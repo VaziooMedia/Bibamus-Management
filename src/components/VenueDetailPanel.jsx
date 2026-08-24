@@ -9,6 +9,21 @@ import { COUNTRIES, PAYMENT_METHODS, VENUE_TYPES, PHONE_PREFIXES } from "../cons
 // pas pendant la frappe, pour ne pas gêner la saisie.
 const capitalizeWords = (s) => s.replace(/\b\p{L}/gu, (c) => c.toUpperCase());
 
+// Comprend directement un collage au format "50.4261° N" ou "6.0251° E" (issu par exemple d'une
+// recherche Google) et le convertit en simple nombre décimal signé, sans que l'utilisateur doive
+// nettoyer le texte à la main. Un Sud ou un Ouest devient négatif, comme l'exige la convention GPS.
+const parseCoordinate = (raw) => {
+  if (!raw) return raw;
+  const match = String(raw).match(/(-?\d+[.,]?\d*)\s*°?\s*([NSEWnsew])?/);
+  if (!match) return raw;
+  let value = parseFloat(match[1].replace(",", "."));
+  if (isNaN(value)) return raw;
+  const dir = match[2]?.toUpperCase();
+  if (dir === "S" || dir === "W") value = -Math.abs(value);
+  else if (dir === "N" || dir === "E") value = Math.abs(value);
+  return String(value);
+};
+
 const fieldStyle = { padding: "10px 12px", borderRadius: "8px", border: "2px solid #28405C", fontSize: "14px", width: "100%" };
 const labelStyle = { fontSize: "12.5px", color: "#8792A6", marginBottom: "4px", display: "block", fontWeight: 600 };
 const sectionTitleStyle = { fontSize: "13px", fontWeight: 700, color: "#39FF66", marginTop: "6px", marginBottom: "12px", display: "flex", alignItems: "center", gap: "8px" };
@@ -236,14 +251,30 @@ export function VenueDetailPanel({ venue, onClose, onSaved, onManageMenu }) {
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px", marginBottom: "6px" }}>
           <div>
             <label style={labelStyle}>Latitude</label>
-            <input type="number" step="any" value={form.lat} onChange={(e) => set("lat", e.target.value)} style={fieldStyle} />
+            <input
+              type="text"
+              value={form.lat}
+              onChange={(e) => set("lat", e.target.value)}
+              onBlur={(e) => set("lat", parseCoordinate(e.target.value))}
+              placeholder="Ex. 50.4261 ou 50.4261° N"
+              style={fieldStyle}
+            />
           </div>
           <div>
             <label style={labelStyle}>Longitude</label>
-            <input type="number" step="any" value={form.lng} onChange={(e) => set("lng", e.target.value)} style={fieldStyle} />
+            <input
+              type="text"
+              value={form.lng}
+              onChange={(e) => set("lng", e.target.value)}
+              onBlur={(e) => set("lng", parseCoordinate(e.target.value))}
+              placeholder="Ex. 6.0251 ou 6.0251° E"
+              style={fieldStyle}
+            />
           </div>
         </div>
-
+        <p style={{ fontSize: "11px", color: "#8792A6", marginTop: "-2px", marginBottom: "14px" }}>
+          Vous pouvez coller directement au format "50.4261° N" — converti automatiquement.
+        </p>
         <div style={separatorStyle} />
         <SectionTitle>Coordonnées</SectionTitle>
 
