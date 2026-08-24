@@ -1,6 +1,7 @@
-import React, { useState, useEffect } from "react";
-import { loadDrinksDirectory } from "../data/sharedDirectories.js";
-import { DataTable, StatusBadge } from "./DataTable.jsx";
+import React, { useState, useEffect, useCallback } from "react";
+import { loadDrinksPage, countDrinks, countDrinksByType } from "../data/sharedDirectories.js";
+import { ServerDataTable } from "./ServerDataTable.jsx";
+import { StatusBadge } from "./DataTable.jsx";
 import { DrinkDetailPanel } from "./DrinkDetailPanel.jsx";
 import { StatsCounterBar } from "./StatsCounterBar.jsx";
 import { ProductCategoryBar } from "./ProductCategoryBar.jsx";
@@ -19,47 +20,63 @@ const allColumns = [
 ];
 
 export function DrinksScreen() {
-  const [drinks, setDrinks] = useState([]);
-  const [loading, setLoading] = useState(true);
   const [selected, setSelected] = useState(null);
   const [creating, setCreating] = useState(false);
+  const [selectedType, setSelectedType] = useState(null);
+  const [statCounts, setStatCounts] = useState(null);
+  const [categoryCounts, setCategoryCounts] = useState(null);
+  const [refreshKey, setRefreshKey] = useState(0);
 
-  const refresh = async () => {
-    setLoading(true);
-    setDrinks(await loadDrinksDirectory());
-    setLoading(false);
-  };
+  // Les statistiques (total/certifiés/etc.) et la répartition par catégorie utilisent de
+  // simples comptages côté serveur — jamais un chargement complet du répertoire, qui pourrait
+  // représenter des dizaines ou centaines de milliers de lignes.
+  const refreshCounts = useCallback(async () => {
+    const [total, certified, reviewed, pending, byType] = await Promise.all([
+      countDrinks({ type: selectedType === "__other__" ? "__other__" : selectedType }),
+      countDrinks({ type: selectedType === "__other__" ? "__other__" : selectedType, status: "certified" }),
+      countDrinks({ type: selectedType === "__other__" ? "__other__" : selectedType, status: "reviewed" }),
+      countDrinks({ type: selectedType === "__other__" ? "__other__" : selectedType, status: "pending" }),
+      countDrinksByType(),
+    ]);
+    setStatCounts({ total, certified, reviewed, pending });
+    setCategoryCounts(byType);
+  }, [selectedType]);
 
   useEffect(() => {
-    refresh();
-  }, []);
+    refreshCounts();
+  }, [refreshCounts, refreshKey]);
+
+  const fetchPage = useCallback(
+    (params) => loadDrinksPage({ ...params, type: selectedType === "__other__" ? "__other__" : selectedType }),
+    [selectedType]
+  );
+
+  const triggerRefresh = () => setRefreshKey((k) => k + 1);
 
   return (
     <div>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "20px" }}>
         <PageTitle>Produits</PageTitle>
-        <button onClick={refresh} style={{ background: "none", border: "2px solid #28405C", borderRadius: "8px", padding: "8px 14px", color: "#F2F2E8", cursor: "pointer", fontSize: "13px" }}>
+        <button onClick={triggerRefresh} style={{ background: "none", border: "2px solid #28405C", borderRadius: "8px", padding: "8px 14px", color: "#F2F2E8", cursor: "pointer", fontSize: "13px" }}>
           ⟳ Rafraîchir
         </button>
       </div>
-      {loading ? (
-        <p style={{ color: "#8792A6" }}>Chargement...</p>
-      ) : (
-        <>
-          <StatsCounterBar items={drinks} />
-          <div style={{ borderBottom: "2px solid #39FF66", margin: "0 0 24px 0" }} />
-          <ProductCategoryBar items={drinks} />
-          <DataTable
-            items={drinks}
-            allColumns={allColumns}
-            forcedKeys={["name", "status"]}
-            defaultVisibleKeys={["name", "type", "brand", "brewery", "abv", "status"]}
-            onRowClick={setSelected}
-            onAdd={() => setCreating(true)}
-            searchPlaceholder="Rechercher un produit, une marque, une brasserie..."
-          />
-        </>
-      )}
+
+      {statCounts ? <StatsCounterBar counts={statCounts} /> : <p style={{ color: "#8792A6" }}>Chargement des statistiques...</p>}
+      <div style={{ borderBottom: "2px solid #39FF66", margin: "0 0 24px 0" }} />
+      <ProductCategoryBar counts={categoryCounts} selectedType={selectedType} onSelect={setSelectedType} />
+
+      <ServerDataTable
+        allColumns={allColumns}
+        forcedKeys={["name", "status"]}
+        defaultVisibleKeys={["name", "type", "brand", "brewery", "abv", "status"]}
+        fetchPage={fetchPage}
+        onRowClick={setSelected}
+        onAdd={() => setCreating(true)}
+        searchPlaceholder="Rechercher un produit par nom..."
+        refreshKey={`${refreshKey}-${selectedType}`}
+      />
+
       {(selected || creating) && (
         <DrinkDetailPanel
           drink={selected}
@@ -67,12 +84,10 @@ export function DrinksScreen() {
             setSelected(null);
             setCreating(false);
           }}
-          onSaved={(updated) => {
-            const wasCreating = creating;
+          onSaved={() => {
             setSelected(null);
             setCreating(false);
-            if (updated) setDrinks((prev) => (wasCreating ? [...prev, updated] : prev.map((d) => (d.id === updated.id ? updated : d))));
-            else setDrinks((prev) => prev.filter((d) => d.id !== selected.id));
+            triggerRefresh();
           }}
         />
       )}

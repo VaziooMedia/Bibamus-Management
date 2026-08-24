@@ -219,6 +219,64 @@ export async function loadDrinksDirectory() {
   return data.map(rowToDrink);
 }
 
+// Un statut vide en base ("null") équivaut à "en attente" — traité comme tel dans les comptages.
+function applyStatusFilter(query, status) {
+  if (status === "pending") return query.or("status.is.null,status.eq.pending");
+  return query.eq("status", status);
+}
+
+const KNOWN_DRINK_TYPES = ["Bières", "Vins & bulles", "Spiritueux", "Cocktails / Mocktails", "Softs & eaux", "Boissons chaudes", "Snacks"];
+
+function applyTypeFilter(query, type) {
+  if (!type) return query;
+  if (type === "__other__") return query.not("type", "in", `(${KNOWN_DRINK_TYPES.map((t) => `"${t}"`).join(",")})`);
+  return query.eq("type", type);
+}
+
+// Charge une SEULE page de produits, filtrée et triée côté serveur — jamais l'ensemble du
+// répertoire d'un coup, pour rester rapide même avec des dizaines ou centaines de milliers de
+// produits.
+export async function loadDrinksPage({ type, search, sortKey = "name", sortDir = 1, page = 0, pageSize = 50 } = {}) {
+  let query = supabase.from("drinks_directory").select("*", { count: "exact" });
+  query = applyTypeFilter(query, type);
+  if (search && search.trim()) query = query.ilike("name", `%${search.trim()}%`);
+  query = query.order(sortKey, { ascending: sortDir === 1, nullsFirst: false });
+  query = query.range(page * pageSize, page * pageSize + pageSize - 1);
+
+  const { data, error, count } = await query;
+  if (error) {
+    console.error("loadDrinksPage:", error);
+    return { items: [], total: 0 };
+  }
+  return { items: data.map(rowToDrink), total: count || 0 };
+}
+
+// Un seul décompte rapide (via count exact, sans jamais rapatrier les lignes elles-mêmes) —
+// utilisé pour les blocs de statistiques, avec un filtre de catégorie optionnel pour qu'ils
+// restent justes une fois qu'une catégorie est sélectionnée.
+export async function countDrinks({ type, status } = {}) {
+  let query = supabase.from("drinks_directory").select("id", { count: "exact", head: true });
+  query = applyTypeFilter(query, type);
+  if (status) query = applyStatusFilter(query, status);
+  const { count, error } = await query;
+  if (error) {
+    console.error("countDrinks:", error);
+    return 0;
+  }
+  return count || 0;
+}
+
+// Compte les produits par catégorie (les 8 blocs), y compris "Autres - Divers" — 8 petites
+// requêtes de comptage exact, bien plus légères qu'un chargement complet du répertoire pour
+// ensuite compter en mémoire.
+export async function countDrinksByType() {
+  const results = await Promise.all([...KNOWN_DRINK_TYPES.map((t) => countDrinks({ type: t })), countDrinks({ type: "__other__" })]);
+  const map = {};
+  KNOWN_DRINK_TYPES.forEach((t, i) => (map[t] = results[i]));
+  map.autres = results[KNOWN_DRINK_TYPES.length];
+  return map;
+}
+
 export async function createDrink(drink) {
   const { data, error } = await supabase.from("drinks_directory").insert(drinkToRow(drink)).select().single();
   if (error) {

@@ -9,13 +9,16 @@ function Stat({ label, value }) {
   );
 }
 
-// items: tableau d'objets avec au moins { status, ownerManaged? }
-export function StatsCounterBar({ items, showOwnerManaged = false }) {
-  const total = items.length;
-  const certified = items.filter((i) => i.status === "certified").length;
-  const reviewed = items.filter((i) => i.status === "reviewed").length;
-  const pending = items.filter((i) => !i.status || i.status === "pending").length;
-  const ownerManaged = items.filter((i) => i.ownerManaged).length;
+// items: tableau d'objets avec au moins { status, ownerManaged? } — utilisé pour les petits
+// répertoires (établissements, marques, producteurs).
+// counts: { total, certified, reviewed, pending, ownerManaged } déjà calculés côté serveur —
+// utilisé pour les répertoires trop volumineux pour être chargés entièrement (produits).
+export function StatsCounterBar({ items, counts, showOwnerManaged = false }) {
+  const total = counts ? counts.total : items.length;
+  const certified = counts ? counts.certified : items.filter((i) => i.status === "certified").length;
+  const reviewed = counts ? counts.reviewed : items.filter((i) => i.status === "reviewed").length;
+  const pending = counts ? counts.pending : items.filter((i) => !i.status || i.status === "pending").length;
+  const ownerManaged = counts ? counts.ownerManaged : items.filter((i) => i.ownerManaged).length;
 
   return (
     <div style={{ display: "flex", gap: "12px", marginBottom: "24px", flexWrap: "wrap" }}>
