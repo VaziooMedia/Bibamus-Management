@@ -62,6 +62,9 @@ function rowToVenue(row) {
     facebookUrl: row.facebook_url,
     instagramUrl: row.instagram_url,
     tiktokUrl: row.tiktok_url,
+    snapchatUrl: row.snapchat_url,
+    restaurantGuruUrl: row.restaurant_guru_url,
+    tripadvisorUrl: row.tripadvisor_url,
     hasFood: row.has_food,
     defaultCurrency: row.default_currency,
     jetonUnitValue: row.jeton_unit_value,
@@ -69,6 +72,14 @@ function rowToVenue(row) {
     lat: row.lat,
     lng: row.lng,
     avatarEmoji: row.avatar_emoji,
+    profilePhotoUrl: row.profile_photo_url,
+    coverPhotoUrl: row.cover_photo_url,
+    acceptedPaymentMethods: row.accepted_payment_methods || [],
+    venueType: row.venue_type,
+    openingHours: row.opening_hours || {},
+    hasTerrace: !!row.has_terrace,
+    wheelchairAccessible: !!row.wheelchair_accessible,
+    hasWifi: !!row.has_wifi,
     ownerManaged: !!row.owner_managed,
     status: row.status,
     likes: row.likes || [],
@@ -97,6 +108,9 @@ function venueToRow(v, partial = false) {
     facebook_url: v.facebookUrl,
     instagram_url: v.instagramUrl,
     tiktok_url: v.tiktokUrl,
+    snapchat_url: v.snapchatUrl,
+    restaurant_guru_url: v.restaurantGuruUrl,
+    tripadvisor_url: v.tripadvisorUrl,
     has_food: v.hasFood,
     default_currency: v.defaultCurrency,
     jeton_unit_value: v.jetonUnitValue,
@@ -104,6 +118,14 @@ function venueToRow(v, partial = false) {
     lat: v.lat,
     lng: v.lng,
     avatar_emoji: v.avatarEmoji,
+    profile_photo_url: v.profilePhotoUrl,
+    cover_photo_url: v.coverPhotoUrl,
+    accepted_payment_methods: v.acceptedPaymentMethods,
+    venue_type: v.venueType,
+    opening_hours: v.openingHours,
+    has_terrace: v.hasTerrace,
+    wheelchair_accessible: v.wheelchairAccessible,
+    has_wifi: v.hasWifi,
     owner_managed: v.ownerManaged,
     status: v.status,
     likes: v.likes,
@@ -118,6 +140,43 @@ function venueToRow(v, partial = false) {
   // fields the caller didn't mean to touch.
   Object.keys(row).forEach((k) => row[k] === undefined && delete row[k]);
   return row;
+}
+
+/* ---------------- PHOTOS D'ÉTABLISSEMENTS ---------------- */
+
+async function resizeImageTo(file, targetW, targetH, quality = 0.85) {
+  const bitmap = await createImageBitmap(file);
+  // Recadrage centré pour remplir exactement le format demandé (carré pour le profil,
+  // bannière large pour la couverture), plutôt que de déformer l'image.
+  const srcRatio = bitmap.width / bitmap.height;
+  const targetRatio = targetW / targetH;
+  let sx = 0, sy = 0, sw = bitmap.width, sh = bitmap.height;
+  if (srcRatio > targetRatio) {
+    sw = bitmap.height * targetRatio;
+    sx = (bitmap.width - sw) / 2;
+  } else {
+    sh = bitmap.width / targetRatio;
+    sy = (bitmap.height - sh) / 2;
+  }
+  const canvas = document.createElement("canvas");
+  canvas.width = targetW;
+  canvas.height = targetH;
+  const ctx = canvas.getContext("2d");
+  ctx.drawImage(bitmap, sx, sy, sw, sh, 0, 0, targetW, targetH);
+  return new Promise((resolve) => canvas.toBlob(resolve, "image/jpeg", quality));
+}
+
+export async function uploadVenuePhoto(venueId, file, kind) {
+  const dims = kind === "cover" ? [1200, 400] : [400, 400];
+  const blob = await resizeImageTo(file, dims[0], dims[1]);
+  const path = `${venueId}-${kind}-${Date.now()}.jpg`;
+  const { error: uploadError } = await supabase.storage.from("venue-photos").upload(path, blob, { contentType: "image/jpeg", upsert: true });
+  if (uploadError) {
+    console.error("uploadVenuePhoto:", uploadError);
+    return null;
+  }
+  const { data } = supabase.storage.from("venue-photos").getPublicUrl(path);
+  return data.publicUrl;
 }
 
 /* ---------------- PRODUITS (RÉPERTOIRE DES BOISSONS) ---------------- */
