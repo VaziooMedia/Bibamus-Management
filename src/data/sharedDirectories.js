@@ -78,6 +78,13 @@ function rowToVenue(row) {
     venueType: row.venue_type,
     venueTypes: row.venue_types || [],
     hasDogs: !!row.has_dogs,
+    canDance: !!row.can_dance,
+    reservationPossible: !!row.reservation_possible,
+    goodForGroups: !!row.good_for_groups,
+    privatizationPossible: !!row.privatization_possible,
+    hasPrivateRoom: !!row.has_private_room,
+    smokingArea: !!row.smoking_area,
+    menuPdfUrl: row.menu_pdf_url,
     openingHours: row.opening_hours || {},
     hasTerrace: !!row.has_terrace,
     wheelchairAccessible: !!row.wheelchair_accessible,
@@ -126,6 +133,13 @@ function venueToRow(v, partial = false) {
     venue_type: v.venueType,
     venue_types: v.venueTypes,
     has_dogs: v.hasDogs,
+    can_dance: v.canDance,
+    reservation_possible: v.reservationPossible,
+    good_for_groups: v.goodForGroups,
+    privatization_possible: v.privatizationPossible,
+    has_private_room: v.hasPrivateRoom,
+    smoking_area: v.smokingArea,
+    menu_pdf_url: v.menuPdfUrl,
     opening_hours: v.openingHours,
     has_terrace: v.hasTerrace,
     wheelchair_accessible: v.wheelchairAccessible,
@@ -180,6 +194,17 @@ export async function uploadVenuePhoto(venueId, file, kind) {
     return null;
   }
   const { data } = supabase.storage.from("venue-photos").getPublicUrl(path);
+  return data.publicUrl;
+}
+
+export async function uploadVenueMenuPdf(venueId, file) {
+  const path = `${venueId}-menu-${Date.now()}.pdf`;
+  const { error: uploadError } = await supabase.storage.from("venue-menus").upload(path, file, { contentType: "application/pdf", upsert: true });
+  if (uploadError) {
+    console.error("uploadVenueMenuPdf:", uploadError);
+    return null;
+  }
+  const { data } = supabase.storage.from("venue-menus").getPublicUrl(path);
   return data.publicUrl;
 }
 

@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { updatePublicVenue, deletePublicVenue, createPublicVenue, uploadVenuePhoto } from "../data/sharedDirectories.js";
+import { updatePublicVenue, deletePublicVenue, createPublicVenue, uploadVenuePhoto, uploadVenueMenuPdf } from "../data/sharedDirectories.js";
 import { StatusSelector } from "./StatusSelector.jsx";
 import { AdminPhotoField } from "./AdminPhotoField.jsx";
 import { OpeningHoursEditor } from "./OpeningHoursEditor.jsx";
@@ -70,12 +70,20 @@ export function VenueDetailPanel({ venue, onClose, onSaved, onManageMenu }) {
     wheelchairAccessible: !!venue?.wheelchairAccessible,
     hasWifi: !!venue?.hasWifi,
     hasDogs: !!venue?.hasDogs,
+    canDance: !!venue?.canDance,
+    reservationPossible: !!venue?.reservationPossible,
+    goodForGroups: !!venue?.goodForGroups,
+    privatizationPossible: !!venue?.privatizationPossible,
+    hasPrivateRoom: !!venue?.hasPrivateRoom,
+    smokingArea: !!venue?.smokingArea,
     openingHours: venue?.openingHours && venue.openingHours.days ? venue.openingHours : { days: {}, openOnHolidays: false },
   });
   const [profilePhotoUrl, setProfilePhotoUrl] = useState(venue?.profilePhotoUrl || null);
   const [coverPhotoUrl, setCoverPhotoUrl] = useState(venue?.coverPhotoUrl || null);
+  const [menuPdfUrl, setMenuPdfUrl] = useState(venue?.menuPdfUrl || null);
   const [uploadingProfile, setUploadingProfile] = useState(false);
   const [uploadingCover, setUploadingCover] = useState(false);
+  const [uploadingMenu, setUploadingMenu] = useState(false);
   const [status, setStatus] = useState(venue?.status || (isNew ? "certified" : "pending"));
   const [saving, setSaving] = useState(false);
 
@@ -119,6 +127,13 @@ export function VenueDetailPanel({ venue, onClose, onSaved, onManageMenu }) {
     wheelchairAccessible: form.wheelchairAccessible,
     hasWifi: form.hasWifi,
     hasDogs: form.hasDogs,
+    canDance: form.canDance,
+    reservationPossible: form.reservationPossible,
+    goodForGroups: form.goodForGroups,
+    privatizationPossible: form.privatizationPossible,
+    hasPrivateRoom: form.hasPrivateRoom,
+    smokingArea: form.smokingArea,
+    menuPdfUrl,
     openingHours: form.openingHours,
     profilePhotoUrl,
     coverPhotoUrl,
@@ -161,6 +176,17 @@ export function VenueDetailPanel({ venue, onClose, onSaved, onManageMenu }) {
     const url = await uploadVenuePhoto(tempId, file, "cover");
     if (url) setCoverPhotoUrl(url);
     setUploadingCover(false);
+  };
+
+  const handleUploadMenuPdf = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    setUploadingMenu(true);
+    const tempId = venue?.id || `pending-${Date.now()}`;
+    const url = await uploadVenueMenuPdf(tempId, file);
+    if (url) setMenuPdfUrl(url);
+    setUploadingMenu(false);
+    e.target.value = "";
   };
 
   const requiredOk = form.name.trim() && form.streetName.trim() && form.streetNumber.trim() && form.postalCode.trim() && form.city.trim();
@@ -410,6 +436,58 @@ export function VenueDetailPanel({ venue, onClose, onSaved, onManageMenu }) {
             <input type="checkbox" checked={form.hasDogs} onChange={(e) => set("hasDogs", e.target.checked)} />
             Chiens acceptés
           </label>
+          <label style={{ display: "flex", alignItems: "center", gap: "6px", fontSize: "13px", cursor: "pointer" }}>
+            <input type="checkbox" checked={form.canDance} onChange={(e) => set("canDance", e.target.checked)} />
+            Possibilité de danser (en soirée)
+          </label>
+          <label style={{ display: "flex", alignItems: "center", gap: "6px", fontSize: "13px", cursor: "pointer" }}>
+            <input type="checkbox" checked={form.reservationPossible} onChange={(e) => set("reservationPossible", e.target.checked)} />
+            Réservation possible
+          </label>
+          <label style={{ display: "flex", alignItems: "center", gap: "6px", fontSize: "13px", cursor: "pointer" }}>
+            <input type="checkbox" checked={form.goodForGroups} onChange={(e) => set("goodForGroups", e.target.checked)} />
+            Idéal pour des grands groupes
+          </label>
+          <label style={{ display: "flex", alignItems: "center", gap: "6px", fontSize: "13px", cursor: "pointer" }}>
+            <input type="checkbox" checked={form.privatizationPossible} onChange={(e) => set("privatizationPossible", e.target.checked)} />
+            Privatisation possible
+          </label>
+          <label style={{ display: "flex", alignItems: "center", gap: "6px", fontSize: "13px", cursor: "pointer" }}>
+            <input type="checkbox" checked={form.hasPrivateRoom} onChange={(e) => set("hasPrivateRoom", e.target.checked)} />
+            Salle annexe privée disponible
+          </label>
+          <label style={{ display: "flex", alignItems: "center", gap: "6px", fontSize: "13px", cursor: "pointer" }}>
+            <input type="checkbox" checked={form.smokingArea} onChange={(e) => set("smokingArea", e.target.checked)} />
+            Espace fumeurs
+          </label>
+        </div>
+
+        <label style={labelStyle}>Menu (PDF)</label>
+        <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "6px" }}>
+          <label
+            style={{
+              background: "#16273D",
+              border: "2px solid #28405C",
+              borderRadius: "8px",
+              padding: "9px 14px",
+              fontSize: "12.5px",
+              color: "#F2F2E8",
+              cursor: "pointer",
+            }}
+          >
+            {uploadingMenu ? "Envoi..." : menuPdfUrl ? "Remplacer le PDF" : "Ajouter un PDF"}
+            <input type="file" accept="application/pdf" onChange={handleUploadMenuPdf} style={{ display: "none" }} disabled={uploadingMenu} />
+          </label>
+          {menuPdfUrl && (
+            <>
+              <a href={menuPdfUrl} target="_blank" rel="noreferrer" style={{ fontSize: "12.5px", color: "#39FF66" }}>
+                Voir le PDF actuel
+              </a>
+              <button onClick={() => setMenuPdfUrl(null)} style={{ background: "none", border: "none", color: "#FF3B4E", fontSize: "12px", cursor: "pointer" }}>
+                Retirer
+              </button>
+            </>
+          )}
         </div>
 
         <div style={separatorStyle} />
