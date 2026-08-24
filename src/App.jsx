@@ -5,6 +5,7 @@ import { Dashboard } from "./components/Dashboard.jsx";
 import { VenuesScreen } from "./components/VenuesScreen.jsx";
 import { DrinksScreen } from "./components/DrinksScreen.jsx";
 import { BreweriesScreen, BrandsScreen } from "./components/BreweriesAndBrandsScreens.jsx";
+import { ComingSoon } from "./components/ComingSoon.jsx";
 
 export default function App() {
   const [unlocked, setUnlocked] = useState(() => sessionStorage.getItem("bibamus-admin-unlocked") === "true");
@@ -28,6 +29,12 @@ export default function App() {
       {screen === "drinks" && <DrinksScreen />}
       {screen === "breweries" && <BreweriesScreen />}
       {screen === "brands" && <BrandsScreen />}
+      {screen === "chat" && <ComingSoon title="Chat" />}
+      {screen === "stats" && <ComingSoon title="Statistiques" />}
+      {screen === "finances" && <ComingSoon title="Finances" />}
+      {screen === "notifications" && <ComingSoon title="Notifications" />}
+      {screen === "admins" && <ComingSoon title="Administrateurs" />}
+      {screen === "settings" && <ComingSoon title="Paramètres" />}
     </Layout>
   );
 }

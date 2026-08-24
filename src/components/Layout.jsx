@@ -1,38 +1,92 @@
-import React from "react";
+import React, { useState } from "react";
 
-const NAV_ITEMS = [
+const TOP_ITEMS = [
   { key: "dashboard", label: "Tableau de bord" },
-  { key: "venues", label: "Établissements" },
-  { key: "drinks", label: "Produits" },
-  { key: "breweries", label: "Brasseries & Producteurs" },
-  { key: "brands", label: "Marques" },
+  { key: "chat", label: "Chat" },
 ];
 
+const DATABASE_ITEMS = [
+  { key: "venues", label: "Établissements" },
+  { key: "drinks", label: "Produits" },
+  { key: "brands", label: "Marques" },
+  { key: "breweries", label: "Producteurs" },
+];
+
+const BOTTOM_ITEMS = [
+  { key: "stats", label: "Statistiques" },
+  { key: "finances", label: "Finances" },
+  { key: "notifications", label: "Notifications" },
+  { key: "admins", label: "Administrateurs" },
+  { key: "settings", label: "Paramètres" },
+];
+
+function NavButton({ item, current, onNavigate, indent }) {
+  const active = current === item.key;
+  return (
+    <button
+      key={item.key}
+      onClick={() => onNavigate(item.key)}
+      style={{
+        textAlign: "left",
+        background: active ? "#28405C" : "none",
+        border: "none",
+        borderLeft: active ? "3px solid #39FF66" : "3px solid transparent",
+        padding: indent ? "10px 20px 10px 34px" : "12px 20px",
+        fontSize: indent ? "13px" : "14px",
+        fontWeight: active ? 700 : 500,
+        color: active ? "#39FF66" : "#F2F2E8",
+        cursor: "pointer",
+        width: "100%",
+      }}
+    >
+      {item.label}
+    </button>
+  );
+}
+
 export function Layout({ current, onNavigate, children }) {
+  const isDatabaseScreen = DATABASE_ITEMS.some((i) => i.key === current);
+  const [databaseOpen, setDatabaseOpen] = useState(isDatabaseScreen);
+
   return (
     <div style={{ display: "flex", minHeight: "100vh" }}>
       <div style={{ width: "220px", flexShrink: 0, background: "#16273D", padding: "24px 0", display: "flex", flexDirection: "column" }}>
-        <div style={{ padding: "0 20px 24px 20px", fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "20px" }}>
-          <span style={{ color: "#F2F2E8" }}>Bibamus</span> <span style={{ color: "#39FF66" }}>Gestion</span>
+        <div style={{ padding: "0 20px 28px 20px" }}>
+          <img src="/bibamus-logo.svg" alt="Bibamus" style={{ height: "26px", display: "block" }} />
+          <div style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "13px", color: "#39FF66", letterSpacing: "1px", marginTop: "4px" }}>
+            Management
+          </div>
         </div>
-        {NAV_ITEMS.map((item) => (
-          <button
-            key={item.key}
-            onClick={() => onNavigate(item.key)}
-            style={{
-              textAlign: "left",
-              background: current === item.key ? "#28405C" : "none",
-              border: "none",
-              borderLeft: current === item.key ? "3px solid #39FF66" : "3px solid transparent",
-              padding: "12px 20px",
-              fontSize: "14px",
-              fontWeight: current === item.key ? 700 : 500,
-              color: current === item.key ? "#39FF66" : "#F2F2E8",
-              cursor: "pointer",
-            }}
-          >
-            {item.label}
-          </button>
+
+        {TOP_ITEMS.map((item) => (
+          <NavButton key={item.key} item={item} current={current} onNavigate={onNavigate} />
+        ))}
+
+        <button
+          onClick={() => setDatabaseOpen((o) => !o)}
+          style={{
+            textAlign: "left",
+            background: isDatabaseScreen ? "#28405C" : "none",
+            border: "none",
+            borderLeft: isDatabaseScreen ? "3px solid #39FF66" : "3px solid transparent",
+            padding: "12px 20px",
+            fontSize: "14px",
+            fontWeight: isDatabaseScreen ? 700 : 500,
+            color: isDatabaseScreen ? "#39FF66" : "#F2F2E8",
+            cursor: "pointer",
+            width: "100%",
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+          }}
+        >
+          Data base
+          <span style={{ fontSize: "11px", opacity: 0.7 }}>{databaseOpen ? "▲" : "▼"}</span>
+        </button>
+        {databaseOpen && DATABASE_ITEMS.map((item) => <NavButton key={item.key} item={item} current={current} onNavigate={onNavigate} indent />)}
+
+        {BOTTOM_ITEMS.map((item) => (
+          <NavButton key={item.key} item={item} current={current} onNavigate={onNavigate} />
         ))}
       </div>
       <div style={{ flex: 1, padding: "32px 40px", overflowY: "auto" }}>{children}</div>
