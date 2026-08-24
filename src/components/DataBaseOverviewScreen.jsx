@@ -11,8 +11,8 @@ const TILES = [
 export function DataBaseOverviewScreen({ onNavigate, supabaseUrl }) {
   return (
     <div>
-      <PageTitle>Data base</PageTitle>
-      <p style={{ color: "#8792A6", fontSize: "13.5px", margin: "10px 0 24px 0" }}>Choisissez une catégorie à gérer.</p>
+      <PageTitle>DataBase</PageTitle>
+      <div style={{ height: "20px" }} />
 
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "14px", marginBottom: "28px" }}>
         {TILES.map((t) => (
@@ -45,16 +45,13 @@ export function DataBaseOverviewScreen({ onNavigate, supabaseUrl }) {
           style={{
             display: "inline-flex",
             alignItems: "center",
-            gap: "10px",
-            background: "#16273D",
-            border: "2px solid #28405C",
+            background: "#FF9500",
             borderRadius: "10px",
-            padding: "12px 18px",
+            padding: "12px 22px",
             textDecoration: "none",
           }}
         >
-          <img src="/supabase-logo.svg" alt="Supabase" style={{ height: "20px" }} />
-          <span style={{ color: "#F2F2E8", fontSize: "13.5px", fontWeight: 600 }}>Ouvrir le projet Supabase</span>
+          <span style={{ color: "#fff", fontSize: "14px", fontWeight: 800 }}>Supabase</span>
         </a>
       )}
     </div>

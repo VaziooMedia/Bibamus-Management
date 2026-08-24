@@ -102,7 +102,7 @@ export function Layout({ current, onNavigate, children }) {
         >
           <span style={{ display: "flex", alignItems: "center", gap: "10px" }}>
             <span style={{ width: "4px", height: "16px", background: "#39FF66", borderRadius: "2px", display: "inline-block", flexShrink: 0 }} />
-            Data base
+            DataBase
           </span>
           <span
             onClick={(e) => {
@@ -114,11 +114,20 @@ export function Layout({ current, onNavigate, children }) {
             {databaseOpen ? "▼" : "▶"}
           </span>
         </button>
-        {databaseOpen && DATABASE_ITEMS.map((item) => <NavButton key={item.key} item={item} current={current} onNavigate={onNavigate} indent />)}
+        {databaseOpen && (
+          <div style={{ paddingLeft: "14px" }}>
+            {DATABASE_ITEMS.map((item) => (
+              <NavButton key={item.key} item={item} current={current} onNavigate={onNavigate} indent />
+            ))}
+          </div>
+        )}
 
         {BOTTOM_ITEMS.map((item) => (
           <NavButton key={item.key} item={item} current={current} onNavigate={onNavigate} />
         ))}
+
+        <div style={{ flex: 1 }} />
+        <div style={{ padding: "16px 20px 0 20px", fontSize: "11px", color: "#8792A6" }}>VaziooMedia - 2026</div>
       </div>
       <div style={{ flex: 1, display: "flex", flexDirection: "column", minWidth: 0 }}>
         <TopBar />

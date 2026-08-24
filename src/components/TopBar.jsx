@@ -54,13 +54,13 @@ export function TopBar({ adminName = "Mehdi Alorchi", adminRole = "Super Admin",
         placeholder="Rechercher sur toute la plateforme..."
         style={{
           flex: 1,
-          maxWidth: "480px",
-          padding: "9px 14px",
+          maxWidth: "720px",
+          padding: "11px 16px",
           borderRadius: "8px",
           border: "2px solid #28405C",
           background: "#16273D",
           color: "#F2F2E8",
-          fontSize: "13.5px",
+          fontSize: "14px",
         }}
       />
 
@@ -78,7 +78,19 @@ export function TopBar({ adminName = "Mehdi Alorchi", adminRole = "Super Admin",
         </svg>
       </button>
 
-      <div style={{ fontSize: "13px", color: "#8792A6", whiteSpace: "nowrap" }}>
+      <div
+        style={{
+          fontSize: "13px",
+          color: "#8792A6",
+          whiteSpace: "nowrap",
+          border: "2px solid #39FF66",
+          borderRadius: "999px",
+          padding: "6px 14px",
+          minWidth: "108px",
+          textAlign: "center",
+          marginRight: "8px",
+        }}
+      >
         Bibax : <span style={{ color: "#39FF66", fontWeight: 800, fontFamily: "'Urbanist', sans-serif" }}>{userCount != null ? userCount : "…"}</span>
       </div>
     </div>

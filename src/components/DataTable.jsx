@@ -184,7 +184,7 @@ export function StatusBadge({ status }) {
         height: "22px",
         borderRadius: "50%",
         background: config.bg,
-        color: "#fff",
+        color: "#0D1B2A",
         fontSize: "12px",
         fontWeight: 800,
         lineHeight: 1,

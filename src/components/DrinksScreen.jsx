@@ -47,6 +47,7 @@ export function DrinksScreen() {
       ) : (
         <>
           <StatsCounterBar items={drinks} />
+          <div style={{ borderBottom: "2px solid #39FF66", margin: "0 0 24px 0" }} />
           <ProductCategoryBar items={drinks} />
           <DataTable
             items={drinks}
