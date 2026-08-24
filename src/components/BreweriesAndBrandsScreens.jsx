@@ -20,6 +20,7 @@ export function BreweriesScreen() {
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selected, setSelected] = useState(null);
+  const [creating, setCreating] = useState(false);
 
   const refresh = async () => {
     setLoading(true);
@@ -44,17 +45,30 @@ export function BreweriesScreen() {
       ) : (
         <>
           <StatsCounterBar items={items} showOwnerManaged />
-          <DataTable items={items} columns={breweryColumns} onRowClick={setSelected} searchPlaceholder="Rechercher un producteur..." />
+          <DataTable
+            items={items}
+            allColumns={breweryColumns}
+            forcedKeys={["name", "status"]}
+            defaultVisibleKeys={["name", "country", "status"]}
+            onRowClick={setSelected}
+            onAdd={() => setCreating(true)}
+            searchPlaceholder="Rechercher un producteur..."
+          />
         </>
       )}
-      {selected && (
+      {(selected || creating) && (
         <SimpleEntityPanel
           entity={selected}
           kind="brewery"
-          onClose={() => setSelected(null)}
-          onSaved={(updated) => {
+          onClose={() => {
             setSelected(null);
-            if (updated) setItems((prev) => prev.map((i) => (i.id === updated.id ? updated : i)));
+            setCreating(false);
+          }}
+          onSaved={(updated) => {
+            const wasCreating = creating;
+            setSelected(null);
+            setCreating(false);
+            if (updated) setItems((prev) => (wasCreating ? [...prev, updated] : prev.map((i) => (i.id === updated.id ? updated : i))));
             else setItems((prev) => prev.filter((i) => i.id !== selected.id));
           }}
         />
@@ -67,6 +81,7 @@ export function BrandsScreen() {
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selected, setSelected] = useState(null);
+  const [creating, setCreating] = useState(false);
 
   const refresh = async () => {
     setLoading(true);
@@ -91,17 +106,30 @@ export function BrandsScreen() {
       ) : (
         <>
           <StatsCounterBar items={items} showOwnerManaged />
-          <DataTable items={items} columns={brandColumns} onRowClick={setSelected} searchPlaceholder="Rechercher une marque..." />
+          <DataTable
+            items={items}
+            allColumns={brandColumns}
+            forcedKeys={["name", "status"]}
+            defaultVisibleKeys={["name", "status"]}
+            onRowClick={setSelected}
+            onAdd={() => setCreating(true)}
+            searchPlaceholder="Rechercher une marque..."
+          />
         </>
       )}
-      {selected && (
+      {(selected || creating) && (
         <SimpleEntityPanel
           entity={selected}
           kind="brand"
-          onClose={() => setSelected(null)}
-          onSaved={(updated) => {
+          onClose={() => {
             setSelected(null);
-            if (updated) setItems((prev) => prev.map((i) => (i.id === updated.id ? updated : i)));
+            setCreating(false);
+          }}
+          onSaved={(updated) => {
+            const wasCreating = creating;
+            setSelected(null);
+            setCreating(false);
+            if (updated) setItems((prev) => (wasCreating ? [...prev, updated] : prev.map((i) => (i.id === updated.id ? updated : i))));
             else setItems((prev) => prev.filter((i) => i.id !== selected.id));
           }}
         />

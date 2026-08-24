@@ -1,41 +1,53 @@
 import React, { useState } from "react";
-import { updatePublicVenue, deletePublicVenue } from "../data/sharedDirectories.js";
+import { updatePublicVenue, deletePublicVenue, createPublicVenue } from "../data/sharedDirectories.js";
 import { StatusSelector } from "./StatusSelector.jsx";
 
+// venue === null → mode création
 export function VenueDetailPanel({ venue, onClose, onSaved }) {
+  const isNew = !venue;
   const [form, setForm] = useState({
-    name: venue.name || "",
-    streetName: venue.streetName || "",
-    streetNumber: venue.streetNumber || "",
-    postalCode: venue.postalCode || "",
-    city: venue.city || "",
-    country: venue.country || "",
-    phone: venue.phone || "",
-    email: venue.email || "",
-    website: venue.website || "",
+    name: venue?.name || "",
+    streetName: venue?.streetName || "",
+    streetNumber: venue?.streetNumber || "",
+    postalCode: venue?.postalCode || "",
+    city: venue?.city || "",
+    country: venue?.country || "",
+    phone: venue?.phone || "",
+    email: venue?.email || "",
+    website: venue?.website || "",
   });
-  const [status, setStatus] = useState(venue.status || "pending");
+  const [status, setStatus] = useState(venue?.status || (isNew ? "certified" : "pending"));
   const [saving, setSaving] = useState(false);
 
   const set = (field, value) => setForm((f) => ({ ...f, [field]: value }));
 
+  const buildPatch = () => ({
+    name: form.name.trim(),
+    streetName: form.streetName.trim(),
+    streetNumber: form.streetNumber.trim(),
+    postalCode: form.postalCode.trim(),
+    city: form.city.trim(),
+    country: form.country.trim(),
+    phone: form.phone.trim(),
+    email: form.email.trim(),
+    website: form.website.trim(),
+    status,
+  });
+
   const save = async () => {
+    if (!form.name.trim()) return;
     setSaving(true);
-    const patch = {
-      name: form.name.trim(),
-      streetName: form.streetName.trim(),
-      streetNumber: form.streetNumber.trim(),
-      postalCode: form.postalCode.trim(),
-      city: form.city.trim(),
-      country: form.country.trim(),
-      phone: form.phone.trim(),
-      email: form.email.trim(),
-      website: form.website.trim(),
-      status,
-    };
-    await updatePublicVenue(venue.id, patch);
-    setSaving(false);
-    onSaved({ ...venue, ...patch });
+    if (isNew) {
+      const id = `venue-${Date.now()}-${Math.floor(Math.random() * 10000)}`;
+      const created = await createPublicVenue({ id, ...buildPatch(), menu: [], likes: [] });
+      setSaving(false);
+      onSaved(created);
+    } else {
+      const patch = buildPatch();
+      await updatePublicVenue(venue.id, patch);
+      setSaving(false);
+      onSaved({ ...venue, ...patch });
+    }
   };
 
   const remove = async () => {
@@ -51,7 +63,7 @@ export function VenueDetailPanel({ venue, onClose, onSaved }) {
     <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.5)", display: "flex", justifyContent: "flex-end", zIndex: 100 }}>
       <div style={{ width: "480px", background: "#0D1B2A", height: "100%", overflowY: "auto", padding: "28px", borderLeft: "2px solid #28405C" }}>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "20px" }}>
-          <h2 style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "22px", margin: 0 }}>Vérifier l'établissement</h2>
+          <h2 style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "22px", margin: 0 }}>{isNew ? "Ajouter un établissement" : "Vérifier l'établissement"}</h2>
           <button onClick={onClose} style={{ background: "none", border: "none", color: "#8792A6", fontSize: "20px", cursor: "pointer" }}>
             ✕
           </button>
@@ -107,14 +119,16 @@ export function VenueDetailPanel({ venue, onClose, onSaved }) {
         <div style={{ display: "flex", flexDirection: "column", gap: "10px", marginTop: "10px" }}>
           <button
             onClick={save}
-            disabled={saving}
-            style={{ background: "#39FF66", border: "none", borderRadius: "8px", padding: "12px", fontWeight: 700, color: "#0D1B2A", cursor: "pointer" }}
+            disabled={saving || !form.name.trim()}
+            style={{ background: "#39FF66", border: "none", borderRadius: "8px", padding: "12px", fontWeight: 700, color: "#0D1B2A", cursor: "pointer", opacity: form.name.trim() ? 1 : 0.5 }}
           >
-            ✓ Enregistrer
+            ✓ {isNew ? "Créer l'établissement" : "Enregistrer"}
           </button>
-          <button onClick={remove} style={{ background: "none", border: "none", color: "#FF3B4E", fontSize: "13px", cursor: "pointer", marginTop: "8px" }}>
-            Supprimer
-          </button>
+          {!isNew && (
+            <button onClick={remove} style={{ background: "none", border: "none", color: "#FF3B4E", fontSize: "13px", cursor: "pointer", marginTop: "8px" }}>
+              Supprimer
+            </button>
+          )}
         </div>
       </div>
     </div>

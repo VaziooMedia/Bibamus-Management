@@ -3,14 +3,18 @@ import { loadDrinksDirectory } from "../data/sharedDirectories.js";
 import { DataTable, StatusBadge } from "./DataTable.jsx";
 import { DrinkDetailPanel } from "./DrinkDetailPanel.jsx";
 import { StatsCounterBar } from "./StatsCounterBar.jsx";
+import { ProductCategoryBar } from "./ProductCategoryBar.jsx";
 import { PageTitle } from "./PageTitle.jsx";
 
-const columns = [
+const allColumns = [
   { key: "name", label: "Nom" },
   { key: "type", label: "Type" },
   { key: "brand", label: "Marque" },
   { key: "brewery", label: "Brasserie" },
+  { key: "nationality", label: "Origine" },
   { key: "abv", label: "Degré", render: (d) => (d.abv != null ? `${d.abv}%` : "—") },
+  { key: "kcalPer100ml", label: "Kcal/100ml" },
+  { key: "volumeCl", label: "Volume (cl)" },
   { key: "status", label: "Statut", render: (d) => <StatusBadge status={d.status} /> },
 ];
 
@@ -18,6 +22,7 @@ export function DrinksScreen() {
   const [drinks, setDrinks] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selected, setSelected] = useState(null);
+  const [creating, setCreating] = useState(false);
 
   const refresh = async () => {
     setLoading(true);
@@ -42,16 +47,30 @@ export function DrinksScreen() {
       ) : (
         <>
           <StatsCounterBar items={drinks} />
-          <DataTable items={drinks} columns={columns} onRowClick={setSelected} searchPlaceholder="Rechercher un produit, une marque, une brasserie..." />
+          <ProductCategoryBar items={drinks} />
+          <DataTable
+            items={drinks}
+            allColumns={allColumns}
+            forcedKeys={["name", "status"]}
+            defaultVisibleKeys={["name", "type", "brand", "brewery", "abv", "status"]}
+            onRowClick={setSelected}
+            onAdd={() => setCreating(true)}
+            searchPlaceholder="Rechercher un produit, une marque, une brasserie..."
+          />
         </>
       )}
-      {selected && (
+      {(selected || creating) && (
         <DrinkDetailPanel
           drink={selected}
-          onClose={() => setSelected(null)}
-          onSaved={(updated) => {
+          onClose={() => {
             setSelected(null);
-            if (updated) setDrinks((prev) => prev.map((d) => (d.id === updated.id ? updated : d)));
+            setCreating(false);
+          }}
+          onSaved={(updated) => {
+            const wasCreating = creating;
+            setSelected(null);
+            setCreating(false);
+            if (updated) setDrinks((prev) => (wasCreating ? [...prev, updated] : prev.map((d) => (d.id === updated.id ? updated : d))));
             else setDrinks((prev) => prev.filter((d) => d.id !== selected.id));
           }}
         />

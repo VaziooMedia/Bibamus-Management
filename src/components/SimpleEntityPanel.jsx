@@ -1,20 +1,30 @@
 import React, { useState } from "react";
-import { updateBrewery, deleteBrewery, updateBrand, deleteBrand } from "../data/sharedDirectories.js";
+import { updateBrewery, deleteBrewery, createBrewery, updateBrand, deleteBrand, createBrand } from "../data/sharedDirectories.js";
 import { StatusSelector } from "./StatusSelector.jsx";
 
+// entity === null → mode création
 export function SimpleEntityPanel({ entity, kind, onClose, onSaved }) {
   const isBrewery = kind === "brewery";
-  const [form, setForm] = useState({ name: entity.name || "", country: entity.country || "" });
-  const [status, setStatus] = useState(entity.status || "pending");
+  const isNew = !entity;
+  const [form, setForm] = useState({ name: entity?.name || "", country: entity?.country || "" });
+  const [status, setStatus] = useState(entity?.status || (isNew ? "certified" : "pending"));
   const [saving, setSaving] = useState(false);
 
   const save = async () => {
+    if (!form.name.trim()) return;
     setSaving(true);
     const patch = { name: form.name.trim(), ...(isBrewery ? { country: form.country.trim() } : {}), status };
-    if (isBrewery) await updateBrewery(entity.id, patch);
-    else await updateBrand(entity.id, patch);
-    setSaving(false);
-    onSaved({ ...entity, ...patch });
+    if (isNew) {
+      const id = `${isBrewery ? "brewery" : "brand"}-${Date.now()}-${Math.floor(Math.random() * 10000)}`;
+      const created = isBrewery ? await createBrewery({ id, ...patch }) : await createBrand({ id, ...patch });
+      setSaving(false);
+      onSaved(created);
+    } else {
+      if (isBrewery) await updateBrewery(entity.id, patch);
+      else await updateBrand(entity.id, patch);
+      setSaving(false);
+      onSaved({ ...entity, ...patch });
+    }
   };
 
   const remove = async () => {
@@ -31,7 +41,9 @@ export function SimpleEntityPanel({ entity, kind, onClose, onSaved }) {
     <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.5)", display: "flex", justifyContent: "flex-end", zIndex: 100 }}>
       <div style={{ width: "420px", background: "#0D1B2A", height: "100%", overflowY: "auto", padding: "28px", borderLeft: "2px solid #28405C" }}>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "20px" }}>
-          <h2 style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "22px", margin: 0 }}>{isBrewery ? "Vérifier le producteur" : "Vérifier la marque"}</h2>
+          <h2 style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "22px", margin: 0 }}>
+            {isNew ? (isBrewery ? "Ajouter un producteur" : "Ajouter une marque") : isBrewery ? "Vérifier le producteur" : "Vérifier la marque"}
+          </h2>
           <button onClick={onClose} style={{ background: "none", border: "none", color: "#8792A6", fontSize: "20px", cursor: "pointer" }}>
             ✕
           </button>
@@ -55,14 +67,16 @@ export function SimpleEntityPanel({ entity, kind, onClose, onSaved }) {
         <div style={{ display: "flex", flexDirection: "column", gap: "10px", marginTop: "10px" }}>
           <button
             onClick={save}
-            disabled={saving}
-            style={{ background: "#39FF66", border: "none", borderRadius: "8px", padding: "12px", fontWeight: 700, color: "#0D1B2A", cursor: "pointer" }}
+            disabled={saving || !form.name.trim()}
+            style={{ background: "#39FF66", border: "none", borderRadius: "8px", padding: "12px", fontWeight: 700, color: "#0D1B2A", cursor: "pointer", opacity: form.name.trim() ? 1 : 0.5 }}
           >
-            ✓ Enregistrer
+            ✓ {isNew ? "Créer" : "Enregistrer"}
           </button>
-          <button onClick={remove} style={{ background: "none", border: "none", color: "#FF3B4E", fontSize: "13px", cursor: "pointer", marginTop: "8px" }}>
-            Supprimer
-          </button>
+          {!isNew && (
+            <button onClick={remove} style={{ background: "none", border: "none", color: "#FF3B4E", fontSize: "13px", cursor: "pointer", marginTop: "8px" }}>
+              Supprimer
+            </button>
+          )}
         </div>
       </div>
     </div>

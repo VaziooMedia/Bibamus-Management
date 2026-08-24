@@ -2,7 +2,7 @@ import React from "react";
 
 function Stat({ label, value }) {
   return (
-    <div style={{ background: "#16273D", borderRadius: "10px", padding: "14px 16px", flex: 1, minWidth: "110px" }}>
+    <div style={{ background: "#16273D", borderRadius: "10px", padding: "14px 16px", flex: 1, minWidth: "110px", textAlign: "center" }}>
       <div style={{ fontSize: "11.5px", color: "#8792A6", marginBottom: "4px" }}>{label}</div>
       <div style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "26px", color: "#39FF66" }}>{value}</div>
     </div>
@@ -22,8 +22,8 @@ export function StatsCounterBar({ items, showOwnerManaged = false }) {
       <Stat label="Total" value={total} />
       <Stat label="Certifiés" value={certified} />
       <Stat label="Non certifiés" value={reviewed} />
-      <Stat label="En attente de vérification" value={pending} />
-      {showOwnerManaged && <Stat label="Gérés par les propriétaires" value={ownerManaged} />}
+      <Stat label="À vérifier" value={pending} />
+      {showOwnerManaged && <Stat label="Business" value={ownerManaged} />}
     </div>
   );
 }

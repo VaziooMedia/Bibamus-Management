@@ -1,10 +1,30 @@
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useRef, useEffect } from "react";
 
-// columns: [{ key, label, render? }]
-export function DataTable({ items, columns, onRowClick, searchPlaceholder = "Rechercher..." }) {
+// allColumns: [{ key, label, render? }] — la liste complète des colonnes possibles.
+// forcedKeys: clés toujours affichées, non désactivables (ex. ["name", "status"]).
+// defaultVisibleKeys: clés affichées par défaut au premier chargement.
+export function DataTable({ items, allColumns, forcedKeys = [], defaultVisibleKeys, onRowClick, onAdd, searchPlaceholder = "Rechercher..." }) {
   const [query, setQuery] = useState("");
+  const [visibleKeys, setVisibleKeys] = useState(defaultVisibleKeys || allColumns.map((c) => c.key));
+  const [pickerOpen, setPickerOpen] = useState(false);
+  const pickerRef = useRef(null);
+
+  const columns = allColumns.filter((c) => forcedKeys.includes(c.key) || visibleKeys.includes(c.key));
   const [sortKey, setSortKey] = useState(columns[0]?.key);
   const [sortDir, setSortDir] = useState(1);
+
+  useEffect(() => {
+    const onClickOutside = (e) => {
+      if (pickerRef.current && !pickerRef.current.contains(e.target)) setPickerOpen(false);
+    };
+    document.addEventListener("mousedown", onClickOutside);
+    return () => document.removeEventListener("mousedown", onClickOutside);
+  }, []);
+
+  const toggleColumn = (key) => {
+    if (forcedKeys.includes(key)) return;
+    setVisibleKeys((prev) => (prev.includes(key) ? prev.filter((k) => k !== key) : [...prev, key]));
+  };
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
@@ -37,14 +57,72 @@ export function DataTable({ items, columns, onRowClick, searchPlaceholder = "Rec
 
   return (
     <div>
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "16px" }}>
-        <input
-          value={query}
-          onChange={(e) => setQuery(e.target.value)}
-          placeholder={searchPlaceholder}
-          style={{ padding: "10px 14px", borderRadius: "8px", border: "2px solid #28405C", fontSize: "14px", width: "320px" }}
-        />
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "16px", gap: "10px" }}>
+        <div style={{ display: "flex", alignItems: "center", gap: "10px", flex: 1 }}>
+          <input
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            placeholder={searchPlaceholder}
+            style={{ padding: "10px 14px", borderRadius: "8px", border: "2px solid #28405C", fontSize: "14px", width: "320px" }}
+          />
+          <div ref={pickerRef} style={{ position: "relative" }}>
+            <button
+              onClick={() => setPickerOpen((o) => !o)}
+              style={{ background: "none", border: "2px solid #28405C", borderRadius: "8px", padding: "10px 14px", color: "#F2F2E8", cursor: "pointer", fontSize: "13px" }}
+            >
+              Colonnes ▾
+            </button>
+            {pickerOpen && (
+              <div
+                style={{
+                  position: "absolute",
+                  top: "100%",
+                  left: 0,
+                  marginTop: "6px",
+                  background: "#16273D",
+                  border: "2px solid #28405C",
+                  borderRadius: "8px",
+                  padding: "10px",
+                  zIndex: 10,
+                  minWidth: "220px",
+                }}
+              >
+                {allColumns.map((col) => {
+                  const forced = forcedKeys.includes(col.key);
+                  const checked = forced || visibleKeys.includes(col.key);
+                  return (
+                    <label
+                      key={col.key}
+                      style={{ display: "flex", alignItems: "center", gap: "8px", padding: "6px 4px", fontSize: "13px", color: forced ? "#8792A6" : "#F2F2E8", cursor: forced ? "default" : "pointer" }}
+                    >
+                      <input type="checkbox" checked={checked} disabled={forced} onChange={() => toggleColumn(col.key)} />
+                      {col.label}
+                      {forced && <span style={{ fontSize: "10.5px", opacity: 0.7 }}>(toujours affiché)</span>}
+                    </label>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+        </div>
         <div style={{ fontSize: "13px", color: "#8792A6" }}>{filtered.length} résultat{filtered.length > 1 ? "s" : ""}</div>
+        {onAdd && (
+          <button
+            onClick={onAdd}
+            style={{
+              background: "#39FF66",
+              border: "none",
+              borderRadius: "8px",
+              padding: "10px 16px",
+              color: "#0D1B2A",
+              cursor: "pointer",
+              fontSize: "14px",
+              fontWeight: 800,
+            }}
+          >
+            +
+          </button>
+        )}
       </div>
       <table>
         <thead>
@@ -91,22 +169,28 @@ export function DataTable({ items, columns, onRowClick, searchPlaceholder = "Rec
 
 export function StatusBadge({ status }) {
   const config = {
-    certified: { label: "Certifié", bg: "#2E9E6B", color: "#fff" },
-    reviewed: { label: "Non certifié", bg: "#8A6D1D", color: "#fff" },
-    pending: { label: "En attente", bg: "#28405C", color: "#8792A6" },
-  }[status] || { label: "En attente", bg: "#28405C", color: "#8792A6" };
+    certified: { bg: "#39FF66", symbol: "✓", title: "Certifié" },
+    reviewed: { bg: "#FF3B4E", symbol: "✕", title: "Non certifié" },
+    pending: { bg: "#00C8FF", symbol: "–", title: "À vérifier" },
+  }[status] || { bg: "#00C8FF", symbol: "–", title: "À vérifier" };
   return (
     <span
+      title={config.title}
       style={{
-        fontSize: "11px",
-        fontWeight: 700,
-        padding: "2px 8px",
-        borderRadius: "999px",
+        display: "inline-flex",
+        alignItems: "center",
+        justifyContent: "center",
+        width: "22px",
+        height: "22px",
+        borderRadius: "50%",
         background: config.bg,
-        color: config.color,
+        color: "#fff",
+        fontSize: "12px",
+        fontWeight: 800,
+        lineHeight: 1,
       }}
     >
-      {config.label}
+      {config.symbol}
     </span>
   );
 }

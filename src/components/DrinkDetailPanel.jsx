@@ -1,24 +1,26 @@
 import React, { useState } from "react";
-import { updateDrink, deleteDrink } from "../data/sharedDirectories.js";
+import { updateDrink, deleteDrink, createDrink } from "../data/sharedDirectories.js";
 import { StatusSelector } from "./StatusSelector.jsx";
 
 const DRINK_TYPES = ["Bières", "Vins & bulles", "Spiritueux", "Cocktails / Mocktails", "Softs & eaux", "Boissons chaudes", "Snacks"];
 
+// drink === null → mode création (nouvelle fiche vierge)
 export function DrinkDetailPanel({ drink, onClose, onSaved }) {
+  const isNew = !drink;
   const [form, setForm] = useState({
-    name: drink.name || "",
-    type: drink.type || "",
-    brand: drink.brand || "",
-    brewery: drink.brewery || "",
-    nationality: drink.nationality || "",
-    abv: drink.abv ?? "",
-    kcalPer100ml: drink.kcalPer100ml ?? "",
-    volumeCl: drink.volumeCl ?? "",
-    glutenFree: !!drink.glutenFree,
-    bio: !!drink.bio,
-    avatarEmoji: drink.avatarEmoji || "",
+    name: drink?.name || "",
+    type: drink?.type || DRINK_TYPES[0],
+    brand: drink?.brand || "",
+    brewery: drink?.brewery || "",
+    nationality: drink?.nationality || "",
+    abv: drink?.abv ?? "",
+    kcalPer100ml: drink?.kcalPer100ml ?? "",
+    volumeCl: drink?.volumeCl ?? "",
+    glutenFree: !!drink?.glutenFree,
+    bio: !!drink?.bio,
+    avatarEmoji: drink?.avatarEmoji || "",
   });
-  const [status, setStatus] = useState(drink.status || "pending");
+  const [status, setStatus] = useState(drink?.status || (isNew ? "certified" : "pending"));
   const [saving, setSaving] = useState(false);
 
   const set = (field, value) => setForm((f) => ({ ...f, [field]: value }));
@@ -38,11 +40,19 @@ export function DrinkDetailPanel({ drink, onClose, onSaved }) {
   });
 
   const save = async () => {
+    if (!form.name.trim()) return;
     setSaving(true);
-    const patch = { ...buildPatch(), status };
-    await updateDrink(drink.id, patch);
-    setSaving(false);
-    onSaved({ ...drink, ...patch });
+    if (isNew) {
+      const id = `drink-${Date.now()}-${Math.floor(Math.random() * 10000)}`;
+      const created = await createDrink({ id, ...buildPatch(), status });
+      setSaving(false);
+      onSaved(created);
+    } else {
+      const patch = { ...buildPatch(), status };
+      await updateDrink(drink.id, patch);
+      setSaving(false);
+      onSaved({ ...drink, ...patch });
+    }
   };
 
   const remove = async () => {
@@ -58,7 +68,7 @@ export function DrinkDetailPanel({ drink, onClose, onSaved }) {
     <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.5)", display: "flex", justifyContent: "flex-end", zIndex: 100 }}>
       <div style={{ width: "480px", background: "#0D1B2A", height: "100%", overflowY: "auto", padding: "28px", borderLeft: "2px solid #28405C" }}>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "20px" }}>
-          <h2 style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "22px", margin: 0 }}>Vérifier le produit</h2>
+          <h2 style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "22px", margin: 0 }}>{isNew ? "Ajouter un produit" : "Vérifier le produit"}</h2>
           <button onClick={onClose} style={{ background: "none", border: "none", color: "#8792A6", fontSize: "20px", cursor: "pointer" }}>
             ✕
           </button>
@@ -134,14 +144,16 @@ export function DrinkDetailPanel({ drink, onClose, onSaved }) {
         <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
           <button
             onClick={save}
-            disabled={saving}
-            style={{ background: "#39FF66", border: "none", borderRadius: "8px", padding: "12px", fontWeight: 700, color: "#0D1B2A", cursor: "pointer" }}
+            disabled={saving || !form.name.trim()}
+            style={{ background: "#39FF66", border: "none", borderRadius: "8px", padding: "12px", fontWeight: 700, color: "#0D1B2A", cursor: "pointer", opacity: form.name.trim() ? 1 : 0.5 }}
           >
-            ✓ Enregistrer
+            ✓ {isNew ? "Créer le produit" : "Enregistrer"}
           </button>
-          <button onClick={remove} style={{ background: "none", border: "none", color: "#FF3B4E", fontSize: "13px", cursor: "pointer", marginTop: "8px" }}>
-            Supprimer ce produit
-          </button>
+          {!isNew && (
+            <button onClick={remove} style={{ background: "none", border: "none", color: "#FF3B4E", fontSize: "13px", cursor: "pointer", marginTop: "8px" }}>
+              Supprimer ce produit
+            </button>
+          )}
         </div>
       </div>
     </div>

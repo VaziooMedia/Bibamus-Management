@@ -5,11 +5,13 @@ import { VenueDetailPanel } from "./VenueDetailPanel.jsx";
 import { StatsCounterBar } from "./StatsCounterBar.jsx";
 import { PageTitle } from "./PageTitle.jsx";
 
-const columns = [
+const allColumns = [
   { key: "name", label: "Nom" },
   { key: "city", label: "Ville" },
   { key: "country", label: "Pays" },
   { key: "phone", label: "Téléphone" },
+  { key: "email", label: "Email" },
+  { key: "website", label: "Site web" },
   { key: "status", label: "Statut", render: (v) => <StatusBadge status={v.status} /> },
 ];
 
@@ -17,6 +19,7 @@ export function VenuesScreen() {
   const [venues, setVenues] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selected, setSelected] = useState(null);
+  const [creating, setCreating] = useState(false);
 
   const refresh = async () => {
     setLoading(true);
@@ -41,16 +44,29 @@ export function VenuesScreen() {
       ) : (
         <>
           <StatsCounterBar items={venues} showOwnerManaged />
-          <DataTable items={venues} columns={columns} onRowClick={setSelected} searchPlaceholder="Rechercher un établissement, une ville..." />
+          <DataTable
+            items={venues}
+            allColumns={allColumns}
+            forcedKeys={["name", "status"]}
+            defaultVisibleKeys={["name", "city", "country", "phone", "status"]}
+            onRowClick={setSelected}
+            onAdd={() => setCreating(true)}
+            searchPlaceholder="Rechercher un établissement, une ville..."
+          />
         </>
       )}
-      {selected && (
+      {(selected || creating) && (
         <VenueDetailPanel
           venue={selected}
-          onClose={() => setSelected(null)}
-          onSaved={(updated) => {
+          onClose={() => {
             setSelected(null);
-            if (updated) setVenues((prev) => prev.map((v) => (v.id === updated.id ? updated : v)));
+            setCreating(false);
+          }}
+          onSaved={(updated) => {
+            const wasCreating = creating;
+            setSelected(null);
+            setCreating(false);
+            if (updated) setVenues((prev) => (wasCreating ? [...prev, updated] : prev.map((v) => (v.id === updated.id ? updated : v))));
             else setVenues((prev) => prev.filter((v) => v.id !== selected.id));
           }}
         />
