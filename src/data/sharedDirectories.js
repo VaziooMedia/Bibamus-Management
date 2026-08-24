@@ -340,7 +340,27 @@ function rowToBrewery(row) {
   return {
     id: row.id,
     name: row.name,
+    subtitle: row.subtitle,
     country: row.country,
+    profilePhotoUrl: row.profile_photo_url,
+    coverPhotoUrl: row.cover_photo_url,
+    streetName: row.street_name,
+    streetNumber: row.street_number,
+    postalCode: row.postal_code,
+    city: row.city,
+    village: row.village,
+    lat: row.lat,
+    lng: row.lng,
+    phone: row.phone,
+    email: row.email,
+    website: row.website,
+    googleUrl: row.google_url,
+    facebookUrl: row.facebook_url,
+    instagramUrl: row.instagram_url,
+    tiktokUrl: row.tiktok_url,
+    snapchatUrl: row.snapchat_url,
+    producerTypes: row.producer_types || [],
+    producerProfiles: row.producer_profiles || [],
     status: row.status,
     ownerManaged: !!row.owner_managed,
     submittedBy: row.submitted_by,
@@ -352,7 +372,27 @@ function rowToBrewery(row) {
 function breweryToRow(b, partial = false) {
   const row = {
     name: b.name,
+    subtitle: b.subtitle,
     country: b.country,
+    profile_photo_url: b.profilePhotoUrl,
+    cover_photo_url: b.coverPhotoUrl,
+    street_name: b.streetName,
+    street_number: b.streetNumber,
+    postal_code: b.postalCode,
+    city: b.city,
+    village: b.village,
+    lat: b.lat,
+    lng: b.lng,
+    phone: b.phone,
+    email: b.email,
+    website: b.website,
+    google_url: b.googleUrl,
+    facebook_url: b.facebookUrl,
+    instagram_url: b.instagramUrl,
+    tiktok_url: b.tiktokUrl,
+    snapchat_url: b.snapchatUrl,
+    producer_types: b.producerTypes,
+    producer_profiles: b.producerProfiles,
     status: b.status,
     owner_managed: b.ownerManaged,
     submitted_by: b.submittedBy,
@@ -362,6 +402,19 @@ function breweryToRow(b, partial = false) {
   if (!partial) row.id = b.id;
   Object.keys(row).forEach((k) => row[k] === undefined && delete row[k]);
   return row;
+}
+
+export async function uploadBreweryPhoto(breweryId, file, kind) {
+  const dims = kind === "cover" ? [1200, 400] : [400, 400];
+  const blob = await resizeImageTo(file, dims[0], dims[1]);
+  const path = `${breweryId}-${kind}-${Date.now()}.jpg`;
+  const { error: uploadError } = await supabase.storage.from("brewery-photos").upload(path, blob, { contentType: "image/jpeg", upsert: true });
+  if (uploadError) {
+    console.error("uploadBreweryPhoto:", uploadError);
+    return null;
+  }
+  const { data } = supabase.storage.from("brewery-photos").getPublicUrl(path);
+  return data.publicUrl;
 }
 
 /* ---------------- MARQUES ---------------- */

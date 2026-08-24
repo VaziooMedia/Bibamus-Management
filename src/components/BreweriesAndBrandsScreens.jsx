@@ -2,12 +2,16 @@ import React, { useState, useEffect } from "react";
 import { loadBreweriesDirectory, loadBrandsDirectory } from "../data/sharedDirectories.js";
 import { DataTable, StatusBadge } from "./DataTable.jsx";
 import { SimpleEntityPanel } from "./SimpleEntityPanel.jsx";
+import { BreweryDetailPanel } from "./BreweryDetailPanel.jsx";
 import { StatsCounterBar } from "./StatsCounterBar.jsx";
 import { PageTitle } from "./PageTitle.jsx";
 
 const breweryColumns = [
   { key: "name", label: "Nom" },
+  { key: "city", label: "Ville" },
   { key: "country", label: "Pays" },
+  { key: "phone", label: "Téléphone" },
+  { key: "producerTypes", label: "Type", render: (b) => (b.producerTypes || []).join(", ") },
   { key: "status", label: "Statut", render: (b) => <StatusBadge status={b.status} /> },
 ];
 
@@ -49,7 +53,7 @@ export function BreweriesScreen() {
             items={items}
             allColumns={breweryColumns}
             forcedKeys={["name", "status"]}
-            defaultVisibleKeys={["name", "country", "status"]}
+            defaultVisibleKeys={["name", "city", "country", "status"]}
             onRowClick={setSelected}
             onAdd={() => setCreating(true)}
             searchPlaceholder="Rechercher un producteur..."
@@ -57,9 +61,8 @@ export function BreweriesScreen() {
         </>
       )}
       {(selected || creating) && (
-        <SimpleEntityPanel
-          entity={selected}
-          kind="brewery"
+        <BreweryDetailPanel
+          brewery={selected}
           onClose={() => {
             setSelected(null);
             setCreating(false);
@@ -120,7 +123,6 @@ export function BrandsScreen() {
       {(selected || creating) && (
         <SimpleEntityPanel
           entity={selected}
-          kind="brand"
           onClose={() => {
             setSelected(null);
             setCreating(false);

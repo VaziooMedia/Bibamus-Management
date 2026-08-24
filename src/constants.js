@@ -134,3 +134,26 @@ export const PHONE_PREFIXES = {
   "Vénézuéla": "+58",
   "Autre": "",
 };
+
+export const PRODUCER_TYPES = [
+  "Brasserie",
+  "Micro-brasserie",
+  "Distillerie",
+  "Cidrerie",
+  "Domaine viticole",
+  "Hydromellerie",
+  "Torréfacteur",
+  "Boissons sans alcool",
+  "Alimentaire",
+];
+
+export const PRODUCER_PROFILES = [
+  "Micro-producteur",
+  "Artisanal",
+  "Local",
+  "Indépendant",
+  "Industriel",
+  "Groupe",
+  "Multinationale",
+  "Coopérative",
+];
