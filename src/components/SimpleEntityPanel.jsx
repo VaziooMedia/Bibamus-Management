@@ -1,14 +1,16 @@
 import React, { useState } from "react";
 import { updateBrewery, deleteBrewery, updateBrand, deleteBrand } from "../data/sharedDirectories.js";
+import { StatusSelector } from "./StatusSelector.jsx";
 
 export function SimpleEntityPanel({ entity, kind, onClose, onSaved }) {
   const isBrewery = kind === "brewery";
   const [form, setForm] = useState({ name: entity.name || "", country: entity.country || "" });
+  const [status, setStatus] = useState(entity.status || "pending");
   const [saving, setSaving] = useState(false);
 
-  const save = async (extraStatus) => {
+  const save = async () => {
     setSaving(true);
-    const patch = { name: form.name.trim(), ...(isBrewery ? { country: form.country.trim() } : {}), ...(extraStatus ? { status: extraStatus } : {}) };
+    const patch = { name: form.name.trim(), ...(isBrewery ? { country: form.country.trim() } : {}), status };
     if (isBrewery) await updateBrewery(entity.id, patch);
     else await updateBrand(entity.id, patch);
     setSaving(false);
@@ -29,7 +31,7 @@ export function SimpleEntityPanel({ entity, kind, onClose, onSaved }) {
     <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.5)", display: "flex", justifyContent: "flex-end", zIndex: 100 }}>
       <div style={{ width: "420px", background: "#0D1B2A", height: "100%", overflowY: "auto", padding: "28px", borderLeft: "2px solid #28405C" }}>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "20px" }}>
-          <h2 style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "22px", margin: 0 }}>{isBrewery ? "Vérifier la brasserie" : "Vérifier la marque"}</h2>
+          <h2 style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "22px", margin: 0 }}>{isBrewery ? "Vérifier le producteur" : "Vérifier la marque"}</h2>
           <button onClick={onClose} style={{ background: "none", border: "none", color: "#8792A6", fontSize: "20px", cursor: "pointer" }}>
             ✕
           </button>
@@ -45,30 +47,18 @@ export function SimpleEntityPanel({ entity, kind, onClose, onSaved }) {
           </>
         )}
 
+        <label style={labelStyle}>Statut</label>
+        <div style={{ marginBottom: "20px" }}>
+          <StatusSelector value={status} onChange={setStatus} />
+        </div>
+
         <div style={{ display: "flex", flexDirection: "column", gap: "10px", marginTop: "10px" }}>
-          {entity.status !== "certified" ? (
-            <button
-              onClick={() => save("certified")}
-              disabled={saving}
-              style={{ background: "#39FF66", border: "none", borderRadius: "8px", padding: "12px", fontWeight: 700, color: "#0D1B2A", cursor: "pointer" }}
-            >
-              ✓ Enregistrer et certifier
-            </button>
-          ) : (
-            <button
-              onClick={() => save("pending")}
-              disabled={saving}
-              style={{ background: "none", border: "2px solid #28405C", borderRadius: "8px", padding: "12px", fontWeight: 700, color: "#F2F2E8", cursor: "pointer" }}
-            >
-              Enregistrer et retirer la certification
-            </button>
-          )}
           <button
-            onClick={() => save()}
+            onClick={save}
             disabled={saving}
-            style={{ background: "#16273D", border: "2px solid #28405C", borderRadius: "8px", padding: "12px", fontWeight: 700, color: "#F2F2E8", cursor: "pointer" }}
+            style={{ background: "#39FF66", border: "none", borderRadius: "8px", padding: "12px", fontWeight: 700, color: "#0D1B2A", cursor: "pointer" }}
           >
-            Enregistrer sans changer la certification
+            ✓ Enregistrer
           </button>
           <button onClick={remove} style={{ background: "none", border: "none", color: "#FF3B4E", fontSize: "13px", cursor: "pointer", marginTop: "8px" }}>
             Supprimer

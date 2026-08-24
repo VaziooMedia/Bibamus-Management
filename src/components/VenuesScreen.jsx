@@ -2,6 +2,8 @@ import React, { useState, useEffect } from "react";
 import { loadPublicVenues } from "../data/sharedDirectories.js";
 import { DataTable, StatusBadge } from "./DataTable.jsx";
 import { VenueDetailPanel } from "./VenueDetailPanel.jsx";
+import { StatsCounterBar } from "./StatsCounterBar.jsx";
+import { PageTitle } from "./PageTitle.jsx";
 
 const columns = [
   { key: "name", label: "Nom" },
@@ -29,7 +31,7 @@ export function VenuesScreen() {
   return (
     <div>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "20px" }}>
-        <h1 style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "26px", margin: 0 }}>Établissements</h1>
+        <PageTitle>Établissements</PageTitle>
         <button onClick={refresh} style={{ background: "none", border: "2px solid #28405C", borderRadius: "8px", padding: "8px 14px", color: "#F2F2E8", cursor: "pointer", fontSize: "13px" }}>
           ⟳ Rafraîchir
         </button>
@@ -37,7 +39,10 @@ export function VenuesScreen() {
       {loading ? (
         <p style={{ color: "#8792A6" }}>Chargement...</p>
       ) : (
-        <DataTable items={venues} columns={columns} onRowClick={setSelected} searchPlaceholder="Rechercher un établissement, une ville..." />
+        <>
+          <StatsCounterBar items={venues} showOwnerManaged />
+          <DataTable items={venues} columns={columns} onRowClick={setSelected} searchPlaceholder="Rechercher un établissement, une ville..." />
+        </>
       )}
       {selected && (
         <VenueDetailPanel

@@ -90,7 +90,11 @@ export function DataTable({ items, columns, onRowClick, searchPlaceholder = "Rec
 }
 
 export function StatusBadge({ status }) {
-  const certified = status === "certified";
+  const config = {
+    certified: { label: "Certifié", bg: "#2E9E6B", color: "#fff" },
+    reviewed: { label: "Non certifié", bg: "#8A6D1D", color: "#fff" },
+    pending: { label: "En attente", bg: "#28405C", color: "#8792A6" },
+  }[status] || { label: "En attente", bg: "#28405C", color: "#8792A6" };
   return (
     <span
       style={{
@@ -98,11 +102,11 @@ export function StatusBadge({ status }) {
         fontWeight: 700,
         padding: "2px 8px",
         borderRadius: "999px",
-        background: certified ? "#2E9E6B" : "#28405C",
-        color: certified ? "#fff" : "#8792A6",
+        background: config.bg,
+        color: config.color,
       }}
     >
-      {certified ? "Certifié" : "En attente"}
+      {config.label}
     </span>
   );
 }

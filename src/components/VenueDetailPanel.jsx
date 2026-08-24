@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { updatePublicVenue, deletePublicVenue } from "../data/sharedDirectories.js";
+import { StatusSelector } from "./StatusSelector.jsx";
 
 export function VenueDetailPanel({ venue, onClose, onSaved }) {
   const [form, setForm] = useState({
@@ -13,11 +14,12 @@ export function VenueDetailPanel({ venue, onClose, onSaved }) {
     email: venue.email || "",
     website: venue.website || "",
   });
+  const [status, setStatus] = useState(venue.status || "pending");
   const [saving, setSaving] = useState(false);
 
   const set = (field, value) => setForm((f) => ({ ...f, [field]: value }));
 
-  const save = async (extraStatus) => {
+  const save = async () => {
     setSaving(true);
     const patch = {
       name: form.name.trim(),
@@ -29,7 +31,7 @@ export function VenueDetailPanel({ venue, onClose, onSaved }) {
       phone: form.phone.trim(),
       email: form.email.trim(),
       website: form.website.trim(),
-      ...(extraStatus ? { status: extraStatus } : {}),
+      status,
     };
     await updatePublicVenue(venue.id, patch);
     setSaving(false);
@@ -97,30 +99,18 @@ export function VenueDetailPanel({ venue, onClose, onSaved }) {
         <label style={labelStyle}>Site web</label>
         <input value={form.website} onChange={(e) => set("website", e.target.value)} style={{ ...fieldStyle, marginBottom: "14px" }} />
 
+        <label style={labelStyle}>Statut</label>
+        <div style={{ marginBottom: "20px" }}>
+          <StatusSelector value={status} onChange={setStatus} />
+        </div>
+
         <div style={{ display: "flex", flexDirection: "column", gap: "10px", marginTop: "10px" }}>
-          {venue.status !== "certified" ? (
-            <button
-              onClick={() => save("certified")}
-              disabled={saving}
-              style={{ background: "#39FF66", border: "none", borderRadius: "8px", padding: "12px", fontWeight: 700, color: "#0D1B2A", cursor: "pointer" }}
-            >
-              ✓ Enregistrer et certifier
-            </button>
-          ) : (
-            <button
-              onClick={() => save("pending")}
-              disabled={saving}
-              style={{ background: "none", border: "2px solid #28405C", borderRadius: "8px", padding: "12px", fontWeight: 700, color: "#F2F2E8", cursor: "pointer" }}
-            >
-              Enregistrer et retirer la certification
-            </button>
-          )}
           <button
-            onClick={() => save()}
+            onClick={save}
             disabled={saving}
-            style={{ background: "#16273D", border: "2px solid #28405C", borderRadius: "8px", padding: "12px", fontWeight: 700, color: "#F2F2E8", cursor: "pointer" }}
+            style={{ background: "#39FF66", border: "none", borderRadius: "8px", padding: "12px", fontWeight: 700, color: "#0D1B2A", cursor: "pointer" }}
           >
-            Enregistrer sans changer la certification
+            ✓ Enregistrer
           </button>
           <button onClick={remove} style={{ background: "none", border: "none", color: "#FF3B4E", fontSize: "13px", cursor: "pointer", marginTop: "8px" }}>
             Supprimer

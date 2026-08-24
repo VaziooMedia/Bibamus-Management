@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { loadPublicVenues, loadDrinksDirectory, loadBreweriesDirectory, loadBrandsDirectory } from "../data/sharedDirectories.js";
+import { PageTitle } from "./PageTitle.jsx";
 
 function StatCard({ label, value, sub }) {
   return (
@@ -35,11 +36,12 @@ export function Dashboard() {
 
   return (
     <div>
-      <h1 style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "26px", marginBottom: "20px" }}>Tableau de bord</h1>
+      <PageTitle>Tableau de bord</PageTitle>
+      <div style={{ height: "20px" }} />
       <div style={{ display: "flex", gap: "16px", marginBottom: "32px" }}>
         <StatCard label="Établissements" value={stats.venues.total} sub={`${stats.venues.pending} en attente de vérification`} />
         <StatCard label="Produits" value={stats.drinks.total} sub={`${stats.drinks.pending} en attente de vérification`} />
-        <StatCard label="Brasseries" value={stats.breweries.total} sub={`${stats.breweries.pending} en attente`} />
+        <StatCard label="Producteurs" value={stats.breweries.total} sub={`${stats.breweries.pending} en attente`} />
         <StatCard label="Marques" value={stats.brands.total} sub={`${stats.brands.pending} en attente`} />
       </div>
       <div style={{ background: "#16273D", borderRadius: "12px", padding: "20px", color: "#8792A6", fontSize: "13.5px" }}>

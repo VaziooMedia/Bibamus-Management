@@ -6,6 +6,9 @@ import { VenuesScreen } from "./components/VenuesScreen.jsx";
 import { DrinksScreen } from "./components/DrinksScreen.jsx";
 import { BreweriesScreen, BrandsScreen } from "./components/BreweriesAndBrandsScreens.jsx";
 import { ComingSoon } from "./components/ComingSoon.jsx";
+import { DataBaseOverviewScreen } from "./components/DataBaseOverviewScreen.jsx";
+
+const SUPABASE_PROJECT_URL = "https://supabase.com/dashboard/project/rkmmrzkqzqpntgiguajz";
 
 export default function App() {
   const [unlocked, setUnlocked] = useState(() => sessionStorage.getItem("bibamus-admin-unlocked") === "true");
@@ -25,6 +28,7 @@ export default function App() {
   return (
     <Layout current={screen} onNavigate={setScreen}>
       {screen === "dashboard" && <Dashboard />}
+      {screen === "database" && <DataBaseOverviewScreen onNavigate={setScreen} supabaseUrl={SUPABASE_PROJECT_URL} />}
       {screen === "venues" && <VenuesScreen />}
       {screen === "drinks" && <DrinksScreen />}
       {screen === "breweries" && <BreweriesScreen />}

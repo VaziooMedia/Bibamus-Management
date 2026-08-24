@@ -2,6 +2,8 @@ import React, { useState, useEffect } from "react";
 import { loadDrinksDirectory } from "../data/sharedDirectories.js";
 import { DataTable, StatusBadge } from "./DataTable.jsx";
 import { DrinkDetailPanel } from "./DrinkDetailPanel.jsx";
+import { StatsCounterBar } from "./StatsCounterBar.jsx";
+import { PageTitle } from "./PageTitle.jsx";
 
 const columns = [
   { key: "name", label: "Nom" },
@@ -30,7 +32,7 @@ export function DrinksScreen() {
   return (
     <div>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "20px" }}>
-        <h1 style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "26px", margin: 0 }}>Produits</h1>
+        <PageTitle>Produits</PageTitle>
         <button onClick={refresh} style={{ background: "none", border: "2px solid #28405C", borderRadius: "8px", padding: "8px 14px", color: "#F2F2E8", cursor: "pointer", fontSize: "13px" }}>
           ⟳ Rafraîchir
         </button>
@@ -38,7 +40,10 @@ export function DrinksScreen() {
       {loading ? (
         <p style={{ color: "#8792A6" }}>Chargement...</p>
       ) : (
-        <DataTable items={drinks} columns={columns} onRowClick={setSelected} searchPlaceholder="Rechercher un produit, une marque, une brasserie..." />
+        <>
+          <StatsCounterBar items={drinks} />
+          <DataTable items={drinks} columns={columns} onRowClick={setSelected} searchPlaceholder="Rechercher un produit, une marque, une brasserie..." />
+        </>
       )}
       {selected && (
         <DrinkDetailPanel

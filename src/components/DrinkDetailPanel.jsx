@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { updateDrink, deleteDrink } from "../data/sharedDirectories.js";
+import { StatusSelector } from "./StatusSelector.jsx";
 
 const DRINK_TYPES = ["Bières", "Vins & bulles", "Spiritueux", "Cocktails / Mocktails", "Softs & eaux", "Boissons chaudes", "Snacks"];
 
@@ -17,6 +18,7 @@ export function DrinkDetailPanel({ drink, onClose, onSaved }) {
     bio: !!drink.bio,
     avatarEmoji: drink.avatarEmoji || "",
   });
+  const [status, setStatus] = useState(drink.status || "pending");
   const [saving, setSaving] = useState(false);
 
   const set = (field, value) => setForm((f) => ({ ...f, [field]: value }));
@@ -35,9 +37,9 @@ export function DrinkDetailPanel({ drink, onClose, onSaved }) {
     avatarEmoji: form.avatarEmoji.trim(),
   });
 
-  const save = async (extra = {}) => {
+  const save = async () => {
     setSaving(true);
-    const patch = { ...buildPatch(), ...extra };
+    const patch = { ...buildPatch(), status };
     await updateDrink(drink.id, patch);
     setSaving(false);
     onSaved({ ...drink, ...patch });
@@ -124,30 +126,18 @@ export function DrinkDetailPanel({ drink, onClose, onSaved }) {
           </label>
         </div>
 
+        <label style={labelStyle}>Statut</label>
+        <div style={{ marginBottom: "20px" }}>
+          <StatusSelector value={status} onChange={setStatus} />
+        </div>
+
         <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
-          {drink.status !== "certified" ? (
-            <button
-              onClick={() => save({ status: "certified" })}
-              disabled={saving}
-              style={{ background: "#39FF66", border: "none", borderRadius: "8px", padding: "12px", fontWeight: 700, color: "#0D1B2A", cursor: "pointer" }}
-            >
-              ✓ Enregistrer et certifier
-            </button>
-          ) : (
-            <button
-              onClick={() => save({ status: "pending" })}
-              disabled={saving}
-              style={{ background: "none", border: "2px solid #28405C", borderRadius: "8px", padding: "12px", fontWeight: 700, color: "#F2F2E8", cursor: "pointer" }}
-            >
-              Enregistrer et retirer la certification
-            </button>
-          )}
           <button
-            onClick={() => save()}
+            onClick={save}
             disabled={saving}
-            style={{ background: "#16273D", border: "2px solid #28405C", borderRadius: "8px", padding: "12px", fontWeight: 700, color: "#F2F2E8", cursor: "pointer" }}
+            style={{ background: "#39FF66", border: "none", borderRadius: "8px", padding: "12px", fontWeight: 700, color: "#0D1B2A", cursor: "pointer" }}
           >
-            Enregistrer sans changer la certification
+            ✓ Enregistrer
           </button>
           <button onClick={remove} style={{ background: "none", border: "none", color: "#FF3B4E", fontSize: "13px", cursor: "pointer", marginTop: "8px" }}>
             Supprimer ce produit
