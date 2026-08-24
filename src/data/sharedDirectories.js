@@ -451,6 +451,21 @@ function rowToBrand(row) {
   return {
     id: row.id,
     name: row.name,
+    alternateName: row.alternate_name,
+    slogan: row.slogan,
+    logoUrl: row.logo_url,
+    foundedYear: row.founded_year,
+    originCountry: row.origin_country,
+    originCity: row.origin_city,
+    classification: row.classification,
+    brandTypes: row.brand_types || [],
+    website: row.website,
+    facebookUrl: row.facebook_url,
+    instagramUrl: row.instagram_url,
+    tiktokUrl: row.tiktok_url,
+    snapchatUrl: row.snapchat_url,
+    currentProducer: row.current_producer,
+    brandOwner: row.brand_owner,
     status: row.status,
     ownerManaged: !!row.owner_managed,
     submittedBy: row.submitted_by,
@@ -462,6 +477,21 @@ function rowToBrand(row) {
 function brandToRow(b, partial = false) {
   const row = {
     name: b.name,
+    alternate_name: b.alternateName,
+    slogan: b.slogan,
+    logo_url: b.logoUrl,
+    founded_year: b.foundedYear,
+    origin_country: b.originCountry,
+    origin_city: b.originCity,
+    classification: b.classification,
+    brand_types: b.brandTypes,
+    website: b.website,
+    facebook_url: b.facebookUrl,
+    instagram_url: b.instagramUrl,
+    tiktok_url: b.tiktokUrl,
+    snapchat_url: b.snapchatUrl,
+    current_producer: b.currentProducer,
+    brand_owner: b.brandOwner,
     status: b.status,
     owner_managed: b.ownerManaged,
     submitted_by: b.submittedBy,
@@ -471,4 +501,16 @@ function brandToRow(b, partial = false) {
   if (!partial) row.id = b.id;
   Object.keys(row).forEach((k) => row[k] === undefined && delete row[k]);
   return row;
+}
+
+export async function uploadBrandLogo(brandId, file) {
+  const blob = await resizeImageTo(file, 400, 400);
+  const path = `${brandId}-logo-${Date.now()}.jpg`;
+  const { error: uploadError } = await supabase.storage.from("brand-logos").upload(path, blob, { contentType: "image/jpeg", upsert: true });
+  if (uploadError) {
+    console.error("uploadBrandLogo:", uploadError);
+    return null;
+  }
+  const { data } = supabase.storage.from("brand-logos").getPublicUrl(path);
+  return data.publicUrl;
 }

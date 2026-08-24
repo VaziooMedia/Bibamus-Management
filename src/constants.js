@@ -157,3 +157,20 @@ export const PRODUCER_PROFILES = [
   "Multinationale",
   "Coopérative",
 ];
+
+export const BRAND_CLASSIFICATIONS = [
+  "Bière",
+  "Vin",
+  "Spiritueux",
+  "Cidre",
+  "Soft / Soda",
+  "Eau",
+  "Boisson énergétique",
+  "Café",
+  "Thé",
+  "Snack salé",
+  "Snack sucré",
+  "Autre",
+];
+
+export const BRAND_TYPES = ["Artisanale", "Locale", "Régionale", "Nationale", "Internationale"];

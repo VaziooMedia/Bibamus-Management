@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from "react";
 import { loadBreweriesDirectory, loadBrandsDirectory } from "../data/sharedDirectories.js";
 import { DataTable, StatusBadge } from "./DataTable.jsx";
-import { SimpleEntityPanel } from "./SimpleEntityPanel.jsx";
 import { BreweryDetailPanel } from "./BreweryDetailPanel.jsx";
+import { BrandDetailPanel } from "./BrandDetailPanel.jsx";
 import { StatsCounterBar } from "./StatsCounterBar.jsx";
 import { PageTitle } from "./PageTitle.jsx";
 
@@ -17,6 +17,9 @@ const breweryColumns = [
 
 const brandColumns = [
   { key: "name", label: "Nom" },
+  { key: "classification", label: "Classification" },
+  { key: "originCountry", label: "Origine" },
+  { key: "foundedYear", label: "Créée en" },
   { key: "status", label: "Statut", render: (b) => <StatusBadge status={b.status} /> },
 ];
 
@@ -113,7 +116,7 @@ export function BrandsScreen() {
             items={items}
             allColumns={brandColumns}
             forcedKeys={["name", "status"]}
-            defaultVisibleKeys={["name", "status"]}
+            defaultVisibleKeys={["name", "classification", "originCountry", "status"]}
             onRowClick={setSelected}
             onAdd={() => setCreating(true)}
             searchPlaceholder="Rechercher une marque..."
@@ -121,8 +124,8 @@ export function BrandsScreen() {
         </>
       )}
       {(selected || creating) && (
-        <SimpleEntityPanel
-          entity={selected}
+        <BrandDetailPanel
+          brand={selected}
           onClose={() => {
             setSelected(null);
             setCreating(false);
