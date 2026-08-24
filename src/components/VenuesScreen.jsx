@@ -58,6 +58,7 @@ export function VenuesScreen() {
       {(selected || creating) && (
         <VenueDetailPanel
           venue={selected}
+          onManageMenu={() => alert("La gestion de la carte boissons depuis cette plateforme arrive prochainement — utilisable pour l'instant depuis l'app elle-même.")}
           onClose={() => {
             setSelected(null);
             setCreating(false);
