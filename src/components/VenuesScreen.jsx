@@ -4,11 +4,18 @@ import { DataTable, StatusBadge } from "./DataTable.jsx";
 import { VenueDetailPanel } from "./VenueDetailPanel.jsx";
 import { StatsCounterBar } from "./StatsCounterBar.jsx";
 import { PageTitle } from "./PageTitle.jsx";
+import { COUNTRIES } from "../constants.js";
+
+// Les données stockent désormais des codes techniques (ex. "belgique") — le tableau doit
+// résoudre le libellé français pour l'affichage.
+const countryMap = {};
+COUNTRIES.forEach((c) => (countryMap[c.code] = c.fr));
+const countryLabel = (code) => countryMap[code] || code || "—";
 
 const allColumns = [
   { key: "name", label: "Nom" },
   { key: "city", label: "Ville" },
-  { key: "country", label: "Pays" },
+  { key: "country", label: "Pays", render: (v) => countryLabel(v.country) },
   { key: "phone", label: "Téléphone" },
   { key: "email", label: "Email" },
   { key: "website", label: "Site web" },

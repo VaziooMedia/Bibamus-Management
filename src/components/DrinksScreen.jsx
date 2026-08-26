@@ -2,20 +2,34 @@ import React, { useState, useEffect, useCallback } from "react";
 import { loadDrinksPage, countDrinks, countDrinksByType } from "../data/sharedDirectories.js";
 import { ServerDataTable } from "./ServerDataTable.jsx";
 import { StatusBadge } from "./DataTable.jsx";
-import { DrinkDetailPanel } from "./DrinkDetailPanel.jsx";
+import { DrinkDetailPanel, DRINK_TYPES, BEER_CIDER_SUBTYPES } from "./DrinkDetailPanel.jsx";
 import { StatsCounterBar } from "./StatsCounterBar.jsx";
 import { ProductCategoryBar } from "./ProductCategoryBar.jsx";
 import { PageTitle } from "./PageTitle.jsx";
+import { COUNTRIES } from "../constants.js";
+import { BEER_CIDER_COMMERCIAL_STATUSES } from "../data/beerCiderStyles.js";
+
+// Les données stockent désormais des codes techniques (ex. "bieres_cidres") — le tableau doit
+// résoudre le libellé français pour l'affichage, la fiche détaillée s'en charge déjà elle-même.
+const labelFromList = (list) => {
+  const map = {};
+  list.forEach((o) => (map[o.code] = o.fr));
+  return (code) => map[code] || code || "—";
+};
+const typeLabel = labelFromList(DRINK_TYPES);
+const subtypeLabel = labelFromList(BEER_CIDER_SUBTYPES);
+const countryLabel = labelFromList(COUNTRIES);
+const productStatusLabel = labelFromList(BEER_CIDER_COMMERCIAL_STATUSES);
 
 const allColumns = [
   { key: "name", label: "Nom" },
-  { key: "type", label: "Type" },
-  { key: "beverageSubtype", label: "Bière/Cidre" },
+  { key: "type", label: "Type", render: (d) => typeLabel(d.type) },
+  { key: "beverageSubtype", label: "Bière/Cidre", render: (d) => subtypeLabel(d.beverageSubtype) },
   { key: "brandName", label: "Marque" },
-  { key: "nationality", label: "Origine" },
+  { key: "nationality", label: "Origine", render: (d) => countryLabel(d.nationality) },
   { key: "abv", label: "Degré", render: (d) => (d.abv != null ? `${d.abv}%` : "—") },
   { key: "kcalPer100ml", label: "Kcal/100ml" },
-  { key: "productStatus", label: "Statut produit" },
+  { key: "productStatus", label: "Statut produit", render: (d) => productStatusLabel(d.productStatus) },
   { key: "status", label: "Statut", render: (d) => <StatusBadge status={d.status} /> },
 ];
 

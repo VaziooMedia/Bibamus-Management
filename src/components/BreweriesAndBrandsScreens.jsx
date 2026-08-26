@@ -5,20 +5,32 @@ import { BreweryDetailPanel } from "./BreweryDetailPanel.jsx";
 import { BrandDetailPanel } from "./BrandDetailPanel.jsx";
 import { StatsCounterBar } from "./StatsCounterBar.jsx";
 import { PageTitle } from "./PageTitle.jsx";
+import { COUNTRIES, PRODUCER_TYPES, BRAND_CLASSIFICATIONS } from "../constants.js";
+
+// Les données stockent désormais des codes techniques — les tableaux doivent résoudre le
+// libellé français pour l'affichage.
+const labelFromList = (list) => {
+  const map = {};
+  list.forEach((o) => (map[o.code] = o.fr));
+  return (code) => map[code] || code || "—";
+};
+const countryLabel = labelFromList(COUNTRIES);
+const producerTypeLabel = labelFromList(PRODUCER_TYPES);
+const classificationLabel = labelFromList(BRAND_CLASSIFICATIONS);
 
 const breweryColumns = [
   { key: "name", label: "Nom" },
   { key: "city", label: "Ville" },
-  { key: "country", label: "Pays" },
+  { key: "country", label: "Pays", render: (b) => countryLabel(b.country) },
   { key: "phone", label: "Téléphone" },
-  { key: "producerTypes", label: "Type", render: (b) => (b.producerTypes || []).join(", ") },
+  { key: "producerTypes", label: "Type", render: (b) => (b.producerTypes || []).map(producerTypeLabel).join(", ") },
   { key: "status", label: "Statut", render: (b) => <StatusBadge status={b.status} /> },
 ];
 
 const brandColumns = [
   { key: "name", label: "Nom" },
-  { key: "classification", label: "Classification" },
-  { key: "originCountry", label: "Origine" },
+  { key: "classification", label: "Classification", render: (b) => classificationLabel(b.classification) },
+  { key: "originCountry", label: "Origine", render: (b) => countryLabel(b.originCountry) },
   { key: "foundedYear", label: "Créée en" },
   { key: "status", label: "Statut", render: (b) => <StatusBadge status={b.status} /> },
 ];

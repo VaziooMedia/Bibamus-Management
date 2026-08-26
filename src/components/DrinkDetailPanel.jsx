@@ -32,7 +32,7 @@ import {
   VERIFICATION_STATUSES,
 } from "../data/beerCiderStyles.js";
 
-const DRINK_TYPES = [
+export const DRINK_TYPES = [
   { code: "bieres_cidres", fr: "Bières & Cidres" },
   { code: "vins_bulles", fr: "Vins & Bulles" },
   { code: "spiritueux", fr: "Spiritueux" },
@@ -42,7 +42,7 @@ const DRINK_TYPES = [
   { code: "snacks", fr: "Snacks" },
   { code: "generiques", fr: "Génériques" },
 ];
-const BEER_CIDER_SUBTYPES = [
+export const BEER_CIDER_SUBTYPES = [
   { code: "biere", fr: "Bière" },
   { code: "cidre", fr: "Cidre" },
   { code: "poire", fr: "Poiré" },
