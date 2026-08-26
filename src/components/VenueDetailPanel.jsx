@@ -49,7 +49,7 @@ export function VenueDetailPanel({ venue, onClose, onSaved, onManageMenu }) {
     postalCode: venue?.postalCode || "",
     city: venue?.city || "",
     village: venue?.village || "",
-    country: venue?.country || "Belgique",
+    country: venue?.country || "belgique",
     lat: venue?.lat ?? "",
     lng: venue?.lng ?? "",
     phone: venue?.phone || "",
@@ -266,8 +266,8 @@ export function VenueDetailPanel({ venue, onClose, onSaved, onManageMenu }) {
             <label style={labelStyle}>Pays</label>
             <select value={form.country} onChange={(e) => set("country", e.target.value)} style={fieldStyle}>
               {COUNTRIES.map((c) => (
-                <option key={c} value={c}>
-                  {c}
+                <option key={c.code} value={c.code}>
+                  {c.fr}
                 </option>
               ))}
             </select>
@@ -335,11 +335,11 @@ export function VenueDetailPanel({ venue, onClose, onSaved, onManageMenu }) {
         <label style={labelStyle}>Moyens de paiement acceptés</label>
         <div style={{ display: "flex", flexWrap: "wrap", gap: "8px", marginBottom: "14px" }}>
           {PAYMENT_METHODS.map((m) => {
-            const checked = form.acceptedPaymentMethods.includes(m);
+            const checked = form.acceptedPaymentMethods.includes(m.code);
             return (
               <button
-                key={m}
-                onClick={() => togglePaymentMethod(m)}
+                key={m.code}
+                onClick={() => togglePaymentMethod(m.code)}
                 style={{
                   background: checked ? "#39FF66" : "none",
                   border: `2px solid ${checked ? "#39FF66" : "#28405C"}`,
@@ -351,7 +351,7 @@ export function VenueDetailPanel({ venue, onClose, onSaved, onManageMenu }) {
                   cursor: "pointer",
                 }}
               >
-                {m}
+                {m.fr}
               </button>
             );
           })}
@@ -388,11 +388,11 @@ export function VenueDetailPanel({ venue, onClose, onSaved, onManageMenu }) {
         <label style={labelStyle}>Type d'établissement (plusieurs choix possibles)</label>
         <div style={{ display: "flex", flexWrap: "wrap", gap: "8px", marginBottom: "14px" }}>
           {VENUE_TYPES.map((t) => {
-            const checked = form.venueTypes.includes(t);
+            const checked = form.venueTypes.includes(t.code);
             return (
               <button
-                key={t}
-                onClick={() => toggleVenueType(t)}
+                key={t.code}
+                onClick={() => toggleVenueType(t.code)}
                 style={{
                   background: checked ? "#39FF66" : "none",
                   border: `2px solid ${checked ? "#39FF66" : "#28405C"}`,
@@ -404,7 +404,7 @@ export function VenueDetailPanel({ venue, onClose, onSaved, onManageMenu }) {
                   cursor: "pointer",
                 }}
               >
-                {t}
+                {t.fr}
               </button>
             );
           })}

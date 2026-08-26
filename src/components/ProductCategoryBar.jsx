@@ -1,14 +1,14 @@
 import React, { useState } from "react";
 
 export const PRODUCT_CATEGORIES = [
-  { type: "Bières & Cidres", label: "Bières & Cidres" },
-  { type: "Vins & Bulles", label: "Vins & Bulles" },
-  { type: "Spiritueux", label: "Spiritueux" },
-  { type: "Cocktails / Mocktails", label: "Cocktails / Mocktails" },
-  { type: "Softs & Eaux", label: "Softs & Eaux" },
-  { type: "Boissons chaudes", label: "Boissons chaudes" },
-  { type: "Snacks", label: "Snacks" },
-  { type: "Génériques", label: "Génériques" },
+  { type: "bieres_cidres", label: "Bières & Cidres" },
+  { type: "vins_bulles", label: "Vins & Bulles" },
+  { type: "spiritueux", label: "Spiritueux" },
+  { type: "cocktails_mocktails", label: "Cocktails / Mocktails" },
+  { type: "softs_eaux", label: "Softs & Eaux" },
+  { type: "boissons_chaudes", label: "Boissons chaudes" },
+  { type: "snacks", label: "Snacks" },
+  { type: "generiques", label: "Génériques" },
 ];
 
 // counts: { [type]: nombre, autres: nombre } — déjà calculés côté serveur.

@@ -24,12 +24,12 @@ function SectionTitle({ children }) {
 function TagPicker({ options, selected, onToggle }) {
   return (
     <div style={{ display: "flex", flexWrap: "wrap", gap: "8px" }}>
-      {options.map((t) => {
-        const checked = selected.includes(t);
+      {options.map((o) => {
+        const checked = selected.includes(o.code);
         return (
           <button
-            key={t}
-            onClick={() => onToggle(t)}
+            key={o.code}
+            onClick={() => onToggle(o.code)}
             style={{
               background: checked ? "#39FF66" : "none",
               border: `2px solid ${checked ? "#39FF66" : "#28405C"}`,
@@ -41,7 +41,7 @@ function TagPicker({ options, selected, onToggle }) {
               cursor: "pointer",
             }}
           >
-            {t}
+            {o.fr}
           </button>
         );
       })}
@@ -57,9 +57,9 @@ export function BrandDetailPanel({ brand, onClose, onSaved }) {
     alternateName: brand?.alternateName || "",
     slogan: brand?.slogan || "",
     foundedYear: brand?.foundedYear ?? "",
-    originCountry: brand?.originCountry || "Belgique",
+    originCountry: brand?.originCountry || "belgique",
     originCity: brand?.originCity || "",
-    classification: brand?.classification || BRAND_CLASSIFICATIONS[0],
+    classification: brand?.classification || BRAND_CLASSIFICATIONS[0].code,
     brandTypes: brand?.brandTypes || [],
     website: brand?.website || "",
     facebookUrl: brand?.facebookUrl || "",
@@ -165,8 +165,8 @@ export function BrandDetailPanel({ brand, onClose, onSaved }) {
             <label style={labelStyle}>Pays d'origine</label>
             <select value={form.originCountry} onChange={(e) => set("originCountry", e.target.value)} style={fieldStyle}>
               {COUNTRIES.map((c) => (
-                <option key={c} value={c}>
-                  {c}
+                <option key={c.code} value={c.code}>
+                  {c.fr}
                 </option>
               ))}
             </select>
@@ -179,8 +179,8 @@ export function BrandDetailPanel({ brand, onClose, onSaved }) {
         <SectionTitle>Classification</SectionTitle>
         <select value={form.classification} onChange={(e) => set("classification", e.target.value)} style={fieldStyle}>
           {BRAND_CLASSIFICATIONS.map((c) => (
-            <option key={c} value={c}>
-              {c}
+            <option key={c.code} value={c.code}>
+              {c.fr}
             </option>
           ))}
         </select>

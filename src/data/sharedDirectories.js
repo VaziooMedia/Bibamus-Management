@@ -269,7 +269,7 @@ function applyStatusFilter(query, status) {
   return query.eq("status", status);
 }
 
-const KNOWN_DRINK_TYPES = ["Bières & Cidres", "Vins & Bulles", "Spiritueux", "Cocktails / Mocktails", "Softs & Eaux", "Boissons chaudes", "Snacks", "Génériques"];
+const KNOWN_DRINK_TYPES = ["bieres_cidres", "vins_bulles", "spiritueux", "cocktails_mocktails", "softs_eaux", "boissons_chaudes", "snacks", "generiques"];
 
 function applyTypeFilter(query, type) {
   if (!type) return query;

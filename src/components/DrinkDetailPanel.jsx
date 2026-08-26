@@ -32,8 +32,21 @@ import {
   VERIFICATION_STATUSES,
 } from "../data/beerCiderStyles.js";
 
-const DRINK_TYPES = ["Bières & Cidres", "Vins & Bulles", "Spiritueux", "Cocktails / Mocktails", "Softs & Eaux", "Boissons chaudes", "Snacks", "Génériques"];
-const BEER_CIDER_SUBTYPES = ["Bière", "Cidre", "Poiré"];
+const DRINK_TYPES = [
+  { code: "bieres_cidres", fr: "Bières & Cidres" },
+  { code: "vins_bulles", fr: "Vins & Bulles" },
+  { code: "spiritueux", fr: "Spiritueux" },
+  { code: "cocktails_mocktails", fr: "Cocktails / Mocktails" },
+  { code: "softs_eaux", fr: "Softs & Eaux" },
+  { code: "boissons_chaudes", fr: "Boissons chaudes" },
+  { code: "snacks", fr: "Snacks" },
+  { code: "generiques", fr: "Génériques" },
+];
+const BEER_CIDER_SUBTYPES = [
+  { code: "biere", fr: "Bière" },
+  { code: "cidre", fr: "Cidre" },
+  { code: "poire", fr: "Poiré" },
+];
 
 const fieldStyle = { padding: "10px 12px", borderRadius: "8px", border: "2px solid #28405C", fontSize: "14px", width: "100%" };
 const labelStyle = { fontSize: "12.5px", color: "#8792A6", marginBottom: "4px", display: "block", fontWeight: 600 };
@@ -54,17 +67,17 @@ export function DrinkDetailPanel({ drink, onClose, onSaved }) {
   const isNew = !drink;
   const [form, setForm] = useState({
     name: drink?.name || "",
-    type: drink?.type || DRINK_TYPES[0],
-    beverageSubtype: drink?.beverageSubtype || BEER_CIDER_SUBTYPES[0],
+    type: drink?.type || DRINK_TYPES[0].code,
+    beverageSubtype: drink?.beverageSubtype || BEER_CIDER_SUBTYPES[0].code,
     brandId: drink?.brandId || null,
     producerIds: drink?.producerIds || [],
-    nationality: drink?.nationality || "Belgique",
+    nationality: drink?.nationality || "belgique",
     originRegion: drink?.originRegion || "",
     originCity: drink?.originCity || "",
     styles: drink?.styles || [],
     abv: drink?.abv ?? "",
     kcalPer100ml: drink?.kcalPer100ml ?? "",
-    productStatus: drink?.productStatus || BEER_CIDER_COMMERCIAL_STATUSES[0],
+    productStatus: drink?.productStatus || BEER_CIDER_COMMERCIAL_STATUSES[0].code,
     alternateName: drink?.alternateName || "",
     launchYear: drink?.launchYear ?? "",
     // Niveau 2 — composition bière
@@ -110,7 +123,7 @@ export function DrinkDetailPanel({ drink, onClose, onSaved }) {
     flavorNotes: drink?.flavorNotes || [],
     // Niveau 2 — service & consommation
     servingTemperature: drink?.servingTemperature || "",
-    recommendedGlass: drink?.recommendedGlass || RECOMMENDED_GLASSES[0],
+    recommendedGlass: drink?.recommendedGlass || RECOMMENDED_GLASSES[0].code,
     foodPairings: drink?.foodPairings || [],
     occasion: drink?.occasion || "",
     // Niveau 2 — caractéristiques & labels
@@ -119,7 +132,7 @@ export function DrinkDetailPanel({ drink, onClose, onSaved }) {
     glutenFree: !!drink?.glutenFree,
     glutenReduced: !!drink?.glutenReduced,
     bio: !!drink?.bio,
-    vegan: drink?.vegan || "Inconnu",
+    vegan: drink?.vegan || "inconnu",
     sugarFree: !!drink?.sugarFree,
     lactoseFree: !!drink?.lactoseFree,
     certifications: drink?.certifications || [],
@@ -171,7 +184,7 @@ export function DrinkDetailPanel({ drink, onClose, onSaved }) {
     sourceUrl: drink?.sourceUrl || "",
     verificationDate: drink?.verificationDate || "",
     contributor: drink?.contributor || "",
-    verificationStatus: drink?.verificationStatus || VERIFICATION_STATUSES[0],
+    verificationStatus: drink?.verificationStatus || VERIFICATION_STATUSES[0].code,
   });
   const [mainPhotoUrl, setMainPhotoUrl] = useState(drink?.mainPhotoUrl || null);
   const [galleryPhotos, setGalleryPhotos] = useState(drink?.galleryPhotos || []);
@@ -184,8 +197,8 @@ export function DrinkDetailPanel({ drink, onClose, onSaved }) {
   const [brandOptions, setBrandOptions] = useState([]);
   const [producerOptions, setProducerOptions] = useState([]);
 
-  const isBeerOrCider = form.type === "Bières & Cidres";
-  const isBeer = form.beverageSubtype === "Bière";
+  const isBeerOrCider = form.type === "bieres_cidres";
+  const isBeer = form.beverageSubtype === "biere";
 
   useEffect(() => {
     loadBrandsDirectory().then((list) => setBrandOptions(list.map((b) => ({ id: b.id, name: b.name }))));
@@ -368,8 +381,8 @@ export function DrinkDetailPanel({ drink, onClose, onSaved }) {
         <label style={labelStyle}>Type</label>
         <select value={form.type} onChange={(e) => set("type", e.target.value)} style={{ ...fieldStyle, marginBottom: "14px" }}>
           {DRINK_TYPES.map((t) => (
-            <option key={t} value={t}>
-              {t}
+            <option key={t.code} value={t.code}>
+              {t.fr}
             </option>
           ))}
         </select>
@@ -426,8 +439,8 @@ export function DrinkDetailPanel({ drink, onClose, onSaved }) {
             <label style={labelStyle}>Bière / Cidre / Poiré</label>
             <select value={form.beverageSubtype} onChange={(e) => set("beverageSubtype", e.target.value)} style={{ ...fieldStyle, marginBottom: "14px" }}>
               {BEER_CIDER_SUBTYPES.map((t) => (
-                <option key={t} value={t}>
-                  {t}
+                <option key={t.code} value={t.code}>
+                  {t.fr}
                 </option>
               ))}
             </select>
@@ -449,8 +462,8 @@ export function DrinkDetailPanel({ drink, onClose, onSaved }) {
             <label style={labelStyle}>Pays d'origine</label>
             <select value={form.nationality} onChange={(e) => set("nationality", e.target.value)} style={{ ...fieldStyle, marginBottom: "12px" }}>
               {COUNTRIES.map((c) => (
-                <option key={c} value={c}>
-                  {c}
+                <option key={c.code} value={c.code}>
+                  {c.fr}
                 </option>
               ))}
             </select>
@@ -482,8 +495,8 @@ export function DrinkDetailPanel({ drink, onClose, onSaved }) {
                 <label style={labelStyle}>Statut du produit</label>
                 <select value={form.productStatus} onChange={(e) => set("productStatus", e.target.value)} style={fieldStyle}>
                   {BEER_CIDER_COMMERCIAL_STATUSES.map((s) => (
-                    <option key={s} value={s}>
-                      {s}
+                    <option key={s.code} value={s.code}>
+                      {s.fr}
                     </option>
                   ))}
                 </select>
@@ -563,14 +576,14 @@ export function DrinkDetailPanel({ drink, onClose, onSaved }) {
                     <label style={labelStyle}>Allergènes déclarés</label>
                     <div style={{ display: "flex", flexWrap: "wrap", gap: "8px" }}>
                       {ALLERGENS.map((a) => {
-                        const checked = form.allergens.includes(a);
+                        const checked = form.allergens.includes(a.code);
                         return (
                           <button
-                            key={a}
-                            onClick={() => toggleArrayField("allergens", a)}
+                            key={a.code}
+                            onClick={() => toggleArrayField("allergens", a.code)}
                             style={{ background: checked ? "#39FF66" : "none", border: `2px solid ${checked ? "#39FF66" : "#28405C"}`, borderRadius: "999px", padding: "5px 11px", fontSize: "11.5px", fontWeight: 600, color: checked ? "#0D1B2A" : "#F2F2E8", cursor: "pointer" }}
                           >
-                            {a}
+                            {a.fr}
                           </button>
                         );
                       })}
@@ -584,9 +597,9 @@ export function DrinkDetailPanel({ drink, onClose, onSaved }) {
                         <select value={form.fermentationType} onChange={(e) => set("fermentationType", e.target.value)} style={fieldStyle}>
                           <option value="">—</option>
                           {FERMENTATION_TYPES.map((t) => (
-                            <option key={t} value={t}>
-                              {t}
-                            </option>
+                            <option key={t.code} value={t.code}>
+                      {t.fr}
+                    </option>
                           ))}
                         </select>
                       </div>
@@ -595,9 +608,9 @@ export function DrinkDetailPanel({ drink, onClose, onSaved }) {
                         <select value={form.bottleRefermented} onChange={(e) => set("bottleRefermented", e.target.value)} style={fieldStyle}>
                           <option value="">—</option>
                           {YES_NO_UNKNOWN.map((t) => (
-                            <option key={t} value={t}>
-                              {t}
-                            </option>
+                            <option key={t.code} value={t.code}>
+                      {t.fr}
+                    </option>
                           ))}
                         </select>
                       </div>
@@ -608,9 +621,9 @@ export function DrinkDetailPanel({ drink, onClose, onSaved }) {
                         <select value={form.filtered} onChange={(e) => set("filtered", e.target.value)} style={fieldStyle}>
                           <option value="">—</option>
                           {YES_NO_UNKNOWN.map((t) => (
-                            <option key={t} value={t}>
-                              {t}
-                            </option>
+                            <option key={t.code} value={t.code}>
+                      {t.fr}
+                    </option>
                           ))}
                         </select>
                       </div>
@@ -619,9 +632,9 @@ export function DrinkDetailPanel({ drink, onClose, onSaved }) {
                         <select value={form.pasteurized} onChange={(e) => set("pasteurized", e.target.value)} style={fieldStyle}>
                           <option value="">—</option>
                           {YES_NO_UNKNOWN.map((t) => (
-                            <option key={t} value={t}>
-                              {t}
-                            </option>
+                            <option key={t.code} value={t.code}>
+                      {t.fr}
+                    </option>
                           ))}
                         </select>
                       </div>
@@ -629,11 +642,11 @@ export function DrinkDetailPanel({ drink, onClose, onSaved }) {
                         <label style={labelStyle}>Dry hopping</label>
                         <select value={form.dryHopping} onChange={(e) => set("dryHopping", e.target.value)} style={fieldStyle}>
                           <option value="">—</option>
-                          <option value="Oui">Oui</option>
-                          <option value="Non">Non</option>
-                          <option value="DDH">DDH</option>
-                          <option value="TDH">TDH</option>
-                          <option value="Inconnu">Inconnu</option>
+                          <option value="oui">Oui</option>
+                          <option value="non">Non</option>
+                          <option value="ddh">DDH</option>
+                          <option value="tdh">TDH</option>
+                          <option value="inconnu">Inconnu</option>
                         </select>
                       </div>
                     </div>
@@ -643,9 +656,9 @@ export function DrinkDetailPanel({ drink, onClose, onSaved }) {
                         <select value={form.beerAging} onChange={(e) => set("beerAging", e.target.value)} style={fieldStyle}>
                           <option value="">—</option>
                           {BEER_AGING_OPTIONS.map((t) => (
-                            <option key={t} value={t}>
-                              {t}
-                            </option>
+                            <option key={t.code} value={t.code}>
+                      {t.fr}
+                    </option>
                           ))}
                         </select>
                       </div>
@@ -655,9 +668,9 @@ export function DrinkDetailPanel({ drink, onClose, onSaved }) {
                           <select value={form.barrelType} onChange={(e) => set("barrelType", e.target.value)} style={fieldStyle}>
                             <option value="">—</option>
                             {BARREL_TYPES.map((t) => (
-                              <option key={t} value={t}>
-                                {t}
-                              </option>
+                              <option key={t.code} value={t.code}>
+                      {t.fr}
+                    </option>
                             ))}
                           </select>
                         </div>
@@ -674,9 +687,9 @@ export function DrinkDetailPanel({ drink, onClose, onSaved }) {
                         <select value={form.mainFruit} onChange={(e) => set("mainFruit", e.target.value)} style={fieldStyle}>
                           <option value="">—</option>
                           {MAIN_FRUITS.map((t) => (
-                            <option key={t} value={t}>
-                              {t}
-                            </option>
+                            <option key={t.code} value={t.code}>
+                      {t.fr}
+                    </option>
                           ))}
                         </select>
                       </div>
@@ -693,9 +706,9 @@ export function DrinkDetailPanel({ drink, onClose, onSaved }) {
                         <select value={form.pureJuice} onChange={(e) => set("pureJuice", e.target.value)} style={fieldStyle}>
                           <option value="">—</option>
                           {YES_NO_UNKNOWN.map((t) => (
-                            <option key={t} value={t}>
-                              {t}
-                            </option>
+                            <option key={t.code} value={t.code}>
+                      {t.fr}
+                    </option>
                           ))}
                         </select>
                       </div>
@@ -704,9 +717,9 @@ export function DrinkDetailPanel({ drink, onClose, onSaved }) {
                         <select value={form.concentrateUsed} onChange={(e) => set("concentrateUsed", e.target.value)} style={fieldStyle}>
                           <option value="">—</option>
                           {YES_NO_UNKNOWN.map((t) => (
-                            <option key={t} value={t}>
-                              {t}
-                            </option>
+                            <option key={t.code} value={t.code}>
+                      {t.fr}
+                    </option>
                           ))}
                         </select>
                       </div>
@@ -717,9 +730,9 @@ export function DrinkDetailPanel({ drink, onClose, onSaved }) {
                         <select value={form.ciderFermentation} onChange={(e) => set("ciderFermentation", e.target.value)} style={fieldStyle}>
                           <option value="">—</option>
                           {CIDER_FERMENTATION_TYPES.map((t) => (
-                            <option key={t} value={t}>
-                              {t}
-                            </option>
+                            <option key={t.code} value={t.code}>
+                      {t.fr}
+                    </option>
                           ))}
                         </select>
                       </div>
@@ -728,9 +741,9 @@ export function DrinkDetailPanel({ drink, onClose, onSaved }) {
                         <select value={form.carbonationMethod} onChange={(e) => set("carbonationMethod", e.target.value)} style={fieldStyle}>
                           <option value="">—</option>
                           {CARBONATION_METHODS.map((t) => (
-                            <option key={t} value={t}>
-                              {t}
-                            </option>
+                            <option key={t.code} value={t.code}>
+                      {t.fr}
+                    </option>
                           ))}
                         </select>
                       </div>
@@ -741,9 +754,9 @@ export function DrinkDetailPanel({ drink, onClose, onSaved }) {
                         <select value={form.ciderFiltered} onChange={(e) => set("ciderFiltered", e.target.value)} style={fieldStyle}>
                           <option value="">—</option>
                           {YES_NO_UNKNOWN.map((t) => (
-                            <option key={t} value={t}>
-                              {t}
-                            </option>
+                            <option key={t.code} value={t.code}>
+                      {t.fr}
+                    </option>
                           ))}
                         </select>
                       </div>
@@ -752,9 +765,9 @@ export function DrinkDetailPanel({ drink, onClose, onSaved }) {
                         <select value={form.ciderPasteurized} onChange={(e) => set("ciderPasteurized", e.target.value)} style={fieldStyle}>
                           <option value="">—</option>
                           {YES_NO_UNKNOWN.map((t) => (
-                            <option key={t} value={t}>
-                              {t}
-                            </option>
+                            <option key={t.code} value={t.code}>
+                      {t.fr}
+                    </option>
                           ))}
                         </select>
                       </div>
@@ -765,9 +778,9 @@ export function DrinkDetailPanel({ drink, onClose, onSaved }) {
                         <select value={form.ciderAging} onChange={(e) => set("ciderAging", e.target.value)} style={fieldStyle}>
                           <option value="">—</option>
                           {CIDER_AGING_OPTIONS.map((t) => (
-                            <option key={t} value={t}>
-                              {t}
-                            </option>
+                            <option key={t.code} value={t.code}>
+                      {t.fr}
+                    </option>
                           ))}
                         </select>
                       </div>
@@ -777,9 +790,9 @@ export function DrinkDetailPanel({ drink, onClose, onSaved }) {
                           <select value={form.ciderBarrelType} onChange={(e) => set("ciderBarrelType", e.target.value)} style={fieldStyle}>
                             <option value="">—</option>
                             {CIDER_BARREL_TYPES.map((t) => (
-                              <option key={t} value={t}>
-                                {t}
-                              </option>
+                              <option key={t.code} value={t.code}>
+                      {t.fr}
+                    </option>
                             ))}
                           </select>
                         </div>
@@ -815,9 +828,9 @@ export function DrinkDetailPanel({ drink, onClose, onSaved }) {
                     <label style={labelStyle}>Verre recommandé</label>
                     <select value={form.recommendedGlass} onChange={(e) => set("recommendedGlass", e.target.value)} style={fieldStyle}>
                       {RECOMMENDED_GLASSES.map((g) => (
-                        <option key={g} value={g}>
-                          {g}
-                        </option>
+                        <option key={g.code} value={g.code}>
+                      {g.fr}
+                    </option>
                       ))}
                     </select>
                   </div>
@@ -825,14 +838,14 @@ export function DrinkDetailPanel({ drink, onClose, onSaved }) {
                 <label style={labelStyle}>Accords alimentaires</label>
                 <div style={{ display: "flex", flexWrap: "wrap", gap: "8px", marginBottom: "12px" }}>
                   {FOOD_PAIRINGS.map((f) => {
-                    const checked = form.foodPairings.includes(f);
+                    const checked = form.foodPairings.includes(f.code);
                     return (
                       <button
-                        key={f}
-                        onClick={() => toggleArrayField("foodPairings", f)}
+                        key={f.code}
+                        onClick={() => toggleArrayField("foodPairings", f.code)}
                         style={{ background: checked ? "#39FF66" : "none", border: `2px solid ${checked ? "#39FF66" : "#28405C"}`, borderRadius: "999px", padding: "5px 11px", fontSize: "11.5px", fontWeight: 600, color: checked ? "#0D1B2A" : "#F2F2E8", cursor: "pointer" }}
                       >
-                        {f}
+                        {f.fr}
                       </button>
                     );
                   })}
@@ -841,8 +854,8 @@ export function DrinkDetailPanel({ drink, onClose, onSaved }) {
                 <select value={form.occasion} onChange={(e) => set("occasion", e.target.value)} style={fieldStyle}>
                   <option value="">—</option>
                   {OCCASIONS.map((o) => (
-                    <option key={o} value={o}>
-                      {o}
+                    <option key={o.code} value={o.code}>
+                      {o.fr}
                     </option>
                   ))}
                 </select>
@@ -882,8 +895,8 @@ export function DrinkDetailPanel({ drink, onClose, onSaved }) {
                 <label style={labelStyle}>Vegan</label>
                 <select value={form.vegan} onChange={(e) => set("vegan", e.target.value)} style={{ ...fieldStyle, marginBottom: "12px" }}>
                   {YES_NO_UNKNOWN.map((t) => (
-                    <option key={t} value={t}>
-                      {t}
+                    <option key={t.code} value={t.code}>
+                      {t.fr}
                     </option>
                   ))}
                 </select>
@@ -978,9 +991,9 @@ export function DrinkDetailPanel({ drink, onClose, onSaved }) {
                         <select value={form.mashingProcess} onChange={(e) => set("mashingProcess", e.target.value)} style={{ ...fieldStyle, marginBottom: "12px" }}>
                           <option value="">—</option>
                           {MASHING_PROCESSES.map((t) => (
-                            <option key={t} value={t}>
-                              {t}
-                            </option>
+                            <option key={t.code} value={t.code}>
+                      {t.fr}
+                    </option>
                           ))}
                         </select>
                         <label style={labelStyle}>Houblonnage</label>
@@ -1047,9 +1060,9 @@ export function DrinkDetailPanel({ drink, onClose, onSaved }) {
                           <select value={form.appleType} onChange={(e) => set("appleType", e.target.value)} style={fieldStyle}>
                             <option value="">—</option>
                             {APPLE_TYPES.map((t) => (
-                              <option key={t} value={t}>
-                                {t}
-                              </option>
+                              <option key={t.code} value={t.code}>
+                      {t.fr}
+                    </option>
                             ))}
                           </select>
                         </div>
@@ -1064,9 +1077,9 @@ export function DrinkDetailPanel({ drink, onClose, onSaved }) {
                       <select value={form.malolacticFermentation} onChange={(e) => set("malolacticFermentation", e.target.value)} style={{ ...fieldStyle, marginBottom: "12px" }}>
                         <option value="">—</option>
                         {YES_NO_UNKNOWN.map((t) => (
-                          <option key={t} value={t}>
-                            {t}
-                          </option>
+                          <option key={t.code} value={t.code}>
+                      {t.fr}
+                    </option>
                         ))}
                       </select>
                       <label style={labelStyle}>Assemblage</label>
@@ -1094,9 +1107,9 @@ export function DrinkDetailPanel({ drink, onClose, onSaved }) {
                     <label style={labelStyle}>Statut de vérification</label>
                     <select value={form.verificationStatus} onChange={(e) => set("verificationStatus", e.target.value)} style={fieldStyle}>
                       {VERIFICATION_STATUSES.map((s) => (
-                        <option key={s} value={s}>
-                          {s}
-                        </option>
+                        <option key={s.code} value={s.code}>
+                      {s.fr}
+                    </option>
                       ))}
                     </select>
                     </CollapsibleSection>

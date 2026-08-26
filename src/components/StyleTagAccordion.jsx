@@ -1,9 +1,9 @@
 import React, { useState, useMemo } from "react";
 
-// groups: [{ title, tags: [...] }]
-// Barre de recherche en haut (avec 291 tags, s'y retrouver autrement serait pénible) — tape un
-// mot, seuls les groupes contenant une correspondance restent visibles, dépliés automatiquement.
-// Bouton "Tout déplier / Tout replier" pour parcourir librement sans la recherche.
+// groups: [{ title, tags: [{ code, fr }] }] — selected est un tableau de codes.
+// Barre de recherche en haut (avec des centaines de tags, s'y retrouver autrement serait
+// pénible) — tape un mot, seuls les groupes contenant une correspondance restent visibles,
+// dépliés automatiquement. Bouton "Tout déplier / Tout replier" pour parcourir librement.
 export function StyleTagAccordion({ groups, selected, onToggle }) {
   const [query, setQuery] = useState("");
   const [openIndices, setOpenIndices] = useState(new Set());
@@ -11,7 +11,7 @@ export function StyleTagAccordion({ groups, selected, onToggle }) {
   const q = query.trim().toLowerCase();
   const filteredGroups = useMemo(() => {
     if (!q) return groups.map((g, i) => ({ ...g, index: i }));
-    return groups.map((g, i) => ({ ...g, index: i, tags: g.tags.filter((t) => t.toLowerCase().includes(q)) })).filter((g) => g.tags.length > 0);
+    return groups.map((g, i) => ({ ...g, index: i, tags: g.tags.filter((t) => t.fr.toLowerCase().includes(q)) })).filter((g) => g.tags.length > 0);
   }, [groups, q]);
 
   const isOpen = (i) => (q ? true : openIndices.has(i));
@@ -51,7 +51,7 @@ export function StyleTagAccordion({ groups, selected, onToggle }) {
         {filteredGroups.length === 0 && <p style={{ fontSize: "12.5px", color: "#8792A6", fontStyle: "italic" }}>Aucun style ne correspond à "{query}".</p>}
         {filteredGroups.map((group) => {
           const open = isOpen(group.index);
-          const selectedInGroup = group.tags.filter((t) => selected.includes(t)).length;
+          const selectedInGroup = group.tags.filter((t) => selected.includes(t.code)).length;
           return (
             <div key={group.title} style={{ border: "2px solid #28405C", borderRadius: "8px", overflow: "hidden" }}>
               <button
@@ -77,11 +77,11 @@ export function StyleTagAccordion({ groups, selected, onToggle }) {
               {open && (
                 <div style={{ padding: "12px", display: "flex", flexWrap: "wrap", gap: "8px" }}>
                   {group.tags.map((tag) => {
-                    const checked = selected.includes(tag);
+                    const checked = selected.includes(tag.code);
                     return (
                       <button
-                        key={tag}
-                        onClick={() => onToggle(tag)}
+                        key={tag.code}
+                        onClick={() => onToggle(tag.code)}
                         style={{
                           background: checked ? "#39FF66" : "none",
                           border: `2px solid ${checked ? "#39FF66" : "#28405C"}`,
@@ -93,7 +93,7 @@ export function StyleTagAccordion({ groups, selected, onToggle }) {
                           cursor: "pointer",
                         }}
                       >
-                        {tag}
+                        {tag.fr}
                       </button>
                     );
                   })}

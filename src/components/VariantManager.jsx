@@ -6,7 +6,7 @@ import { COUNTRIES } from "../constants.js";
 const fieldStyle = { padding: "8px 10px", borderRadius: "6px", border: "2px solid #28405C", fontSize: "12.5px" };
 
 function VariantRow({ variant, onSave, onDelete }) {
-  const [container, setContainer] = useState(variant.container || CONTAINER_TYPES[0]);
+  const [container, setContainer] = useState(variant.container || CONTAINER_TYPES[0].code);
   const [volumeCl, setVolumeCl] = useState(variant.volumeMl ? variant.volumeMl / 10 : "");
   const [barcode, setBarcode] = useState(variant.barcode || "");
   const [marketCountry, setMarketCountry] = useState(variant.marketCountry || "");
@@ -29,8 +29,8 @@ function VariantRow({ variant, onSave, onDelete }) {
           style={{ ...fieldStyle, flex: 1 }}
         >
           {CONTAINER_TYPES.map((c) => (
-            <option key={c} value={c}>
-              {c}
+            <option key={c.code} value={c.code}>
+              {c.fr}
             </option>
           ))}
         </select>
@@ -79,8 +79,8 @@ function VariantRow({ variant, onSave, onDelete }) {
         >
           <option value="">Marché — tous</option>
           {COUNTRIES.map((c) => (
-            <option key={c} value={c}>
-              {c}
+            <option key={c.code} value={c.code}>
+              {c.fr}
             </option>
           ))}
         </select>
@@ -112,7 +112,7 @@ export function VariantManager({ drinkId }) {
   }
 
   const addVariant = async () => {
-    const created = await createDrinkVariant({ drinkId, container: CONTAINER_TYPES[0], volumeMl: 330, barcode: null, marketCountry: null });
+    const created = await createDrinkVariant({ drinkId, container: CONTAINER_TYPES[0].code, volumeMl: 330, barcode: null, marketCountry: null });
     if (created) setVariants((prev) => [...prev, created]);
   };
 

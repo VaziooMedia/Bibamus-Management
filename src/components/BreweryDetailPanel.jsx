@@ -35,12 +35,12 @@ function SectionTitle({ children }) {
 function TagPicker({ options, selected, onToggle }) {
   return (
     <div style={{ display: "flex", flexWrap: "wrap", gap: "8px" }}>
-      {options.map((t) => {
-        const checked = selected.includes(t);
+      {options.map((o) => {
+        const checked = selected.includes(o.code);
         return (
           <button
-            key={t}
-            onClick={() => onToggle(t)}
+            key={o.code}
+            onClick={() => onToggle(o.code)}
             style={{
               background: checked ? "#39FF66" : "none",
               border: `2px solid ${checked ? "#39FF66" : "#28405C"}`,
@@ -52,7 +52,7 @@ function TagPicker({ options, selected, onToggle }) {
               cursor: "pointer",
             }}
           >
-            {t}
+            {o.fr}
           </button>
         );
       })}
@@ -71,7 +71,7 @@ export function BreweryDetailPanel({ brewery, onClose, onSaved }) {
     postalCode: brewery?.postalCode || "",
     city: brewery?.city || "",
     village: brewery?.village || "",
-    country: brewery?.country || "Belgique",
+    country: brewery?.country || "belgique",
     lat: brewery?.lat ?? "",
     lng: brewery?.lng ?? "",
     phone: brewery?.phone || "",
@@ -216,8 +216,8 @@ export function BreweryDetailPanel({ brewery, onClose, onSaved }) {
             <label style={labelStyle}>Pays</label>
             <select value={form.country} onChange={(e) => set("country", e.target.value)} style={fieldStyle}>
               {COUNTRIES.map((c) => (
-                <option key={c} value={c}>
-                  {c}
+                <option key={c.code} value={c.code}>
+                  {c.fr}
                 </option>
               ))}
             </select>
