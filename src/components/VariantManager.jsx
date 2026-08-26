@@ -18,7 +18,7 @@ function VariantRow({ variant, onSave, onDelete }) {
   };
 
   return (
-    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1.3fr 1fr auto", gap: "6px", alignItems: "center", padding: "8px", background: "#16273D", borderRadius: "8px", marginBottom: "6px" }}>
+    <div style={{ display: "grid", gridTemplateColumns: "1fr 60px 1.4fr 1fr auto", gap: "6px", alignItems: "center", padding: "8px", background: "#16273D", borderRadius: "8px", marginBottom: "6px" }}>
       <select
         value={container}
         onChange={(e) => {
@@ -35,15 +35,17 @@ function VariantRow({ variant, onSave, onDelete }) {
       </select>
       <input
         type="number"
-        step="0.1"
+        step="0.5"
+        min="0"
+        max="999"
         list="common-volumes-cl"
         value={volumeCl}
         onChange={(e) => {
           setVolumeCl(e.target.value);
           setDirty(true);
         }}
-        placeholder="Volume (cl)"
-        style={fieldStyle}
+        title="Volume (cl)"
+        style={{ ...fieldStyle, padding: "8px 4px", textAlign: "center", width: "100%" }}
       />
       <input
         value={barcode}

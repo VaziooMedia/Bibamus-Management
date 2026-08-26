@@ -7,6 +7,7 @@ import { StyleTagAccordion } from "./StyleTagAccordion.jsx";
 import { TasteScale } from "./TasteScale.jsx";
 import { VariantManager } from "./VariantManager.jsx";
 import { FreeTagInput } from "./FreeTagInput.jsx";
+import { CollapsibleSection } from "./CollapsibleSection.jsx";
 import { COUNTRIES } from "../constants.js";
 import {
   BEER_CIDER_STYLE_GROUPS,
@@ -401,7 +402,7 @@ export function DrinkDetailPanel({ drink, onClose, onSaved }) {
               <>
                 {isBeer ? (
                   <>
-                    <SectionTitle>Composition</SectionTitle>
+                    <CollapsibleSection title="Composition">
                     <label style={labelStyle}>Malt(s)</label>
                     <div style={{ marginBottom: "12px" }}>
                       <FreeTagInput tags={form.malts} onChange={(v) => set("malts", v)} placeholder="Ex. Pilsner, Vienna, Caramel..." />
@@ -429,7 +430,7 @@ export function DrinkDetailPanel({ drink, onClose, onSaved }) {
                       <FreeTagInput tags={form.otherIngredients} onChange={(v) => set("otherIngredients", v)} placeholder="Lactose, miel, sel..." />
                     </div>
                     <label style={labelStyle}>Allergènes déclarés</label>
-                    <div style={{ display: "flex", flexWrap: "wrap", gap: "8px", marginBottom: "14px" }}>
+                    <div style={{ display: "flex", flexWrap: "wrap", gap: "8px" }}>
                       {ALLERGENS.map((a) => {
                         const checked = form.allergens.includes(a);
                         return (
@@ -443,9 +444,9 @@ export function DrinkDetailPanel({ drink, onClose, onSaved }) {
                         );
                       })}
                     </div>
+                    </CollapsibleSection>
 
-                    <div style={separatorStyle} />
-                    <SectionTitle>Fabrication</SectionTitle>
+                    <CollapsibleSection title="Fabrication">
                     <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px", marginBottom: "12px" }}>
                       <div>
                         <label style={labelStyle}>Type de fermentation</label>
@@ -531,10 +532,11 @@ export function DrinkDetailPanel({ drink, onClose, onSaved }) {
                         </div>
                       )}
                     </div>
+                    </CollapsibleSection>
                   </>
                 ) : (
                   <>
-                    <SectionTitle>Composition & fabrication (cidre / poiré)</SectionTitle>
+                    <CollapsibleSection title="Composition & fabrication (cidre / poiré)">
                     <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px", marginBottom: "12px" }}>
                       <div>
                         <label style={labelStyle}>Fruit principal</label>
@@ -652,11 +654,11 @@ export function DrinkDetailPanel({ drink, onClose, onSaved }) {
                         </div>
                       )}
                     </div>
+                    </CollapsibleSection>
                   </>
                 )}
 
-                <div style={separatorStyle} />
-                <SectionTitle>Profil gustatif</SectionTitle>
+                <CollapsibleSection title="Profil gustatif">
                 <TasteScale label="Amertume" value={form.tasteBitterness} onChange={(v) => set("tasteBitterness", v)} lowLabel="Très faible" highLabel="Très forte" />
                 <TasteScale label="Douceur" value={form.tasteSweetness} onChange={(v) => set("tasteSweetness", v)} lowLabel="Très sèche" highLabel="Très douce" />
                 <TasteScale label="Acidité" value={form.tasteAcidity} onChange={(v) => set("tasteAcidity", v)} lowLabel="Très faible" highLabel="Très forte" />
@@ -666,13 +668,13 @@ export function DrinkDetailPanel({ drink, onClose, onSaved }) {
                 {isBeer && <TasteScale label="Malté" value={form.tasteMaltiness} onChange={(v) => set("tasteMaltiness", v)} lowLabel="Discret" highLabel="Très malté" />}
                 {!isBeer && <TasteScale label="Tanin" value={form.tasteTannin} onChange={(v) => set("tasteTannin", v)} lowLabel="Faible" highLabel="Très tannique" />}
                 <TasteScale label="Effervescence" value={form.tasteCarbonation} onChange={(v) => set("tasteCarbonation", v)} lowLabel="Plate" highLabel="Très effervescente" />
+                </CollapsibleSection>
 
-                <div style={separatorStyle} />
-                <SectionTitle>Arômes & saveurs</SectionTitle>
+                <CollapsibleSection title="Arômes & saveurs">
                 <StyleTagAccordion groups={FLAVOR_NOTE_GROUPS} selected={form.flavorNotes} onToggle={(t) => toggleArrayField("flavorNotes", t)} />
+                </CollapsibleSection>
 
-                <div style={separatorStyle} />
-                <SectionTitle>Service & consommation</SectionTitle>
+                <CollapsibleSection title="Service & consommation">
                 <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px", marginBottom: "12px" }}>
                   <div>
                     <label style={labelStyle}>Température de service</label>
@@ -705,7 +707,7 @@ export function DrinkDetailPanel({ drink, onClose, onSaved }) {
                   })}
                 </div>
                 <label style={labelStyle}>Moment / occasion</label>
-                <select value={form.occasion} onChange={(e) => set("occasion", e.target.value)} style={{ ...fieldStyle, marginBottom: "14px" }}>
+                <select value={form.occasion} onChange={(e) => set("occasion", e.target.value)} style={fieldStyle}>
                   <option value="">—</option>
                   {OCCASIONS.map((o) => (
                     <option key={o} value={o}>
@@ -713,9 +715,9 @@ export function DrinkDetailPanel({ drink, onClose, onSaved }) {
                     </option>
                   ))}
                 </select>
+                </CollapsibleSection>
 
-                <div style={separatorStyle} />
-                <SectionTitle>Caractéristiques & labels</SectionTitle>
+                <CollapsibleSection title="Caractéristiques & labels">
                 <div style={{ display: "flex", flexDirection: "column", gap: "8px", marginBottom: "12px" }}>
                   <label style={{ display: "flex", alignItems: "center", gap: "6px", fontSize: "13px", cursor: "pointer" }}>
                     <input type="checkbox" checked={form.alcoholFree} onChange={(e) => set("alcoholFree", e.target.checked)} />
@@ -755,12 +757,12 @@ export function DrinkDetailPanel({ drink, onClose, onSaved }) {
                   ))}
                 </select>
                 <label style={labelStyle}>Labels / certifications</label>
-                <div style={{ marginBottom: "14px" }}>
+                <div>
                   <FreeTagInput tags={form.certifications} onChange={(v) => set("certifications", v)} placeholder="Ex. AB, Ecocert, Demeter..." />
                 </div>
+                </CollapsibleSection>
 
-                <div style={separatorStyle} />
-                <SectionTitle>Présentation</SectionTitle>
+                <CollapsibleSection title="Présentation">
                 <label style={labelStyle}>Description courte</label>
                 <textarea value={form.shortDescription} onChange={(e) => set("shortDescription", e.target.value)} rows={2} style={{ ...fieldStyle, marginBottom: "12px", resize: "vertical" }} />
                 <label style={labelStyle}>Description complète</label>
@@ -768,14 +770,15 @@ export function DrinkDetailPanel({ drink, onClose, onSaved }) {
                 <label style={labelStyle}>Histoire du produit</label>
                 <textarea value={form.productHistory} onChange={(e) => set("productHistory", e.target.value)} rows={3} style={{ ...fieldStyle, marginBottom: "12px", resize: "vertical" }} />
                 <label style={labelStyle}>Lien officiel</label>
-                <input value={form.officialUrl} onChange={(e) => set("officialUrl", e.target.value)} style={{ ...fieldStyle, marginBottom: "14px" }} />
+                <input value={form.officialUrl} onChange={(e) => set("officialUrl", e.target.value)} style={fieldStyle} />
+                </CollapsibleSection>
 
-                <div style={separatorStyle} />
-                <SectionTitle>Conditionnements & variantes</SectionTitle>
+                <CollapsibleSection title="Conditionnements & variantes">
                 <p style={{ fontSize: "11.5px", color: "#8792A6", marginTop: "-6px", marginBottom: "10px" }}>
                   Une même bière peut exister en plusieurs bouteilles, canettes ou fûts — chacun avec son propre code-barres si connu.
                 </p>
                 <VariantManager drinkId={drink?.id || null} />
+                </CollapsibleSection>
               </>
             )}
           </>
