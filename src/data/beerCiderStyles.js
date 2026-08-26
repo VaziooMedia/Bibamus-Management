@@ -200,3 +200,7 @@ export const ALLERGENS = ["Gluten", "Œufs", "Lait", "Fruits à coque", "Soja", 
 
 export const CONTAINER_TYPES = ["Bouteille", "Canette", "Fût", "KeyKeg", "Bag-in-box", "Growler", "Autre"];
 export const COMMON_VOLUMES_CL = [20, 25, 33, 35.5, 44, 50, 75, 100, 2000, 3000, 5000];
+
+export const MASHING_PROCESSES = ["Monopalier", "Multipalier", "Décoction", "Infusion", "Autre"];
+export const APPLE_TYPES = ["Douces", "Douces-amères", "Amères", "Acidulées"];
+export const VERIFICATION_STATUSES = ["Non vérifié", "Communauté", "Producteur vérifié", "Équipe Bibamus"];

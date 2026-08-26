@@ -26,6 +26,9 @@ import {
   CIDER_AGING_OPTIONS,
   CIDER_BARREL_TYPES,
   ALLERGENS,
+  MASHING_PROCESSES,
+  APPLE_TYPES,
+  VERIFICATION_STATUSES,
 } from "../data/beerCiderStyles.js";
 
 const DRINK_TYPES = ["Bières", "Vins & bulles", "Spiritueux", "Cocktails / Mocktails", "Softs & eaux", "Boissons chaudes", "Snacks"];
@@ -124,12 +127,57 @@ export function DrinkDetailPanel({ drink, onClose, onSaved }) {
     fullDescription: drink?.fullDescription || "",
     productHistory: drink?.productHistory || "",
     officialUrl: drink?.officialUrl || "",
+    // Niveau 3 — données techniques bière
+    ibu: drink?.ibu ?? "",
+    colorEbc: drink?.colorEbc ?? "",
+    colorSrm: drink?.colorSrm ?? "",
+    originalGravity: drink?.originalGravity ?? "",
+    finalGravity: drink?.finalGravity ?? "",
+    platoDegree: drink?.platoDegree ?? "",
+    apparentAttenuation: drink?.apparentAttenuation ?? "",
+    finalPh: drink?.finalPh ?? "",
+    carbonationTechnical: drink?.carbonationTechnical || "",
+    relativeBitterness: drink?.relativeBitterness ?? "",
+    realExtract: drink?.realExtract ?? "",
+    // Niveau 3 — procédé brassicole avancé
+    mashingProcess: drink?.mashingProcess || "",
+    hoppingDetails: drink?.hoppingDetails || "",
+    dryHopDetail: drink?.dryHopDetail || "",
+    yeastStrain: drink?.yeastStrain || "",
+    primaryFermentation: drink?.primaryFermentation || "",
+    secondaryFermentation: drink?.secondaryFermentation || "",
+    conditioningProcess: drink?.conditioningProcess || "",
+    maturationDetails: drink?.maturationDetails || "",
+    barrelDetails: drink?.barrelDetails || "",
+    blendDetails: drink?.blendDetails || "",
+    // Niveau 3 — données techniques cidre/poiré
+    ciderInitialGravity: drink?.ciderInitialGravity ?? "",
+    ciderFinalGravity: drink?.ciderFinalGravity ?? "",
+    residualSugar: drink?.residualSugar ?? "",
+    totalAcidity: drink?.totalAcidity ?? "",
+    ciderPh: drink?.ciderPh ?? "",
+    tanninLevel: drink?.tanninLevel ?? "",
+    ciderCarbonationTechnical: drink?.ciderCarbonationTechnical || "",
+    detailedVarieties: drink?.detailedVarieties || "",
+    appleType: drink?.appleType || "",
+    pressingMethod: drink?.pressingMethod || "",
+    defecationKeeving: drink?.defecationKeeving || "",
+    malolacticFermentation: drink?.malolacticFermentation || "",
+    ciderBlendDetails: drink?.ciderBlendDetails || "",
+    ciderAgingDetails: drink?.ciderAgingDetails || "",
+    // Niveau 3 — traçabilité & sources
+    infoSource: drink?.infoSource || "",
+    sourceUrl: drink?.sourceUrl || "",
+    verificationDate: drink?.verificationDate || "",
+    contributor: drink?.contributor || "",
+    verificationStatus: drink?.verificationStatus || VERIFICATION_STATUSES[0],
   });
   const [mainPhotoUrl, setMainPhotoUrl] = useState(drink?.mainPhotoUrl || null);
   const [uploadingPhoto, setUploadingPhoto] = useState(false);
   const [status, setStatus] = useState(drink?.status || (isNew ? "certified" : "pending"));
   const [stylesSectionOpen, setStylesSectionOpen] = useState((drink?.styles || []).length > 0);
   const [niveau2Open, setNiveau2Open] = useState(false);
+  const [niveau3Open, setNiveau3Open] = useState(false);
   const [saving, setSaving] = useState(false);
   const [brandOptions, setBrandOptions] = useState([]);
   const [producerOptions, setProducerOptions] = useState([]);
@@ -220,6 +268,46 @@ export function DrinkDetailPanel({ drink, onClose, onSaved }) {
       fullDescription: form.fullDescription.trim(),
       productHistory: form.productHistory.trim(),
       officialUrl: form.officialUrl.trim(),
+      ibu: form.ibu === "" ? null : parseFloat(form.ibu),
+      colorEbc: form.colorEbc === "" ? null : parseFloat(form.colorEbc),
+      colorSrm: form.colorSrm === "" ? null : parseFloat(form.colorSrm),
+      originalGravity: form.originalGravity === "" ? null : parseFloat(form.originalGravity),
+      finalGravity: form.finalGravity === "" ? null : parseFloat(form.finalGravity),
+      platoDegree: form.platoDegree === "" ? null : parseFloat(form.platoDegree),
+      apparentAttenuation: form.apparentAttenuation === "" ? null : parseFloat(form.apparentAttenuation),
+      finalPh: form.finalPh === "" ? null : parseFloat(form.finalPh),
+      carbonationTechnical: form.carbonationTechnical.trim(),
+      relativeBitterness: form.relativeBitterness === "" ? null : parseFloat(form.relativeBitterness),
+      realExtract: form.realExtract === "" ? null : parseFloat(form.realExtract),
+      mashingProcess: form.mashingProcess,
+      hoppingDetails: form.hoppingDetails.trim(),
+      dryHopDetail: form.dryHopDetail.trim(),
+      yeastStrain: form.yeastStrain.trim(),
+      primaryFermentation: form.primaryFermentation.trim(),
+      secondaryFermentation: form.secondaryFermentation.trim(),
+      conditioningProcess: form.conditioningProcess.trim(),
+      maturationDetails: form.maturationDetails.trim(),
+      barrelDetails: form.barrelDetails.trim(),
+      blendDetails: form.blendDetails.trim(),
+      ciderInitialGravity: form.ciderInitialGravity === "" ? null : parseFloat(form.ciderInitialGravity),
+      ciderFinalGravity: form.ciderFinalGravity === "" ? null : parseFloat(form.ciderFinalGravity),
+      residualSugar: form.residualSugar === "" ? null : parseFloat(form.residualSugar),
+      totalAcidity: form.totalAcidity === "" ? null : parseFloat(form.totalAcidity),
+      ciderPh: form.ciderPh === "" ? null : parseFloat(form.ciderPh),
+      tanninLevel: form.tanninLevel === "" ? null : parseFloat(form.tanninLevel),
+      ciderCarbonationTechnical: form.ciderCarbonationTechnical.trim(),
+      detailedVarieties: form.detailedVarieties.trim(),
+      appleType: form.appleType,
+      pressingMethod: form.pressingMethod.trim(),
+      defecationKeeving: form.defecationKeeving.trim(),
+      malolacticFermentation: form.malolacticFermentation,
+      ciderBlendDetails: form.ciderBlendDetails.trim(),
+      ciderAgingDetails: form.ciderAgingDetails.trim(),
+      infoSource: form.infoSource.trim(),
+      sourceUrl: form.sourceUrl.trim(),
+      verificationDate: form.verificationDate || null,
+      contributor: form.contributor.trim(),
+      verificationStatus: form.verificationStatus,
       mainPhotoUrl,
     };
   };
@@ -779,6 +867,205 @@ export function DrinkDetailPanel({ drink, onClose, onSaved }) {
                 </p>
                 <VariantManager drinkId={drink?.id || null} />
                 </CollapsibleSection>
+
+                <div style={separatorStyle} />
+                <button
+                  onClick={() => setNiveau3Open((o) => !o)}
+                  style={{ width: "100%", display: "flex", justifyContent: "space-between", alignItems: "center", background: "none", border: "none", cursor: "pointer", padding: 0, marginBottom: niveau3Open ? "14px" : 0 }}
+                >
+                  <span style={{ ...sectionTitleStyle, marginTop: 0, marginBottom: 0 }}>
+                    <span style={{ width: "4px", height: "14px", background: "#39FF66", borderRadius: "2px", display: "inline-block" }} />
+                    Niveau 3 — Données expert
+                  </span>
+                  <span style={{ color: "#39FF66", fontSize: "12px" }}>{niveau3Open ? "▼" : "▶"}</span>
+                </button>
+
+                {niveau3Open && (
+                  <>
+                    {isBeer ? (
+                      <>
+                        <CollapsibleSection title="Données techniques (bière)">
+                        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "12px", marginBottom: "12px" }}>
+                          <div>
+                            <label style={labelStyle}>IBU</label>
+                            <input type="number" step="0.1" value={form.ibu} onChange={(e) => set("ibu", e.target.value)} style={fieldStyle} />
+                          </div>
+                          <div>
+                            <label style={labelStyle}>Couleur EBC</label>
+                            <input type="number" step="0.1" value={form.colorEbc} onChange={(e) => set("colorEbc", e.target.value)} style={fieldStyle} />
+                          </div>
+                          <div>
+                            <label style={labelStyle}>Couleur SRM</label>
+                            <input type="number" step="0.1" value={form.colorSrm} onChange={(e) => set("colorSrm", e.target.value)} style={fieldStyle} />
+                          </div>
+                        </div>
+                        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "12px", marginBottom: "12px" }}>
+                          <div>
+                            <label style={labelStyle}>OG (densité initiale)</label>
+                            <input type="number" step="0.001" value={form.originalGravity} onChange={(e) => set("originalGravity", e.target.value)} style={fieldStyle} />
+                          </div>
+                          <div>
+                            <label style={labelStyle}>FG (densité finale)</label>
+                            <input type="number" step="0.001" value={form.finalGravity} onChange={(e) => set("finalGravity", e.target.value)} style={fieldStyle} />
+                          </div>
+                          <div>
+                            <label style={labelStyle}>Degré Plato</label>
+                            <input type="number" step="0.1" value={form.platoDegree} onChange={(e) => set("platoDegree", e.target.value)} style={fieldStyle} />
+                          </div>
+                        </div>
+                        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px", marginBottom: "12px" }}>
+                          <div>
+                            <label style={labelStyle}>Atténuation apparente (%)</label>
+                            <input type="number" step="0.1" value={form.apparentAttenuation} onChange={(e) => set("apparentAttenuation", e.target.value)} style={fieldStyle} />
+                          </div>
+                          <div>
+                            <label style={labelStyle}>pH final</label>
+                            <input type="number" step="0.01" value={form.finalPh} onChange={(e) => set("finalPh", e.target.value)} style={fieldStyle} />
+                          </div>
+                        </div>
+                        <label style={labelStyle}>Carbonatation (volumes CO2 ou g/L)</label>
+                        <input value={form.carbonationTechnical} onChange={(e) => set("carbonationTechnical", e.target.value)} style={{ ...fieldStyle, marginBottom: "12px" }} />
+                        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px" }}>
+                          <div>
+                            <label style={labelStyle}>Amertume relative</label>
+                            <input type="number" step="0.01" value={form.relativeBitterness} onChange={(e) => set("relativeBitterness", e.target.value)} style={fieldStyle} />
+                          </div>
+                          <div>
+                            <label style={labelStyle}>Extrait réel / apparent</label>
+                            <input type="number" step="0.1" value={form.realExtract} onChange={(e) => set("realExtract", e.target.value)} style={fieldStyle} />
+                          </div>
+                        </div>
+                        </CollapsibleSection>
+
+                        <CollapsibleSection title="Procédé brassicole avancé">
+                        <label style={labelStyle}>Empâtage</label>
+                        <select value={form.mashingProcess} onChange={(e) => set("mashingProcess", e.target.value)} style={{ ...fieldStyle, marginBottom: "12px" }}>
+                          <option value="">—</option>
+                          {MASHING_PROCESSES.map((t) => (
+                            <option key={t} value={t}>
+                              {t}
+                            </option>
+                          ))}
+                        </select>
+                        <label style={labelStyle}>Houblonnage</label>
+                        <input value={form.hoppingDetails} onChange={(e) => set("hoppingDetails", e.target.value)} placeholder="Ajouts amérisants, whirlpool, dry hop..." style={{ ...fieldStyle, marginBottom: "12px" }} />
+                        <label style={labelStyle}>DDH / TDH (détail)</label>
+                        <input value={form.dryHopDetail} onChange={(e) => set("dryHopDetail", e.target.value)} style={{ ...fieldStyle, marginBottom: "12px" }} />
+                        <label style={labelStyle}>Levure / souche précise</label>
+                        <input value={form.yeastStrain} onChange={(e) => set("yeastStrain", e.target.value)} style={{ ...fieldStyle, marginBottom: "12px" }} />
+                        <label style={labelStyle}>Fermentation primaire</label>
+                        <input value={form.primaryFermentation} onChange={(e) => set("primaryFermentation", e.target.value)} placeholder="Température, durée, cuve" style={{ ...fieldStyle, marginBottom: "12px" }} />
+                        <label style={labelStyle}>Fermentation secondaire</label>
+                        <input value={form.secondaryFermentation} onChange={(e) => set("secondaryFermentation", e.target.value)} style={{ ...fieldStyle, marginBottom: "12px" }} />
+                        <label style={labelStyle}>Conditionnement</label>
+                        <input value={form.conditioningProcess} onChange={(e) => set("conditioningProcess", e.target.value)} placeholder="Refermentation, carbonatation forcée, krausening..." style={{ ...fieldStyle, marginBottom: "12px" }} />
+                        <label style={labelStyle}>Maturation</label>
+                        <input value={form.maturationDetails} onChange={(e) => set("maturationDetails", e.target.value)} placeholder="Durée, température, cuve, lagering" style={{ ...fieldStyle, marginBottom: "12px" }} />
+                        <label style={labelStyle}>Barrique / bois</label>
+                        <input value={form.barrelDetails} onChange={(e) => set("barrelDetails", e.target.value)} placeholder="Essence, ancien contenu, durée" style={{ ...fieldStyle, marginBottom: "12px" }} />
+                        <label style={labelStyle}>Assemblage / blend</label>
+                        <input value={form.blendDetails} onChange={(e) => set("blendDetails", e.target.value)} placeholder="Lots ou millésimes assemblés" style={fieldStyle} />
+                        </CollapsibleSection>
+                      </>
+                    ) : (
+                      <CollapsibleSection title="Données techniques (cidre / poiré)">
+                      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px", marginBottom: "12px" }}>
+                        <div>
+                          <label style={labelStyle}>Densité initiale</label>
+                          <input type="number" step="0.001" value={form.ciderInitialGravity} onChange={(e) => set("ciderInitialGravity", e.target.value)} style={fieldStyle} />
+                        </div>
+                        <div>
+                          <label style={labelStyle}>Densité finale</label>
+                          <input type="number" step="0.001" value={form.ciderFinalGravity} onChange={(e) => set("ciderFinalGravity", e.target.value)} style={fieldStyle} />
+                        </div>
+                      </div>
+                      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "12px", marginBottom: "12px" }}>
+                        <div>
+                          <label style={labelStyle}>Sucre résiduel (g/L)</label>
+                          <input type="number" step="0.1" value={form.residualSugar} onChange={(e) => set("residualSugar", e.target.value)} style={fieldStyle} />
+                        </div>
+                        <div>
+                          <label style={labelStyle}>Acidité totale (g/L)</label>
+                          <input type="number" step="0.1" value={form.totalAcidity} onChange={(e) => set("totalAcidity", e.target.value)} style={fieldStyle} />
+                        </div>
+                        <div>
+                          <label style={labelStyle}>pH</label>
+                          <input type="number" step="0.01" value={form.ciderPh} onChange={(e) => set("ciderPh", e.target.value)} style={fieldStyle} />
+                        </div>
+                      </div>
+                      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px", marginBottom: "12px" }}>
+                        <div>
+                          <label style={labelStyle}>Tanins</label>
+                          <input type="number" step="0.1" value={form.tanninLevel} onChange={(e) => set("tanninLevel", e.target.value)} style={fieldStyle} />
+                        </div>
+                        <div>
+                          <label style={labelStyle}>Carbonatation (CO2 ou g/L)</label>
+                          <input value={form.ciderCarbonationTechnical} onChange={(e) => set("ciderCarbonationTechnical", e.target.value)} style={fieldStyle} />
+                        </div>
+                      </div>
+                      <label style={labelStyle}>Variétés détaillées</label>
+                      <input value={form.detailedVarieties} onChange={(e) => set("detailedVarieties", e.target.value)} placeholder="Variétés et proportions si connues" style={{ ...fieldStyle, marginBottom: "12px" }} />
+                      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px", marginBottom: "12px" }}>
+                        <div>
+                          <label style={labelStyle}>Type de pommes</label>
+                          <select value={form.appleType} onChange={(e) => set("appleType", e.target.value)} style={fieldStyle}>
+                            <option value="">—</option>
+                            {APPLE_TYPES.map((t) => (
+                              <option key={t} value={t}>
+                                {t}
+                              </option>
+                            ))}
+                          </select>
+                        </div>
+                        <div>
+                          <label style={labelStyle}>Méthode de pressage</label>
+                          <input value={form.pressingMethod} onChange={(e) => set("pressingMethod", e.target.value)} style={fieldStyle} />
+                        </div>
+                      </div>
+                      <label style={labelStyle}>Défécation / Keeving</label>
+                      <input value={form.defecationKeeving} onChange={(e) => set("defecationKeeving", e.target.value)} style={{ ...fieldStyle, marginBottom: "12px" }} />
+                      <label style={labelStyle}>Fermentation malolactique</label>
+                      <select value={form.malolacticFermentation} onChange={(e) => set("malolacticFermentation", e.target.value)} style={{ ...fieldStyle, marginBottom: "12px" }}>
+                        <option value="">—</option>
+                        {YES_NO_UNKNOWN.map((t) => (
+                          <option key={t} value={t}>
+                            {t}
+                          </option>
+                        ))}
+                      </select>
+                      <label style={labelStyle}>Assemblage</label>
+                      <input value={form.ciderBlendDetails} onChange={(e) => set("ciderBlendDetails", e.target.value)} placeholder="Variétés, cuvées, millésimes assemblés" style={{ ...fieldStyle, marginBottom: "12px" }} />
+                      <label style={labelStyle}>Vieillissement (détails)</label>
+                      <input value={form.ciderAgingDetails} onChange={(e) => set("ciderAgingDetails", e.target.value)} placeholder="Durée, récipient, type de bois" style={fieldStyle} />
+                      </CollapsibleSection>
+                    )}
+
+                    <CollapsibleSection title="Traçabilité & sources">
+                    <label style={labelStyle}>Source de l'information</label>
+                    <input value={form.infoSource} onChange={(e) => set("infoSource", e.target.value)} placeholder="Site officiel, fiche technique, étiquette..." style={{ ...fieldStyle, marginBottom: "12px" }} />
+                    <label style={labelStyle}>URL source</label>
+                    <input value={form.sourceUrl} onChange={(e) => set("sourceUrl", e.target.value)} style={{ ...fieldStyle, marginBottom: "12px" }} />
+                    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px", marginBottom: "12px" }}>
+                      <div>
+                        <label style={labelStyle}>Date de vérification</label>
+                        <input type="date" value={form.verificationDate} onChange={(e) => set("verificationDate", e.target.value)} style={fieldStyle} />
+                      </div>
+                      <div>
+                        <label style={labelStyle}>Contributeur</label>
+                        <input value={form.contributor} onChange={(e) => set("contributor", e.target.value)} style={fieldStyle} />
+                      </div>
+                    </div>
+                    <label style={labelStyle}>Statut de vérification</label>
+                    <select value={form.verificationStatus} onChange={(e) => set("verificationStatus", e.target.value)} style={fieldStyle}>
+                      {VERIFICATION_STATUSES.map((s) => (
+                        <option key={s} value={s}>
+                          {s}
+                        </option>
+                      ))}
+                    </select>
+                    </CollapsibleSection>
+                  </>
+                )}
               </>
             )}
           </>

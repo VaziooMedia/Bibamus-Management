@@ -18,68 +18,72 @@ function VariantRow({ variant, onSave, onDelete }) {
   };
 
   return (
-    <div style={{ display: "grid", gridTemplateColumns: "1fr 60px 1.4fr 1fr auto", gap: "6px", alignItems: "center", padding: "8px", background: "#16273D", borderRadius: "8px", marginBottom: "6px" }}>
-      <select
-        value={container}
-        onChange={(e) => {
-          setContainer(e.target.value);
-          setDirty(true);
-        }}
-        style={fieldStyle}
-      >
-        {CONTAINER_TYPES.map((c) => (
-          <option key={c} value={c}>
-            {c}
-          </option>
-        ))}
-      </select>
-      <input
-        type="number"
-        step="0.5"
-        min="0"
-        max="999"
-        list="common-volumes-cl"
-        value={volumeCl}
-        onChange={(e) => {
-          setVolumeCl(e.target.value);
-          setDirty(true);
-        }}
-        title="Volume (cl)"
-        style={{ ...fieldStyle, padding: "8px 4px", textAlign: "center", width: "100%" }}
-      />
-      <input
-        value={barcode}
-        onChange={(e) => {
-          setBarcode(e.target.value);
-          setDirty(true);
-        }}
-        placeholder="Code-barres (optionnel)"
-        style={fieldStyle}
-      />
-      <select
-        value={marketCountry}
-        onChange={(e) => {
-          setMarketCountry(e.target.value);
-          setDirty(true);
-        }}
-        style={fieldStyle}
-      >
-        <option value="">Marché — tous</option>
-        {COUNTRIES.map((c) => (
-          <option key={c} value={c}>
-            {c}
-          </option>
-        ))}
-      </select>
-      <div style={{ display: "flex", gap: "4px" }}>
-        {dirty && (
-          <button onClick={save} title="Enregistrer" style={{ background: "#39FF66", border: "none", borderRadius: "6px", width: "26px", height: "26px", cursor: "pointer", fontWeight: 800, fontSize: "12px" }}>
-            ✓
+    <div style={{ padding: "8px", background: "#16273D", borderRadius: "8px", marginBottom: "6px" }}>
+      <div style={{ display: "flex", gap: "6px", marginBottom: "6px" }}>
+        <select
+          value={container}
+          onChange={(e) => {
+            setContainer(e.target.value);
+            setDirty(true);
+          }}
+          style={{ ...fieldStyle, flex: 1 }}
+        >
+          {CONTAINER_TYPES.map((c) => (
+            <option key={c} value={c}>
+              {c}
+            </option>
+          ))}
+        </select>
+        <input
+          type="number"
+          step="0.5"
+          min="0"
+          max="999"
+          list="common-volumes-cl"
+          value={volumeCl}
+          onChange={(e) => {
+            setVolumeCl(e.target.value);
+            setDirty(true);
+          }}
+          title="Volume (cl)"
+          style={{ ...fieldStyle, width: "60px", padding: "8px 4px", textAlign: "center", flexShrink: 0 }}
+        />
+        <div style={{ display: "flex", gap: "4px", flexShrink: 0 }}>
+          {dirty && (
+            <button onClick={save} title="Enregistrer" style={{ background: "#39FF66", border: "none", borderRadius: "6px", width: "30px", height: "30px", cursor: "pointer", fontWeight: 800, fontSize: "12px" }}>
+              ✓
+            </button>
+          )}
+          <button onClick={() => onDelete(variant.id)} title="Supprimer" style={{ background: "none", border: "none", color: "#FF3B4E", cursor: "pointer", fontSize: "14px", width: "30px" }}>
+            ✕
           </button>
-        )}
-        <button onClick={() => onDelete(variant.id)} title="Supprimer" style={{ background: "none", border: "none", color: "#FF3B4E", cursor: "pointer", fontSize: "14px" }}>
-          ✕
-        </button>
+        </div>
+      </div>
+      <div style={{ display: "flex", gap: "6px" }}>
+        <input
+          value={barcode}
+          onChange={(e) => {
+            setBarcode(e.target.value);
+            setDirty(true);
+          }}
+          placeholder="Code-barres (optionnel)"
+          style={{ ...fieldStyle, flex: 1.3 }}
+        />
+        <select
+          value={marketCountry}
+          onChange={(e) => {
+            setMarketCountry(e.target.value);
+            setDirty(true);
+          }}
+          style={{ ...fieldStyle, flex: 1 }}
+        >
+          <option value="">Marché — tous</option>
+          {COUNTRIES.map((c) => (
+            <option key={c} value={c}>
+              {c}
+            </option>
+          ))}
+        </select>
       </div>
     </div>
   );
