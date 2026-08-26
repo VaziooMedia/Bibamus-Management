@@ -175,9 +175,8 @@ export function DrinkDetailPanel({ drink, onClose, onSaved }) {
   const [mainPhotoUrl, setMainPhotoUrl] = useState(drink?.mainPhotoUrl || null);
   const [uploadingPhoto, setUploadingPhoto] = useState(false);
   const [status, setStatus] = useState(drink?.status || (isNew ? "certified" : "pending"));
-  const [stylesSectionOpen, setStylesSectionOpen] = useState((drink?.styles || []).length > 0);
-  const [niveau2Open, setNiveau2Open] = useState(false);
-  const [niveau3Open, setNiveau3Open] = useState(false);
+  const [stylesSectionOpen, setStylesSectionOpen] = useState(true);
+  const [activeTab, setActiveTab] = useState("quick");
   const [saving, setSaving] = useState(false);
   const [brandOptions, setBrandOptions] = useState([]);
   const [producerOptions, setProducerOptions] = useState([]);
@@ -370,6 +369,45 @@ export function DrinkDetailPanel({ drink, onClose, onSaved }) {
 
         {isBeerOrCider ? (
           <>
+            <div style={{ display: "flex", gap: "4px", marginBottom: "18px", borderBottom: "2px solid #28405C" }}>
+              {[
+                { key: "quick", label: "Ajout rapide" },
+                { key: "niveau1", label: "Niveau 1" },
+                { key: "niveau2", label: "Niveau 2 (expert)" },
+                { key: "niveau3", label: "Niveau 3 (expert)" },
+              ].map((tab) => (
+                <button
+                  key={tab.key}
+                  onClick={() => setActiveTab(tab.key)}
+                  style={{
+                    background: "none",
+                    border: "none",
+                    borderBottom: activeTab === tab.key ? "2px solid #39FF66" : "2px solid transparent",
+                    marginBottom: "-2px",
+                    padding: "8px 10px",
+                    color: activeTab === tab.key ? "#39FF66" : "#8792A6",
+                    fontWeight: activeTab === tab.key ? 700 : 500,
+                    fontSize: "12.5px",
+                    cursor: "pointer",
+                  }}
+                >
+                  {tab.label}
+                </button>
+              ))}
+            </div>
+
+            {activeTab === "quick" && (
+              <div>
+                <label style={labelStyle}>Taux d'alcool (%)</label>
+                <input type="number" step="0.1" value={form.abv} onChange={(e) => set("abv", e.target.value)} placeholder="Ex. 0.0 pour sans alcool" style={{ ...fieldStyle, marginBottom: "14px" }} />
+                <p style={{ fontSize: "12.5px", color: "#8792A6" }}>
+                  De quoi créer la fiche en quelques secondes. Le nom et le type suffisent pour enregistrer — vous pourrez enrichir via les onglets Niveau 1, 2 et 3 à tout moment, y compris plus tard.
+                </p>
+              </div>
+            )}
+
+            {activeTab === "niveau1" && (
+              <>
             <label style={labelStyle}>Bière / Cidre / Poiré</label>
             <select value={form.beverageSubtype} onChange={(e) => set("beverageSubtype", e.target.value)} style={{ ...fieldStyle, marginBottom: "14px" }}>
               {BEER_CIDER_SUBTYPES.map((t) => (
@@ -473,20 +511,10 @@ export function DrinkDetailPanel({ drink, onClose, onSaved }) {
                 <StyleTagAccordion groups={BEER_CIDER_STYLE_GROUPS} selected={form.styles} onToggle={toggleStyle} />
               </>
             )}
+              </>
+            )}
 
-            <div style={separatorStyle} />
-            <button
-              onClick={() => setNiveau2Open((o) => !o)}
-              style={{ width: "100%", display: "flex", justifyContent: "space-between", alignItems: "center", background: "none", border: "none", cursor: "pointer", padding: 0, marginBottom: niveau2Open ? "14px" : 0 }}
-            >
-              <span style={{ ...sectionTitleStyle, marginTop: 0, marginBottom: 0 }}>
-                <span style={{ width: "4px", height: "14px", background: "#39FF66", borderRadius: "2px", display: "inline-block" }} />
-                Niveau 2 — Informations complémentaires
-              </span>
-              <span style={{ color: "#39FF66", fontSize: "12px" }}>{niveau2Open ? "▼" : "▶"}</span>
-            </button>
-
-            {niveau2Open && (
+            {activeTab === "niveau2" && (
               <>
                 {isBeer ? (
                   <>
@@ -867,23 +895,16 @@ export function DrinkDetailPanel({ drink, onClose, onSaved }) {
                 </p>
                 <VariantManager drinkId={drink?.id || null} />
                 </CollapsibleSection>
+              </>
+            )}
 
-                <div style={separatorStyle} />
-                <button
-                  onClick={() => setNiveau3Open((o) => !o)}
-                  style={{ width: "100%", display: "flex", justifyContent: "space-between", alignItems: "center", background: "none", border: "none", cursor: "pointer", padding: 0, marginBottom: niveau3Open ? "14px" : 0 }}
-                >
-                  <span style={{ ...sectionTitleStyle, marginTop: 0, marginBottom: 0 }}>
-                    <span style={{ width: "4px", height: "14px", background: "#39FF66", borderRadius: "2px", display: "inline-block" }} />
-                    Niveau 3 — Données expert
-                  </span>
-                  <span style={{ color: "#39FF66", fontSize: "12px" }}>{niveau3Open ? "▼" : "▶"}</span>
-                </button>
-
-                {niveau3Open && (
+            {activeTab === "niveau3" && (
+              <>
+                <div style={{ background: "#2A1F0D", border: "2px solid #FF9500", borderRadius: "8px", padding: "12px", marginBottom: "16px", fontSize: "12px", color: "#F2F2E8" }}>
+                  🔒 Réservé aux producteurs "Business" (accord B2B) et aux administrateurs. L'accès depuis cette plateforme n'est pas encore restreint techniquement — un vrai verrouillage par compte producteur reste à construire.
+                </div>
+                {isBeer ? (
                   <>
-                    {isBeer ? (
-                      <>
                         <CollapsibleSection title="Données techniques (bière)">
                         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "12px", marginBottom: "12px" }}>
                           <div>
@@ -1066,8 +1087,6 @@ export function DrinkDetailPanel({ drink, onClose, onSaved }) {
                     </CollapsibleSection>
                   </>
                 )}
-              </>
-            )}
           </>
         ) : (
           <p style={{ background: "#16273D", borderRadius: "8px", padding: "12px", fontSize: "12.5px", color: "#8792A6", marginBottom: "14px" }}>
