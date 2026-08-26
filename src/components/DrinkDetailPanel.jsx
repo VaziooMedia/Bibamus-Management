@@ -46,6 +46,7 @@ export function DrinkDetailPanel({ drink, onClose, onSaved }) {
   const [mainPhotoUrl, setMainPhotoUrl] = useState(drink?.mainPhotoUrl || null);
   const [uploadingPhoto, setUploadingPhoto] = useState(false);
   const [status, setStatus] = useState(drink?.status || (isNew ? "certified" : "pending"));
+  const [stylesSectionOpen, setStylesSectionOpen] = useState((drink?.styles || []).length > 0);
   const [saving, setSaving] = useState(false);
   const [brandOptions, setBrandOptions] = useState([]);
   const [producerOptions, setProducerOptions] = useState([]);
@@ -219,9 +220,33 @@ export function DrinkDetailPanel({ drink, onClose, onSaved }) {
             </p>
 
             <div style={separatorStyle} />
-            <SectionTitle>Style(s)</SectionTitle>
-            <p style={{ fontSize: "11.5px", color: "#8792A6", marginTop: "-6px", marginBottom: "10px" }}>Plusieurs styles peuvent se cumuler (ex. IPA + Hazy + Double IPA).</p>
-            <StyleTagAccordion groups={BEER_CIDER_STYLE_GROUPS} selected={form.styles} onToggle={toggleStyle} />
+            <button
+              onClick={() => setStylesSectionOpen((o) => !o)}
+              style={{
+                width: "100%",
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "center",
+                background: "none",
+                border: "none",
+                cursor: "pointer",
+                padding: 0,
+                marginBottom: stylesSectionOpen ? "12px" : 0,
+              }}
+            >
+              <span style={{ ...sectionTitleStyle, marginTop: 0, marginBottom: 0 }}>
+                <span style={{ width: "4px", height: "14px", background: "#39FF66", borderRadius: "2px", display: "inline-block" }} />
+                Style(s)
+                {form.styles.length > 0 && <span style={{ color: "#8792A6", fontWeight: 500 }}> ({form.styles.length} sélectionné{form.styles.length > 1 ? "s" : ""})</span>}
+              </span>
+              <span style={{ color: "#39FF66", fontSize: "12px" }}>{stylesSectionOpen ? "▼" : "▶"}</span>
+            </button>
+            {stylesSectionOpen && (
+              <>
+                <p style={{ fontSize: "11.5px", color: "#8792A6", marginTop: "-6px", marginBottom: "10px" }}>Plusieurs styles peuvent se cumuler (ex. IPA + Hazy + Double IPA).</p>
+                <StyleTagAccordion groups={BEER_CIDER_STYLE_GROUPS} selected={form.styles} onToggle={toggleStyle} />
+              </>
+            )}
           </>
         ) : (
           <p style={{ background: "#16273D", borderRadius: "8px", padding: "12px", fontSize: "12.5px", color: "#8792A6", marginBottom: "14px" }}>
