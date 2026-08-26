@@ -85,6 +85,7 @@ export function VenueDetailPanel({ venue, onClose, onSaved, onManageMenu }) {
   const [uploadingMenu, setUploadingMenu] = useState(false);
   const [status, setStatus] = useState(venue?.status || (isNew ? "certified" : "pending"));
   const [googlePlaceId, setGooglePlaceId] = useState(venue?.googlePlaceId || null);
+  const [noGooglePresence, setNoGooglePresenceState] = useState(!!venue?.noGooglePresence);
   const [saving, setSaving] = useState(false);
 
   const set = (field, value) => setForm((f) => ({ ...f, [field]: value }));
@@ -417,7 +418,9 @@ export function VenueDetailPanel({ venue, onClose, onSaved, onManageMenu }) {
             address={`${form.streetName} ${form.streetNumber}, ${form.postalCode} ${form.city}`}
             googlePlaceId={googlePlaceId}
             checkedAt={venue?.googlePlaceIdCheckedAt}
+            noGooglePresence={noGooglePresence}
             onLinked={setGooglePlaceId}
+            onNoPresenceChange={setNoGooglePresenceState}
           />
         </div>
 
