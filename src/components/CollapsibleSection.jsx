@@ -21,7 +21,7 @@ export function CollapsibleSection({ title, defaultOpen = false, children }) {
           marginBottom: open ? "10px" : 0,
         }}
       >
-        <span style={{ fontSize: "13px", fontWeight: 700, color: "#39FF66", display: "flex", alignItems: "center", gap: "8px" }}>
+        <span style={{ fontSize: "13px", fontWeight: 700, color: "#F2F2E8", display: "flex", alignItems: "center", gap: "8px" }}>
           <span style={{ width: "4px", height: "14px", background: "#39FF66", borderRadius: "2px", display: "inline-block" }} />
           {title}
         </span>

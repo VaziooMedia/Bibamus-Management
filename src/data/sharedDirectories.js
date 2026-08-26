@@ -242,6 +242,18 @@ export async function uploadDrinkMainPhoto(drinkId, file) {
   return data.publicUrl;
 }
 
+export async function uploadDrinkGalleryPhoto(drinkId, file) {
+  const blob = await resizeImageTo(file, 1000, 1000);
+  const path = `${drinkId}-gallery-${Date.now()}-${Math.floor(Math.random() * 10000)}.jpg`;
+  const { error: uploadError } = await supabase.storage.from("drink-photos").upload(path, blob, { contentType: "image/jpeg", upsert: true });
+  if (uploadError) {
+    console.error("uploadDrinkGalleryPhoto:", uploadError);
+    return null;
+  }
+  const { data } = supabase.storage.from("drink-photos").getPublicUrl(path);
+  return data.publicUrl;
+}
+
 export async function loadDrinksDirectory() {
   const { data, error } = await supabase.from("drinks_directory").select("*").order("name");
   if (error) {
@@ -257,7 +269,7 @@ function applyStatusFilter(query, status) {
   return query.eq("status", status);
 }
 
-const KNOWN_DRINK_TYPES = ["Bières", "Vins & bulles", "Spiritueux", "Cocktails / Mocktails", "Softs & eaux", "Boissons chaudes", "Snacks"];
+const KNOWN_DRINK_TYPES = ["Bières & Cidres", "Vins & Bulles", "Spiritueux", "Cocktails / Mocktails", "Softs & Eaux", "Boissons chaudes", "Snacks", "Génériques"];
 
 function applyTypeFilter(query, type) {
   if (!type) return query;
@@ -359,6 +371,7 @@ function rowToDrink(row) {
     originRegion: row.origin_region,
     originCity: row.origin_city,
     mainPhotoUrl: row.main_photo_url,
+    galleryPhotos: row.gallery_photos || [],
     styles: row.styles || [],
     productStatus: row.product_status,
     alternateName: row.alternate_name,
@@ -504,6 +517,7 @@ function drinkToRow(d, partial = false) {
     origin_region: d.originRegion,
     origin_city: d.originCity,
     main_photo_url: d.mainPhotoUrl,
+    gallery_photos: d.galleryPhotos,
     styles: d.styles,
     product_status: d.productStatus,
     alternate_name: d.alternateName,

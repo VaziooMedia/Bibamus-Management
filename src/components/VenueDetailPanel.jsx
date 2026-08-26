@@ -26,7 +26,7 @@ const parseCoordinate = (raw) => {
 
 const fieldStyle = { padding: "10px 12px", borderRadius: "8px", border: "2px solid #28405C", fontSize: "14px", width: "100%" };
 const labelStyle = { fontSize: "12.5px", color: "#8792A6", marginBottom: "4px", display: "block", fontWeight: 600 };
-const sectionTitleStyle = { fontSize: "13px", fontWeight: 700, color: "#39FF66", marginTop: "6px", marginBottom: "12px", display: "flex", alignItems: "center", gap: "8px" };
+const sectionTitleStyle = { fontSize: "13px", fontWeight: 700, color: "#F2F2E8", marginTop: "6px", marginBottom: "12px", display: "flex", alignItems: "center", gap: "8px" };
 const separatorStyle = { borderBottom: "1px solid #28405C", margin: "20px 0" };
 
 function SectionTitle({ children }) {

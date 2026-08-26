@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from "react";
-import { updateDrink, deleteDrink, createDrink, uploadDrinkMainPhoto, loadBrandsDirectory, loadBreweriesDirectory } from "../data/sharedDirectories.js";
+import { updateDrink, deleteDrink, createDrink, uploadDrinkMainPhoto, uploadDrinkGalleryPhoto, loadBrandsDirectory, loadBreweriesDirectory } from "../data/sharedDirectories.js";
 import { StatusSelector } from "./StatusSelector.jsx";
 import { AdminPhotoField } from "./AdminPhotoField.jsx";
+import { GalleryManager } from "./GalleryManager.jsx";
 import { SearchableSelect, SearchableMultiSelect } from "./SearchableSelect.jsx";
 import { StyleTagAccordion } from "./StyleTagAccordion.jsx";
 import { TasteScale } from "./TasteScale.jsx";
@@ -31,12 +32,12 @@ import {
   VERIFICATION_STATUSES,
 } from "../data/beerCiderStyles.js";
 
-const DRINK_TYPES = ["Bières", "Vins & bulles", "Spiritueux", "Cocktails / Mocktails", "Softs & eaux", "Boissons chaudes", "Snacks"];
+const DRINK_TYPES = ["Bières & Cidres", "Vins & Bulles", "Spiritueux", "Cocktails / Mocktails", "Softs & Eaux", "Boissons chaudes", "Snacks", "Génériques"];
 const BEER_CIDER_SUBTYPES = ["Bière", "Cidre", "Poiré"];
 
 const fieldStyle = { padding: "10px 12px", borderRadius: "8px", border: "2px solid #28405C", fontSize: "14px", width: "100%" };
 const labelStyle = { fontSize: "12.5px", color: "#8792A6", marginBottom: "4px", display: "block", fontWeight: 600 };
-const sectionTitleStyle = { fontSize: "13px", fontWeight: 700, color: "#39FF66", marginTop: "6px", marginBottom: "12px", display: "flex", alignItems: "center", gap: "8px" };
+const sectionTitleStyle = { fontSize: "13px", fontWeight: 700, color: "#F2F2E8", marginTop: "6px", marginBottom: "12px", display: "flex", alignItems: "center", gap: "8px" };
 const separatorStyle = { borderBottom: "1px solid #28405C", margin: "20px 0" };
 
 function SectionTitle({ children }) {
@@ -173,15 +174,17 @@ export function DrinkDetailPanel({ drink, onClose, onSaved }) {
     verificationStatus: drink?.verificationStatus || VERIFICATION_STATUSES[0],
   });
   const [mainPhotoUrl, setMainPhotoUrl] = useState(drink?.mainPhotoUrl || null);
+  const [galleryPhotos, setGalleryPhotos] = useState(drink?.galleryPhotos || []);
+  const [uploadingGallery, setUploadingGallery] = useState(false);
   const [uploadingPhoto, setUploadingPhoto] = useState(false);
-  const [status, setStatus] = useState(drink?.status || (isNew ? "certified" : "pending"));
+  const [status, setStatus] = useState(drink?.status || "pending");
   const [stylesSectionOpen, setStylesSectionOpen] = useState(true);
   const [activeTab, setActiveTab] = useState("quick");
   const [saving, setSaving] = useState(false);
   const [brandOptions, setBrandOptions] = useState([]);
   const [producerOptions, setProducerOptions] = useState([]);
 
-  const isBeerOrCider = form.type === "Bières";
+  const isBeerOrCider = form.type === "Bières & Cidres";
   const isBeer = form.beverageSubtype === "Bière";
 
   useEffect(() => {
@@ -308,6 +311,7 @@ export function DrinkDetailPanel({ drink, onClose, onSaved }) {
       contributor: form.contributor.trim(),
       verificationStatus: form.verificationStatus,
       mainPhotoUrl,
+      galleryPhotos,
     };
   };
 
@@ -340,6 +344,16 @@ export function DrinkDetailPanel({ drink, onClose, onSaved }) {
     if (url) setMainPhotoUrl(url);
     setUploadingPhoto(false);
   };
+
+  const handleUploadGalleryPhoto = async (file) => {
+    setUploadingGallery(true);
+    const tempId = drink?.id || `pending-${Date.now()}`;
+    const url = await uploadDrinkGalleryPhoto(tempId, file);
+    if (url) setGalleryPhotos((prev) => [...prev, url]);
+    setUploadingGallery(false);
+  };
+
+  const removeGalleryPhoto = (index) => setGalleryPhotos((prev) => prev.filter((_, i) => i !== index));
 
   return (
     <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.5)", display: "flex", justifyContent: "flex-end", zIndex: 100 }}>
@@ -375,6 +389,7 @@ export function DrinkDetailPanel({ drink, onClose, onSaved }) {
                 { key: "niveau1", label: "Niveau 1" },
                 { key: "niveau2", label: "Niveau 2 (expert)" },
                 { key: "niveau3", label: "Niveau 3 (expert)" },
+                { key: "gallery", label: "Galerie images" },
               ].map((tab) => (
                 <button
                   key={tab.key}
@@ -1087,6 +1102,13 @@ export function DrinkDetailPanel({ drink, onClose, onSaved }) {
                     </CollapsibleSection>
                   </>
                 )}
+
+            {activeTab === "gallery" && (
+              <div>
+                <p style={{ fontSize: "12.5px", color: "#8792A6", marginBottom: "12px" }}>Photos additionnelles du produit (packaging, étiquette, verre servi...).</p>
+                <GalleryManager photos={galleryPhotos} onUpload={handleUploadGalleryPhoto} onRemove={removeGalleryPhoto} uploading={uploadingGallery} />
+              </div>
+            )}
           </>
         ) : (
           <p style={{ background: "#16273D", borderRadius: "8px", padding: "12px", fontSize: "12.5px", color: "#8792A6", marginBottom: "14px" }}>
