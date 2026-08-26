@@ -89,6 +89,10 @@ function rowToVenue(row) {
     hasTerrace: !!row.has_terrace,
     wheelchairAccessible: !!row.wheelchair_accessible,
     hasWifi: !!row.has_wifi,
+    googlePlaceId: row.google_place_id,
+    googlePlaceIdCheckedAt: row.google_place_id_checked_at,
+    googleHoursLastFetchAt: row.google_hours_last_fetch_at,
+    googleHoursLastStatus: row.google_hours_last_status,
     ownerManaged: !!row.owner_managed,
     status: row.status,
     likes: row.likes || [],
@@ -158,6 +162,43 @@ function venueToRow(v, partial = false) {
   // fields the caller didn't mean to touch.
   Object.keys(row).forEach((k) => row[k] === undefined && delete row[k]);
   return row;
+}
+
+/* ---------------- HORAIRES — GOOGLE PLACES (source unique) ---------------- */
+
+// Les horaires ne sont jamais encodés à la main — Google est la source unique. Ces fonctions
+// ne gèrent QUE la liaison (recherche + confirmation du Google Place ID) ; l'appel réel à
+// Google se fait côté serveur (Edge Function Supabase), jamais depuis le navigateur, pour ne
+// jamais exposer la clé API.
+
+export async function searchGooglePlaceMatches({ name, address }) {
+  try {
+    const { data, error } = await supabase.functions.invoke("google-place-search", { body: { name, address } });
+    if (error) {
+      console.error("searchGooglePlaceMatches:", error);
+      return null;
+    }
+    return data?.candidates || [];
+  } catch (e) {
+    console.error("searchGooglePlaceMatches:", e);
+    return null;
+  }
+}
+
+export async function linkGooglePlace(venueId, googlePlaceId) {
+  const { error } = await supabase
+    .from("public_venues")
+    .update({ google_place_id: googlePlaceId, google_place_id_checked_at: new Date().toISOString() })
+    .eq("id", venueId);
+  if (error) console.error("linkGooglePlace:", error);
+}
+
+export async function unlinkGooglePlace(venueId) {
+  const { error } = await supabase
+    .from("public_venues")
+    .update({ google_place_id: null, google_place_id_checked_at: null, google_hours_last_fetch_at: null, google_hours_last_status: null })
+    .eq("id", venueId);
+  if (error) console.error("unlinkGooglePlace:", error);
 }
 
 /* ---------------- PHOTOS D'ÉTABLISSEMENTS ---------------- */

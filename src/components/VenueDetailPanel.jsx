@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { updatePublicVenue, deletePublicVenue, createPublicVenue, uploadVenuePhoto, uploadVenueMenuPdf } from "../data/sharedDirectories.js";
 import { StatusSelector } from "./StatusSelector.jsx";
 import { AdminPhotoField } from "./AdminPhotoField.jsx";
-import { OpeningHoursEditor } from "./OpeningHoursEditor.jsx";
+import { GooglePlaceLinker } from "./GooglePlaceLinker.jsx";
 import { COUNTRIES, PAYMENT_METHODS, VENUE_TYPES, PHONE_PREFIXES } from "../constants.js";
 
 // Majuscule en début de chaque mot — appliqué à la validation (au moment de quitter le champ),
@@ -76,7 +76,6 @@ export function VenueDetailPanel({ venue, onClose, onSaved, onManageMenu }) {
     privatizationPossible: !!venue?.privatizationPossible,
     hasPrivateRoom: !!venue?.hasPrivateRoom,
     smokingArea: !!venue?.smokingArea,
-    openingHours: venue?.openingHours && venue.openingHours.days ? venue.openingHours : { days: {}, openOnHolidays: false },
   });
   const [profilePhotoUrl, setProfilePhotoUrl] = useState(venue?.profilePhotoUrl || null);
   const [coverPhotoUrl, setCoverPhotoUrl] = useState(venue?.coverPhotoUrl || null);
@@ -85,6 +84,7 @@ export function VenueDetailPanel({ venue, onClose, onSaved, onManageMenu }) {
   const [uploadingCover, setUploadingCover] = useState(false);
   const [uploadingMenu, setUploadingMenu] = useState(false);
   const [status, setStatus] = useState(venue?.status || (isNew ? "certified" : "pending"));
+  const [googlePlaceId, setGooglePlaceId] = useState(venue?.googlePlaceId || null);
   const [saving, setSaving] = useState(false);
 
   const set = (field, value) => setForm((f) => ({ ...f, [field]: value }));
@@ -134,7 +134,6 @@ export function VenueDetailPanel({ venue, onClose, onSaved, onManageMenu }) {
     hasPrivateRoom: form.hasPrivateRoom,
     smokingArea: form.smokingArea,
     menuPdfUrl,
-    openingHours: form.openingHours,
     profilePhotoUrl,
     coverPhotoUrl,
     status,
@@ -411,8 +410,15 @@ export function VenueDetailPanel({ venue, onClose, onSaved, onManageMenu }) {
         </div>
 
         <label style={labelStyle}>Horaires d'ouverture</label>
-        <div style={{ background: "#16273D", borderRadius: "8px", padding: "12px", marginBottom: "14px" }}>
-          <OpeningHoursEditor value={form.openingHours} onChange={(v) => set("openingHours", v)} />
+        <div style={{ marginBottom: "14px" }}>
+          <GooglePlaceLinker
+            venueId={venue?.id || null}
+            name={form.name}
+            address={`${form.streetName} ${form.streetNumber}, ${form.postalCode} ${form.city}`}
+            googlePlaceId={googlePlaceId}
+            checkedAt={venue?.googlePlaceIdCheckedAt}
+            onLinked={setGooglePlaceId}
+          />
         </div>
 
         <div style={{ display: "flex", flexDirection: "column", gap: "8px", marginBottom: "6px" }}>
