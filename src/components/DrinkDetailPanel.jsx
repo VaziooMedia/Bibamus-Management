@@ -186,11 +186,6 @@ export function DrinkDetailPanel({ drink, onClose, onSaved }) {
             </div>
 
             <div style={separatorStyle} />
-            <SectionTitle>Style(s)</SectionTitle>
-            <p style={{ fontSize: "11.5px", color: "#8792A6", marginTop: "-6px", marginBottom: "10px" }}>Plusieurs styles peuvent se cumuler (ex. IPA + Hazy + Double IPA).</p>
-            <StyleTagAccordion groups={BEER_CIDER_STYLE_GROUPS} selected={form.styles} onToggle={toggleStyle} />
-
-            <div style={separatorStyle} />
             <SectionTitle>Caractéristiques</SectionTitle>
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px", marginBottom: "12px" }}>
               <div>
@@ -222,6 +217,11 @@ export function DrinkDetailPanel({ drink, onClose, onSaved }) {
             <p style={{ fontSize: "11px", color: "#8792A6", marginTop: "-2px", marginBottom: "14px" }}>
               Le code-barres se gère depuis le scan dans l'app — pas encore intégré à cette fiche.
             </p>
+
+            <div style={separatorStyle} />
+            <SectionTitle>Style(s)</SectionTitle>
+            <p style={{ fontSize: "11.5px", color: "#8792A6", marginTop: "-6px", marginBottom: "10px" }}>Plusieurs styles peuvent se cumuler (ex. IPA + Hazy + Double IPA).</p>
+            <StyleTagAccordion groups={BEER_CIDER_STYLE_GROUPS} selected={form.styles} onToggle={toggleStyle} />
           </>
         ) : (
           <p style={{ background: "#16273D", borderRadius: "8px", padding: "12px", fontSize: "12.5px", color: "#8792A6", marginBottom: "14px" }}>
