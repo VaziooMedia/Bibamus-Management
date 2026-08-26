@@ -1,7 +1,8 @@
-import React, { useState } from "react";
-import { updateBrand, deleteBrand, createBrand, uploadBrandLogo } from "../data/sharedDirectories.js";
+import React, { useState, useEffect } from "react";
+import { updateBrand, deleteBrand, createBrand, uploadBrandLogo, loadBreweriesDirectory } from "../data/sharedDirectories.js";
 import { StatusSelector } from "./StatusSelector.jsx";
 import { AdminPhotoField } from "./AdminPhotoField.jsx";
+import { SearchableSelect } from "./SearchableSelect.jsx";
 import { COUNTRIES, BRAND_CLASSIFICATIONS, BRAND_TYPES } from "../constants.js";
 
 const capitalizeWords = (s) => s.replace(/\b\p{L}/gu, (c) => c.toUpperCase());
@@ -65,13 +66,18 @@ export function BrandDetailPanel({ brand, onClose, onSaved }) {
     instagramUrl: brand?.instagramUrl || "",
     tiktokUrl: brand?.tiktokUrl || "",
     snapchatUrl: brand?.snapchatUrl || "",
-    currentProducer: brand?.currentProducer || "",
+    producerId: brand?.producerId || null,
     brandOwner: brand?.brandOwner || "",
   });
   const [logoUrl, setLogoUrl] = useState(brand?.logoUrl || null);
   const [uploadingLogo, setUploadingLogo] = useState(false);
   const [status, setStatus] = useState(brand?.status || (isNew ? "certified" : "pending"));
   const [saving, setSaving] = useState(false);
+  const [producerOptions, setProducerOptions] = useState([]);
+
+  useEffect(() => {
+    loadBreweriesDirectory().then((list) => setProducerOptions(list.map((b) => ({ id: b.id, name: b.name }))));
+  }, []);
 
   const set = (field, value) => setForm((f) => ({ ...f, [field]: value }));
   const capitalizeOnBlur = (field) => () => set(field, capitalizeWords(form[field]));
@@ -91,7 +97,7 @@ export function BrandDetailPanel({ brand, onClose, onSaved }) {
     instagramUrl: form.instagramUrl.trim(),
     tiktokUrl: form.tiktokUrl.trim(),
     snapchatUrl: form.snapchatUrl.trim(),
-    currentProducer: form.currentProducer.trim(),
+    producerId: form.producerId,
     brandOwner: form.brandOwner.trim(),
     logoUrl,
     status,
@@ -199,7 +205,9 @@ export function BrandDetailPanel({ brand, onClose, onSaved }) {
         <div style={separatorStyle} />
         <SectionTitle>Producteur / Propriétaire</SectionTitle>
         <label style={labelStyle}>Producteur actuel</label>
-        <input value={form.currentProducer} onChange={(e) => set("currentProducer", e.target.value)} onBlur={capitalizeOnBlur("currentProducer")} style={{ ...fieldStyle, marginBottom: "12px" }} />
+        <div style={{ marginBottom: "12px" }}>
+          <SearchableSelect options={producerOptions} value={form.producerId} onChange={(id) => set("producerId", id)} placeholder="Chercher un producteur..." />
+        </div>
         <label style={labelStyle}>Propriétaire de la marque</label>
         <input value={form.brandOwner} onChange={(e) => set("brandOwner", e.target.value)} onBlur={capitalizeOnBlur("brandOwner")} style={fieldStyle} />
 

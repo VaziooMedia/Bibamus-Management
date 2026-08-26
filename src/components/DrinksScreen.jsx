@@ -10,12 +10,12 @@ import { PageTitle } from "./PageTitle.jsx";
 const allColumns = [
   { key: "name", label: "Nom" },
   { key: "type", label: "Type" },
-  { key: "brand", label: "Marque" },
-  { key: "brewery", label: "Brasserie" },
+  { key: "beverageSubtype", label: "Bière/Cidre" },
+  { key: "brandName", label: "Marque" },
   { key: "nationality", label: "Origine" },
   { key: "abv", label: "Degré", render: (d) => (d.abv != null ? `${d.abv}%` : "—") },
   { key: "kcalPer100ml", label: "Kcal/100ml" },
-  { key: "volumeCl", label: "Volume (cl)" },
+  { key: "productStatus", label: "Statut produit" },
   { key: "status", label: "Statut", render: (d) => <StatusBadge status={d.status} /> },
 ];
 
@@ -69,7 +69,7 @@ export function DrinksScreen() {
       <ServerDataTable
         allColumns={allColumns}
         forcedKeys={["name", "status"]}
-        defaultVisibleKeys={["name", "type", "brand", "brewery", "abv", "status"]}
+        defaultVisibleKeys={["name", "type", "beverageSubtype", "brandName", "abv", "status"]}
         fetchPage={fetchPage}
         onRowClick={setSelected}
         onAdd={() => setCreating(true)}

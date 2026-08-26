@@ -210,6 +210,38 @@ export async function uploadVenueMenuPdf(venueId, file) {
 
 /* ---------------- PRODUITS (RÉPERTOIRE DES BOISSONS) ---------------- */
 
+// Chargements allégés (juste id + nom) pour alimenter les menus déroulants avec recherche —
+// bien plus légers qu'un chargement complet des fiches, pour les liens marque/producteur.
+export async function loadBrandsForSelect() {
+  const { data, error } = await supabase.from("brands_directory").select("id, name").order("name");
+  if (error) {
+    console.error("loadBrandsForSelect:", error);
+    return [];
+  }
+  return data;
+}
+
+export async function loadBreweriesForSelect() {
+  const { data, error } = await supabase.from("breweries_directory").select("id, name").order("name");
+  if (error) {
+    console.error("loadBreweriesForSelect:", error);
+    return [];
+  }
+  return data;
+}
+
+export async function uploadDrinkMainPhoto(drinkId, file) {
+  const blob = await resizeImageTo(file, 800, 800);
+  const path = `${drinkId}-main-${Date.now()}.jpg`;
+  const { error: uploadError } = await supabase.storage.from("drink-photos").upload(path, blob, { contentType: "image/jpeg", upsert: true });
+  if (uploadError) {
+    console.error("uploadDrinkMainPhoto:", uploadError);
+    return null;
+  }
+  const { data } = supabase.storage.from("drink-photos").getPublicUrl(path);
+  return data.publicUrl;
+}
+
 export async function loadDrinksDirectory() {
   const { data, error } = await supabase.from("drinks_directory").select("*").order("name");
   if (error) {
@@ -237,10 +269,12 @@ function applyTypeFilter(query, type) {
 // répertoire d'un coup, pour rester rapide même avec des dizaines ou centaines de milliers de
 // produits.
 export async function loadDrinksPage({ type, search, sortKey = "name", sortDir = 1, page = 0, pageSize = 50 } = {}) {
-  let query = supabase.from("drinks_directory").select("*", { count: "exact" });
+  let query = supabase.from("drinks_directory").select("*, brands_directory(name)", { count: "exact" });
   query = applyTypeFilter(query, type);
   if (search && search.trim()) query = query.ilike("name", `%${search.trim()}%`);
-  query = query.order(sortKey, { ascending: sortDir === 1, nullsFirst: false });
+  // "brandName" résulte d'une jointure, pas d'une vraie colonne — on trie par brand_id à la place.
+  const realSortKey = sortKey === "brandName" ? "brand_id" : sortKey;
+  query = query.order(realSortKey, { ascending: sortDir === 1, nullsFirst: false });
   query = query.range(page * pageSize, page * pageSize + pageSize - 1);
 
   const { data, error, count } = await query;
@@ -248,7 +282,10 @@ export async function loadDrinksPage({ type, search, sortKey = "name", sortDir =
     console.error("loadDrinksPage:", error);
     return { items: [], total: 0 };
   }
-  return { items: data.map(rowToDrink), total: count || 0 };
+  return {
+    items: data.map((row) => ({ ...rowToDrink(row), brandName: row.brands_directory?.name || null })),
+    total: count || 0,
+  };
 }
 
 // Un seul décompte rapide (via count exact, sans jamais rapatrier les lignes elles-mêmes) —
@@ -316,6 +353,16 @@ function rowToDrink(row) {
     averagePrice: row.average_price,
     averageJetonValue: row.average_jeton_value,
     avatarEmoji: row.avatar_emoji,
+    brandId: row.brand_id,
+    producerIds: row.producer_ids || [],
+    beverageSubtype: row.beverage_subtype,
+    originRegion: row.origin_region,
+    originCity: row.origin_city,
+    mainPhotoUrl: row.main_photo_url,
+    styles: row.styles || [],
+    productStatus: row.product_status,
+    alternateName: row.alternate_name,
+    launchYear: row.launch_year,
     submittedBy: row.submitted_by,
     submittedAt: row.submitted_at ? new Date(row.submitted_at).getTime() : null,
     description: row.description,
@@ -348,6 +395,16 @@ function drinkToRow(d, partial = false) {
     average_price: d.averagePrice,
     average_jeton_value: d.averageJetonValue,
     avatar_emoji: d.avatarEmoji,
+    brand_id: d.brandId,
+    producer_ids: d.producerIds,
+    beverage_subtype: d.beverageSubtype,
+    origin_region: d.originRegion,
+    origin_city: d.originCity,
+    main_photo_url: d.mainPhotoUrl,
+    styles: d.styles,
+    product_status: d.productStatus,
+    alternate_name: d.alternateName,
+    launch_year: d.launchYear,
     submitted_by: d.submittedBy,
     submitted_at: d.submittedAt ? new Date(d.submittedAt).toISOString() : undefined,
     description: d.description,
@@ -522,7 +579,7 @@ function rowToBrand(row) {
     instagramUrl: row.instagram_url,
     tiktokUrl: row.tiktok_url,
     snapchatUrl: row.snapchat_url,
-    currentProducer: row.current_producer,
+    producerId: row.producer_id,
     brandOwner: row.brand_owner,
     status: row.status,
     ownerManaged: !!row.owner_managed,
@@ -548,7 +605,7 @@ function brandToRow(b, partial = false) {
     instagram_url: b.instagramUrl,
     tiktok_url: b.tiktokUrl,
     snapchat_url: b.snapchatUrl,
-    current_producer: b.currentProducer,
+    producer_id: b.producerId,
     brand_owner: b.brandOwner,
     status: b.status,
     owner_managed: b.ownerManaged,
