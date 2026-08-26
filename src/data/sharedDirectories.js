@@ -363,6 +363,65 @@ function rowToDrink(row) {
     productStatus: row.product_status,
     alternateName: row.alternate_name,
     launchYear: row.launch_year,
+    // Niveau 2 — composition bière
+    malts: row.malts || [],
+    hops: row.hops || [],
+    yeast: row.yeast,
+    cereals: row.cereals || [],
+    fruits: row.fruits || [],
+    spices: row.spices || [],
+    otherIngredients: row.other_ingredients || [],
+    allergens: row.allergens || [],
+    // Niveau 2 — fabrication bière
+    fermentationType: row.fermentation_type,
+    bottleRefermented: row.bottle_refermented,
+    filtered: row.filtered,
+    pasteurized: row.pasteurized,
+    dryHopping: row.dry_hopping,
+    beerAging: row.beer_aging,
+    barrelType: row.barrel_type,
+    // Niveau 2 — composition & fabrication cidre/poiré
+    mainFruit: row.main_fruit,
+    fruitVarieties: row.fruit_varieties,
+    fruitOrigin: row.fruit_origin,
+    pureJuice: row.pure_juice,
+    concentrateUsed: row.concentrate_used,
+    ciderFermentation: row.cider_fermentation,
+    carbonationMethod: row.carbonation_method,
+    ciderFiltered: row.cider_filtered,
+    ciderPasteurized: row.cider_pasteurized,
+    ciderAging: row.cider_aging,
+    ciderBarrelType: row.cider_barrel_type,
+    // Niveau 2 — profil gustatif
+    tasteBitterness: row.taste_bitterness,
+    tasteSweetness: row.taste_sweetness,
+    tasteAcidity: row.taste_acidity,
+    tasteBody: row.taste_body,
+    tasteFruitiness: row.taste_fruitiness,
+    tasteHoppiness: row.taste_hoppiness,
+    tasteMaltiness: row.taste_maltiness,
+    tasteTannin: row.taste_tannin,
+    tasteCarbonation: row.taste_carbonation,
+    // Niveau 2 — arômes & saveurs
+    flavorNotes: row.flavor_notes || [],
+    // Niveau 2 — service & consommation
+    servingTemperature: row.serving_temperature,
+    recommendedGlass: row.recommended_glass,
+    foodPairings: row.food_pairings || [],
+    occasion: row.occasion,
+    // Niveau 2 — caractéristiques & labels
+    alcoholFree: !!row.alcohol_free,
+    lowAlcohol: !!row.low_alcohol,
+    glutenReduced: !!row.gluten_reduced,
+    vegan: row.vegan,
+    sugarFree: !!row.sugar_free,
+    lactoseFree: !!row.lactose_free,
+    certifications: row.certifications || [],
+    // Niveau 2 — présentation
+    shortDescription: row.short_description,
+    fullDescription: row.full_description,
+    productHistory: row.product_history,
+    officialUrl: row.official_url,
     submittedBy: row.submitted_by,
     submittedAt: row.submitted_at ? new Date(row.submitted_at).getTime() : null,
     description: row.description,
@@ -405,6 +464,57 @@ function drinkToRow(d, partial = false) {
     product_status: d.productStatus,
     alternate_name: d.alternateName,
     launch_year: d.launchYear,
+    malts: d.malts,
+    hops: d.hops,
+    yeast: d.yeast,
+    cereals: d.cereals,
+    fruits: d.fruits,
+    spices: d.spices,
+    other_ingredients: d.otherIngredients,
+    allergens: d.allergens,
+    fermentation_type: d.fermentationType,
+    bottle_refermented: d.bottleRefermented,
+    filtered: d.filtered,
+    pasteurized: d.pasteurized,
+    dry_hopping: d.dryHopping,
+    beer_aging: d.beerAging,
+    barrel_type: d.barrelType,
+    main_fruit: d.mainFruit,
+    fruit_varieties: d.fruitVarieties,
+    fruit_origin: d.fruitOrigin,
+    pure_juice: d.pureJuice,
+    concentrate_used: d.concentrateUsed,
+    cider_fermentation: d.ciderFermentation,
+    carbonation_method: d.carbonationMethod,
+    cider_filtered: d.ciderFiltered,
+    cider_pasteurized: d.ciderPasteurized,
+    cider_aging: d.ciderAging,
+    cider_barrel_type: d.ciderBarrelType,
+    taste_bitterness: d.tasteBitterness,
+    taste_sweetness: d.tasteSweetness,
+    taste_acidity: d.tasteAcidity,
+    taste_body: d.tasteBody,
+    taste_fruitiness: d.tasteFruitiness,
+    taste_hoppiness: d.tasteHoppiness,
+    taste_maltiness: d.tasteMaltiness,
+    taste_tannin: d.tasteTannin,
+    taste_carbonation: d.tasteCarbonation,
+    flavor_notes: d.flavorNotes,
+    serving_temperature: d.servingTemperature,
+    recommended_glass: d.recommendedGlass,
+    food_pairings: d.foodPairings,
+    occasion: d.occasion,
+    alcohol_free: d.alcoholFree,
+    low_alcohol: d.lowAlcohol,
+    gluten_reduced: d.glutenReduced,
+    vegan: d.vegan,
+    sugar_free: d.sugarFree,
+    lactose_free: d.lactoseFree,
+    certifications: d.certifications,
+    short_description: d.shortDescription,
+    full_description: d.fullDescription,
+    product_history: d.productHistory,
+    official_url: d.officialUrl,
     submitted_by: d.submittedBy,
     submitted_at: d.submittedAt ? new Date(d.submittedAt).toISOString() : undefined,
     description: d.description,
@@ -419,6 +529,61 @@ function drinkToRow(d, partial = false) {
   if (!partial) row.id = d.id;
   Object.keys(row).forEach((k) => row[k] === undefined && delete row[k]);
   return row;
+}
+
+/* ---------------- CONDITIONNEMENTS / VARIANTES (réutilise drink_barcodes) ---------------- */
+
+// Une variante = un conditionnement précis (bouteille 33cl, canette 50cl, fût...) rattaché à un
+// produit. Le code-barres est optionnel — une variante peut exister sans qu'on le connaisse
+// encore. Cette table est la même que celle utilisée par le scanner dans l'app.
+function rowToVariant(row) {
+  return {
+    id: row.id,
+    drinkId: row.product_id,
+    barcode: row.barcode,
+    container: row.container,
+    volumeMl: row.volume_ml,
+    marketCountry: row.market_country,
+    verified: !!row.verified,
+  };
+}
+
+export async function loadDrinkVariants(drinkId) {
+  const { data, error } = await supabase.from("drink_barcodes").select("*").eq("product_id", drinkId).order("created_at");
+  if (error) {
+    console.error("loadDrinkVariants:", error);
+    return [];
+  }
+  return data.map(rowToVariant);
+}
+
+export async function createDrinkVariant({ drinkId, container, volumeMl, barcode, marketCountry }) {
+  const row = {
+    id: `variant-${Date.now()}-${Math.floor(Math.random() * 10000)}`,
+    product_id: drinkId,
+    container: container || null,
+    volume_ml: volumeMl || null,
+    barcode: barcode || null,
+    market_country: marketCountry || null,
+    verified: false,
+  };
+  const { data, error } = await supabase.from("drink_barcodes").insert(row).select().single();
+  if (error) {
+    console.error("createDrinkVariant:", error);
+    return null;
+  }
+  return rowToVariant(data);
+}
+
+export async function updateDrinkVariant(id, { container, volumeMl, barcode, marketCountry }) {
+  const patch = { container: container || null, volume_ml: volumeMl || null, barcode: barcode || null, market_country: marketCountry || null };
+  const { error } = await supabase.from("drink_barcodes").update(patch).eq("id", id);
+  if (error) console.error("updateDrinkVariant:", error);
+}
+
+export async function deleteDrinkVariant(id) {
+  const { error } = await supabase.from("drink_barcodes").delete().eq("id", id);
+  if (error) console.error("deleteDrinkVariant:", error);
 }
 
 /* ---------------- BRASSERIES & PRODUCTEURS ---------------- */

@@ -141,3 +141,62 @@ export const BEER_CIDER_STYLE_GROUPS = [
 ];
 
 export const BEER_CIDER_COMMERCIAL_STATUSES = ["Permanent", "Saisonnier", "Édition limitée", "Temporaire", "Arrêté / discontinué", "Inconnu"];
+
+export const FLAVOR_NOTE_GROUPS = [
+  {
+    title: "Fruits & agrumes",
+    tags: [
+      "Agrumes", "Citron", "Citron vert", "Orange", "Mandarine", "Pamplemousse", "Bergamote", "Fruits tropicaux", "Mangue",
+      "Ananas", "Fruit de la passion", "Papaye", "Litchi", "Pêche", "Abricot", "Poire", "Pomme", "Banane",
+      "Melon", "Raisin", "Cerise", "Framboise", "Fraise", "Mûre", "Cassis", "Prune",
+    ],
+  },
+  {
+    title: "Malt, dessert & torréfié",
+    tags: [
+      "Pain", "Biscuit", "Céréales", "Caramel", "Toffee", "Miel", "Vanille", "Chocolat", "Cacao",
+      "Café", "Espresso", "Noisette", "Amande", "Noix", "Réglisse", "Mélasse", "Sucre brun",
+    ],
+  },
+  {
+    title: "Houblon, végétal & floral",
+    tags: ["Floral", "Herbacé", "Résineux", "Pin", "Gazon", "Thé", "Eucalyptus", "Menthe", "Cannabis / dank", "Épicé", "Poivré"],
+  },
+  {
+    title: "Fermentation & levure",
+    tags: ["Banane", "Clou de girofle", "Bubble-gum", "Poivre", "Esters fruités", "Phénolique", "Funky", "Brett", "Fermier / farmhouse", "Cuir", "Foin"],
+  },
+  {
+    title: "Bois, fumé & spiritueux",
+    tags: ["Boisé", "Chêne", "Fumé", "Tourbé", "Bourbon", "Whisky", "Rhum", "Cognac", "Vin rouge", "Vin blanc", "Porto", "Sherry"],
+  },
+  {
+    title: "Acide & divers",
+    tags: ["Acidulé", "Citrique", "Lactique", "Acétique", "Salin", "Minéral", "Terreux", "Épicé", "Pimenté", "Botanique"],
+  },
+];
+
+export const FOOD_PAIRINGS = [
+  "Fromage", "Charcuterie", "Poisson", "Fruits de mer", "Volaille", "Viande rouge", "Burger", "Pizza", "Cuisine épicée", "Dessert", "Chocolat",
+];
+
+export const OCCASIONS = ["Apéritif", "Repas", "Dégustation", "Dessert", "Afterwork", "Été", "Hiver"];
+
+export const RECOMMENDED_GLASSES = ["Pinte", "Tulipe", "Teku", "Calice", "Ballon", "Flûte", "Weizen", "Nonic", "Snifter", "Stange", "Autre"];
+
+export const YES_NO_UNKNOWN = ["Oui", "Non", "Inconnu"];
+
+export const FERMENTATION_TYPES = ["Haute", "Basse", "Spontanée", "Mixte", "Kveik", "Autre"];
+export const BEER_AGING_OPTIONS = ["Aucun", "Cuve", "Bouteille", "Bois", "Fût"];
+export const BARREL_TYPES = ["Bourbon", "Whisky", "Rhum", "Vin rouge", "Vin blanc", "Porto", "Sherry", "Cognac", "Armagnac", "Tequila", "Autre"];
+
+export const MAIN_FRUITS = ["Pomme", "Poire", "Mélange", "Autres fruits"];
+export const CIDER_FERMENTATION_TYPES = ["Spontanée", "Sauvage", "Contrôlée", "Autre"];
+export const CARBONATION_METHODS = ["Naturelle", "Refermentation bouteille", "Méthode traditionnelle", "Carbonatation", "Autre"];
+export const CIDER_AGING_OPTIONS = ["Cuve", "Bouteille", "Fût", "Bois", "Autre"];
+export const CIDER_BARREL_TYPES = ["Whisky", "Bourbon", "Vin", "Calvados", "Cognac", "Rhum", "Autre"];
+
+export const ALLERGENS = ["Gluten", "Œufs", "Lait", "Fruits à coque", "Soja", "Sulfites", "Céleri", "Moutarde", "Sésame", "Arachide"];
+
+export const CONTAINER_TYPES = ["Bouteille", "Canette", "Fût", "KeyKeg", "Bag-in-box", "Growler", "Autre"];
+export const COMMON_VOLUMES_CL = [20, 25, 33, 35.5, 44, 50, 75, 100, 2000, 3000, 5000];
