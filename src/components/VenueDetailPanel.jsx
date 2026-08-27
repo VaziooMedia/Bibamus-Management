@@ -117,12 +117,14 @@ export function VenueDetailPanel({ venue, onClose, onSaved, onManageMenu }) {
   const [googlePlaceId, setGooglePlaceId] = useState(venue?.googlePlaceId || null);
   const [noGooglePresence, setNoGooglePresenceState] = useState(!!venue?.noGooglePresence);
   const [geocoding, setGeocoding] = useState(false);
+  const [geocodeNotFound, setGeocodeNotFound] = useState(false);
   const [geocodeStatus, setGeocodeStatus] = useState(venue?.geocodeStatus || null);
   const [geocodeSource, setGeocodeSource] = useState(venue?.geocodeSource || null);
   const [geocodeConfidence, setGeocodeConfidence] = useState(venue?.geocodeConfidence ?? null);
 
   const handleGeocode = async () => {
     setGeocoding(true);
+    setGeocodeNotFound(false);
     const result = await geocodeAddress({
       streetName: form.streetName,
       streetNumber: form.streetNumber,
@@ -131,8 +133,8 @@ export function VenueDetailPanel({ venue, onClose, onSaved, onManageMenu }) {
       countryIsoCode: COUNTRY_ISO_CODES[form.country],
     });
     setGeocoding(false);
-    if (!result || result.status === "failed") {
-      setGeocodeStatus("failed");
+    if (!result || result.notFound || !result.lat) {
+      setGeocodeNotFound(true);
       return;
     }
     set("lat", String(result.lat));
@@ -392,9 +394,16 @@ export function VenueDetailPanel({ venue, onClose, onSaved, onManageMenu }) {
           >
             {geocoding ? "Géocodage..." : "📍 Géocoder automatiquement"}
           </button>
-          {geocodeStatus === "verified" && <span style={{ fontSize: "12px", color: "#39FF66" }}>✓ Position vérifiée</span>}
-          {geocodeStatus === "pending" && <span style={{ fontSize: "12px", color: "#00C8FF" }}>Position approximative — à vérifier</span>}
-          {geocodeStatus === "failed" && <span style={{ fontSize: "12px", color: "#FF3B4E" }}>Adresse introuvable</span>}
+          {geocodeNotFound && <span style={{ fontSize: "12px", color: "#FF3B4E" }}>Adresse introuvable — vérifiez les champs</span>}
+          {!geocodeNotFound && geocodeStatus === "verified" && <span style={{ fontSize: "12px", color: "#39FF66" }}>✓ Position vérifiée</span>}
+          {!geocodeNotFound && geocodeStatus === "exact" && <span style={{ fontSize: "12px", color: "#39FF66" }}>✓ Position exacte</span>}
+          {!geocodeNotFound && geocodeStatus === "manual" && <span style={{ fontSize: "12px", color: "#39FF66" }}>✓ Position corrigée manuellement</span>}
+          {!geocodeNotFound && geocodeStatus === "building" && <span style={{ fontSize: "12px", color: "#00C8FF" }}>Précision : bâtiment</span>}
+          {!geocodeNotFound && geocodeStatus === "street" && <span style={{ fontSize: "12px", color: "#00C8FF" }}>Précision : rue</span>}
+          {!geocodeNotFound && geocodeStatus === "postcode" && <span style={{ fontSize: "12px", color: "#00C8FF" }}>Précision : code postal seulement</span>}
+          {!geocodeNotFound && geocodeStatus === "city" && <span style={{ fontSize: "12px", color: "#00C8FF" }}>Précision : ville seulement</span>}
+          {!geocodeNotFound && geocodeStatus === "approximate" && <span style={{ fontSize: "12px", color: "#00C8FF" }}>Position approximative</span>}
+          {!geocodeNotFound && geocodeStatus === "pending" && <span style={{ fontSize: "12px", color: "#8792A6" }}>Pas encore géocodée</span>}
         </div>
         <div style={separatorStyle} />
         <SectionTitle>Coordonnées</SectionTitle>
