@@ -94,6 +94,10 @@ function rowToVenue(row) {
     noGooglePresence: !!row.no_google_presence,
     googleHoursLastFetchAt: row.google_hours_last_fetch_at,
     googleHoursLastStatus: row.google_hours_last_status,
+    geocodeSource: row.geocode_source,
+    geocodeConfidence: row.geocode_confidence,
+    geocodeStatus: row.geocode_status,
+    geocodedAt: row.geocoded_at,
     ownerManaged: !!row.owner_managed,
     status: row.status,
     likes: row.likes || [],
@@ -131,6 +135,9 @@ function venueToRow(v, partial = false) {
     tags: v.tags,
     lat: v.lat,
     lng: v.lng,
+    geocode_status: v.geocodeStatus,
+    geocode_source: v.geocodeSource,
+    geocode_confidence: v.geocodeConfidence,
     avatar_emoji: v.avatarEmoji,
     profile_photo_url: v.profilePhotoUrl,
     cover_photo_url: v.coverPhotoUrl,
@@ -192,6 +199,40 @@ export async function linkGooglePlace(venueId, googlePlaceId) {
     .update({ google_place_id: googlePlaceId, google_place_id_checked_at: new Date().toISOString() })
     .eq("id", venueId);
   if (error) console.error("linkGooglePlace:", error);
+}
+
+// Geoapify géocode l'adresse (adresse → lat/lng) — jamais de calcul de proximité ici, ça reste
+// le rôle de PostGIS côté Supabase (fonction get_nearby_venues). N'écrit rien elle-même ; c'est
+// l'appelant qui enregistre ensuite le résultat sur la fiche.
+export async function geocodeAddress({ streetName, streetNumber, postalCode, city, countryIsoCode }) {
+  try {
+    const { data, error } = await supabase.functions.invoke("geoapify-geocode", {
+      body: { streetName, streetNumber, postalCode, city, countryIsoCode },
+    });
+    if (error) {
+      console.error("geocodeAddress:", error);
+      return null;
+    }
+    return data;
+  } catch (e) {
+    console.error("geocodeAddress:", e);
+    return null;
+  }
+}
+
+export async function saveGeocodeResult(venueId, { lat, lng, source, confidence, status }) {
+  const { error } = await supabase
+    .from("public_venues")
+    .update({
+      lat,
+      lng,
+      geocode_source: source,
+      geocode_confidence: confidence,
+      geocode_status: status,
+      geocoded_at: new Date().toISOString(),
+    })
+    .eq("id", venueId);
+  if (error) console.error("saveGeocodeResult:", error);
 }
 
 export async function unlinkGooglePlace(venueId) {

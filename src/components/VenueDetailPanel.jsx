@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { updatePublicVenue, deletePublicVenue, createPublicVenue, uploadVenuePhoto, uploadVenueMenuPdf } from "../data/sharedDirectories.js";
+import { updatePublicVenue, deletePublicVenue, createPublicVenue, uploadVenuePhoto, uploadVenueMenuPdf, geocodeAddress, saveGeocodeResult } from "../data/sharedDirectories.js";
 import { StatusSelector } from "./StatusSelector.jsx";
 import { AdminPhotoField } from "./AdminPhotoField.jsx";
 import { GooglePlaceLinker } from "./GooglePlaceLinker.jsx";
@@ -116,6 +116,34 @@ export function VenueDetailPanel({ venue, onClose, onSaved, onManageMenu }) {
   const [status, setStatus] = useState(venue?.status || (isNew ? "certified" : "pending"));
   const [googlePlaceId, setGooglePlaceId] = useState(venue?.googlePlaceId || null);
   const [noGooglePresence, setNoGooglePresenceState] = useState(!!venue?.noGooglePresence);
+  const [geocoding, setGeocoding] = useState(false);
+  const [geocodeStatus, setGeocodeStatus] = useState(venue?.geocodeStatus || null);
+  const [geocodeSource, setGeocodeSource] = useState(venue?.geocodeSource || null);
+  const [geocodeConfidence, setGeocodeConfidence] = useState(venue?.geocodeConfidence ?? null);
+
+  const handleGeocode = async () => {
+    setGeocoding(true);
+    const result = await geocodeAddress({
+      streetName: form.streetName,
+      streetNumber: form.streetNumber,
+      postalCode: form.postalCode,
+      city: form.city,
+      countryIsoCode: COUNTRY_ISO_CODES[form.country],
+    });
+    setGeocoding(false);
+    if (!result || result.status === "failed") {
+      setGeocodeStatus("failed");
+      return;
+    }
+    set("lat", String(result.lat));
+    set("lng", String(result.lng));
+    setGeocodeStatus(result.status);
+    setGeocodeSource(result.source);
+    setGeocodeConfidence(result.confidence);
+    if (venue?.id) {
+      await saveGeocodeResult(venue.id, { lat: result.lat, lng: result.lng, source: result.source, confidence: result.confidence, status: result.status });
+    }
+  };
   const [saving, setSaving] = useState(false);
 
   const set = (field, value) => setForm((f) => ({ ...f, [field]: value }));
@@ -140,6 +168,9 @@ export function VenueDetailPanel({ venue, onClose, onSaved, onManageMenu }) {
     country: form.country,
     lat: form.lat === "" ? null : parseFloat(form.lat),
     lng: form.lng === "" ? null : parseFloat(form.lng),
+    geocodeStatus,
+    geocodeSource,
+    geocodeConfidence,
     phone: form.phone.trim() ? `${phonePrefix} ${form.phone.trim()}` : "",
     email: form.email.trim(),
     website: form.website.trim(),
@@ -340,9 +371,31 @@ export function VenueDetailPanel({ venue, onClose, onSaved, onManageMenu }) {
             />
           </div>
         </div>
-        <p style={{ fontSize: "11px", color: "#8792A6", marginTop: "-2px", marginBottom: "14px" }}>
+        <p style={{ fontSize: "11px", color: "#8792A6", marginTop: "-2px", marginBottom: "10px" }}>
           Vous pouvez coller directement au format "50.4261° N" — converti automatiquement.
         </p>
+        <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "14px" }}>
+          <button
+            onClick={handleGeocode}
+            disabled={geocoding || !(form.streetName && form.postalCode && form.city)}
+            style={{
+              background: "none",
+              border: "2px solid #28405C",
+              borderRadius: "8px",
+              padding: "8px 14px",
+              color: "#39FF66",
+              fontSize: "12.5px",
+              fontWeight: 700,
+              cursor: form.streetName && form.postalCode && form.city ? "pointer" : "default",
+              opacity: form.streetName && form.postalCode && form.city ? 1 : 0.5,
+            }}
+          >
+            {geocoding ? "Géocodage..." : "📍 Géocoder automatiquement"}
+          </button>
+          {geocodeStatus === "verified" && <span style={{ fontSize: "12px", color: "#39FF66" }}>✓ Position vérifiée</span>}
+          {geocodeStatus === "pending" && <span style={{ fontSize: "12px", color: "#00C8FF" }}>Position approximative — à vérifier</span>}
+          {geocodeStatus === "failed" && <span style={{ fontSize: "12px", color: "#FF3B4E" }}>Adresse introuvable</span>}
+        </div>
         <div style={separatorStyle} />
         <SectionTitle>Coordonnées</SectionTitle>
 
