@@ -1,8 +1,12 @@
-import React, { useState } from "react";
-import { updateBrewery, deleteBrewery, createBrewery, uploadBreweryPhoto } from "../data/sharedDirectories.js";
+import React, { useState, useEffect } from "react";
+import { updateBrewery, deleteBrewery, createBrewery, uploadBreweryPhoto, loadPublicVenues } from "../data/sharedDirectories.js";
 import { StatusSelector } from "./StatusSelector.jsx";
 import { AdminPhotoField } from "./AdminPhotoField.jsx";
-import { COUNTRIES, PHONE_PREFIXES, PRODUCER_TYPES, PRODUCER_PROFILES } from "../constants.js";
+import { AddressAutocomplete } from "./AddressAutocomplete.jsx";
+import { SearchableSelect } from "./SearchableSelect.jsx";
+import { COUNTRIES, PHONE_PREFIXES, PRODUCER_TYPES, PRODUCER_PROFILES, COUNTRY_ISO_CODES } from "../constants.js";
+
+const GEOAPIFY_CONFIGURED = !!(typeof import.meta !== "undefined" && import.meta.env && import.meta.env.VITE_GEOAPIFY_API_KEY);
 
 const SMALL_WORDS = new Set(["de", "du", "des", "la", "le", "les", "à", "et", "the", "a"]);
 const SMALL_APOSTROPHE_PREFIXES = new Set(["d", "l"]);
@@ -111,12 +115,18 @@ export function BreweryDetailPanel({ brewery, onClose, onSaved }) {
     snapchatUrl: brewery?.snapchatUrl || "",
     producerTypes: brewery?.producerTypes || [],
     producerProfiles: brewery?.producerProfiles || [],
+    linkedVenueId: brewery?.linkedVenueId || null,
   });
   const [profilePhotoUrl, setProfilePhotoUrl] = useState(brewery?.profilePhotoUrl || null);
   const [coverPhotoUrl, setCoverPhotoUrl] = useState(brewery?.coverPhotoUrl || null);
   const [uploadingProfile, setUploadingProfile] = useState(false);
   const [uploadingCover, setUploadingCover] = useState(false);
   const [status, setStatus] = useState(brewery?.status || (isNew ? "certified" : "pending"));
+  const [venueOptions, setVenueOptions] = useState([]);
+
+  useEffect(() => {
+    loadPublicVenues().then((list) => setVenueOptions(list.map((v) => ({ id: v.id, name: `${v.name} — ${v.city || ""}` }))));
+  }, []);
   const [saving, setSaving] = useState(false);
 
   const set = (field, value) => setForm((f) => ({ ...f, [field]: value }));
@@ -146,6 +156,7 @@ export function BreweryDetailPanel({ brewery, onClose, onSaved }) {
     snapchatUrl: form.snapchatUrl.trim(),
     producerTypes: form.producerTypes,
     producerProfiles: form.producerProfiles,
+    linkedVenueId: form.linkedVenueId,
     profilePhotoUrl,
     coverPhotoUrl,
     status,
@@ -223,16 +234,28 @@ export function BreweryDetailPanel({ brewery, onClose, onSaved }) {
           </div>
         </div>
 
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 2fr", gap: "12px", marginBottom: "12px" }}>
-          <div>
-            <label style={labelStyle}>Code postal *</label>
-            <input value={form.postalCode} onChange={(e) => set("postalCode", e.target.value)} style={fieldStyle} />
+        {GEOAPIFY_CONFIGURED ? (
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 2fr", gap: "12px", marginBottom: "12px" }}>
+            <AddressAutocomplete
+              postalCode={form.postalCode}
+              city={form.city}
+              countryIsoCode={COUNTRY_ISO_CODES[form.country]}
+              onPostalCodeChange={(v) => set("postalCode", v)}
+              onCityChange={(v) => set("city", v)}
+            />
           </div>
-          <div>
-            <label style={labelStyle}>Ville</label>
-            <input value={form.city} onChange={(e) => set("city", e.target.value)} onBlur={capitalizeOnBlur("city")} style={fieldStyle} />
+        ) : (
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 2fr", gap: "12px", marginBottom: "12px" }}>
+            <div>
+              <label style={labelStyle}>Code postal *</label>
+              <input value={form.postalCode} onChange={(e) => set("postalCode", e.target.value)} style={fieldStyle} />
+            </div>
+            <div>
+              <label style={labelStyle}>Ville</label>
+              <input value={form.city} onChange={(e) => set("city", e.target.value)} onBlur={capitalizeOnBlur("city")} style={fieldStyle} />
+            </div>
           </div>
-        </div>
+        )}
 
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px", marginBottom: "12px" }}>
           <div>
@@ -308,6 +331,13 @@ export function BreweryDetailPanel({ brewery, onClose, onSaved }) {
         <div style={separatorStyle} />
         <SectionTitle>Profil du producteur</SectionTitle>
         <TagPicker options={PRODUCER_PROFILES} selected={form.producerProfiles} onToggle={(t) => toggleTag("producerProfiles", t)} />
+
+        <div style={separatorStyle} />
+        <SectionTitle>Lien avec un établissement</SectionTitle>
+        <p style={{ fontSize: "11.5px", color: "#8792A6", marginTop: "-6px", marginBottom: "10px" }}>
+          Si ce producteur est aussi un lieu physique (ex. une brasserie-restaurant), associez-le à sa fiche établissement plutôt que de recréer la même adresse en double.
+        </p>
+        <SearchableSelect options={venueOptions} value={form.linkedVenueId} onChange={(id) => set("linkedVenueId", id)} placeholder="Chercher un établissement..." />
 
         <div style={separatorStyle} />
         <label style={labelStyle}>Statut</label>

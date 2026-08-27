@@ -96,6 +96,13 @@ export const VENUE_TYPES = [
   { code: "bar_a_whiskey", fr: "Bar à whiskey" },
   { code: "bar_a_gin", fr: "Bar à gin" },
   { code: "bar_a_shot", fr: "Bar à shot" },
+  { code: "drink_food_shop", fr: "Drink & Food Shop" },
+  { code: "karaokes_occasionnels", fr: "Karaokés occasionnels" },
+  { code: "concerts_occasionnels", fr: "Concerts occasionnels" },
+  { code: "billard", fr: "Billard" },
+  { code: "babyfoot_kicker", fr: "Babyfoot - Kicker" },
+  { code: "jeu_de_flechettes", fr: "Jeu de fléchettes" },
+  { code: "bingo", fr: "Bingo" },
 ];
 
 export const PHONE_PREFIXES = {
@@ -169,6 +176,7 @@ export const PRODUCER_PROFILES = [
 export const BRAND_CLASSIFICATIONS = [
   { code: "biere", fr: "Bière" },
   { code: "vin", fr: "Vin" },
+  { code: "bulles", fr: "Bulles (champagne, crémant...)" },
   { code: "spiritueux", fr: "Spiritueux" },
   { code: "cidre", fr: "Cidre" },
   { code: "soft_soda", fr: "Soft / Soda" },
@@ -176,8 +184,7 @@ export const BRAND_CLASSIFICATIONS = [
   { code: "boisson_energetique", fr: "Boisson énergétique" },
   { code: "cafe", fr: "Café" },
   { code: "the", fr: "Thé" },
-  { code: "snack_sale", fr: "Snack salé" },
-  { code: "snack_sucre", fr: "Snack sucré" },
+  { code: "snacks", fr: "Snacks" },
   { code: "autre", fr: "Autre" },
 ];
 
@@ -188,3 +195,49 @@ export const BRAND_TYPES = [
   { code: "nationale", fr: "Nationale" },
   { code: "internationale", fr: "Internationale" },
 ];
+
+// Correspondance entre nos codes pays internes (COUNTRIES) et les codes ISO 3166-1 alpha-2
+// attendus par Geoapify pour restreindre l'autocomplétion d'adresse au bon pays.
+export const COUNTRY_ISO_CODES = {
+  belgique: "be",
+  france: "fr",
+  pays_bas: "nl",
+  allemagne: "de",
+  luxembourg: "lu",
+  algerie: "dz",
+  autriche: "at",
+  bulgarie: "bg",
+  canada: "ca",
+  chypre: "cy",
+  cote_d_ivoire: "ci",
+  croatie: "hr",
+  cuba: "cu",
+  danemark: "dk",
+  espagne: "es",
+  estonie: "ee",
+  etats_unis: "us",
+  finlande: "fi",
+  grece: "gr",
+  hongrie: "hu",
+  irlande: "ie",
+  islande: "is",
+  italie: "it",
+  lettonie: "lv",
+  lituanie: "lt",
+  malte: "mt",
+  maroc: "ma",
+  mexique: "mx",
+  norvege: "no",
+  pologne: "pl",
+  portugal: "pt",
+  republique_tcheque: "cz",
+  roumanie: "ro",
+  royaume_uni: "gb",
+  senegal: "sn",
+  slovaquie: "sk",
+  slovenie: "si",
+  suede: "se",
+  suisse: "ch",
+  tunisie: "tn",
+  venezuela: "ve",
+};

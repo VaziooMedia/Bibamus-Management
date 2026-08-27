@@ -86,7 +86,7 @@ export function BrandDetailPanel({ brand, onClose, onSaved }) {
     foundedYear: brand?.foundedYear ?? "",
     originCountry: brand?.originCountry || "belgique",
     originCity: brand?.originCity || "",
-    classification: brand?.classification || BRAND_CLASSIFICATIONS[0].code,
+    classifications: brand?.classifications || [],
     brandTypes: brand?.brandTypes || [],
     website: brand?.website || "",
     facebookUrl: brand?.facebookUrl || "",
@@ -109,6 +109,7 @@ export function BrandDetailPanel({ brand, onClose, onSaved }) {
   const set = (field, value) => setForm((f) => ({ ...f, [field]: value }));
   const capitalizeOnBlur = (field) => () => set(field, capitalizeWords(form[field]));
   const toggleType = (t) => setForm((f) => ({ ...f, brandTypes: f.brandTypes.includes(t) ? f.brandTypes.filter((x) => x !== t) : [...f.brandTypes, t] }));
+  const toggleClassification = (c) => setForm((f) => ({ ...f, classifications: f.classifications.includes(c) ? f.classifications.filter((x) => x !== c) : [...f.classifications, c] }));
 
   const buildPatch = () => ({
     name: capitalizeWords(form.name.trim()),
@@ -117,7 +118,7 @@ export function BrandDetailPanel({ brand, onClose, onSaved }) {
     foundedYear: form.foundedYear === "" ? null : parseInt(form.foundedYear, 10),
     originCountry: form.originCountry,
     originCity: form.originCity.trim(),
-    classification: form.classification,
+    classifications: form.classifications,
     brandTypes: form.brandTypes,
     website: form.website.trim(),
     facebookUrl: form.facebookUrl.trim(),
@@ -203,14 +204,8 @@ export function BrandDetailPanel({ brand, onClose, onSaved }) {
         <input value={form.originCity} onChange={(e) => set("originCity", e.target.value)} onBlur={capitalizeOnBlur("originCity")} style={fieldStyle} />
 
         <div style={separatorStyle} />
-        <SectionTitle>Classification</SectionTitle>
-        <select value={form.classification} onChange={(e) => set("classification", e.target.value)} style={fieldStyle}>
-          {BRAND_CLASSIFICATIONS.map((c) => (
-            <option key={c.code} value={c.code}>
-              {c.fr}
-            </option>
-          ))}
-        </select>
+        <SectionTitle>Classification (plusieurs choix possibles)</SectionTitle>
+        <TagPicker options={BRAND_CLASSIFICATIONS} selected={form.classifications} onToggle={toggleClassification} />
 
         <div style={separatorStyle} />
         <SectionTitle>Type de marque</SectionTitle>

@@ -71,7 +71,7 @@ export function DrinkDetailPanel({ drink, onClose, onSaved }) {
     beverageSubtype: drink?.beverageSubtype || BEER_CIDER_SUBTYPES[0].code,
     brandId: drink?.brandId || null,
     producerIds: drink?.producerIds || [],
-    nationality: drink?.nationality || "belgique",
+    nationality: drink?.nationality || "",
     originRegion: drink?.originRegion || "",
     originCity: drink?.originCity || "",
     styles: drink?.styles || [],
@@ -223,7 +223,7 @@ export function DrinkDetailPanel({ drink, onClose, onSaved }) {
       beverageSubtype: form.beverageSubtype,
       brandId: form.brandId,
       producerIds: form.producerIds,
-      nationality: form.nationality,
+      nationality: form.nationality || null,
       originRegion: form.originRegion.trim(),
       originCity: form.originCity.trim(),
       styles: form.styles,
@@ -461,6 +461,7 @@ export function DrinkDetailPanel({ drink, onClose, onSaved }) {
             <SectionTitle>Origine</SectionTitle>
             <label style={labelStyle}>Pays d'origine</label>
             <select value={form.nationality} onChange={(e) => set("nationality", e.target.value)} style={{ ...fieldStyle, marginBottom: "12px" }}>
+              <option value="">—</option>
               {COUNTRIES.map((c) => (
                 <option key={c.code} value={c.code}>
                   {c.fr}

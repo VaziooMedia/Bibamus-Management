@@ -29,7 +29,7 @@ const breweryColumns = [
 
 const brandColumns = [
   { key: "name", label: "Nom" },
-  { key: "classification", label: "Classification", render: (b) => classificationLabel(b.classification) },
+  { key: "classifications", label: "Classification", render: (b) => (b.classifications || []).map(classificationLabel).join(", ") },
   { key: "originCountry", label: "Origine", render: (b) => countryLabel(b.originCountry) },
   { key: "foundedYear", label: "Créée en" },
   { key: "status", label: "Statut", render: (b) => <StatusBadge status={b.status} /> },
@@ -128,7 +128,7 @@ export function BrandsScreen() {
             items={items}
             allColumns={brandColumns}
             forcedKeys={["name", "status"]}
-            defaultVisibleKeys={["name", "classification", "originCountry", "status"]}
+            defaultVisibleKeys={["name", "classifications", "originCountry", "status"]}
             onRowClick={setSelected}
             onAdd={() => setCreating(true)}
             searchPlaceholder="Rechercher une marque..."

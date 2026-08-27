@@ -3,7 +3,10 @@ import { updatePublicVenue, deletePublicVenue, createPublicVenue, uploadVenuePho
 import { StatusSelector } from "./StatusSelector.jsx";
 import { AdminPhotoField } from "./AdminPhotoField.jsx";
 import { GooglePlaceLinker } from "./GooglePlaceLinker.jsx";
-import { COUNTRIES, PAYMENT_METHODS, VENUE_TYPES, PHONE_PREFIXES } from "../constants.js";
+import { AddressAutocomplete } from "./AddressAutocomplete.jsx";
+import { COUNTRIES, PAYMENT_METHODS, VENUE_TYPES, PHONE_PREFIXES, COUNTRY_ISO_CODES } from "../constants.js";
+
+const GEOAPIFY_CONFIGURED = !!(typeof import.meta !== "undefined" && import.meta.env && import.meta.env.VITE_GEOAPIFY_API_KEY);
 
 // Majuscule en début de chaque mot — appliqué à la validation (au moment de quitter le champ),
 // pas pendant la frappe, pour ne pas gêner la saisie.
@@ -273,16 +276,28 @@ export function VenueDetailPanel({ venue, onClose, onSaved, onManageMenu }) {
           </div>
         </div>
 
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 2fr", gap: "12px", marginBottom: "12px" }}>
-          <div>
-            <label style={labelStyle}>Code postal *</label>
-            <input value={form.postalCode} onChange={(e) => set("postalCode", e.target.value)} style={fieldStyle} />
+        {GEOAPIFY_CONFIGURED ? (
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 2fr", gap: "12px", marginBottom: "12px" }}>
+            <AddressAutocomplete
+              postalCode={form.postalCode}
+              city={form.city}
+              countryIsoCode={COUNTRY_ISO_CODES[form.country]}
+              onPostalCodeChange={(v) => set("postalCode", v)}
+              onCityChange={(v) => set("city", v)}
+            />
           </div>
-          <div>
-            <label style={labelStyle}>Ville *</label>
-            <input value={form.city} onChange={(e) => set("city", e.target.value)} onBlur={capitalizeOnBlur("city")} style={fieldStyle} />
+        ) : (
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 2fr", gap: "12px", marginBottom: "12px" }}>
+            <div>
+              <label style={labelStyle}>Code postal *</label>
+              <input value={form.postalCode} onChange={(e) => set("postalCode", e.target.value)} style={fieldStyle} />
+            </div>
+            <div>
+              <label style={labelStyle}>Ville *</label>
+              <input value={form.city} onChange={(e) => set("city", e.target.value)} onBlur={capitalizeOnBlur("city")} style={fieldStyle} />
+            </div>
           </div>
-        </div>
+        )}
 
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px", marginBottom: "12px" }}>
           <div>
