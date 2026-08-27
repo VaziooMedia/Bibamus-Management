@@ -4,7 +4,34 @@ import { StatusSelector } from "./StatusSelector.jsx";
 import { AdminPhotoField } from "./AdminPhotoField.jsx";
 import { COUNTRIES, PHONE_PREFIXES, PRODUCER_TYPES, PRODUCER_PROFILES } from "../constants.js";
 
-const capitalizeWords = (s) => s.replace(/\b\p{L}/gu, (c) => c.toUpperCase());
+const SMALL_WORDS = new Set(["de", "du", "des", "la", "le", "les", "à", "et", "the", "a"]);
+const SMALL_APOSTROPHE_PREFIXES = new Set(["d", "l"]);
+
+// Majuscule en début de chaque mot, mais garde les déterminants (de/du/des/la/le/les/à/et/the/a,
+// ainsi que d'/l') en minuscule sauf en tout début de texte — ex. "Café de la Gare",
+// "Côte d'Ivoire". Corrige aussi un bug où les lettres accentuées en milieu de mot (café → CafÉ)
+// étaient capitalisées à tort : \b (limite de mot) en JavaScript ignore les lettres accentuées.
+const capitalizeWords = (s) => {
+  if (!s) return s;
+  const cap = (w) => (w ? w.charAt(0).toUpperCase() + w.slice(1) : w);
+  return s
+    .split(" ")
+    .map((word, index) => {
+      if (!word) return word;
+      const apostropheMatch = word.match(/^([a-zàâäéèêëïîôöùûüÿœæç]+)(['’])(.*)$/i);
+      if (apostropheMatch) {
+        const [, prefix, apos, rest] = apostropheMatch;
+        const prefixLower = prefix.toLowerCase();
+        const isSmallPrefix = SMALL_APOSTROPHE_PREFIXES.has(prefixLower);
+        const newPrefix = index === 0 || !isSmallPrefix ? cap(prefixLower) : prefixLower;
+        return newPrefix + apos + cap(rest.toLowerCase());
+      }
+      const lower = word.toLowerCase();
+      if (index !== 0 && SMALL_WORDS.has(lower)) return lower;
+      return cap(lower);
+    })
+    .join(" ");
+};
 
 const parseCoordinate = (raw) => {
   if (!raw) return raw;
