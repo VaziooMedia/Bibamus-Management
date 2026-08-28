@@ -1,6 +1,6 @@
 import React, { useEffect, useRef } from "react";
 import { GeocoderAutocomplete } from "@geoapify/geocoder-autocomplete";
-import "@geoapify/geocoder-autocomplete/styles/minimal.css";
+import "@geoapify/geocoder-autocomplete/styles/minimal-dark.css";
 
 const GEOAPIFY_API_KEY = import.meta.env.VITE_GEOAPIFY_API_KEY || "";
 
@@ -76,8 +76,14 @@ export function AddressAutocomplete({ postalCode, city, countryIsoCode, onPostal
 
   return (
     <>
-      <div ref={postalRef} onInput={(e) => onPostalCodeChange(e.target.value)} />
-      <div ref={cityRef} onInput={(e) => onCityChange(e.target.value)} />
+      <div>
+        <label style={{ display: "block", fontSize: "12px", color: "#8792A6", fontWeight: 600, marginBottom: "4px" }}>Code postal *</label>
+        <div ref={postalRef} style={{ position: "relative" }} onInput={(e) => onPostalCodeChange(e.target.value)} />
+      </div>
+      <div>
+        <label style={{ display: "block", fontSize: "12px", color: "#8792A6", fontWeight: 600, marginBottom: "4px" }}>Ville *</label>
+        <div ref={cityRef} style={{ position: "relative" }} onInput={(e) => onCityChange(e.target.value)} />
+      </div>
     </>
   );
 }
