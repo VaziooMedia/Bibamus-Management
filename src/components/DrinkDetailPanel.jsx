@@ -1176,9 +1176,9 @@ export function DrinkDetailPanel({ drink, onClose, onSaved }) {
 
             {activeTab === "gallery" && (
               <div>
-                <SectionTitle>Images & Vidéos</SectionTitle>
+                <SectionTitle>Images</SectionTitle>
                 <p style={{ fontSize: "11.5px", color: "#8792A6", marginTop: "-6px", marginBottom: "10px" }}>
-                  Formats acceptés : JPEG, PNG, WebP (et la plupart des formats image courants) — recadrées et converties automatiquement en 1000×1000px. Privilégiez des fichiers de quelques Mo maximum pour un chargement rapide. Aucune vidéo ne peut être déposée ici : utilisez "Liens vidéos" ci-dessous pour une vidéo YouTube.
+                  Formats acceptés : JPEG, PNG, WebP (et la plupart des formats image courants) — recadrées et converties automatiquement en 1000×1000px. Privilégiez des fichiers de quelques Mo maximum pour un chargement rapide.
                 </p>
                 <GalleryManager photos={galleryPhotos} onUpload={handleUploadGalleryPhoto} onRemove={removeGalleryPhoto} uploading={uploadingGallery} />
 

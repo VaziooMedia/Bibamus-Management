@@ -394,7 +394,10 @@ function applyTypeFilter(query, type) {
 // répertoire d'un coup, pour rester rapide même avec des dizaines ou centaines de milliers de
 // produits.
 export async function loadDrinksPage({ type, search, sortKey = "name", sortDir = 1, page = 0, pageSize = 50 } = {}) {
-  let query = supabase.from("drinks_directory").select("*, brands_directory(name, breweries_directory(name))", { count: "exact" });
+  // Jointure sur une seule profondeur seulement — une double jointure imbriquée (produit → marque
+  // → producteur) s'est révélée trop fragile : si Supabase n'arrive pas à résoudre sans ambiguïté
+  // l'une des deux relations, la requête ENTIÈRE échoue et plus aucun produit ne s'affiche.
+  let query = supabase.from("drinks_directory").select("*, brands_directory(name, producer_id)", { count: "exact" });
   query = applyTypeFilter(query, type);
   if (search && search.trim()) query = query.ilike("name", `%${search.trim()}%`);
   // "brandName"/"producerName" résultent d'une jointure, pas d'une vraie colonne — on trie par brand_id à la place.
@@ -402,13 +405,23 @@ export async function loadDrinksPage({ type, search, sortKey = "name", sortDir =
   query = query.order(realSortKey, { ascending: sortDir === 1, nullsFirst: false });
   query = query.range(page * pageSize, page * pageSize + pageSize - 1);
 
-  const { data, error, count } = await query;
+  const [{ data, error, count }, { data: breweriesData }] = await Promise.all([
+    query,
+    supabase.from("breweries_directory").select("id, name"),
+  ]);
   if (error) {
     console.error("loadDrinksPage:", error);
     return { items: [], total: 0 };
   }
+  const producerNameById = {};
+  (breweriesData || []).forEach((b) => (producerNameById[b.id] = b.name));
+
   return {
-    items: data.map((row) => ({ ...rowToDrink(row), brandName: row.brands_directory?.name || null, producerName: row.brands_directory?.breweries_directory?.name || null })),
+    items: data.map((row) => ({
+      ...rowToDrink(row),
+      brandName: row.brands_directory?.name || null,
+      producerName: row.brands_directory?.producer_id ? producerNameById[row.brands_directory.producer_id] || null : null,
+    })),
     total: count || 0,
   };
 }
