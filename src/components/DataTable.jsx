@@ -1,4 +1,5 @@
 import React, { useState, useMemo, useRef, useEffect } from "react";
+import { STATUSES } from "./StatusSelector.jsx";
 
 // allColumns: [{ key, label, render? }] — la liste complète des colonnes possibles.
 // forcedKeys: clés toujours affichées, non désactivables (ex. ["name", "status"]).
@@ -167,15 +168,23 @@ export function DataTable({ items, allColumns, forcedKeys = [], defaultVisibleKe
   );
 }
 
+const STATUS_SYMBOLS = {
+  draft: "✎",
+  to_process: "○",
+  in_review: "◐",
+  published: "✓",
+  to_fix: "!",
+  rejected: "✕",
+  archived: "▪",
+  duplicate: "D",
+};
+
 export function StatusBadge({ status }) {
-  const config = {
-    certified: { bg: "#39FF66", symbol: "✓", title: "Certifié" },
-    reviewed: { bg: "#FF3B4E", symbol: "✕", title: "Non certifié" },
-    pending: { bg: "#00C8FF", symbol: "–", title: "À vérifier" },
-  }[status] || { bg: "#00C8FF", symbol: "–", title: "À vérifier" };
+  const meta = STATUSES.find((s) => s.key === status) || STATUSES[0];
+  const symbol = STATUS_SYMBOLS[status] || "○";
   return (
     <span
-      title={config.title}
+      title={meta.label}
       style={{
         display: "inline-flex",
         alignItems: "center",
@@ -183,14 +192,14 @@ export function StatusBadge({ status }) {
         width: "22px",
         height: "22px",
         borderRadius: "50%",
-        background: config.bg,
+        background: meta.color,
         color: "#0D1B2A",
         fontSize: "12px",
         fontWeight: 800,
         lineHeight: 1,
       }}
     >
-      {config.symbol}
+      {symbol}
     </span>
   );
 }

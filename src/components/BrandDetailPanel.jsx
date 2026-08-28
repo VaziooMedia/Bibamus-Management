@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from "react";
-import { updateBrand, deleteBrand, createBrand, uploadBrandLogo, loadBreweriesDirectory } from "../data/sharedDirectories.js";
+import { updateBrand, deleteBrand, createBrand, uploadBrandLogo, loadBreweriesDirectory, loadBrandsDirectory } from "../data/sharedDirectories.js";
 import { StatusSelector } from "./StatusSelector.jsx";
 import { AdminPhotoField } from "./AdminPhotoField.jsx";
 import { SearchableSelect } from "./SearchableSelect.jsx";
+import { CertificationLevelSelector } from "./CertificationLevelSelector.jsx";
 import { COUNTRIES, BRAND_CLASSIFICATIONS, BRAND_TYPES } from "../constants.js";
 
 const SMALL_WORDS = new Set(["de", "du", "des", "la", "le", "les", "à", "et", "the", "a"]);
@@ -111,7 +112,17 @@ export function BrandDetailPanel({ brand, onClose, onSaved }) {
   });
   const [logoUrl, setLogoUrl] = useState(brand?.logoUrl || null);
   const [uploadingLogo, setUploadingLogo] = useState(false);
-  const [status, setStatus] = useState(brand?.status || (isNew ? "certified" : "pending"));
+  const [status, setStatus] = useState(brand?.status || "to_process");
+  const [certificationLevel, setCertificationLevel] = useState(brand?.certificationLevel || "utilisateur");
+  const [duplicateOfId, setDuplicateOfId] = useState(brand?.duplicateOfId || null);
+  const [otherBrandOptions, setOtherBrandOptions] = useState([]);
+
+  useEffect(() => {
+    if (status === "duplicate") {
+      loadBrandsDirectory().then((list) => setOtherBrandOptions(list.filter((b) => b.id !== brand?.id).map((b) => ({ id: b.id, name: b.name }))));
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [status]);
   const [saving, setSaving] = useState(false);
   const [producerOptions, setProducerOptions] = useState([]);
 
@@ -142,6 +153,8 @@ export function BrandDetailPanel({ brand, onClose, onSaved }) {
     brandOwner: form.brandOwner.trim(),
     logoUrl,
     status,
+    certificationLevel,
+    duplicateOfId: status === "duplicate" ? duplicateOfId : null,
   });
 
   const save = async () => {
@@ -248,8 +261,20 @@ export function BrandDetailPanel({ brand, onClose, onSaved }) {
 
         <div style={separatorStyle} />
         <label style={labelStyle}>Statut</label>
-        <div style={{ marginBottom: "20px" }}>
+        <div style={{ marginBottom: "14px" }}>
           <StatusSelector value={status} onChange={setStatus} />
+        </div>
+
+        {status === "duplicate" && (
+          <div style={{ marginBottom: "14px" }}>
+            <label style={labelStyle}>Doublon de</label>
+            <SearchableSelect options={otherBrandOptions} value={duplicateOfId} onChange={setDuplicateOfId} placeholder="Chercher la marque conservée..." />
+          </div>
+        )}
+
+        <label style={labelStyle}>Niveau de certification</label>
+        <div style={{ marginBottom: "20px" }}>
+          <CertificationLevelSelector value={certificationLevel} onChange={setCertificationLevel} />
         </div>
 
         <div style={{ display: "flex", flexDirection: "column", gap: "10px", marginTop: "10px" }}>

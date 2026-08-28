@@ -100,6 +100,9 @@ function rowToVenue(row) {
     geocodedAt: row.geocoded_at,
     ownerManaged: !!row.owner_managed,
     status: row.status,
+    certificationLevel: row.certification_level,
+    duplicateOfId: row.duplicate_of_id,
+    openReportsCount: row.open_reports_count || 0,
     likes: row.likes || [],
     menu: row.menu || [],
     stats: row.stats || {},
@@ -158,6 +161,8 @@ function venueToRow(v, partial = false) {
     has_wifi: v.hasWifi,
     owner_managed: v.ownerManaged,
     status: v.status,
+    certification_level: v.certificationLevel,
+    duplicate_of_id: v.duplicateOfId,
     likes: v.likes,
     menu: v.menu,
     stats: v.stats,
@@ -351,9 +356,9 @@ export async function loadDrinksDirectory() {
   return data.map(rowToDrink);
 }
 
-// Un statut vide en base ("null") équivaut à "en attente" — traité comme tel dans les comptages.
+// Un statut vide en base ("null") équivaut à "à traiter" — traité comme tel dans les comptages.
 function applyStatusFilter(query, status) {
-  if (status === "pending") return query.or("status.is.null,status.eq.pending");
+  if (status === "to_process") return query.or("status.is.null,status.eq.to_process,status.eq.draft");
   return query.eq("status", status);
 }
 
@@ -449,6 +454,9 @@ function rowToDrink(row) {
     servingMode: row.serving_mode,
     beerTags: row.beer_tags || [],
     status: row.status,
+    certificationLevel: row.certification_level,
+    duplicateOfId: row.duplicate_of_id,
+    openReportsCount: row.open_reports_count || 0,
     isGeneric: row.is_generic,
     averagePrice: row.average_price,
     averageJetonValue: row.average_jeton_value,
@@ -595,6 +603,8 @@ function drinkToRow(d, partial = false) {
     serving_mode: d.servingMode,
     beer_tags: d.beerTags,
     status: d.status,
+    certification_level: d.certificationLevel,
+    duplicate_of_id: d.duplicateOfId,
     is_generic: d.isGeneric,
     average_price: d.averagePrice,
     average_jeton_value: d.averageJetonValue,
@@ -829,6 +839,9 @@ function rowToBrewery(row) {
     producerProfiles: row.producer_profiles || [],
     linkedVenueId: row.linked_venue_id,
     status: row.status,
+    certificationLevel: row.certification_level,
+    duplicateOfId: row.duplicate_of_id,
+    openReportsCount: row.open_reports_count || 0,
     ownerManaged: !!row.owner_managed,
     submittedBy: row.submitted_by,
     submittedAt: row.submitted_at ? new Date(row.submitted_at).getTime() : null,
@@ -862,6 +875,8 @@ function breweryToRow(b, partial = false) {
     producer_profiles: b.producerProfiles,
     linked_venue_id: b.linkedVenueId,
     status: b.status,
+    certification_level: b.certificationLevel,
+    duplicate_of_id: b.duplicateOfId,
     owner_managed: b.ownerManaged,
     submitted_by: b.submittedBy,
     submitted_at: b.submittedAt ? new Date(b.submittedAt).toISOString() : undefined,
@@ -935,6 +950,9 @@ function rowToBrand(row) {
     producerId: row.producer_id,
     brandOwner: row.brand_owner,
     status: row.status,
+    certificationLevel: row.certification_level,
+    duplicateOfId: row.duplicate_of_id,
+    openReportsCount: row.open_reports_count || 0,
     ownerManaged: !!row.owner_managed,
     submittedBy: row.submitted_by,
     submittedAt: row.submitted_at ? new Date(row.submitted_at).getTime() : null,
@@ -961,6 +979,8 @@ function brandToRow(b, partial = false) {
     producer_id: b.producerId,
     brand_owner: b.brandOwner,
     status: b.status,
+    certification_level: b.certificationLevel,
+    duplicate_of_id: b.duplicateOfId,
     owner_managed: b.ownerManaged,
     submitted_by: b.submittedBy,
     submitted_at: b.submittedAt ? new Date(b.submittedAt).toISOString() : undefined,

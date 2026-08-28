@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from "react";
-import { updateDrink, deleteDrink, createDrink, uploadDrinkMainPhoto, uploadDrinkGalleryPhoto, loadBrandsDirectory, loadBreweriesDirectory } from "../data/sharedDirectories.js";
+import { updateDrink, deleteDrink, createDrink, uploadDrinkMainPhoto, uploadDrinkGalleryPhoto, loadBrandsDirectory, loadBreweriesDirectory, loadDrinksDirectory } from "../data/sharedDirectories.js";
 import { StatusSelector } from "./StatusSelector.jsx";
 import { AdminPhotoField } from "./AdminPhotoField.jsx";
 import { GalleryManager } from "./GalleryManager.jsx";
 import { SearchableSelect, SearchableMultiSelect } from "./SearchableSelect.jsx";
+import { CertificationLevelSelector } from "./CertificationLevelSelector.jsx";
 import { StyleTagAccordion } from "./StyleTagAccordion.jsx";
 import { TasteScale } from "./TasteScale.jsx";
 import { VariantManager } from "./VariantManager.jsx";
@@ -190,7 +191,17 @@ export function DrinkDetailPanel({ drink, onClose, onSaved }) {
   const [galleryPhotos, setGalleryPhotos] = useState(drink?.galleryPhotos || []);
   const [uploadingGallery, setUploadingGallery] = useState(false);
   const [uploadingPhoto, setUploadingPhoto] = useState(false);
-  const [status, setStatus] = useState(drink?.status || "pending");
+  const [status, setStatus] = useState(drink?.status || "to_process");
+  const [certificationLevel, setCertificationLevel] = useState(drink?.certificationLevel || "utilisateur");
+  const [duplicateOfId, setDuplicateOfId] = useState(drink?.duplicateOfId || null);
+  const [otherDrinkOptions, setOtherDrinkOptions] = useState([]);
+
+  useEffect(() => {
+    if (status === "duplicate") {
+      loadDrinksDirectory().then((list) => setOtherDrinkOptions(list.filter((d) => d.id !== drink?.id).map((d) => ({ id: d.id, name: d.name }))));
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [status]);
   const [stylesSectionOpen, setStylesSectionOpen] = useState(true);
   const [activeTab, setActiveTab] = useState("quick");
   const [saving, setSaving] = useState(false);
@@ -216,6 +227,8 @@ export function DrinkDetailPanel({ drink, onClose, onSaved }) {
       abv: form.abv === "" ? null : parseFloat(form.abv),
       kcalPer100ml: form.kcalPer100ml === "" ? null : parseFloat(form.kcalPer100ml),
       status,
+      certificationLevel,
+      duplicateOfId: status === "duplicate" ? duplicateOfId : null,
     };
     if (!isBeerOrCider) return base;
     return {
@@ -1132,8 +1145,20 @@ export function DrinkDetailPanel({ drink, onClose, onSaved }) {
 
         <div style={separatorStyle} />
         <label style={labelStyle}>Statut de vérification</label>
-        <div style={{ marginBottom: "20px" }}>
+        <div style={{ marginBottom: "14px" }}>
           <StatusSelector value={status} onChange={setStatus} />
+        </div>
+
+        {status === "duplicate" && (
+          <div style={{ marginBottom: "14px" }}>
+            <label style={labelStyle}>Doublon de</label>
+            <SearchableSelect options={otherDrinkOptions} value={duplicateOfId} onChange={setDuplicateOfId} placeholder="Chercher le produit conservé..." />
+          </div>
+        )}
+
+        <label style={labelStyle}>Niveau de certification</label>
+        <div style={{ marginBottom: "20px" }}>
+          <CertificationLevelSelector value={certificationLevel} onChange={setCertificationLevel} />
         </div>
 
         <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>

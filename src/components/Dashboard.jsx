@@ -5,9 +5,9 @@ import { PageTitle } from "./PageTitle.jsx";
 function breakdown(items) {
   return {
     total: items.length,
-    certified: items.filter((i) => i.status === "certified").length,
-    reviewed: items.filter((i) => i.status === "reviewed").length,
-    pending: items.filter((i) => !i.status || i.status === "pending").length,
+    published: items.filter((i) => i.status === "published").length,
+    toFix: items.filter((i) => i.status === "to_fix" || i.status === "in_review").length,
+    toProcess: items.filter((i) => !i.status || i.status === "to_process" || i.status === "draft").length,
     ownerManaged: items.filter((i) => i.ownerManaged).length,
   };
 }
@@ -20,13 +20,13 @@ function StatCard({ label, data }) {
       <div style={{ borderBottom: "1px solid #F2F2E8", opacity: 0.25, margin: "12px 0" }} />
       <div style={{ display: "flex", flexDirection: "column", gap: "4px", fontSize: "12px", textAlign: "left" }}>
         <div>
-          Certifié : <span style={{ color: "#39FF66", fontWeight: 700 }}>{data.certified}</span>
+          Publié : <span style={{ color: "#39FF66", fontWeight: 700 }}>{data.published}</span>
         </div>
         <div>
-          Non certifié : <span style={{ color: "#FF3B4E", fontWeight: 700 }}>{data.reviewed}</span>
+          À corriger / en vérif. : <span style={{ color: "#FF3B4E", fontWeight: 700 }}>{data.toFix}</span>
         </div>
         <div>
-          À vérifier : <span style={{ color: "#00C8FF", fontWeight: 700 }}>{data.pending}</span>
+          À traiter : <span style={{ color: "#00C8FF", fontWeight: 700 }}>{data.toProcess}</span>
         </div>
         <div>
           Business : <span style={{ color: "#F2F2E8", fontWeight: 700 }}>{data.ownerManaged}</span>

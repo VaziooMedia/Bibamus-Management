@@ -1,5 +1,7 @@
-import React, { useState } from "react";
-import { updatePublicVenue, deletePublicVenue, createPublicVenue, uploadVenuePhoto, uploadVenueMenuPdf, geocodeAddress, saveGeocodeResult } from "../data/sharedDirectories.js";
+import React, { useState, useEffect } from "react";
+import { updatePublicVenue, deletePublicVenue, createPublicVenue, uploadVenuePhoto, uploadVenueMenuPdf, geocodeAddress, saveGeocodeResult, loadPublicVenues } from "../data/sharedDirectories.js";
+import { CertificationLevelSelector } from "./CertificationLevelSelector.jsx";
+import { SearchableSelect } from "./SearchableSelect.jsx";
 import { StatusSelector } from "./StatusSelector.jsx";
 import { AdminPhotoField } from "./AdminPhotoField.jsx";
 import { GooglePlaceLinker } from "./GooglePlaceLinker.jsx";
@@ -95,7 +97,7 @@ export function VenueDetailPanel({ venue, onClose, onSaved, onManageMenu }) {
     country: venue?.country || "belgique",
     lat: venue?.lat ?? "",
     lng: venue?.lng ?? "",
-    phone: venue?.phone || "",
+    phone: (venue?.phone || "").replace(/^\+\d+\s*/, ""),
     email: venue?.email || "",
     website: venue?.website || "",
     googleUrl: venue?.googleUrl || "",
@@ -126,7 +128,17 @@ export function VenueDetailPanel({ venue, onClose, onSaved, onManageMenu }) {
   const [uploadingProfile, setUploadingProfile] = useState(false);
   const [uploadingCover, setUploadingCover] = useState(false);
   const [uploadingMenu, setUploadingMenu] = useState(false);
-  const [status, setStatus] = useState(venue?.status || (isNew ? "certified" : "pending"));
+  const [status, setStatus] = useState(venue?.status || "to_process");
+  const [certificationLevel, setCertificationLevel] = useState(venue?.certificationLevel || "utilisateur");
+  const [duplicateOfId, setDuplicateOfId] = useState(venue?.duplicateOfId || null);
+  const [otherVenueOptions, setOtherVenueOptions] = useState([]);
+
+  useEffect(() => {
+    if (status === "duplicate") {
+      loadPublicVenues().then((list) => setOtherVenueOptions(list.filter((v) => v.id !== venue?.id).map((v) => ({ id: v.id, name: v.name }))));
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [status]);
   const [googlePlaceId, setGooglePlaceId] = useState(venue?.googlePlaceId || null);
   const [noGooglePresence, setNoGooglePresenceState] = useState(!!venue?.noGooglePresence);
   const [geocoding, setGeocoding] = useState(false);
@@ -214,6 +226,8 @@ export function VenueDetailPanel({ venue, onClose, onSaved, onManageMenu }) {
     profilePhotoUrl,
     coverPhotoUrl,
     status,
+    certificationLevel,
+    duplicateOfId: status === "duplicate" ? duplicateOfId : null,
   });
 
   const save = async () => {
@@ -618,8 +632,20 @@ export function VenueDetailPanel({ venue, onClose, onSaved, onManageMenu }) {
 
         <div style={separatorStyle} />
         <label style={labelStyle}>Statut</label>
-        <div style={{ marginBottom: "20px" }}>
+        <div style={{ marginBottom: "14px" }}>
           <StatusSelector value={status} onChange={setStatus} />
+        </div>
+
+        {status === "duplicate" && (
+          <div style={{ marginBottom: "14px" }}>
+            <label style={labelStyle}>Doublon de</label>
+            <SearchableSelect options={otherVenueOptions} value={duplicateOfId} onChange={setDuplicateOfId} placeholder="Chercher l'établissement conservé..." />
+          </div>
+        )}
+
+        <label style={labelStyle}>Niveau de certification</label>
+        <div style={{ marginBottom: "20px" }}>
+          <CertificationLevelSelector value={certificationLevel} onChange={setCertificationLevel} />
         </div>
 
         <div style={{ display: "flex", flexDirection: "column", gap: "10px", marginTop: "10px" }}>

@@ -7,7 +7,7 @@ import { StatusSelector } from "./StatusSelector.jsx";
 export function SimpleEntityPanel({ entity, onClose, onSaved }) {
   const isNew = !entity;
   const [form, setForm] = useState({ name: entity?.name || "" });
-  const [status, setStatus] = useState(entity?.status || (isNew ? "certified" : "pending"));
+  const [status, setStatus] = useState(entity?.status || "to_process");
   const [saving, setSaving] = useState(false);
 
   const save = async () => {

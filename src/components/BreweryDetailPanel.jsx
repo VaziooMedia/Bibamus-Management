@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from "react";
-import { updateBrewery, deleteBrewery, createBrewery, uploadBreweryPhoto, loadPublicVenues } from "../data/sharedDirectories.js";
+import { updateBrewery, deleteBrewery, createBrewery, uploadBreweryPhoto, loadPublicVenues, loadBreweriesDirectory } from "../data/sharedDirectories.js";
 import { StatusSelector } from "./StatusSelector.jsx";
 import { AdminPhotoField } from "./AdminPhotoField.jsx";
 import { AddressAutocomplete } from "./AddressAutocomplete.jsx";
 import { SearchableSelect } from "./SearchableSelect.jsx";
+import { CertificationLevelSelector } from "./CertificationLevelSelector.jsx";
 import { COUNTRIES, PHONE_PREFIXES, PRODUCER_TYPES, PRODUCER_PROFILES, COUNTRY_ISO_CODES } from "../constants.js";
 
 const GEOAPIFY_CONFIGURED = !!(typeof import.meta !== "undefined" && import.meta.env && import.meta.env.VITE_GEOAPIFY_API_KEY);
@@ -118,7 +119,7 @@ export function BreweryDetailPanel({ brewery, onClose, onSaved }) {
     country: brewery?.country || "belgique",
     lat: brewery?.lat ?? "",
     lng: brewery?.lng ?? "",
-    phone: brewery?.phone || "",
+    phone: (brewery?.phone || "").replace(/^\+\d+\s*/, ""),
     email: brewery?.email || "",
     website: brewery?.website || "",
     googleUrl: brewery?.googleUrl || "",
@@ -134,7 +135,17 @@ export function BreweryDetailPanel({ brewery, onClose, onSaved }) {
   const [coverPhotoUrl, setCoverPhotoUrl] = useState(brewery?.coverPhotoUrl || null);
   const [uploadingProfile, setUploadingProfile] = useState(false);
   const [uploadingCover, setUploadingCover] = useState(false);
-  const [status, setStatus] = useState(brewery?.status || (isNew ? "certified" : "pending"));
+  const [status, setStatus] = useState(brewery?.status || "to_process");
+  const [certificationLevel, setCertificationLevel] = useState(brewery?.certificationLevel || "utilisateur");
+  const [duplicateOfId, setDuplicateOfId] = useState(brewery?.duplicateOfId || null);
+  const [otherBreweryOptions, setOtherBreweryOptions] = useState([]);
+
+  useEffect(() => {
+    if (status === "duplicate") {
+      loadBreweriesDirectory().then((list) => setOtherBreweryOptions(list.filter((b) => b.id !== brewery?.id).map((b) => ({ id: b.id, name: b.name }))));
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [status]);
   const [venueOptions, setVenueOptions] = useState([]);
 
   useEffect(() => {
@@ -173,6 +184,8 @@ export function BreweryDetailPanel({ brewery, onClose, onSaved }) {
     profilePhotoUrl,
     coverPhotoUrl,
     status,
+    certificationLevel,
+    duplicateOfId: status === "duplicate" ? duplicateOfId : null,
   });
 
   const save = async () => {
@@ -354,8 +367,20 @@ export function BreweryDetailPanel({ brewery, onClose, onSaved }) {
 
         <div style={separatorStyle} />
         <label style={labelStyle}>Statut</label>
-        <div style={{ marginBottom: "20px" }}>
+        <div style={{ marginBottom: "14px" }}>
           <StatusSelector value={status} onChange={setStatus} />
+        </div>
+
+        {status === "duplicate" && (
+          <div style={{ marginBottom: "14px" }}>
+            <label style={labelStyle}>Doublon de</label>
+            <SearchableSelect options={otherBreweryOptions} value={duplicateOfId} onChange={setDuplicateOfId} placeholder="Chercher le producteur conservé..." />
+          </div>
+        )}
+
+        <label style={labelStyle}>Niveau de certification</label>
+        <div style={{ marginBottom: "20px" }}>
+          <CertificationLevelSelector value={certificationLevel} onChange={setCertificationLevel} />
         </div>
 
         <div style={{ display: "flex", flexDirection: "column", gap: "10px", marginTop: "10px" }}>

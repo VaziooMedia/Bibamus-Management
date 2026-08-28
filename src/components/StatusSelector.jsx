@@ -1,36 +1,34 @@
 import React from "react";
 
-const STATES = [
-  { key: "pending", label: "En attente", color: "#00C8FF" },
-  { key: "reviewed", label: "Non certifié", color: "#FF3B4E" },
-  { key: "certified", label: "Certifié", color: "#39FF66" },
+// 8 statuts de cycle de vie — remplace l'ancien système à 3 valeurs (pending/reviewed/certified).
+// Exporté pour être réutilisé par StatusBadge (tableaux de liste) et par les fiches détaillées.
+export const STATUSES = [
+  { key: "draft", label: "Brouillon", color: "#8792A6" },
+  { key: "to_process", label: "À traiter", color: "#00C8FF" },
+  { key: "in_review", label: "En vérification", color: "#FF9500" },
+  { key: "published", label: "Publié", color: "#39FF66" },
+  { key: "to_fix", label: "À corriger", color: "#FFC145" },
+  { key: "rejected", label: "Rejeté", color: "#FF3B4E" },
+  { key: "archived", label: "Archivé", color: "#5C6470" },
+  { key: "duplicate", label: "Doublon", color: "#C74B4B" },
 ];
 
 export function StatusSelector({ value, onChange }) {
+  const current = STATUSES.find((s) => s.key === value) || STATUSES[0];
   return (
-    <div style={{ display: "flex", gap: "6px" }}>
-      {STATES.map((s) => {
-        const active = value === s.key;
-        return (
-          <button
-            key={s.key}
-            onClick={() => onChange(s.key)}
-            style={{
-              flex: 1,
-              padding: "9px 8px",
-              borderRadius: "8px",
-              border: `2px solid ${active ? s.color : "#28405C"}`,
-              background: active ? s.color : "none",
-              color: active ? "#0D1B2A" : "#F2F2E8",
-              fontSize: "12px",
-              fontWeight: 700,
-              cursor: "pointer",
-            }}
-          >
+    <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+      <span style={{ width: "10px", height: "10px", borderRadius: "50%", background: current.color, flexShrink: 0 }} />
+      <select
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        style={{ flex: 1, padding: "9px 10px", borderRadius: "8px", border: "2px solid #28405C", fontSize: "13px", fontWeight: 700, color: "#F2F2E8", background: "#0D1B2A" }}
+      >
+        {STATUSES.map((s) => (
+          <option key={s.key} value={s.key}>
             {s.label}
-          </button>
-        );
-      })}
+          </option>
+        ))}
+      </select>
     </div>
   );
 }
