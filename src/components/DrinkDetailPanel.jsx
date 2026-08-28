@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { updateDrink, deleteDrink, createDrink, uploadDrinkMainPhoto, uploadDrinkGalleryPhoto, loadBrandsDirectory, loadBreweriesDirectory, loadDrinksDirectory } from "../data/sharedDirectories.js";
+import { updateDrink, deleteDrink, createDrink, uploadDrinkMainPhoto, uploadDrinkGalleryPhoto, uploadDrinkAwardBadge, loadBrandsDirectory, loadBreweriesDirectory, loadDrinksDirectory } from "../data/sharedDirectories.js";
 import { StatusSelector } from "./StatusSelector.jsx";
 import { AdminPhotoField } from "./AdminPhotoField.jsx";
 import { GalleryManager } from "./GalleryManager.jsx";
@@ -145,7 +145,7 @@ export function DrinkDetailPanel({ drink, onClose, onSaved }) {
     fullDescription: drink?.fullDescription || "",
     productHistory: drink?.productHistory || "",
     officialUrl: drink?.officialUrl || "",
-    youtubeUrl: drink?.youtubeUrl || "",
+    videoLinks: drink?.videoLinks && drink.videoLinks.length > 0 ? drink.videoLinks : [""],
     // Niveau 3 — données techniques bière
     ibu: drink?.ibu ?? "",
     colorEbc: drink?.colorEbc ?? "",
@@ -194,6 +194,8 @@ export function DrinkDetailPanel({ drink, onClose, onSaved }) {
   const [mainPhotoUrl, setMainPhotoUrl] = useState(drink?.mainPhotoUrl || null);
   const [galleryPhotos, setGalleryPhotos] = useState(drink?.galleryPhotos || []);
   const [uploadingGallery, setUploadingGallery] = useState(false);
+  const [awardBadges, setAwardBadges] = useState(drink?.awardBadges || []);
+  const [uploadingAward, setUploadingAward] = useState(false);
   const [uploadingPhoto, setUploadingPhoto] = useState(false);
   const [status, setStatus] = useState(drink?.status || "to_process");
   const [certificationLevel, setCertificationLevel] = useState(drink?.certificationLevel || "utilisateur");
@@ -302,7 +304,8 @@ export function DrinkDetailPanel({ drink, onClose, onSaved }) {
       fullDescription: form.fullDescription.trim(),
       productHistory: form.productHistory.trim(),
       officialUrl: form.officialUrl.trim(),
-      youtubeUrl: form.youtubeUrl.trim(),
+      videoLinks: form.videoLinks.map((v) => v.trim()).filter(Boolean),
+      awardBadges,
       ibu: form.ibu === "" ? null : parseFloat(form.ibu),
       colorEbc: form.colorEbc === "" ? null : parseFloat(form.colorEbc),
       colorSrm: form.colorSrm === "" ? null : parseFloat(form.colorSrm),
@@ -387,6 +390,20 @@ export function DrinkDetailPanel({ drink, onClose, onSaved }) {
   };
 
   const removeGalleryPhoto = (index) => setGalleryPhotos((prev) => prev.filter((_, i) => i !== index));
+
+  const handleUploadAwardBadge = async (file) => {
+    setUploadingAward(true);
+    const tempId = drink?.id || `pending-${Date.now()}`;
+    const url = await uploadDrinkAwardBadge(tempId, file);
+    if (url) setAwardBadges((prev) => [...prev, url]);
+    setUploadingAward(false);
+  };
+
+  const removeAwardBadge = (index) => setAwardBadges((prev) => prev.filter((_, i) => i !== index));
+
+  const updateVideoLink = (index, value) => setForm((f) => ({ ...f, videoLinks: f.videoLinks.map((v, i) => (i === index ? value : v)) }));
+  const addVideoLink = () => setForm((f) => ({ ...f, videoLinks: [...f.videoLinks, ""] }));
+  const removeVideoLink = (index) => setForm((f) => ({ ...f, videoLinks: f.videoLinks.length > 1 ? f.videoLinks.filter((_, i) => i !== index) : [""] }));
 
   return (
     <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.5)", display: "flex", justifyContent: "flex-end", zIndex: 100 }}>
@@ -1159,10 +1176,44 @@ export function DrinkDetailPanel({ drink, onClose, onSaved }) {
 
             {activeTab === "gallery" && (
               <div>
-                <p style={{ fontSize: "12.5px", color: "#8792A6", marginBottom: "12px" }}>Photos additionnelles du produit (packaging, étiquette, verre servi...).</p>
+                <SectionTitle>Images & Vidéos</SectionTitle>
+                <p style={{ fontSize: "11.5px", color: "#8792A6", marginTop: "-6px", marginBottom: "10px" }}>
+                  Formats acceptés : JPEG, PNG, WebP (et la plupart des formats image courants) — recadrées et converties automatiquement en 1000×1000px. Privilégiez des fichiers de quelques Mo maximum pour un chargement rapide. Aucune vidéo ne peut être déposée ici : utilisez "Liens vidéos" ci-dessous pour une vidéo YouTube.
+                </p>
                 <GalleryManager photos={galleryPhotos} onUpload={handleUploadGalleryPhoto} onRemove={removeGalleryPhoto} uploading={uploadingGallery} />
-                <label style={{ ...labelStyle, marginTop: "16px" }}>Lien YouTube</label>
-                <input value={form.youtubeUrl} onChange={(e) => set("youtubeUrl", e.target.value)} style={fieldStyle} />
+
+                <div style={separatorStyle} />
+                <SectionTitle>Liens vidéos</SectionTitle>
+                <p style={{ fontSize: "11.5px", color: "#8792A6", marginTop: "-6px", marginBottom: "10px" }}>
+                  Un ou plusieurs liens YouTube (publicité, présentation, dégustation...).
+                </p>
+                <div style={{ display: "flex", flexDirection: "column", gap: "8px", marginBottom: "10px" }}>
+                  {form.videoLinks.map((link, i) => (
+                    <div key={i} style={{ display: "flex", gap: "8px" }}>
+                      <input value={link} onChange={(e) => updateVideoLink(i, e.target.value)} placeholder="https://www.youtube.com/watch?v=..." style={{ ...fieldStyle, flex: 1 }} />
+                      <button
+                        onClick={() => removeVideoLink(i)}
+                        title="Retirer ce lien"
+                        style={{ background: "none", border: "2px solid #28405C", borderRadius: "8px", width: "40px", color: "#FF3B4E", cursor: "pointer", fontSize: "14px" }}
+                      >
+                        ✕
+                      </button>
+                    </div>
+                  ))}
+                </div>
+                <button
+                  onClick={addVideoLink}
+                  style={{ background: "none", border: "2px dashed #28405C", borderRadius: "8px", padding: "9px", width: "100%", color: "#39FF66", fontSize: "12.5px", fontWeight: 700, cursor: "pointer" }}
+                >
+                  + Ajouter un lien vidéo
+                </button>
+
+                <div style={separatorStyle} />
+                <SectionTitle>Badges récompenses</SectionTitle>
+                <p style={{ fontSize: "11.5px", color: "#8792A6", marginTop: "-6px", marginBottom: "10px" }}>
+                  Médailles, prix ou labels obtenus par ce produit (ex. concours brassicole). Mêmes formats que ci-dessus, recadrés en 600×600px.
+                </p>
+                <GalleryManager photos={awardBadges} onUpload={handleUploadAwardBadge} onRemove={removeAwardBadge} uploading={uploadingAward} />
               </div>
             )}
           </>

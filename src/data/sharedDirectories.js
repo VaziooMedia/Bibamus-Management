@@ -355,6 +355,18 @@ export async function uploadDrinkGalleryPhoto(drinkId, file) {
   return data.publicUrl;
 }
 
+export async function uploadDrinkAwardBadge(drinkId, file) {
+  const blob = await resizeImageTo(file, 600, 600);
+  const path = `${drinkId}-award-${Date.now()}-${Math.floor(Math.random() * 10000)}.jpg`;
+  const { error: uploadError } = await supabase.storage.from("drink-photos").upload(path, blob, { contentType: "image/jpeg", upsert: true });
+  if (uploadError) {
+    console.error("uploadDrinkAwardBadge:", uploadError);
+    return null;
+  }
+  const { data } = supabase.storage.from("drink-photos").getPublicUrl(path);
+  return data.publicUrl;
+}
+
 export async function loadDrinksDirectory() {
   const { data, error } = await supabase.from("drinks_directory").select("*").order("name");
   if (error) {
@@ -541,7 +553,8 @@ function rowToDrink(row) {
     fullDescription: row.full_description,
     productHistory: row.product_history,
     officialUrl: row.official_url,
-    youtubeUrl: row.youtube_url,
+    videoLinks: row.video_links || [],
+    awardBadges: row.award_badges || [],
     // Niveau 3 — données techniques bière
     ibu: row.ibu,
     colorEbc: row.color_ebc,
@@ -684,7 +697,8 @@ function drinkToRow(d, partial = false) {
     full_description: d.fullDescription,
     product_history: d.productHistory,
     official_url: d.officialUrl,
-    youtube_url: d.youtubeUrl,
+    video_links: d.videoLinks,
+    award_badges: d.awardBadges,
     ibu: d.ibu,
     color_ebc: d.colorEbc,
     color_srm: d.colorSrm,
