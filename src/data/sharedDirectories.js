@@ -92,6 +92,7 @@ function rowToVenue(row) {
     googlePlaceId: row.google_place_id,
     googlePlaceIdCheckedAt: row.google_place_id_checked_at,
     noGooglePresence: !!row.no_google_presence,
+    noFixedHours: !!row.no_fixed_hours,
     googleHoursLastFetchAt: row.google_hours_last_fetch_at,
     googleHoursLastStatus: row.google_hours_last_status,
     geocodeSource: row.geocode_source,
@@ -251,6 +252,11 @@ export async function unlinkGooglePlace(venueId) {
 export async function setNoGooglePresence(venueId, value) {
   const { error } = await supabase.from("public_venues").update({ no_google_presence: value }).eq("id", venueId);
   if (error) console.error("setNoGooglePresence:", error);
+}
+
+export async function setNoFixedHours(venueId, value) {
+  const { error } = await supabase.from("public_venues").update({ no_fixed_hours: value }).eq("id", venueId);
+  if (error) console.error("setNoFixedHours:", error);
 }
 
 /* ---------------- PHOTOS D'ÉTABLISSEMENTS ---------------- */

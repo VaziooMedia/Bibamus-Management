@@ -9,35 +9,34 @@ import { COUNTRIES, PHONE_PREFIXES, PRODUCER_TYPES, PRODUCER_PROFILES, COUNTRY_I
 
 const GEOAPIFY_CONFIGURED = !!(typeof import.meta !== "undefined" && import.meta.env && import.meta.env.VITE_GEOAPIFY_API_KEY);
 
-const SMALL_WORDS = new Set(["de", "du", "des", "la", "le", "les", "à", "et", "the", "a"]);
+const SMALL_WORDS = new Set(["de", "du", "des", "la", "le", "les", "à", "et", "the", "a", "au", "aux"]);
 const SMALL_APOSTROPHE_PREFIXES = new Set(["d", "l"]);
 
-const capFirst = (w) => (w ? w.charAt(0).toUpperCase() + w.slice(1) : w);
+// Ne force jamais la casse d'une lettre déjà en majuscule (préserve les sigles comme "RFC" ou
+// les noms composés comme "BrewTous") — ajoute une majuscule seulement au tout premier
+// caractère d'un mot/segment, s'il manque. Garde les déterminants (de/du/des/la/le/les/à/et/
+// the/a/au/aux, ainsi que d'/l') en minuscule sauf en tout début de texte — ex. "Café de la
+// Gare", "Côte d'Ivoire", "Rue Henri-Blès".
+const capFirstOnly = (w) => {
+  if (!w) return w;
+  if (w.charAt(0) === w.charAt(0).toUpperCase()) return w;
+  return w.charAt(0).toUpperCase() + w.slice(1);
+};
 
-// Applique la règle (déterminants en minuscule sauf tout premier segment du texte) à un
-// segment isolé — que ce segment soit un mot séparé par un espace, ou une partie d'un mot
-// composé séparée par un tiret (ex. "Henri-Blès", "Saint-Jean-de-Luz").
 const capSegment = (segment, isVeryFirst) => {
   if (!segment) return segment;
-  const apostropheMatch = segment.match(/^([a-zàâäéèêëïîôöùûüÿœæç]+)(['’])(.*)$/i);
+  const apostropheMatch = segment.match(/^([a-zàâäéèêëïîôöùûüÿœæçA-ZÀÂÄÉÈÊËÏÎÔÖÙÛÜŸŒÆÇ]+)(['’])(.*)$/);
   if (apostropheMatch) {
     const [, prefix, apos, rest] = apostropheMatch;
-    const prefixLower = prefix.toLowerCase();
-    const isSmallPrefix = SMALL_APOSTROPHE_PREFIXES.has(prefixLower);
-    const newPrefix = isVeryFirst || !isSmallPrefix ? capFirst(prefixLower) : prefixLower;
-    return newPrefix + apos + capFirst(rest.toLowerCase());
+    const isSmallPrefix = SMALL_APOSTROPHE_PREFIXES.has(prefix.toLowerCase());
+    const newPrefix = !isVeryFirst && isSmallPrefix ? prefix.toLowerCase() : capFirstOnly(prefix);
+    return newPrefix + apos + capFirstOnly(rest);
   }
   const lower = segment.toLowerCase();
   if (!isVeryFirst && SMALL_WORDS.has(lower)) return lower;
-  return capFirst(lower);
+  return capFirstOnly(segment);
 };
 
-// Majuscule en début de chaque mot ET de chaque partie d'un mot composé (tiret) — ex.
-// "Café de la Gare", "Côte d'Ivoire", "Rue Henri-Blès", "Saint-Jean-de-Luz" — en gardant les
-// déterminants (de/du/des/la/le/les/à/et/the/a, ainsi que d'/l') en minuscule sauf en tout
-// début de texte. Corrige aussi un bug où les lettres accentuées en milieu de mot (café →
-// CafÉ) étaient capitalisées à tort : \b (limite de mot) en JavaScript ignore les lettres
-// accentuées — on ne s'appuie donc plus dessus.
 const capitalizeWords = (s) => {
   if (!s) return s;
   return s
@@ -119,7 +118,7 @@ export function BreweryDetailPanel({ brewery, onClose, onSaved }) {
     country: brewery?.country || "belgique",
     lat: brewery?.lat ?? "",
     lng: brewery?.lng ?? "",
-    phone: (brewery?.phone || "").replace(/^\+\d+\s*/, ""),
+    phone: (brewery?.phone || "").replace(/^(\+\d+\s*)+/, ""),
     email: brewery?.email || "",
     website: brewery?.website || "",
     googleUrl: brewery?.googleUrl || "",
