@@ -193,37 +193,37 @@ export function DataTable({ items, allColumns, forcedKeys = [], defaultVisibleKe
   );
 }
 
-const STATUS_SYMBOLS = {
-  draft: "✎",
-  to_process: "○",
-  to_fix: "!",
-  complete: "✓",
-  rejected: "✕",
-  archived: "▪",
-  duplicate: "D",
-};
-
+// Étiquette pleine largeur avec le texte du statut en toutes lettres — avec 7 statuts
+// distincts, un simple symbole dans un rond n'est plus assez précis pour s'y retrouver
+// d'un coup d'œil dans un tableau.
 export function StatusBadge({ status }) {
   const meta = STATUSES.find((s) => s.key === status) || STATUSES[0];
-  const symbol = STATUS_SYMBOLS[status] || "○";
   return (
     <span
-      title={`${meta.label} — ${meta.showsInApp ? "visible dans l'app" : "non visible dans l'app"}`}
       style={{
-        display: "inline-flex",
-        alignItems: "center",
-        justifyContent: "center",
-        width: "22px",
-        height: "22px",
-        borderRadius: "50%",
+        display: "inline-block",
+        padding: "3px 10px",
+        borderRadius: "999px",
         background: meta.color,
         color: "#0D1B2A",
-        fontSize: "12px",
-        fontWeight: 800,
-        lineHeight: 1,
+        fontSize: "11.5px",
+        fontWeight: 700,
+        whiteSpace: "nowrap",
       }}
     >
-      {symbol}
+      {meta.label}
     </span>
+  );
+}
+
+// Pastille verte/rouge isolée — pour voir d'un coup d'œil, sur toute la liste, ce qui est
+// visible ou non dans l'app, indépendamment du statut précis affiché à côté.
+export function VisibilityDot({ status }) {
+  const meta = STATUSES.find((s) => s.key === status) || STATUSES[0];
+  return (
+    <span
+      title={meta.showsInApp ? "Visible dans l'app" : "Non visible dans l'app"}
+      style={{ display: "inline-block", width: "10px", height: "10px", borderRadius: "50%", background: meta.showsInApp ? "#39FF66" : "#FF3B4E" }}
+    />
   );
 }

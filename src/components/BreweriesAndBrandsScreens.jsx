@@ -1,12 +1,12 @@
 import React, { useState, useEffect } from "react";
 import { loadBreweriesDirectory, loadBrandsDirectory } from "../data/sharedDirectories.js";
-import { DataTable, StatusBadge } from "./DataTable.jsx";
+import { DataTable, StatusBadge, VisibilityDot } from "./DataTable.jsx";
 import { BreweryDetailPanel } from "./BreweryDetailPanel.jsx";
 import { BrandDetailPanel } from "./BrandDetailPanel.jsx";
 import { StatsCounterBar } from "./StatsCounterBar.jsx";
 import { PageTitle } from "./PageTitle.jsx";
 import { COUNTRIES, PRODUCER_TYPES, BRAND_CLASSIFICATIONS } from "../constants.js";
-import { CERTIFICATION_LEVELS } from "./CertificationLevelSelector.jsx";
+import { CertificationIcon } from "./CertificationIcon.jsx";
 
 // Les données stockent désormais des codes techniques — les tableaux doivent résoudre le
 // libellé français pour l'affichage.
@@ -18,7 +18,6 @@ const labelFromList = (list) => {
 const countryLabel = labelFromList(COUNTRIES);
 const producerTypeLabel = labelFromList(PRODUCER_TYPES);
 const classificationLabel = labelFromList(BRAND_CLASSIFICATIONS);
-const certificationLabel = (level) => CERTIFICATION_LEVELS.find((c) => c.key === level)?.label || "Utilisateur (non certifié)";
 
 const breweryColumns = [
   { key: "name", label: "Nom" },
@@ -27,7 +26,8 @@ const breweryColumns = [
   { key: "phone", label: "Téléphone" },
   { key: "producerTypes", label: "Type", render: (b) => (b.producerTypes || []).map(producerTypeLabel).join(", ") },
   { key: "status", label: "Statut", render: (b) => <StatusBadge status={b.status} /> },
-  { key: "certificationLevel", label: "Certification", render: (b) => certificationLabel(b.certificationLevel) },
+  { key: "visible", label: "Visible", render: (b) => <VisibilityDot status={b.status} /> },
+  { key: "certificationLevel", label: "Certification", render: (b) => <CertificationIcon level={b.certificationLevel} /> },
 ];
 
 const brandColumns = [
@@ -36,7 +36,8 @@ const brandColumns = [
   { key: "classifications", label: "Classification", render: (b) => (b.classifications || []).map(classificationLabel).join(", ") },
   { key: "foundedYear", label: "Créée en" },
   { key: "status", label: "Statut", render: (b) => <StatusBadge status={b.status} /> },
-  { key: "certificationLevel", label: "Certification", render: (b) => certificationLabel(b.certificationLevel) },
+  { key: "visible", label: "Visible", render: (b) => <VisibilityDot status={b.status} /> },
+  { key: "certificationLevel", label: "Certification", render: (b) => <CertificationIcon level={b.certificationLevel} /> },
 ];
 
 export function BreweriesScreen() {
@@ -72,7 +73,7 @@ export function BreweriesScreen() {
             items={items}
             allColumns={breweryColumns}
             forcedKeys={["name", "status"]}
-            defaultVisibleKeys={["name", "country", "city", "status", "certificationLevel"]}
+            defaultVisibleKeys={["name", "country", "city", "status", "visible", "certificationLevel"]}
             storageKey="producteurs"
             onRowClick={setSelected}
             onAdd={() => setCreating(true)}
@@ -133,7 +134,7 @@ export function BrandsScreen() {
             items={items}
             allColumns={brandColumns}
             forcedKeys={["name", "status"]}
-            defaultVisibleKeys={["name", "originCountry", "status", "certificationLevel"]}
+            defaultVisibleKeys={["name", "originCountry", "status", "visible", "certificationLevel"]}
             storageKey="marques"
             onRowClick={setSelected}
             onAdd={() => setCreating(true)}

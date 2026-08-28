@@ -1,14 +1,14 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { loadDrinksPage, countDrinks, countDrinksByType } from "../data/sharedDirectories.js";
 import { ServerDataTable } from "./ServerDataTable.jsx";
-import { StatusBadge } from "./DataTable.jsx";
+import { StatusBadge, VisibilityDot } from "./DataTable.jsx";
 import { DrinkDetailPanel, DRINK_TYPES, BEER_CIDER_SUBTYPES } from "./DrinkDetailPanel.jsx";
 import { StatsCounterBar } from "./StatsCounterBar.jsx";
 import { ProductCategoryBar } from "./ProductCategoryBar.jsx";
 import { PageTitle } from "./PageTitle.jsx";
 import { COUNTRIES } from "../constants.js";
 import { BEER_CIDER_COMMERCIAL_STATUSES } from "../data/beerCiderStyles.js";
-import { CERTIFICATION_LEVELS } from "./CertificationLevelSelector.jsx";
+import { CertificationIcon } from "./CertificationIcon.jsx";
 
 // Les données stockent désormais des codes techniques (ex. "bieres_cidres") — le tableau doit
 // résoudre le libellé français pour l'affichage, la fiche détaillée s'en charge déjà elle-même.
@@ -21,7 +21,6 @@ const typeLabel = labelFromList(DRINK_TYPES);
 const subtypeLabel = labelFromList(BEER_CIDER_SUBTYPES);
 const countryLabel = labelFromList(COUNTRIES);
 const productStatusLabel = labelFromList(BEER_CIDER_COMMERCIAL_STATUSES);
-const certificationLabel = (level) => CERTIFICATION_LEVELS.find((c) => c.key === level)?.label || "Utilisateur (non certifié)";
 
 const allColumns = [
   { key: "name", label: "Nom" },
@@ -34,7 +33,8 @@ const allColumns = [
   { key: "kcalPer100ml", label: "Kcal/100ml" },
   { key: "productStatus", label: "Statut produit", render: (d) => productStatusLabel(d.productStatus) },
   { key: "status", label: "Statut", render: (d) => <StatusBadge status={d.status} /> },
-  { key: "certificationLevel", label: "Certification", render: (d) => certificationLabel(d.certificationLevel) },
+  { key: "visible", label: "Visible", render: (d) => <VisibilityDot status={d.status} /> },
+  { key: "certificationLevel", label: "Certification", render: (d) => <CertificationIcon level={d.certificationLevel} /> },
 ];
 
 export function DrinksScreen() {
@@ -87,7 +87,7 @@ export function DrinksScreen() {
       <ServerDataTable
         allColumns={allColumns}
         forcedKeys={["name", "status"]}
-        defaultVisibleKeys={["name", "type", "brandName", "producerName", "status", "certificationLevel"]}
+        defaultVisibleKeys={["name", "type", "brandName", "producerName", "status", "visible", "certificationLevel"]}
         storageKey="produits"
         fetchPage={fetchPage}
         onRowClick={setSelected}

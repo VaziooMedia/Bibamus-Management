@@ -1,18 +1,17 @@
 import React, { useState, useEffect } from "react";
 import { loadPublicVenues } from "../data/sharedDirectories.js";
-import { DataTable, StatusBadge } from "./DataTable.jsx";
+import { DataTable, StatusBadge, VisibilityDot } from "./DataTable.jsx";
 import { VenueDetailPanel } from "./VenueDetailPanel.jsx";
 import { StatsCounterBar } from "./StatsCounterBar.jsx";
 import { PageTitle } from "./PageTitle.jsx";
 import { COUNTRIES } from "../constants.js";
-import { CERTIFICATION_LEVELS } from "./CertificationLevelSelector.jsx";
+import { CertificationIcon } from "./CertificationIcon.jsx";
 
 // Les données stockent désormais des codes techniques (ex. "belgique") — le tableau doit
 // résoudre le libellé français pour l'affichage.
 const countryMap = {};
 COUNTRIES.forEach((c) => (countryMap[c.code] = c.fr));
 const countryLabel = (code) => countryMap[code] || code || "—";
-const certificationLabel = (level) => CERTIFICATION_LEVELS.find((c) => c.key === level)?.label || "Utilisateur (non certifié)";
 
 const allColumns = [
   { key: "name", label: "Nom" },
@@ -22,7 +21,8 @@ const allColumns = [
   { key: "email", label: "Email" },
   { key: "website", label: "Site web" },
   { key: "status", label: "Statut", render: (v) => <StatusBadge status={v.status} /> },
-  { key: "certificationLevel", label: "Certification", render: (v) => certificationLabel(v.certificationLevel) },
+  { key: "visible", label: "Visible", render: (v) => <VisibilityDot status={v.status} /> },
+  { key: "certificationLevel", label: "Certification", render: (v) => <CertificationIcon level={v.certificationLevel} /> },
 ];
 
 export function VenuesScreen() {
@@ -58,7 +58,7 @@ export function VenuesScreen() {
             items={venues}
             allColumns={allColumns}
             forcedKeys={["name", "status"]}
-            defaultVisibleKeys={["name", "country", "city", "status", "certificationLevel"]}
+            defaultVisibleKeys={["name", "country", "city", "status", "visible", "certificationLevel"]}
             storageKey="etablissements"
             onRowClick={setSelected}
             onAdd={() => setCreating(true)}
