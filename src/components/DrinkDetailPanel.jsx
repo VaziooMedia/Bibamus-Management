@@ -422,7 +422,7 @@ export function DrinkDetailPanel({ drink, onClose, onSaved }) {
                 { key: "niveau1", label: "Niveau 1" },
                 { key: "niveau2", label: "Niveau 2 (expert)" },
                 { key: "niveau3", label: "Niveau 3 (expert)" },
-                { key: "gallery", label: "Galerie images" },
+                { key: "gallery", label: "Médias" },
               ].map((tab) => (
                 <button
                   key={tab.key}
@@ -955,9 +955,7 @@ export function DrinkDetailPanel({ drink, onClose, onSaved }) {
                 <label style={labelStyle}>Histoire du produit</label>
                 <textarea value={form.productHistory} onChange={(e) => set("productHistory", e.target.value)} rows={3} style={{ ...fieldStyle, marginBottom: "12px", resize: "vertical" }} />
                 <label style={labelStyle}>Lien officiel</label>
-                <input value={form.officialUrl} onChange={(e) => set("officialUrl", e.target.value)} style={{ ...fieldStyle, marginBottom: "12px" }} />
-                <label style={labelStyle}>Lien YouTube</label>
-                <input value={form.youtubeUrl} onChange={(e) => set("youtubeUrl", e.target.value)} style={fieldStyle} />
+                <input value={form.officialUrl} onChange={(e) => set("officialUrl", e.target.value)} style={fieldStyle} />
                 </CollapsibleSection>
 
                 <CollapsibleSection title="Conditionnements & variantes">
@@ -1163,6 +1161,8 @@ export function DrinkDetailPanel({ drink, onClose, onSaved }) {
               <div>
                 <p style={{ fontSize: "12.5px", color: "#8792A6", marginBottom: "12px" }}>Photos additionnelles du produit (packaging, étiquette, verre servi...).</p>
                 <GalleryManager photos={galleryPhotos} onUpload={handleUploadGalleryPhoto} onRemove={removeGalleryPhoto} uploading={uploadingGallery} />
+                <label style={{ ...labelStyle, marginTop: "16px" }}>Lien YouTube</label>
+                <input value={form.youtubeUrl} onChange={(e) => set("youtubeUrl", e.target.value)} style={fieldStyle} />
               </div>
             )}
           </>

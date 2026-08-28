@@ -335,7 +335,7 @@ export function BreweryDetailPanel({ brewery, onClose, onSaved }) {
         <label style={labelStyle}>Téléphone</label>
         <div style={{ display: "flex", gap: "8px", marginBottom: "12px" }}>
           <div style={{ ...fieldStyle, width: "64px", flexShrink: 0, textAlign: "center", color: "#8792A6" }}>{phonePrefix || "—"}</div>
-          <input value={form.phone} onChange={(e) => set("phone", e.target.value)} placeholder="494 90 90 38" style={fieldStyle} />
+          <input value={form.phone} onChange={(e) => set("phone", e.target.value)} placeholder="000 00 00 00" style={fieldStyle} />
         </div>
 
         <label style={labelStyle}>Email</label>
@@ -348,14 +348,14 @@ export function BreweryDetailPanel({ brewery, onClose, onSaved }) {
         <input value={form.facebookUrl} onChange={(e) => set("facebookUrl", e.target.value)} style={{ ...fieldStyle, marginBottom: "12px" }} />
         <label style={labelStyle}>Lien Instagram</label>
         <input value={form.instagramUrl} onChange={(e) => set("instagramUrl", e.target.value)} style={{ ...fieldStyle, marginBottom: "12px" }} />
-        <label style={labelStyle}>Lien LinkedIn</label>
-        <input value={form.linkedinUrl} onChange={(e) => set("linkedinUrl", e.target.value)} style={{ ...fieldStyle, marginBottom: "12px" }} />
-        <label style={labelStyle}>Lien YouTube</label>
-        <input value={form.youtubeUrl} onChange={(e) => set("youtubeUrl", e.target.value)} style={{ ...fieldStyle, marginBottom: "12px" }} />
         <label style={labelStyle}>Lien TikTok</label>
         <input value={form.tiktokUrl} onChange={(e) => set("tiktokUrl", e.target.value)} style={{ ...fieldStyle, marginBottom: "12px" }} />
         <label style={labelStyle}>Lien Snapchat</label>
-        <input value={form.snapchatUrl} onChange={(e) => set("snapchatUrl", e.target.value)} style={fieldStyle} />
+        <input value={form.snapchatUrl} onChange={(e) => set("snapchatUrl", e.target.value)} style={{ ...fieldStyle, marginBottom: "12px" }} />
+        <label style={labelStyle}>Lien LinkedIn</label>
+        <input value={form.linkedinUrl} onChange={(e) => set("linkedinUrl", e.target.value)} style={{ ...fieldStyle, marginBottom: "12px" }} />
+        <label style={labelStyle}>Lien YouTube</label>
+        <input value={form.youtubeUrl} onChange={(e) => set("youtubeUrl", e.target.value)} style={fieldStyle} />
 
         <div style={separatorStyle} />
         <SectionTitle>Type de producteur</SectionTitle>

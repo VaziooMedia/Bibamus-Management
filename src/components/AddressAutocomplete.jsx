@@ -95,11 +95,11 @@ export function AddressAutocomplete({ postalCode, city, countryIsoCode, onPostal
   return (
     <>
       <div>
-        <label style={{ display: "block", fontSize: "12px", color: "#8792A6", fontWeight: 600, marginBottom: "4px" }}>Code postal *</label>
+        <label style={{ display: "block", fontSize: "12px", color: "#8792A6", fontWeight: 600, marginBottom: "4px" }}>Code postal</label>
         <div ref={postalRef} style={{ position: "relative" }} onInput={(e) => onPostalCodeChange(e.target.value)} />
       </div>
       <div>
-        <label style={{ display: "block", fontSize: "12px", color: "#8792A6", fontWeight: 600, marginBottom: "4px" }}>Ville *</label>
+        <label style={{ display: "block", fontSize: "12px", color: "#8792A6", fontWeight: 600, marginBottom: "4px" }}>Ville</label>
         <div ref={cityRef} style={{ position: "relative" }} onInput={(e) => onCityChange(e.target.value)} />
       </div>
     </>

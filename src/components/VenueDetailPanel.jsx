@@ -233,7 +233,7 @@ export function VenueDetailPanel({ venue, onClose, onSaved, onManageMenu }) {
   });
 
   const save = async () => {
-    if (!form.name.trim() || !form.streetName.trim() || !form.streetNumber.trim() || !form.postalCode.trim() || !form.city.trim()) return;
+    if (!form.name.trim() || !form.streetName.trim() || !form.streetNumber.trim()) return;
     setSaving(true);
     if (isNew) {
       const id = `venue-${Date.now()}-${Math.floor(Math.random() * 10000)}`;
@@ -281,7 +281,7 @@ export function VenueDetailPanel({ venue, onClose, onSaved, onManageMenu }) {
     e.target.value = "";
   };
 
-  const requiredOk = form.name.trim() && form.streetName.trim() && form.streetNumber.trim() && form.postalCode.trim() && form.city.trim();
+  const requiredOk = form.name.trim() && form.streetName.trim() && form.streetNumber.trim();
 
   return (
     <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.5)", display: "flex", justifyContent: "flex-end", zIndex: 100 }}>
@@ -351,11 +351,11 @@ export function VenueDetailPanel({ venue, onClose, onSaved, onManageMenu }) {
         ) : (
           <div style={{ display: "grid", gridTemplateColumns: "1fr 2fr", gap: "12px", marginBottom: "12px" }}>
             <div>
-              <label style={labelStyle}>Code postal *</label>
+              <label style={labelStyle}>Code postal</label>
               <input value={form.postalCode} onChange={(e) => set("postalCode", e.target.value)} style={fieldStyle} />
             </div>
             <div>
-              <label style={labelStyle}>Ville *</label>
+              <label style={labelStyle}>Ville</label>
               <input value={form.city} onChange={(e) => set("city", e.target.value)} onBlur={capitalizeOnBlur("city")} style={fieldStyle} />
             </div>
           </div>
@@ -440,13 +440,13 @@ export function VenueDetailPanel({ venue, onClose, onSaved, onManageMenu }) {
         <label style={labelStyle}>Téléphone</label>
         <div style={{ display: "flex", gap: "8px", marginBottom: "12px" }}>
           <div style={{ ...fieldStyle, width: "64px", flexShrink: 0, textAlign: "center", color: "#8792A6" }}>{phonePrefix || "—"}</div>
-          <input value={form.phone} onChange={(e) => set("phone", e.target.value)} placeholder="494 90 90 38" style={fieldStyle} />
+          <input value={form.phone} onChange={(e) => set("phone", e.target.value)} placeholder="000 00 00 00" style={fieldStyle} />
         </div>
 
         <label style={labelStyle}>WhatsApp</label>
         <div style={{ display: "flex", gap: "8px", marginBottom: "12px" }}>
           <div style={{ ...fieldStyle, width: "64px", flexShrink: 0, textAlign: "center", color: "#8792A6" }}>{phonePrefix || "—"}</div>
-          <input value={form.whatsapp} onChange={(e) => set("whatsapp", e.target.value)} placeholder="494 90 90 38" style={fieldStyle} />
+          <input value={form.whatsapp} onChange={(e) => set("whatsapp", e.target.value)} placeholder="000 00 00 00" style={fieldStyle} />
         </div>
 
         <label style={labelStyle}>Email</label>
