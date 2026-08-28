@@ -145,6 +145,7 @@ export function DrinkDetailPanel({ drink, onClose, onSaved }) {
     fullDescription: drink?.fullDescription || "",
     productHistory: drink?.productHistory || "",
     officialUrl: drink?.officialUrl || "",
+    youtubeUrl: drink?.youtubeUrl || "",
     // Niveau 3 — données techniques bière
     ibu: drink?.ibu ?? "",
     colorEbc: drink?.colorEbc ?? "",
@@ -301,6 +302,7 @@ export function DrinkDetailPanel({ drink, onClose, onSaved }) {
       fullDescription: form.fullDescription.trim(),
       productHistory: form.productHistory.trim(),
       officialUrl: form.officialUrl.trim(),
+      youtubeUrl: form.youtubeUrl.trim(),
       ibu: form.ibu === "" ? null : parseFloat(form.ibu),
       colorEbc: form.colorEbc === "" ? null : parseFloat(form.colorEbc),
       colorSrm: form.colorSrm === "" ? null : parseFloat(form.colorSrm),
@@ -467,13 +469,10 @@ export function DrinkDetailPanel({ drink, onClose, onSaved }) {
             <input value={form.alternateName} onChange={(e) => set("alternateName", e.target.value)} style={{ ...fieldStyle, marginBottom: "14px" }} />
 
             <div style={separatorStyle} />
-            <SectionTitle>Par défaut</SectionTitle>
-            <p style={{ fontSize: "11.5px", color: "#8792A6", marginTop: "-6px", marginBottom: "10px" }}>
-              Évite de tout ressaisir dans chaque carte boissons d'établissement — utilisé comme suggestion de départ quand ce produit est ajouté quelque part.
-            </p>
+            <SectionTitle>Valeurs par défaut</SectionTitle>
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px", marginBottom: "14px" }}>
               <div>
-                <label style={labelStyle}>Volume par défaut (cl)</label>
+                <label style={labelStyle}>Volume par défaut (centilitres)</label>
                 <input type="number" step="0.1" value={form.defaultVolumeCl} onChange={(e) => set("defaultVolumeCl", e.target.value)} placeholder="Ex. 33" style={fieldStyle} />
               </div>
               <div>
@@ -956,7 +955,9 @@ export function DrinkDetailPanel({ drink, onClose, onSaved }) {
                 <label style={labelStyle}>Histoire du produit</label>
                 <textarea value={form.productHistory} onChange={(e) => set("productHistory", e.target.value)} rows={3} style={{ ...fieldStyle, marginBottom: "12px", resize: "vertical" }} />
                 <label style={labelStyle}>Lien officiel</label>
-                <input value={form.officialUrl} onChange={(e) => set("officialUrl", e.target.value)} style={fieldStyle} />
+                <input value={form.officialUrl} onChange={(e) => set("officialUrl", e.target.value)} style={{ ...fieldStyle, marginBottom: "12px" }} />
+                <label style={labelStyle}>Lien YouTube</label>
+                <input value={form.youtubeUrl} onChange={(e) => set("youtubeUrl", e.target.value)} style={fieldStyle} />
                 </CollapsibleSection>
 
                 <CollapsibleSection title="Conditionnements & variantes">

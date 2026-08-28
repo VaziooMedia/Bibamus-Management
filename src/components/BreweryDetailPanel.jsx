@@ -124,6 +124,8 @@ export function BreweryDetailPanel({ brewery, onClose, onSaved }) {
     googleUrl: brewery?.googleUrl || "",
     facebookUrl: brewery?.facebookUrl || "",
     instagramUrl: brewery?.instagramUrl || "",
+    linkedinUrl: brewery?.linkedinUrl || "",
+    youtubeUrl: brewery?.youtubeUrl || "",
     tiktokUrl: brewery?.tiktokUrl || "",
     snapchatUrl: brewery?.snapchatUrl || "",
     producerTypes: brewery?.producerTypes || [],
@@ -175,6 +177,8 @@ export function BreweryDetailPanel({ brewery, onClose, onSaved }) {
     googleUrl: form.googleUrl.trim(),
     facebookUrl: form.facebookUrl.trim(),
     instagramUrl: form.instagramUrl.trim(),
+    linkedinUrl: form.linkedinUrl.trim(),
+    youtubeUrl: form.youtubeUrl.trim(),
     tiktokUrl: form.tiktokUrl.trim(),
     snapchatUrl: form.snapchatUrl.trim(),
     producerTypes: form.producerTypes,
@@ -188,7 +192,7 @@ export function BreweryDetailPanel({ brewery, onClose, onSaved }) {
   });
 
   const save = async () => {
-    if (!form.name.trim() || !form.postalCode.trim()) return;
+    if (!form.name.trim()) return;
     setSaving(true);
     if (isNew) {
       const id = `brewery-${Date.now()}-${Math.floor(Math.random() * 10000)}`;
@@ -225,7 +229,7 @@ export function BreweryDetailPanel({ brewery, onClose, onSaved }) {
     setUploadingCover(false);
   };
 
-  const requiredOk = form.name.trim() && form.postalCode.trim();
+  const requiredOk = form.name.trim();
 
   return (
     <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.5)", display: "flex", justifyContent: "flex-end", zIndex: 100 }}>
@@ -272,7 +276,7 @@ export function BreweryDetailPanel({ brewery, onClose, onSaved }) {
         ) : (
           <div style={{ display: "grid", gridTemplateColumns: "1fr 2fr", gap: "12px", marginBottom: "12px" }}>
             <div>
-              <label style={labelStyle}>Code postal *</label>
+              <label style={labelStyle}>Code postal</label>
               <input value={form.postalCode} onChange={(e) => set("postalCode", e.target.value)} style={fieldStyle} />
             </div>
             <div>
@@ -344,6 +348,10 @@ export function BreweryDetailPanel({ brewery, onClose, onSaved }) {
         <input value={form.facebookUrl} onChange={(e) => set("facebookUrl", e.target.value)} style={{ ...fieldStyle, marginBottom: "12px" }} />
         <label style={labelStyle}>Lien Instagram</label>
         <input value={form.instagramUrl} onChange={(e) => set("instagramUrl", e.target.value)} style={{ ...fieldStyle, marginBottom: "12px" }} />
+        <label style={labelStyle}>Lien LinkedIn</label>
+        <input value={form.linkedinUrl} onChange={(e) => set("linkedinUrl", e.target.value)} style={{ ...fieldStyle, marginBottom: "12px" }} />
+        <label style={labelStyle}>Lien YouTube</label>
+        <input value={form.youtubeUrl} onChange={(e) => set("youtubeUrl", e.target.value)} style={{ ...fieldStyle, marginBottom: "12px" }} />
         <label style={labelStyle}>Lien TikTok</label>
         <input value={form.tiktokUrl} onChange={(e) => set("tiktokUrl", e.target.value)} style={{ ...fieldStyle, marginBottom: "12px" }} />
         <label style={labelStyle}>Lien Snapchat</label>

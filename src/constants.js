@@ -40,6 +40,7 @@ export const COUNTRIES = [
   { code: "suisse", fr: "Suisse" },
   { code: "tunisie", fr: "Tunisie" },
   { code: "venezuela", fr: "Vénézuéla" },
+  { code: "international", fr: "International" },
   { code: "autre", fr: "Autre" },
 ];
 

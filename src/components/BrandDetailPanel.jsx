@@ -106,6 +106,7 @@ export function BrandDetailPanel({ brand, onClose, onSaved }) {
     instagramUrl: brand?.instagramUrl || "",
     tiktokUrl: brand?.tiktokUrl || "",
     snapchatUrl: brand?.snapchatUrl || "",
+    youtubeUrl: brand?.youtubeUrl || "",
     producerId: brand?.producerId || null,
     brandOwner: brand?.brandOwner || "",
   });
@@ -148,6 +149,7 @@ export function BrandDetailPanel({ brand, onClose, onSaved }) {
     instagramUrl: form.instagramUrl.trim(),
     tiktokUrl: form.tiktokUrl.trim(),
     snapchatUrl: form.snapchatUrl.trim(),
+    youtubeUrl: form.youtubeUrl.trim(),
     producerId: form.producerId,
     brandOwner: form.brandOwner.trim(),
     logoUrl,
@@ -247,7 +249,9 @@ export function BrandDetailPanel({ brand, onClose, onSaved }) {
         <label style={labelStyle}>Lien TikTok</label>
         <input value={form.tiktokUrl} onChange={(e) => set("tiktokUrl", e.target.value)} style={{ ...fieldStyle, marginBottom: "12px" }} />
         <label style={labelStyle}>Lien Snapchat</label>
-        <input value={form.snapchatUrl} onChange={(e) => set("snapchatUrl", e.target.value)} style={fieldStyle} />
+        <input value={form.snapchatUrl} onChange={(e) => set("snapchatUrl", e.target.value)} style={{ ...fieldStyle, marginBottom: "12px" }} />
+        <label style={labelStyle}>Lien YouTube</label>
+        <input value={form.youtubeUrl} onChange={(e) => set("youtubeUrl", e.target.value)} style={fieldStyle} />
 
         <div style={separatorStyle} />
         <SectionTitle>Producteur / Propriétaire</SectionTitle>
