@@ -5,8 +5,8 @@ import { PageTitle } from "./PageTitle.jsx";
 function breakdown(items) {
   return {
     total: items.length,
-    published: items.filter((i) => i.status === "published").length,
-    toFix: items.filter((i) => i.status === "to_fix" || i.status === "in_review").length,
+    complete: items.filter((i) => i.status === "complete").length,
+    toFix: items.filter((i) => i.status === "to_fix").length,
     toProcess: items.filter((i) => !i.status || i.status === "to_process" || i.status === "draft").length,
     ownerManaged: items.filter((i) => i.ownerManaged).length,
   };
@@ -20,10 +20,10 @@ function StatCard({ label, data }) {
       <div style={{ borderBottom: "1px solid #F2F2E8", opacity: 0.25, margin: "12px 0" }} />
       <div style={{ display: "flex", flexDirection: "column", gap: "4px", fontSize: "12px", textAlign: "left" }}>
         <div>
-          Publié : <span style={{ color: "#39FF66", fontWeight: 700 }}>{data.published}</span>
+          Complète : <span style={{ color: "#39FF66", fontWeight: 700 }}>{data.complete}</span>
         </div>
         <div>
-          À compléter / en vérif. : <span style={{ color: "#FF3B4E", fontWeight: 700 }}>{data.toFix}</span>
+          À compléter : <span style={{ color: "#FFC145", fontWeight: 700 }}>{data.toFix}</span>
         </div>
         <div>
           À traiter : <span style={{ color: "#00C8FF", fontWeight: 700 }}>{data.toProcess}</span>

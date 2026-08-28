@@ -1,16 +1,17 @@
 import React from "react";
 
-// 8 statuts de cycle de vie — remplace l'ancien système à 3 valeurs (pending/reviewed/certified).
-// Exporté pour être réutilisé par StatusBadge (tableaux de liste) et par les fiches détaillées.
+// 7 statuts de cycle de vie — modèle simplifié (retrait de "En vérification" et "Publié",
+// jugés redondants : "À traiter" peut déjà être visible dans l'app, et le passage par une
+// vérification n'a pas besoin d'être un état à part entière).
+// showsInApp détermine la pastille verte/rouge à droite du texte.
 export const STATUSES = [
-  { key: "draft", label: "Brouillon", color: "#8792A6" },
-  { key: "to_process", label: "À traiter", color: "#00C8FF" },
-  { key: "in_review", label: "En vérification", color: "#FF9500" },
-  { key: "published", label: "Publié", color: "#39FF66" },
-  { key: "to_fix", label: "À compléter", color: "#FFC145" },
-  { key: "rejected", label: "Rejeté", color: "#FF3B4E" },
-  { key: "archived", label: "Archivé", color: "#5C6470" },
-  { key: "duplicate", label: "Doublon", color: "#C74B4B" },
+  { key: "draft", label: "Brouillon", color: "#8792A6", showsInApp: false },
+  { key: "to_process", label: "À traiter", color: "#00C8FF", showsInApp: true },
+  { key: "to_fix", label: "À compléter", color: "#FFC145", showsInApp: true },
+  { key: "complete", label: "Complète", color: "#39FF66", showsInApp: true },
+  { key: "rejected", label: "Rejeté", color: "#FF3B4E", showsInApp: false },
+  { key: "archived", label: "Archivé", color: "#5C6470", showsInApp: false },
+  { key: "duplicate", label: "Doublon", color: "#C74B4B", showsInApp: false },
 ];
 
 export function StatusSelector({ value, onChange }) {
@@ -29,6 +30,10 @@ export function StatusSelector({ value, onChange }) {
           </option>
         ))}
       </select>
+      <span
+        title={current.showsInApp ? "Visible dans l'app" : "Non visible dans l'app"}
+        style={{ width: "9px", height: "9px", borderRadius: "50%", background: current.showsInApp ? "#39FF66" : "#FF3B4E", flexShrink: 0 }}
+      />
     </div>
   );
 }

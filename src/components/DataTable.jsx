@@ -196,9 +196,8 @@ export function DataTable({ items, allColumns, forcedKeys = [], defaultVisibleKe
 const STATUS_SYMBOLS = {
   draft: "✎",
   to_process: "○",
-  in_review: "◐",
-  published: "✓",
   to_fix: "!",
+  complete: "✓",
   rejected: "✕",
   archived: "▪",
   duplicate: "D",
@@ -209,7 +208,7 @@ export function StatusBadge({ status }) {
   const symbol = STATUS_SYMBOLS[status] || "○";
   return (
     <span
-      title={meta.label}
+      title={`${meta.label} — ${meta.showsInApp ? "visible dans l'app" : "non visible dans l'app"}`}
       style={{
         display: "inline-flex",
         alignItems: "center",

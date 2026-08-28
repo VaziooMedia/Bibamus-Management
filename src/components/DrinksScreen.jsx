@@ -49,14 +49,14 @@ export function DrinksScreen() {
   // simples comptages côté serveur — jamais un chargement complet du répertoire, qui pourrait
   // représenter des dizaines ou centaines de milliers de lignes.
   const refreshCounts = useCallback(async () => {
-    const [total, published, toProcess, toFix, byType] = await Promise.all([
+    const [total, complete, toProcess, toFix, byType] = await Promise.all([
       countDrinks({ type: selectedType === "__other__" ? "__other__" : selectedType }),
-      countDrinks({ type: selectedType === "__other__" ? "__other__" : selectedType, status: "published" }),
+      countDrinks({ type: selectedType === "__other__" ? "__other__" : selectedType, status: "complete" }),
       countDrinks({ type: selectedType === "__other__" ? "__other__" : selectedType, status: "to_process" }),
       countDrinks({ type: selectedType === "__other__" ? "__other__" : selectedType, status: "to_fix" }),
       countDrinksByType(),
     ]);
-    setStatCounts({ total, published, toProcess, toFix });
+    setStatCounts({ total, complete, toProcess, toFix });
     setCategoryCounts(byType);
   }, [selectedType]);
 
