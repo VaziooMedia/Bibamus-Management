@@ -6,6 +6,7 @@ import { BrandDetailPanel } from "./BrandDetailPanel.jsx";
 import { StatsCounterBar } from "./StatsCounterBar.jsx";
 import { PageTitle } from "./PageTitle.jsx";
 import { COUNTRIES, PRODUCER_TYPES, BRAND_CLASSIFICATIONS } from "../constants.js";
+import { CERTIFICATION_LEVELS } from "./CertificationLevelSelector.jsx";
 
 // Les données stockent désormais des codes techniques — les tableaux doivent résoudre le
 // libellé français pour l'affichage.
@@ -17,22 +18,25 @@ const labelFromList = (list) => {
 const countryLabel = labelFromList(COUNTRIES);
 const producerTypeLabel = labelFromList(PRODUCER_TYPES);
 const classificationLabel = labelFromList(BRAND_CLASSIFICATIONS);
+const certificationLabel = (level) => CERTIFICATION_LEVELS.find((c) => c.key === level)?.label || "Utilisateur (non certifié)";
 
 const breweryColumns = [
   { key: "name", label: "Nom" },
-  { key: "city", label: "Ville" },
   { key: "country", label: "Pays", render: (b) => countryLabel(b.country) },
+  { key: "city", label: "Ville" },
   { key: "phone", label: "Téléphone" },
   { key: "producerTypes", label: "Type", render: (b) => (b.producerTypes || []).map(producerTypeLabel).join(", ") },
   { key: "status", label: "Statut", render: (b) => <StatusBadge status={b.status} /> },
+  { key: "certificationLevel", label: "Certification", render: (b) => certificationLabel(b.certificationLevel) },
 ];
 
 const brandColumns = [
   { key: "name", label: "Nom" },
-  { key: "classifications", label: "Classification", render: (b) => (b.classifications || []).map(classificationLabel).join(", ") },
   { key: "originCountry", label: "Origine", render: (b) => countryLabel(b.originCountry) },
+  { key: "classifications", label: "Classification", render: (b) => (b.classifications || []).map(classificationLabel).join(", ") },
   { key: "foundedYear", label: "Créée en" },
   { key: "status", label: "Statut", render: (b) => <StatusBadge status={b.status} /> },
+  { key: "certificationLevel", label: "Certification", render: (b) => certificationLabel(b.certificationLevel) },
 ];
 
 export function BreweriesScreen() {
@@ -68,7 +72,8 @@ export function BreweriesScreen() {
             items={items}
             allColumns={breweryColumns}
             forcedKeys={["name", "status"]}
-            defaultVisibleKeys={["name", "city", "country", "status"]}
+            defaultVisibleKeys={["name", "country", "city", "status", "certificationLevel"]}
+            storageKey="producteurs"
             onRowClick={setSelected}
             onAdd={() => setCreating(true)}
             searchPlaceholder="Rechercher un producteur..."
@@ -128,7 +133,8 @@ export function BrandsScreen() {
             items={items}
             allColumns={brandColumns}
             forcedKeys={["name", "status"]}
-            defaultVisibleKeys={["name", "classifications", "originCountry", "status"]}
+            defaultVisibleKeys={["name", "originCountry", "status", "certificationLevel"]}
+            storageKey="marques"
             onRowClick={setSelected}
             onAdd={() => setCreating(true)}
             searchPlaceholder="Rechercher une marque..."

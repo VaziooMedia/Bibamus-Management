@@ -7,7 +7,7 @@ export const STATUSES = [
   { key: "to_process", label: "À traiter", color: "#00C8FF" },
   { key: "in_review", label: "En vérification", color: "#FF9500" },
   { key: "published", label: "Publié", color: "#39FF66" },
-  { key: "to_fix", label: "À corriger", color: "#FFC145" },
+  { key: "to_fix", label: "À compléter", color: "#FFC145" },
   { key: "rejected", label: "Rejeté", color: "#FF3B4E" },
   { key: "archived", label: "Archivé", color: "#5C6470" },
   { key: "duplicate", label: "Doublon", color: "#C74B4B" },

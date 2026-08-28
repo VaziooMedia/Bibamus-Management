@@ -3,10 +3,35 @@ import React, { useState, useEffect, useRef } from "react";
 // allColumns: [{ key, label, render? }]
 // fetchPage({ search, sortKey, sortDir, page, pageSize }) → Promise<{ items, total }>
 // refreshKey: changez cette valeur pour forcer un rechargement (ex. après une catégorie changée ailleurs)
-export function ServerDataTable({ allColumns, forcedKeys = [], defaultVisibleKeys, fetchPage, onRowClick, onAdd, searchPlaceholder = "Rechercher...", pageSize = 50, refreshKey }) {
+// storageKey: si fourni, le choix de colonnes est mémorisé (localStorage) et retrouvé après un
+// rafraîchissement de la page — propre à chaque tableau, pas partagé entre eux.
+export function ServerDataTable({ allColumns, forcedKeys = [], defaultVisibleKeys, fetchPage, onRowClick, onAdd, searchPlaceholder = "Rechercher...", pageSize = 50, refreshKey, storageKey }) {
   const [query, setQuery] = useState("");
   const [debouncedQuery, setDebouncedQuery] = useState("");
-  const [visibleKeys, setVisibleKeys] = useState(defaultVisibleKeys || allColumns.map((c) => c.key));
+  const [visibleKeys, setVisibleKeysState] = useState(() => {
+    if (storageKey) {
+      try {
+        const saved = localStorage.getItem(`bibamus-admin-columns:${storageKey}`);
+        if (saved) return JSON.parse(saved);
+      } catch (e) {
+        // localStorage indisponible ou valeur corrompue — on retombe sur le défaut.
+      }
+    }
+    return defaultVisibleKeys || allColumns.map((c) => c.key);
+  });
+  const setVisibleKeys = (updater) => {
+    setVisibleKeysState((prev) => {
+      const next = typeof updater === "function" ? updater(prev) : updater;
+      if (storageKey) {
+        try {
+          localStorage.setItem(`bibamus-admin-columns:${storageKey}`, JSON.stringify(next));
+        } catch (e) {
+          // stockage plein ou indisponible — l'affichage fonctionne quand même, juste sans mémorisation.
+        }
+      }
+      return next;
+    });
+  };
   const [pickerOpen, setPickerOpen] = useState(false);
   const pickerRef = useRef(null);
   const [sortKey, setSortKey] = useState(allColumns[0]?.key);

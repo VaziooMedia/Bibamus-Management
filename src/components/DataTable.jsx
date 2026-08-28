@@ -4,9 +4,34 @@ import { STATUSES } from "./StatusSelector.jsx";
 // allColumns: [{ key, label, render? }] — la liste complète des colonnes possibles.
 // forcedKeys: clés toujours affichées, non désactivables (ex. ["name", "status"]).
 // defaultVisibleKeys: clés affichées par défaut au premier chargement.
-export function DataTable({ items, allColumns, forcedKeys = [], defaultVisibleKeys, onRowClick, onAdd, searchPlaceholder = "Rechercher..." }) {
+// storageKey: si fourni, le choix de colonnes est mémorisé (localStorage) et retrouvé après un
+// rafraîchissement de la page — propre à chaque tableau, pas partagé entre eux.
+export function DataTable({ items, allColumns, forcedKeys = [], defaultVisibleKeys, onRowClick, onAdd, searchPlaceholder = "Rechercher...", storageKey }) {
   const [query, setQuery] = useState("");
-  const [visibleKeys, setVisibleKeys] = useState(defaultVisibleKeys || allColumns.map((c) => c.key));
+  const [visibleKeys, setVisibleKeysState] = useState(() => {
+    if (storageKey) {
+      try {
+        const saved = localStorage.getItem(`bibamus-admin-columns:${storageKey}`);
+        if (saved) return JSON.parse(saved);
+      } catch (e) {
+        // localStorage indisponible ou valeur corrompue — on retombe sur le défaut.
+      }
+    }
+    return defaultVisibleKeys || allColumns.map((c) => c.key);
+  });
+  const setVisibleKeys = (updater) => {
+    setVisibleKeysState((prev) => {
+      const next = typeof updater === "function" ? updater(prev) : updater;
+      if (storageKey) {
+        try {
+          localStorage.setItem(`bibamus-admin-columns:${storageKey}`, JSON.stringify(next));
+        } catch (e) {
+          // stockage plein ou indisponible — l'affichage fonctionne quand même, juste sans mémorisation.
+        }
+      }
+      return next;
+    });
+  };
   const [pickerOpen, setPickerOpen] = useState(false);
   const pickerRef = useRef(null);
 

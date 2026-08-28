@@ -97,6 +97,7 @@ export function VenueDetailPanel({ venue, onClose, onSaved, onManageMenu }) {
     lat: venue?.lat ?? "",
     lng: venue?.lng ?? "",
     phone: (venue?.phone || "").replace(/^(\+\d+\s*)+/, ""),
+    whatsapp: (venue?.whatsapp || "").replace(/^(\+\d+\s*)+/, ""),
     email: venue?.email || "",
     website: venue?.website || "",
     googleUrl: venue?.googleUrl || "",
@@ -199,6 +200,7 @@ export function VenueDetailPanel({ venue, onClose, onSaved, onManageMenu }) {
     geocodeSource,
     geocodeConfidence,
     phone: form.phone.trim() ? `${phonePrefix} ${form.phone.trim()}` : "",
+    whatsapp: form.whatsapp.trim() ? `${phonePrefix} ${form.whatsapp.trim()}` : "",
     email: form.email.trim(),
     website: form.website.trim(),
     googleUrl: form.googleUrl.trim(),
@@ -439,6 +441,12 @@ export function VenueDetailPanel({ venue, onClose, onSaved, onManageMenu }) {
         <div style={{ display: "flex", gap: "8px", marginBottom: "12px" }}>
           <div style={{ ...fieldStyle, width: "64px", flexShrink: 0, textAlign: "center", color: "#8792A6" }}>{phonePrefix || "—"}</div>
           <input value={form.phone} onChange={(e) => set("phone", e.target.value)} placeholder="494 90 90 38" style={fieldStyle} />
+        </div>
+
+        <label style={labelStyle}>WhatsApp</label>
+        <div style={{ display: "flex", gap: "8px", marginBottom: "12px" }}>
+          <div style={{ ...fieldStyle, width: "64px", flexShrink: 0, textAlign: "center", color: "#8792A6" }}>{phonePrefix || "—"}</div>
+          <input value={form.whatsapp} onChange={(e) => set("whatsapp", e.target.value)} placeholder="494 90 90 38" style={fieldStyle} />
         </div>
 
         <label style={labelStyle}>Email</label>

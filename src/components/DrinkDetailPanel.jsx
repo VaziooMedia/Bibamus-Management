@@ -28,6 +28,7 @@ import {
   CIDER_AGING_OPTIONS,
   CIDER_BARREL_TYPES,
   ALLERGENS,
+  DEFAULT_SERVING_MODES,
   MASHING_PROCESSES,
   APPLE_TYPES,
   VERIFICATION_STATUSES,
@@ -70,6 +71,8 @@ export function DrinkDetailPanel({ drink, onClose, onSaved }) {
     name: drink?.name || "",
     type: drink?.type || DRINK_TYPES[0].code,
     beverageSubtype: drink?.beverageSubtype || BEER_CIDER_SUBTYPES[0].code,
+    defaultVolumeCl: drink?.defaultVolumeCl ?? "",
+    defaultServingMode: drink?.defaultServingMode || "",
     brandId: drink?.brandId || null,
     producerIds: drink?.producerIds || [],
     nationality: drink?.nationality || "",
@@ -234,6 +237,8 @@ export function DrinkDetailPanel({ drink, onClose, onSaved }) {
     return {
       ...base,
       beverageSubtype: form.beverageSubtype,
+      defaultVolumeCl: form.defaultVolumeCl === "" ? null : parseFloat(form.defaultVolumeCl),
+      defaultServingMode: form.defaultServingMode || null,
       brandId: form.brandId,
       producerIds: form.producerIds,
       nationality: form.nationality || null,
@@ -460,6 +465,29 @@ export function DrinkDetailPanel({ drink, onClose, onSaved }) {
 
             <label style={labelStyle}>Nom alternatif / ancien nom</label>
             <input value={form.alternateName} onChange={(e) => set("alternateName", e.target.value)} style={{ ...fieldStyle, marginBottom: "14px" }} />
+
+            <div style={separatorStyle} />
+            <SectionTitle>Par défaut</SectionTitle>
+            <p style={{ fontSize: "11.5px", color: "#8792A6", marginTop: "-6px", marginBottom: "10px" }}>
+              Évite de tout ressaisir dans chaque carte boissons d'établissement — utilisé comme suggestion de départ quand ce produit est ajouté quelque part.
+            </p>
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px", marginBottom: "14px" }}>
+              <div>
+                <label style={labelStyle}>Volume par défaut (cl)</label>
+                <input type="number" step="0.1" value={form.defaultVolumeCl} onChange={(e) => set("defaultVolumeCl", e.target.value)} placeholder="Ex. 33" style={fieldStyle} />
+              </div>
+              <div>
+                <label style={labelStyle}>Type de service par défaut</label>
+                <select value={form.defaultServingMode} onChange={(e) => set("defaultServingMode", e.target.value)} style={fieldStyle}>
+                  <option value="">—</option>
+                  {DEFAULT_SERVING_MODES.map((m) => (
+                    <option key={m.code} value={m.code}>
+                      {m.fr}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            </div>
 
             <div style={separatorStyle} />
             <SectionTitle>Marque & producteur</SectionTitle>

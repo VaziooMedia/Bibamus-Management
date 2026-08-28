@@ -56,6 +56,7 @@ function rowToVenue(row) {
     village: row.village,
     country: row.country,
     phone: row.phone,
+    whatsapp: row.whatsapp,
     email: row.email,
     website: row.website,
     googleUrl: row.google_url,
@@ -124,6 +125,7 @@ function venueToRow(v, partial = false) {
     village: v.village,
     country: v.country,
     phone: v.phone,
+    whatsapp: v.whatsapp,
     email: v.email,
     website: v.website,
     google_url: v.googleUrl,
@@ -380,11 +382,11 @@ function applyTypeFilter(query, type) {
 // répertoire d'un coup, pour rester rapide même avec des dizaines ou centaines de milliers de
 // produits.
 export async function loadDrinksPage({ type, search, sortKey = "name", sortDir = 1, page = 0, pageSize = 50 } = {}) {
-  let query = supabase.from("drinks_directory").select("*, brands_directory(name)", { count: "exact" });
+  let query = supabase.from("drinks_directory").select("*, brands_directory(name, breweries_directory(name))", { count: "exact" });
   query = applyTypeFilter(query, type);
   if (search && search.trim()) query = query.ilike("name", `%${search.trim()}%`);
-  // "brandName" résulte d'une jointure, pas d'une vraie colonne — on trie par brand_id à la place.
-  const realSortKey = sortKey === "brandName" ? "brand_id" : sortKey;
+  // "brandName"/"producerName" résultent d'une jointure, pas d'une vraie colonne — on trie par brand_id à la place.
+  const realSortKey = sortKey === "brandName" || sortKey === "producerName" ? "brand_id" : sortKey;
   query = query.order(realSortKey, { ascending: sortDir === 1, nullsFirst: false });
   query = query.range(page * pageSize, page * pageSize + pageSize - 1);
 
@@ -394,7 +396,7 @@ export async function loadDrinksPage({ type, search, sortKey = "name", sortDir =
     return { items: [], total: 0 };
   }
   return {
-    items: data.map((row) => ({ ...rowToDrink(row), brandName: row.brands_directory?.name || null })),
+    items: data.map((row) => ({ ...rowToDrink(row), brandName: row.brands_directory?.name || null, producerName: row.brands_directory?.breweries_directory?.name || null })),
     total: count || 0,
   };
 }
@@ -469,6 +471,8 @@ function rowToDrink(row) {
     avatarEmoji: row.avatar_emoji,
     brandId: row.brand_id,
     producerIds: row.producer_ids || [],
+    defaultVolumeCl: row.default_volume_cl,
+    defaultServingMode: row.default_serving_mode,
     beverageSubtype: row.beverage_subtype,
     originRegion: row.origin_region,
     originCity: row.origin_city,
@@ -617,6 +621,8 @@ function drinkToRow(d, partial = false) {
     avatar_emoji: d.avatarEmoji,
     brand_id: d.brandId,
     producer_ids: d.producerIds,
+    default_volume_cl: d.defaultVolumeCl,
+    default_serving_mode: d.defaultServingMode,
     beverage_subtype: d.beverageSubtype,
     origin_region: d.originRegion,
     origin_city: d.originCity,

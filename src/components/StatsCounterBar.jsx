@@ -25,7 +25,7 @@ export function StatsCounterBar({ items, counts, showOwnerManaged = false }) {
       <Stat label="Total" value={total} />
       <Stat label="Publiés" value={published} />
       <Stat label="À traiter" value={toProcess} />
-      <Stat label="À corriger / en vérif." value={toFix} />
+      <Stat label="À compléter / en vérif." value={toFix} />
       {showOwnerManaged && <Stat label="Business" value={ownerManaged} />}
     </div>
   );

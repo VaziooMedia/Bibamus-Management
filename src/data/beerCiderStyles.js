@@ -644,6 +644,16 @@ export const CONTAINER_TYPES = [
 ];
 export const COMMON_VOLUMES_CL = [20, 25, 33, 35.5, 44, 50, 75, 100, 2000, 3000, 5000];
 
+// Mode de service PAR DÉFAUT d'un produit — pas le conditionnement physique (CONTAINER_TYPES,
+// pour les variantes/codes-barres), mais la façon la plus courante dont ce produit est servi
+// dans un établissement, pour préremplir la carte boissons sans tout ressaisir à chaque fois.
+export const DEFAULT_SERVING_MODES = [
+  { code: "bouteille", fr: "Bouteille" },
+  { code: "canette", fr: "Canette" },
+  { code: "pression", fr: "Pression (on tap)" },
+  { code: "verre", fr: "Au verre" },
+];
+
 export const MASHING_PROCESSES = [
   { code: "monopalier", fr: "Monopalier" },
   { code: "multipalier", fr: "Multipalier" },

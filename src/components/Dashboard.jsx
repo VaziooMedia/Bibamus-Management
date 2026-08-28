@@ -23,7 +23,7 @@ function StatCard({ label, data }) {
           Publié : <span style={{ color: "#39FF66", fontWeight: 700 }}>{data.published}</span>
         </div>
         <div>
-          À corriger / en vérif. : <span style={{ color: "#FF3B4E", fontWeight: 700 }}>{data.toFix}</span>
+          À compléter / en vérif. : <span style={{ color: "#FF3B4E", fontWeight: 700 }}>{data.toFix}</span>
         </div>
         <div>
           À traiter : <span style={{ color: "#00C8FF", fontWeight: 700 }}>{data.toProcess}</span>
