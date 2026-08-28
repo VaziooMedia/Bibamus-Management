@@ -650,7 +650,7 @@ export const COMMON_VOLUMES_CL = [20, 25, 33, 35.5, 44, 50, 75, 100, 2000, 3000,
 export const DEFAULT_SERVING_MODES = [
   { code: "bouteille", fr: "Bouteille" },
   { code: "canette", fr: "Canette" },
-  { code: "pression", fr: "Pression (on tap)" },
+  { code: "fut", fr: "Pression (on tap)" },
   { code: "verre", fr: "Au verre" },
 ];
 
