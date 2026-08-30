@@ -16,7 +16,7 @@ import { supabase } from "../supabaseClient.js";
 /* ---------------- COLLABORATEURS (comptes pro de la plateforme de gestion) ---------------- */
 
 export async function loadCollaborators() {
-  const { data, error } = await supabase.from("profiles").select("id, email, name, role").order("email");
+  const { data, error } = await supabase.from("profiles").select("id, email, name, last_name, birth_date, avatar_url, role, active").order("name");
   if (error) {
     console.error("loadCollaborators:", error);
     return [];
@@ -26,19 +26,37 @@ export async function loadCollaborators() {
 
 // Passe par la fonction serveur dédiée — un compte ne peut jamais être créé directement
 // depuis le navigateur, quel que soit le rôle de la personne connectée.
-export async function createCollaborator(email, password, name, role) {
-  const { data, error } = await supabase.functions.invoke("admin-create-collaborator", { body: { email, password, name, role } });
+export async function createCollaborator(email, password, firstName, lastName, birthDate, role) {
+  const { data, error } = await supabase.functions.invoke("admin-create-collaborator", {
+    body: { email, password, firstName, lastName, birthDate, role },
+  });
   if (error) return { error: error.message };
   if (data?.error) return { error: data.error };
   return { ok: true };
 }
 
-// Rétrograder (retirer les droits) se fait par une simple mise à jour — protégée par la RLS
-// et le déclencheur déjà en place, réservée aux super_admin.
-export async function updateCollaboratorRole(userId, role) {
-  const { error } = await supabase.from("profiles").update({ role }).eq("id", userId);
+// Modification de la fiche (nom/prénom/date de naissance/rôle/statut actif) — le rôle et le
+// statut actif restent malgré tout protégés côté base de données (réservés aux super_admin),
+// peu importe qui appelle cette fonction.
+export async function updateCollaboratorProfile(userId, { firstName, lastName, birthDate, role, active }) {
+  const { error } = await supabase
+    .from("profiles")
+    .update({ name: firstName, last_name: lastName, birth_date: birthDate || null, role, active })
+    .eq("id", userId);
   if (error) return { error: error.message };
   return { ok: true };
+}
+
+export async function uploadAdminAvatar(userId, file) {
+  const blob = await resizeImageTo(file, 400, 400);
+  const path = `${userId}-${Date.now()}.jpg`;
+  const { error: uploadError } = await supabase.storage.from("admin-avatars").upload(path, blob, { contentType: "image/jpeg", upsert: true });
+  if (uploadError) {
+    console.error("uploadAdminAvatar:", uploadError);
+    return null;
+  }
+  const { data } = supabase.storage.from("admin-avatars").getPublicUrl(path);
+  return data.publicUrl;
 }
 
 /* ---------------- ÉTABLISSEMENTS & LIEUX ---------------- */

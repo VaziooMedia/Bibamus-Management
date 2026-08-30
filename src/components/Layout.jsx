@@ -15,8 +15,9 @@ const DATABASE_ITEMS = [
 const BOTTOM_ITEMS = [
   { key: "stats", label: "Statistiques" },
   { key: "finances", label: "Finances" },
+  { key: "business", label: "Business" },
   { key: "notifications", label: "Notifications" },
-  { key: "admins", label: "Collaborateurs" },
+  { key: "admins", label: "Administrateurs" },
   { key: "settings", label: "Paramètres" },
 ];
 

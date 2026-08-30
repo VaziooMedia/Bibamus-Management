@@ -62,6 +62,7 @@ export default function App() {
       {screen === "chat" && <ComingSoon title="Chat" />}
       {screen === "stats" && <ComingSoon title="Statistiques" />}
       {screen === "finances" && <ComingSoon title="Finances" />}
+      {screen === "business" && <ComingSoon title="Business" />}
       {screen === "notifications" && <ComingSoon title="Notifications" />}
       {screen === "admins" && <CollaboratorsScreen />}
       {screen === "settings" && <ComingSoon title="Paramètres" />}
