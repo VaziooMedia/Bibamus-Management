@@ -47,6 +47,13 @@ export async function updateCollaboratorProfile(userId, { firstName, lastName, b
   return { ok: true };
 }
 
+export async function deleteCollaborator(targetUserId, confirmPassword) {
+  const { data, error } = await supabase.functions.invoke("admin-delete-collaborator", { body: { targetUserId, confirmPassword } });
+  if (error) return { error: error.message };
+  if (data?.error) return { error: data.error };
+  return { ok: true };
+}
+
 export async function uploadAdminAvatar(userId, file) {
   const blob = await resizeImageTo(file, 400, 400);
   const path = `${userId}-${Date.now()}.jpg`;
