@@ -16,7 +16,7 @@ const BOTTOM_ITEMS = [
   { key: "stats", label: "Statistiques" },
   { key: "finances", label: "Finances" },
   { key: "notifications", label: "Notifications" },
-  { key: "admins", label: "Administrateurs" },
+  { key: "admins", label: "Collaborateurs" },
   { key: "settings", label: "Paramètres" },
 ];
 

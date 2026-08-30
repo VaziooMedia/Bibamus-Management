@@ -13,6 +13,34 @@
 
 import { supabase } from "../supabaseClient.js";
 
+/* ---------------- COLLABORATEURS (comptes pro de la plateforme de gestion) ---------------- */
+
+export async function loadCollaborators() {
+  const { data, error } = await supabase.from("profiles").select("id, email, name, role").order("email");
+  if (error) {
+    console.error("loadCollaborators:", error);
+    return [];
+  }
+  return data;
+}
+
+// Passe par la fonction serveur dédiée — un compte ne peut jamais être créé directement
+// depuis le navigateur, quel que soit le rôle de la personne connectée.
+export async function createCollaborator(email, password, name, role) {
+  const { data, error } = await supabase.functions.invoke("admin-create-collaborator", { body: { email, password, name, role } });
+  if (error) return { error: error.message };
+  if (data?.error) return { error: data.error };
+  return { ok: true };
+}
+
+// Rétrograder (retirer les droits) se fait par une simple mise à jour — protégée par la RLS
+// et le déclencheur déjà en place, réservée aux super_admin.
+export async function updateCollaboratorRole(userId, role) {
+  const { error } = await supabase.from("profiles").update({ role }).eq("id", userId);
+  if (error) return { error: error.message };
+  return { ok: true };
+}
+
 /* ---------------- ÉTABLISSEMENTS & LIEUX ---------------- */
 
 export async function loadPublicVenues() {
