@@ -40,6 +40,7 @@ export function UserDetailPanel({ user, onClose, onSaved }) {
   const [instagramUrl, setInstagramUrl] = useState(user?.instagram_url || "");
   const [tiktokUrl, setTiktokUrl] = useState(user?.tiktok_url || "");
   const [snapchatUrl, setSnapchatUrl] = useState(user?.snapchat_url || "");
+  const [linkedinUrl, setLinkedinUrl] = useState(user?.linkedin_url || "");
   const [appLanguage, setAppLanguage] = useState(user?.app_language || "fr");
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState(null);
@@ -74,6 +75,7 @@ export function UserDetailPanel({ user, onClose, onSaved }) {
       instagramUrl,
       tiktokUrl,
       snapchatUrl,
+      linkedinUrl,
       appLanguage,
     });
     setSaving(false);
@@ -105,12 +107,28 @@ export function UserDetailPanel({ user, onClose, onSaved }) {
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "center",
-                fontSize: "40px",
               }}
             >
-              {user.avatar_emoji || "👤"}
+              {user.avatar_emoji ? (
+                <span style={{ fontSize: "40px" }}>{user.avatar_emoji}</span>
+              ) : (
+                <svg width="44" height="44" viewBox="0 0 1024 1024" fill="none">
+                  <g fill="none" stroke="#39FF66" strokeWidth="60" strokeLinecap="round" strokeLinejoin="round">
+                    <circle cx="176" cy="410" r="92" />
+                    <path d="M 36 786 C 36 666, 122 596, 222 596 C 258 596, 291 605, 318 622" />
+                    <circle cx="848" cy="410" r="92" />
+                    <path d="M 706 622 C 733 605, 766 596, 802 596 C 902 596, 988 666, 988 786" />
+                    <circle cx="512" cy="286" r="194" />
+                    <path d="M 235 926 C 183 926, 153 894, 162 842 C 188 690, 320 579, 512 579 C 704 579, 836 690, 862 842 C 871 894, 841 926, 789 926 Z" />
+                  </g>
+                </svg>
+              )}
             </div>
-            <p style={{ fontSize: "11px", color: "#8792A6", marginTop: "8px" }}>Photo choisie par l'utilisateur dans l'app — non modifiable ici.</p>
+            <p style={{ fontSize: "11px", color: "#8792A6", marginTop: "8px", textAlign: "center" }}>
+              Photo choisie par l'utilisateur dans l'app
+              <br />
+              Non modifiable ici.
+            </p>
           </div>
         )}
 
@@ -147,7 +165,7 @@ export function UserDetailPanel({ user, onClose, onSaved }) {
           </div>
           <div style={{ width: "80px" }}>
             <label style={labelStyle}>Âge</label>
-            <p style={{ ...fieldStyle, color: "#8792A6", textAlign: "center" }}>{age != null ? age : "—"}</p>
+            <p style={{ ...fieldStyle, margin: 0, color: "#8792A6", textAlign: "center" }}>{age != null ? age : "—"}</p>
           </div>
         </div>
 
@@ -184,6 +202,8 @@ export function UserDetailPanel({ user, onClose, onSaved }) {
         <input value={tiktokUrl} onChange={(e) => setTiktokUrl(e.target.value)} style={{ ...fieldStyle, marginBottom: "12px" }} />
         <label style={labelStyle}>Lien Snapchat</label>
         <input value={snapchatUrl} onChange={(e) => setSnapchatUrl(e.target.value)} style={{ ...fieldStyle, marginBottom: "12px" }} />
+        <label style={labelStyle}>Lien LinkedIn</label>
+        <input value={linkedinUrl} onChange={(e) => setLinkedinUrl(e.target.value)} style={{ ...fieldStyle, marginBottom: "12px" }} />
 
         <div style={separatorStyle} />
 
