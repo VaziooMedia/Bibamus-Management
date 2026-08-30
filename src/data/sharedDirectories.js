@@ -15,6 +15,15 @@ import { supabase } from "../supabaseClient.js";
 
 /* ---------------- COLLABORATEURS (comptes pro de la plateforme de gestion) ---------------- */
 
+export async function loadAppUsers() {
+  const { data, error } = await supabase.from("profiles").select("id, email, name, last_name, username, bibro_code, birth_date, active, created_at").eq("role", "user").order("created_at", { ascending: false });
+  if (error) {
+    console.error("loadAppUsers:", error);
+    return [];
+  }
+  return data;
+}
+
 export async function loadCollaborators() {
   const { data, error } = await supabase.from("profiles").select("id, email, name, last_name, birth_date, avatar_url, role, active").order("name");
   if (error) {

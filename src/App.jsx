@@ -9,6 +9,7 @@ import { BreweriesScreen, BrandsScreen } from "./components/BreweriesAndBrandsSc
 import { ComingSoon } from "./components/ComingSoon.jsx";
 import { DataBaseOverviewScreen } from "./components/DataBaseOverviewScreen.jsx";
 import { CollaboratorsScreen } from "./components/CollaboratorsScreen.jsx";
+import { UsersScreen } from "./components/UsersScreen.jsx";
 
 const SUPABASE_PROJECT_URL = "https://supabase.com/dashboard/project/rkmmrzkqzqpntgiguajz";
 
@@ -65,6 +66,7 @@ export default function App() {
       {screen === "business" && <ComingSoon title="Business" />}
       {screen === "notifications" && <ComingSoon title="Notifications" />}
       {screen === "admins" && <CollaboratorsScreen />}
+      {screen === "users" && <UsersScreen />}
       {screen === "settings" && <ComingSoon title="Paramètres" />}
     </Layout>
   );
