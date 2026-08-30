@@ -1,10 +1,20 @@
 import React, { useState } from "react";
-import { updateAppUserProfile, createAppUser } from "../data/sharedDirectories.js";
+import { updateAppUserProfile, createAppUser, deleteAppUser } from "../data/sharedDirectories.js";
 import { COUNTRIES } from "../constants.js";
 
 const fieldStyle = { padding: "10px 12px", borderRadius: "8px", border: "2px solid #28405C", fontSize: "14px", width: "100%", color: "#F2F2E8", background: "#0D1B2A", boxSizing: "border-box" };
 const labelStyle = { fontSize: "12.5px", color: "#8792A6", marginBottom: "4px", display: "block", fontWeight: 600 };
 const separatorStyle = { borderBottom: "1px solid #28405C", margin: "20px 0" };
+const errorBorder = { borderColor: "#FF3B4E" };
+
+// Astérisque vert fluo pour signaler un champ obligatoire (uniquement affiché en création).
+function RequiredLabel({ children, required }) {
+  return (
+    <label style={labelStyle}>
+      {children} {required && <span style={{ color: "#39FF66" }}>*</span>}
+    </label>
+  );
+}
 
 const APP_LANGUAGES = [
   { code: "fr", label: "Français" },
@@ -55,14 +65,32 @@ export function UserDetailPanel({ user, onClose, onSaved }) {
   const [appLanguage, setAppLanguage] = useState(user?.app_language || "fr");
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState(null);
+  const [fieldErrors, setFieldErrors] = useState({});
+
+  const [confirmingDelete, setConfirmingDelete] = useState(false);
+  const [deletePassword, setDeletePassword] = useState("");
+  const [deleting, setDeleting] = useState(false);
+  const [deleteError, setDeleteError] = useState(null);
 
   const age = ageFromBirthDate(birthDate);
 
   const handleSave = async () => {
-    setSaving(true);
     setError(null);
 
     if (isNew) {
+      const missing = {};
+      if (!firstName.trim()) missing.firstName = true;
+      if (!lastName.trim()) missing.lastName = true;
+      if (!username.trim()) missing.username = true;
+      if (!email.trim()) missing.email = true;
+      if (!password.trim()) missing.password = true;
+      setFieldErrors(missing);
+      if (Object.keys(missing).length > 0) {
+        setError("Merci de compléter tous les champs obligatoires (*).");
+        return;
+      }
+
+      setSaving(true);
       const result = await createAppUser(email, password, firstName, lastName, nickname, username, birthDate);
       setSaving(false);
       if (result.error) {
@@ -73,6 +101,7 @@ export function UserDetailPanel({ user, onClose, onSaved }) {
       return;
     }
 
+    setSaving(true);
     const result = await updateAppUserProfile(user.id, {
       firstName,
       lastName,
@@ -92,6 +121,18 @@ export function UserDetailPanel({ user, onClose, onSaved }) {
     setSaving(false);
     if (result.error) {
       setError(result.error);
+      return;
+    }
+    onSaved();
+  };
+
+  const handleDelete = async () => {
+    setDeleting(true);
+    setDeleteError(null);
+    const result = await deleteAppUser(user.id, deletePassword);
+    setDeleting(false);
+    if (result.error) {
+      setDeleteError(result.error);
       return;
     }
     onSaved();
@@ -141,34 +182,51 @@ export function UserDetailPanel({ user, onClose, onSaved }) {
           </div>
         )}
 
-        <label style={labelStyle}>Prénom</label>
-        <input value={firstName} onChange={(e) => setFirstName(e.target.value)} style={{ ...fieldStyle, marginBottom: "12px" }} />
+        <RequiredLabel required={isNew}>Prénom</RequiredLabel>
+        <input
+          value={firstName}
+          onChange={(e) => setFirstName(e.target.value)}
+          style={{ ...fieldStyle, marginBottom: "12px", ...(fieldErrors.firstName ? errorBorder : {}) }}
+        />
 
-        <label style={labelStyle}>Nom</label>
-        <input value={lastName} onChange={(e) => setLastName(e.target.value)} style={{ ...fieldStyle, marginBottom: "12px" }} />
+        <RequiredLabel required={isNew}>Nom</RequiredLabel>
+        <input
+          value={lastName}
+          onChange={(e) => setLastName(e.target.value)}
+          style={{ ...fieldStyle, marginBottom: "12px", ...(fieldErrors.lastName ? errorBorder : {}) }}
+        />
 
         <label style={labelStyle}>Surnom</label>
         <input value={nickname} onChange={(e) => setNickname(e.target.value)} style={{ ...fieldStyle, marginBottom: "12px" }} />
 
-        <label style={labelStyle}>Nom d'utilisateur</label>
-        <input value={username} onChange={(e) => setUsername(e.target.value)} style={{ ...fieldStyle, marginBottom: "12px" }} />
+        <RequiredLabel required={isNew}>Nom d'utilisateur</RequiredLabel>
+        <input
+          value={username}
+          onChange={(e) => setUsername(e.target.value)}
+          style={{ ...fieldStyle, marginBottom: "12px", ...(fieldErrors.username ? errorBorder : {}) }}
+        />
 
-        <label style={labelStyle}>Email</label>
+        <RequiredLabel required={isNew}>Email</RequiredLabel>
         {isNew ? (
-          <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} style={{ ...fieldStyle, marginBottom: "12px" }} />
+          <input
+            type="email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            style={{ ...fieldStyle, marginBottom: "12px", ...(fieldErrors.email ? errorBorder : {}) }}
+          />
         ) : (
           <p style={{ ...fieldStyle, marginBottom: "12px", color: "#8792A6" }}>{email}</p>
         )}
 
         {isNew && (
           <>
-            <label style={labelStyle}>Mot de passe</label>
+            <RequiredLabel required>Mot de passe</RequiredLabel>
             <div style={{ position: "relative", marginBottom: "12px" }}>
               <input
                 type={passwordVisible ? "text" : "password"}
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                style={{ ...fieldStyle, paddingRight: "40px" }}
+                style={{ ...fieldStyle, paddingRight: "40px", ...(fieldErrors.password ? errorBorder : {}) }}
               />
               <button
                 type="button"
@@ -260,6 +318,53 @@ export function UserDetailPanel({ user, onClose, onSaved }) {
         >
           {saving ? "Enregistrement..." : isNew ? "Créer le compte" : "Enregistrer"}
         </button>
+
+        {!isNew && (
+          <>
+            <div style={separatorStyle} />
+            {!confirmingDelete ? (
+              <button
+                onClick={() => setConfirmingDelete(true)}
+                style={{ width: "100%", background: "none", border: "2px solid #FF3B4E", borderRadius: "8px", padding: "10px", fontWeight: 700, color: "#FF3B4E", cursor: "pointer" }}
+              >
+                Supprimer ce compte utilisateur
+              </button>
+            ) : (
+              <div>
+                <p style={{ fontSize: "12.5px", color: "#F2F2E8", marginBottom: "8px" }}>
+                  Pour confirmer la suppression, entrez <strong>votre propre</strong> mot de passe (le compte admin actuellement connecté) :
+                </p>
+                <input
+                  type="password"
+                  value={deletePassword}
+                  onChange={(e) => setDeletePassword(e.target.value)}
+                  placeholder="Votre mot de passe"
+                  style={{ ...fieldStyle, marginBottom: "10px" }}
+                />
+                {deleteError && <p style={{ color: "#FF3B4E", fontSize: "12.5px", marginBottom: "10px" }}>{deleteError}</p>}
+                <div style={{ display: "flex", gap: "8px" }}>
+                  <button
+                    onClick={() => {
+                      setConfirmingDelete(false);
+                      setDeletePassword("");
+                      setDeleteError(null);
+                    }}
+                    style={{ flex: 1, background: "none", border: "2px solid #28405C", borderRadius: "8px", padding: "10px", color: "#F2F2E8", cursor: "pointer" }}
+                  >
+                    Annuler
+                  </button>
+                  <button
+                    onClick={handleDelete}
+                    disabled={deleting || !deletePassword}
+                    style={{ flex: 1, background: "#FF3B4E", border: "none", borderRadius: "8px", padding: "10px", fontWeight: 700, color: "#fff", cursor: "pointer", opacity: deleting || !deletePassword ? 0.6 : 1 }}
+                  >
+                    {deleting ? "Suppression..." : "Confirmer la suppression"}
+                  </button>
+                </div>
+              </div>
+            )}
+          </>
+        )}
       </div>
     </div>
   );

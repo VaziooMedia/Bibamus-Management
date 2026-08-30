@@ -1,31 +1,20 @@
 import React, { useState, useEffect } from "react";
-import { loadPublicVenues, loadDrinksDirectory, loadBrandsDirectory, loadBreweriesDirectory } from "../data/sharedDirectories.js";
+import { loadAppUsers } from "../data/sharedDirectories.js";
 
-// Bibamus n'a pas encore de vrais comptes utilisateurs — ce chiffre est donc une estimation
-// (le nombre de codes Bibax distincts ayant contribué au moins un élément à la base), pas un
-// vrai décompte d'inscrits. À remplacer une fois un système de comptes en place.
-function useApproxUserCount() {
+// Nombre réel de comptes Bibax inscrits (rôle "user") — remplace l'ancienne approximation par
+// "codes ayant contribué à la base", devenue obsolète maintenant que les vrais comptes existent.
+function useUserCount() {
   const [count, setCount] = useState(null);
 
   useEffect(() => {
-    (async () => {
-      const [venues, drinks, brands, breweries] = await Promise.all([
-        loadPublicVenues(),
-        loadDrinksDirectory(),
-        loadBrandsDirectory(),
-        loadBreweriesDirectory(),
-      ]);
-      const codes = new Set();
-      [...venues, ...drinks, ...brands, ...breweries].forEach((i) => i.submittedBy && codes.add(i.submittedBy));
-      setCount(codes.size);
-    })();
+    loadAppUsers().then((users) => setCount(users.length));
   }, []);
 
   return count;
 }
 
 export function TopBar({ adminName = "Mehdi Alorchi", adminRole = "Super Admin", onSearch }) {
-  const userCount = useApproxUserCount();
+  const userCount = useUserCount();
   const [query, setQuery] = useState("");
 
   return (

@@ -39,6 +39,13 @@ export async function createAppUser(email, password, firstName, lastName, nickna
   return { ok: true };
 }
 
+export async function deleteAppUser(targetUserId, confirmPassword) {
+  const { data, error } = await supabase.functions.invoke("admin-delete-user", { body: { targetUserId, confirmPassword } });
+  if (error) return { error: error.message };
+  if (data?.error) return { error: data.error };
+  return { ok: true };
+}
+
 export async function updateAppUserProfile(userId, patch) {
   const { error } = await supabase
     .from("profiles")
