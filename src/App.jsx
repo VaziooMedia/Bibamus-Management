@@ -1,4 +1,5 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
+import { supabase } from "./supabaseClient.js";
 import { LoginScreen } from "./components/LoginScreen.jsx";
 import { Layout } from "./components/Layout.jsx";
 import { Dashboard } from "./components/Dashboard.jsx";
@@ -11,22 +12,46 @@ import { DataBaseOverviewScreen } from "./components/DataBaseOverviewScreen.jsx"
 const SUPABASE_PROJECT_URL = "https://supabase.com/dashboard/project/rkmmrzkqzqpntgiguajz";
 
 export default function App() {
-  const [unlocked, setUnlocked] = useState(() => sessionStorage.getItem("bibamus-admin-unlocked") === "true");
+  // authChecked distingue "en cours de vérification" de "vérifié, pas connecté" — évite un
+  // flash de l'écran de connexion pendant la vérification initiale de session.
+  const [authChecked, setAuthChecked] = useState(false);
+  const [unlocked, setUnlocked] = useState(false);
   const [screen, setScreen] = useState("dashboard");
 
+  // Vérifie une session déjà active (ex. après un rafraîchissement de page) — revérifie le
+  // rôle à chaque fois, pas seulement à la connexion, au cas où il aurait changé depuis.
+  useEffect(() => {
+    (async () => {
+      const { data } = await supabase.auth.getSession();
+      if (!data.session) {
+        setAuthChecked(true);
+        return;
+      }
+      const { data: profile } = await supabase.from("profiles").select("role").eq("id", data.session.user.id).single();
+      if (profile && ["admin", "super_admin"].includes(profile.role)) {
+        setUnlocked(true);
+      } else {
+        await supabase.auth.signOut();
+      }
+      setAuthChecked(true);
+    })();
+  }, []);
+
+  const handleLogout = async () => {
+    await supabase.auth.signOut();
+    setUnlocked(false);
+  };
+
+  if (!authChecked) {
+    return <div style={{ minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", color: "#F2F2E8" }}>Chargement...</div>;
+  }
+
   if (!unlocked) {
-    return (
-      <LoginScreen
-        onUnlock={() => {
-          sessionStorage.setItem("bibamus-admin-unlocked", "true");
-          setUnlocked(true);
-        }}
-      />
-    );
+    return <LoginScreen onUnlock={() => setUnlocked(true)} />;
   }
 
   return (
-    <Layout current={screen} onNavigate={setScreen}>
+    <Layout current={screen} onNavigate={setScreen} onLogout={handleLogout}>
       {screen === "dashboard" && <Dashboard />}
       {screen === "database" && <DataBaseOverviewScreen onNavigate={setScreen} supabaseUrl={SUPABASE_PROJECT_URL} />}
       {screen === "venues" && <VenuesScreen />}

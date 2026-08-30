@@ -56,7 +56,7 @@ function NavButton({ item, current, onNavigate, indent }) {
   );
 }
 
-export function Layout({ current, onNavigate, children }) {
+export function Layout({ current, onNavigate, onLogout, children }) {
   const isDatabaseScreen = DATABASE_ITEMS.some((i) => i.key === current) || current === "database";
   const [databaseOpen, setDatabaseOpen] = useState(isDatabaseScreen);
 
@@ -127,7 +127,13 @@ export function Layout({ current, onNavigate, children }) {
         ))}
 
         <div style={{ flex: 1 }} />
-        <div style={{ padding: "16px 20px 0 20px", fontSize: "11px", color: "#8792A6" }}>VaziooMedia - 2026</div>
+        <button
+          onClick={onLogout}
+          style={{ margin: "0 20px 8px", background: "none", border: "none", color: "#FF3B4E", fontSize: "12px", fontWeight: 700, cursor: "pointer", textAlign: "left" }}
+        >
+          Se déconnecter
+        </button>
+        <div style={{ padding: "0 20px 16px", fontSize: "11px", color: "#8792A6" }}>VaziooMedia - 2026</div>
       </div>
       <div style={{ flex: 1, display: "flex", flexDirection: "column", minWidth: 0 }}>
         <TopBar />
