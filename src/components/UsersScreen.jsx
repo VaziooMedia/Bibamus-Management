@@ -20,6 +20,7 @@ function SortHeader({ label, sortKey, currentSort, onSort }) {
 export function UsersScreen() {
   const [users, setUsers] = useState(null);
   const [selected, setSelected] = useState(null);
+  const [creating, setCreating] = useState(false);
   const [sort, setSort] = useState({ key: "created_at", dir: -1 });
 
   const refresh = () => loadAppUsers().then(setUsers);
@@ -29,6 +30,7 @@ export function UsersScreen() {
 
   const handleSaved = () => {
     setSelected(null);
+    setCreating(false);
     refresh();
   };
 
@@ -54,7 +56,30 @@ export function UsersScreen() {
 
   return (
     <div>
-      <PageTitle>Utilisateurs</PageTitle>
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "20px" }}>
+        <PageTitle>Utilisateurs</PageTitle>
+        <button
+          onClick={() => setCreating(true)}
+          title="Ajouter un utilisateur"
+          style={{
+            width: "36px",
+            height: "36px",
+            borderRadius: "50%",
+            background: "#39FF66",
+            border: "none",
+            color: "#0D1B2A",
+            fontSize: "20px",
+            fontWeight: 800,
+            cursor: "pointer",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            lineHeight: 1,
+          }}
+        >
+          +
+        </button>
+      </div>
 
       {!sorted ? (
         <p style={{ color: "#8792A6" }}>Chargement...</p>
@@ -95,6 +120,7 @@ export function UsersScreen() {
       )}
 
       {selected && <UserDetailPanel user={selected} onClose={() => setSelected(null)} onSaved={handleSaved} />}
+      {creating && <UserDetailPanel user={null} onClose={() => setCreating(false)} onSaved={handleSaved} />}
     </div>
   );
 }

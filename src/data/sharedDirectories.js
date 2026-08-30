@@ -30,6 +30,15 @@ export async function loadAppUsers() {
   return data;
 }
 
+export async function createAppUser(email, password, firstName, lastName, nickname, username, birthDate) {
+  const { data, error } = await supabase.functions.invoke("admin-create-user", {
+    body: { email, password, firstName, lastName, nickname, username, birthDate },
+  });
+  if (error) return { error: error.message };
+  if (data?.error) return { error: data.error };
+  return { ok: true };
+}
+
 export async function updateAppUserProfile(userId, patch) {
   const { error } = await supabase
     .from("profiles")

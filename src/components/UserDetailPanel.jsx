@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { updateAppUserProfile } from "../data/sharedDirectories.js";
+import { updateAppUserProfile, createAppUser } from "../data/sharedDirectories.js";
 import { COUNTRIES } from "../constants.js";
 
 const fieldStyle = { padding: "10px 12px", borderRadius: "8px", border: "2px solid #28405C", fontSize: "14px", width: "100%", color: "#F2F2E8", background: "#0D1B2A", boxSizing: "border-box" };
@@ -25,19 +25,22 @@ function ageFromBirthDate(dateStr) {
 }
 
 export function UserDetailPanel({ user, onClose, onSaved }) {
-  const [firstName, setFirstName] = useState(user.name || "");
-  const [lastName, setLastName] = useState(user.last_name || "");
-  const [nickname, setNickname] = useState(user.nickname || "");
-  const [username, setUsername] = useState(user.username || "");
-  const [birthDate, setBirthDate] = useState(user.birth_date || "");
-  const [country, setCountry] = useState(user.country || "");
-  const [region, setRegion] = useState(user.region || "");
-  const [city, setCity] = useState(user.city || "");
-  const [facebookUrl, setFacebookUrl] = useState(user.facebook_url || "");
-  const [instagramUrl, setInstagramUrl] = useState(user.instagram_url || "");
-  const [tiktokUrl, setTiktokUrl] = useState(user.tiktok_url || "");
-  const [snapchatUrl, setSnapchatUrl] = useState(user.snapchat_url || "");
-  const [appLanguage, setAppLanguage] = useState(user.app_language || "fr");
+  const isNew = !user;
+  const [email, setEmail] = useState(user?.email || "");
+  const [password, setPassword] = useState("");
+  const [firstName, setFirstName] = useState(user?.name || "");
+  const [lastName, setLastName] = useState(user?.last_name || "");
+  const [nickname, setNickname] = useState(user?.nickname || "");
+  const [username, setUsername] = useState(user?.username || "");
+  const [birthDate, setBirthDate] = useState(user?.birth_date || "");
+  const [country, setCountry] = useState(user?.country || "");
+  const [region, setRegion] = useState(user?.region || "");
+  const [city, setCity] = useState(user?.city || "");
+  const [facebookUrl, setFacebookUrl] = useState(user?.facebook_url || "");
+  const [instagramUrl, setInstagramUrl] = useState(user?.instagram_url || "");
+  const [tiktokUrl, setTiktokUrl] = useState(user?.tiktok_url || "");
+  const [snapchatUrl, setSnapchatUrl] = useState(user?.snapchat_url || "");
+  const [appLanguage, setAppLanguage] = useState(user?.app_language || "fr");
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState(null);
 
@@ -46,6 +49,18 @@ export function UserDetailPanel({ user, onClose, onSaved }) {
   const handleSave = async () => {
     setSaving(true);
     setError(null);
+
+    if (isNew) {
+      const result = await createAppUser(email, password, firstName, lastName, nickname, username, birthDate);
+      setSaving(false);
+      if (result.error) {
+        setError(result.error);
+        return;
+      }
+      onSaved();
+      return;
+    }
+
     const result = await updateAppUserProfile(user.id, {
       firstName,
       lastName,
@@ -73,32 +88,31 @@ export function UserDetailPanel({ user, onClose, onSaved }) {
     <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.5)", display: "flex", alignItems: "flex-start", justifyContent: "center", padding: "40px 20px", zIndex: 50, overflowY: "auto" }}>
       <div style={{ background: "#16273D", borderRadius: "14px", padding: "28px", width: "480px", maxWidth: "100%" }}>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "20px" }}>
-          <h2 style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "22px", color: "#F2F2E8", margin: 0 }}>Fiche utilisateur</h2>
+          <h2 style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "22px", color: "#F2F2E8", margin: 0 }}>{isNew ? "Nouvel utilisateur" : "Fiche utilisateur"}</h2>
           <button onClick={onClose} style={{ background: "none", border: "none", color: "#8792A6", fontSize: "20px", cursor: "pointer" }}>
             ✕
           </button>
         </div>
 
-        <div style={{ display: "flex", flexDirection: "column", alignItems: "center", marginBottom: "20px" }}>
-          <div
-            style={{
-              width: "88px",
-              height: "88px",
-              borderRadius: "50%",
-              background: "#28405C",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              fontSize: "40px",
-            }}
-          >
-            {user.avatar_emoji || "👤"}
+        {!isNew && (
+          <div style={{ display: "flex", flexDirection: "column", alignItems: "center", marginBottom: "20px" }}>
+            <div
+              style={{
+                width: "88px",
+                height: "88px",
+                borderRadius: "50%",
+                background: "#28405C",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                fontSize: "40px",
+              }}
+            >
+              {user.avatar_emoji || "👤"}
+            </div>
+            <p style={{ fontSize: "11px", color: "#8792A6", marginTop: "8px" }}>Photo choisie par l'utilisateur dans l'app — non modifiable ici.</p>
           </div>
-          <p style={{ fontSize: "11px", color: "#8792A6", marginTop: "8px" }}>Photo choisie par l'utilisateur dans l'app — non modifiable ici.</p>
-        </div>
-
-        <label style={labelStyle}>Email</label>
-        <p style={{ ...fieldStyle, marginBottom: "12px", color: "#8792A6" }}>{user.email}</p>
+        )}
 
         <label style={labelStyle}>Prénom</label>
         <input value={firstName} onChange={(e) => setFirstName(e.target.value)} style={{ ...fieldStyle, marginBottom: "12px" }} />
@@ -111,6 +125,20 @@ export function UserDetailPanel({ user, onClose, onSaved }) {
 
         <label style={labelStyle}>Nom d'utilisateur</label>
         <input value={username} onChange={(e) => setUsername(e.target.value)} style={{ ...fieldStyle, marginBottom: "12px" }} />
+
+        <label style={labelStyle}>Email</label>
+        {isNew ? (
+          <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} style={{ ...fieldStyle, marginBottom: "12px" }} />
+        ) : (
+          <p style={{ ...fieldStyle, marginBottom: "12px", color: "#8792A6" }}>{email}</p>
+        )}
+
+        {isNew && (
+          <>
+            <label style={labelStyle}>Mot de passe</label>
+            <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} style={{ ...fieldStyle, marginBottom: "12px" }} />
+          </>
+        )}
 
         <div style={{ display: "flex", gap: "10px", marginBottom: "12px" }}>
           <div style={{ flex: 1 }}>
@@ -168,12 +196,16 @@ export function UserDetailPanel({ user, onClose, onSaved }) {
           ))}
         </select>
 
-        <label style={labelStyle}>Statut</label>
-        <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "20px" }}>
-          <span style={{ width: "10px", height: "10px", borderRadius: "50%", background: user.active !== false ? "#39FF66" : "#FF3B4E" }} />
-          <span style={{ color: "#F2F2E8", fontSize: "13.5px" }}>{user.active !== false ? "Actif" : "Non actif"}</span>
-          <span style={{ color: "#8792A6", fontSize: "11px" }}>(les actions de modération arriveront avec le chantier dédié)</span>
-        </div>
+        {!isNew && (
+          <>
+            <label style={labelStyle}>Statut</label>
+            <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "20px" }}>
+              <span style={{ width: "10px", height: "10px", borderRadius: "50%", background: user.active !== false ? "#39FF66" : "#FF3B4E" }} />
+              <span style={{ color: "#F2F2E8", fontSize: "13.5px" }}>{user.active !== false ? "Actif" : "Non actif"}</span>
+              <span style={{ color: "#8792A6", fontSize: "11px" }}>(les actions de modération arriveront avec le chantier dédié)</span>
+            </div>
+          </>
+        )}
 
         {error && <p style={{ color: "#FF3B4E", fontSize: "12.5px", marginBottom: "12px" }}>{error}</p>}
 
@@ -182,7 +214,7 @@ export function UserDetailPanel({ user, onClose, onSaved }) {
           disabled={saving}
           style={{ width: "100%", background: "#39FF66", border: "none", borderRadius: "8px", padding: "12px", fontWeight: 700, color: "#0D1B2A", cursor: "pointer", opacity: saving ? 0.6 : 1 }}
         >
-          {saving ? "Enregistrement..." : "Enregistrer"}
+          {saving ? "Enregistrement..." : isNew ? "Créer le compte" : "Enregistrer"}
         </button>
       </div>
     </div>
