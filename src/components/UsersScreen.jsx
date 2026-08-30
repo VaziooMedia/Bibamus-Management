@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useMemo } from "react";
 import { loadAppUsers } from "../data/sharedDirectories.js";
 import { PageTitle } from "./PageTitle.jsx";
+import { UserDetailPanel } from "./UserDetailPanel.jsx";
 
 function SortHeader({ label, sortKey, currentSort, onSort }) {
   const active = currentSort.key === sortKey;
@@ -18,11 +19,18 @@ function SortHeader({ label, sortKey, currentSort, onSort }) {
 // viendront avec le chantier dédié.
 export function UsersScreen() {
   const [users, setUsers] = useState(null);
+  const [selected, setSelected] = useState(null);
   const [sort, setSort] = useState({ key: "created_at", dir: -1 });
 
+  const refresh = () => loadAppUsers().then(setUsers);
   useEffect(() => {
-    loadAppUsers().then(setUsers);
+    refresh();
   }, []);
+
+  const handleSaved = () => {
+    setSelected(null);
+    refresh();
+  };
 
   const handleSort = (key) => {
     setSort((prev) => (prev.key === key ? { key, dir: -prev.dir } : { key, dir: 1 }));
@@ -67,7 +75,7 @@ export function UsersScreen() {
           </thead>
           <tbody>
             {sorted.map((u) => (
-              <tr key={u.id} style={{ borderBottom: "1px solid #28405C" }}>
+              <tr key={u.id} onClick={() => setSelected(u)} style={{ borderBottom: "1px solid #28405C", cursor: "pointer" }}>
                 <td style={{ padding: "10px", color: "#F2F2E8", fontSize: "13.5px" }}>{u.last_name || "—"}</td>
                 <td style={{ padding: "10px", color: "#F2F2E8", fontSize: "13.5px" }}>{u.name || "—"}</td>
                 <td style={{ padding: "10px", color: "#F2F2E8", fontSize: "13.5px" }}>{u.username || "—"}</td>
@@ -85,6 +93,8 @@ export function UsersScreen() {
           </tbody>
         </table>
       )}
+
+      {selected && <UserDetailPanel user={selected} onClose={() => setSelected(null)} onSaved={handleSaved} />}
     </div>
   );
 }

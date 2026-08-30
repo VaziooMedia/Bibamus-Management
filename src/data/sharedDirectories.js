@@ -16,12 +16,41 @@ import { supabase } from "../supabaseClient.js";
 /* ---------------- COLLABORATEURS (comptes pro de la plateforme de gestion) ---------------- */
 
 export async function loadAppUsers() {
-  const { data, error } = await supabase.from("profiles").select("id, email, name, last_name, username, bibro_code, birth_date, active, created_at").eq("role", "user").order("created_at", { ascending: false });
+  const { data, error } = await supabase
+    .from("profiles")
+    .select(
+      "id, email, name, last_name, nickname, username, bibro_code, birth_date, avatar_emoji, country, region, city, facebook_url, instagram_url, tiktok_url, snapchat_url, app_language, active, created_at"
+    )
+    .eq("role", "user")
+    .order("created_at", { ascending: false });
   if (error) {
     console.error("loadAppUsers:", error);
     return [];
   }
   return data;
+}
+
+export async function updateAppUserProfile(userId, patch) {
+  const { error } = await supabase
+    .from("profiles")
+    .update({
+      name: patch.firstName,
+      last_name: patch.lastName,
+      nickname: patch.nickname,
+      username: patch.username,
+      birth_date: patch.birthDate || null,
+      country: patch.country,
+      region: patch.region,
+      city: patch.city,
+      facebook_url: patch.facebookUrl,
+      instagram_url: patch.instagramUrl,
+      tiktok_url: patch.tiktokUrl,
+      snapchat_url: patch.snapchatUrl,
+      app_language: patch.appLanguage,
+    })
+    .eq("id", userId);
+  if (error) return { error: error.message };
+  return { ok: true };
 }
 
 export async function loadCollaborators() {
