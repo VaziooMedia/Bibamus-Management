@@ -102,7 +102,7 @@ function NewBusinessForm({ claim, onCreated }) {
   return (
     <div style={{ marginTop: "10px", padding: "12px", background: "#0D1B2A", borderRadius: "8px", display: "flex", flexDirection: "column", gap: "8px" }}>
       <p style={{ ...sectionTitleStyle, marginTop: 0, paddingTop: 0, borderTop: "none" }}>Société</p>
-      <label style={labelStyle}>Nom de la société</label>
+      <label style={labelStyle}>Nom de la société *</label>
       <input value={companyName} onChange={(e) => setCompanyName(e.target.value)} style={fieldStyle} />
       <label style={labelStyle}>Numéro d'entreprise</label>
       <input value={vatNumber} onChange={(e) => setVatNumber(e.target.value)} style={fieldStyle} />
@@ -133,11 +133,11 @@ function NewBusinessForm({ claim, onCreated }) {
       <p style={sectionTitleStyle}>Personne de contact</p>
       <div style={{ display: "flex", gap: "8px" }}>
         <div style={{ flex: 1 }}>
-          <label style={labelStyle}>Prénom</label>
+          <label style={labelStyle}>Prénom *</label>
           <input value={firstName} onChange={(e) => setFirstName(e.target.value)} style={fieldStyle} />
         </div>
         <div style={{ flex: 1 }}>
-          <label style={labelStyle}>Nom</label>
+          <label style={labelStyle}>Nom *</label>
           <input value={lastName} onChange={(e) => setLastName(e.target.value)} style={fieldStyle} />
         </div>
       </div>
@@ -176,9 +176,9 @@ function NewBusinessForm({ claim, onCreated }) {
       <p style={{ fontSize: "11.5px", color: "#8792A6", margin: "0 0 4px" }}>
         Doit être différente de l'adresse email du compte personnel ayant fait la revendication. Peut être la même que les emails ci-dessus, ou différente selon la taille de l'entreprise.
       </p>
-      <label style={labelStyle}>Email de connexion</label>
+      <label style={labelStyle}>Email de connexion *</label>
       <input type="email" value={loginEmail} onChange={(e) => setLoginEmail(e.target.value)} style={fieldStyle} />
-      <label style={labelStyle}>Mot de passe provisoire</label>
+      <label style={labelStyle}>Mot de passe provisoire *</label>
       <div style={{ position: "relative" }}>
         <input type={passwordVisible ? "text" : "password"} value={password} onChange={(e) => setPassword(e.target.value)} style={{ ...fieldStyle, paddingRight: "38px" }} />
         <button
