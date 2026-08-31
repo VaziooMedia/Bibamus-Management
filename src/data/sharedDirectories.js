@@ -79,6 +79,16 @@ export async function loadReports() {
 // Confirme un doublon : marque le lien officiel (duplicate_of_id) et passe la fiche au statut
 // "duplicate" — plus juste qu'un archivage générique, puisque ça garde la trace de quelle
 // fiche est la bonne à conserver.
+// Correction directe depuis "Signalements" — un modérateur a déjà le droit de modifier ces
+// champs (seuls statut/certification/doublon sont protégés), il ne manquait que l'interface.
+export async function updateEntityField(entityType, entityId, patch) {
+  const table = ENTITY_TABLE_BY_TYPE[entityType];
+  if (!table) return { error: "Type de fiche inconnu." };
+  const { error } = await supabase.from(table).update(patch).eq("id", entityId);
+  if (error) return { error: error.message };
+  return { ok: true };
+}
+
 export async function confirmDuplicate(reportId, entityType, entityId, duplicateOfId) {
   const table = ENTITY_TABLE_BY_TYPE[entityType];
   if (!table) return { error: "Type de fiche inconnu." };
