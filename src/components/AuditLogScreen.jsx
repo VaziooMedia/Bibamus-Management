@@ -4,8 +4,7 @@ import { PageTitle } from "./PageTitle.jsx";
 
 const ACTION_LABELS = {
   create: "Création",
-  status_change: "Changement de statut",
-  certification_change: "Certification",
+  update: "Modification",
   delete: "Suppression",
   block: "Blocage",
   unblock: "Déblocage",
@@ -14,8 +13,7 @@ const ACTION_LABELS = {
 
 const ACTION_COLORS = {
   create: "#39FF66",
-  status_change: "#00C8FF",
-  certification_change: "#39FF66",
+  update: "#00C8FF",
   delete: "#FF3B4E",
   block: "#FF3B4E",
   unblock: "#39FF66",
@@ -27,8 +25,7 @@ const ENTITY_TYPE_LABELS = { venue: "Établissement", drink: "Produit", brand: "
 const ACTION_FILTERS = [
   { key: null, label: "Toutes les actions" },
   { key: "create", label: "Création" },
-  { key: "status_change", label: "Changement de statut" },
-  { key: "certification_change", label: "Certification" },
+  { key: "update", label: "Modification" },
   { key: "delete", label: "Suppression" },
   { key: "block", label: "Blocage" },
   { key: "unblock", label: "Déblocage" },
@@ -37,7 +34,13 @@ const ACTION_FILTERS = [
 
 function formatDetails(action, details) {
   if (!details) return null;
-  if (action === "status_change" || action === "certification_change" || action === "role_change") {
+  if (action === "update") {
+    const parts = [];
+    if (details.status_from !== undefined && details.status_from !== details.status_to) parts.push(`statut : ${details.status_from || "—"} → ${details.status_to || "—"}`);
+    if (details.certification_from !== undefined && details.certification_from !== details.certification_to) parts.push(`certification : ${details.certification_from || "—"} → ${details.certification_to || "—"}`);
+    return parts.length > 0 ? parts.join(" · ") : null;
+  }
+  if (action === "role_change") {
     return `${details.from || "—"} → ${details.to || "—"}`;
   }
   if (action === "block") {
