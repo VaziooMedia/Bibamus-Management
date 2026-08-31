@@ -317,6 +317,19 @@ export async function searchEntitiesByName(entityType, query) {
   return data;
 }
 
+// Organisation et abonnement d'un compte Business — architecture posée pour le chantier B2B,
+// pas encore utilisée pour restreindre quoi que ce soit (aucune fonctionnalité payante
+// n'existe encore), affichée ici à titre informatif.
+export async function loadOrganizationForProfile(profileId) {
+  const { data: membership } = await supabase.from("memberships").select("organization_id").eq("profile_id", profileId).maybeSingle();
+  if (!membership) return null;
+  const [{ data: org }, { data: sub }] = await Promise.all([
+    supabase.from("organizations").select("*").eq("id", membership.organization_id).maybeSingle(),
+    supabase.from("subscriptions").select("*").eq("organization_id", membership.organization_id).maybeSingle(),
+  ]);
+  return { organization: org, subscription: sub };
+}
+
 export async function loadBusinessAccountById(userId) {
   const { data, error } = await supabase.from("profiles").select(BUSINESS_FIELDS).eq("id", userId).single();
   if (error) {

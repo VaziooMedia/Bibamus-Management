@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { loadBusinessAccountById, updateBusinessAccount, loadMyBusinessEntities, unlinkEntityFromBusiness, linkEntityToBusiness, searchEntitiesByName } from "../data/sharedDirectories.js";
+import { loadBusinessAccountById, updateBusinessAccount, loadMyBusinessEntities, unlinkEntityFromBusiness, linkEntityToBusiness, searchEntitiesByName, loadOrganizationForProfile } from "../data/sharedDirectories.js";
 import { PageTitle } from "./PageTitle.jsx";
 import { COUNTRIES } from "../constants.js";
 
@@ -44,6 +44,7 @@ export function BusinessAccountDetailScreen({ accountId, onBack }) {
   const [searchQuery, setSearchQuery] = useState("");
   const [searchResults, setSearchResults] = useState([]);
   const [linkBusy, setLinkBusy] = useState(false);
+  const [orgInfo, setOrgInfo] = useState(null);
 
   const refresh = () => {
     loadBusinessAccountById(accountId).then((a) => {
@@ -51,6 +52,7 @@ export function BusinessAccountDetailScreen({ accountId, onBack }) {
       setForm(null);
     });
     loadMyBusinessEntities(accountId).then(setEntities);
+    loadOrganizationForProfile(accountId).then(setOrgInfo);
   };
   useEffect(() => {
     refresh();
@@ -161,6 +163,8 @@ export function BusinessAccountDetailScreen({ accountId, onBack }) {
           <ReadRow label="Statut" value={account.business_status} />
           <ReadRow label="État" value={account.active !== false ? "Actif" : "Non actif"} />
           <ReadRow label="Email de connexion" value={account.email} />
+          <ReadRow label="Organisation" value={orgInfo?.organization?.name} />
+          <ReadRow label="Plan" value={orgInfo?.subscription ? `${orgInfo.subscription.plan === "pro" ? "Pro" : "Gratuit"} (${orgInfo.subscription.status === "active" ? "actif" : orgInfo.subscription.status})` : null} />
 
           <p style={sectionTitleStyle}>Société</p>
           <ReadRow label="Nom de la société" value={account.company_name} />
