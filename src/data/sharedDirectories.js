@@ -411,9 +411,9 @@ export async function loadMyActivity() {
 // Seuil d'âge minimum pour un pays donné — piloté depuis "Configuration pays", plus besoin de
 // déploiement de code pour ajuster un seuil ou ajouter un pays.
 export async function getMinimumAge(countryCode) {
-  const { data, error } = await supabase.from("country_rules").select("minimum_age").eq("country_code", countryCode).maybeSingle();
+  const { data, error } = await supabase.from("market_config").select("config_value").eq("country_code", countryCode).eq("config_key", "minimum_age").maybeSingle();
   if (error || !data) return 18;
-  return data.minimum_age;
+  return data.config_value;
 }
 
 export async function loadAnalyticsEvents() {
@@ -434,6 +434,29 @@ export async function loadCrashReports() {
   return data;
 }
 
+export async function loadFeatureFlagOverrides(flagKey) {
+  const { data, error } = await supabase.from("feature_flag_overrides").select("*").eq("flag_key", flagKey).order("country_code");
+  if (error) {
+    console.error("loadFeatureFlagOverrides:", error);
+    return [];
+  }
+  return data;
+}
+
+export async function setFeatureFlagOverride(flagKey, countryCode, enabled) {
+  const { error } = await supabase
+    .from("feature_flag_overrides")
+    .upsert({ flag_key: flagKey, country_code: countryCode, enabled, updated_at: new Date().toISOString() });
+  if (error) return { error: error.message };
+  return { ok: true };
+}
+
+export async function removeFeatureFlagOverride(flagKey, countryCode) {
+  const { error } = await supabase.from("feature_flag_overrides").delete().eq("flag_key", flagKey).eq("country_code", countryCode);
+  if (error) return { error: error.message };
+  return { ok: true };
+}
+
 export async function loadFeatureFlags() {
   const { data, error } = await supabase.from("feature_flags").select("*").order("flag_key");
   if (error) {
@@ -450,16 +473,18 @@ export async function updateFeatureFlag(flagKey, enabled) {
 }
 
 export async function loadCountryRules() {
-  const { data, error } = await supabase.from("country_rules").select("*").order("country_code");
+  const { data, error } = await supabase.from("market_config").select("country_code, config_value, updated_at").eq("config_key", "minimum_age").order("country_code");
   if (error) {
     console.error("loadCountryRules:", error);
     return [];
   }
-  return data;
+  return data.map((r) => ({ country_code: r.country_code, minimum_age: r.config_value, updated_at: r.updated_at }));
 }
 
 export async function updateCountryRule(countryCode, minimumAge) {
-  const { error } = await supabase.from("country_rules").upsert({ country_code: countryCode, minimum_age: minimumAge, updated_at: new Date().toISOString() });
+  const { error } = await supabase
+    .from("market_config")
+    .upsert({ country_code: countryCode, config_key: "minimum_age", config_value: minimumAge, updated_at: new Date().toISOString() });
   if (error) return { error: error.message };
   return { ok: true };
 }
