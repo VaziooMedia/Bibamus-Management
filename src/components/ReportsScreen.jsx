@@ -24,31 +24,53 @@ const ENTITY_TYPE_LABELS = { venue: "Établissement", drink: "Produit", brand: "
 // Aperçu compact d'une fiche (photo + nom + détails spécifiques au type) — juste pour situer le
 // signalement d'un coup d'œil. L'action se fait via "Ouvrir la fiche complète" (le vrai
 // panneau d'édition, identique à celui de la Database), pas ici.
-function EntityPreview({ entityType, details, onOpen }) {
+function EntityPreview({ entityType, details, onOpen, keeperControl }) {
   if (!details) {
     return <p style={{ fontSize: "12.5px", color: "#8792A6", fontStyle: "italic" }}>Fiche introuvable (peut-être déjà supprimée).</p>;
   }
   const photo = details.cover_photo_url || details.profile_photo_url || details.main_photo_url || details.logo_url;
+  const isCertified = ["bibamus", "producteur"].includes(details.certification_level);
   return (
-    <div style={{ display: "flex", gap: "10px", alignItems: "center", padding: "10px", background: "#0D1B2A", borderRadius: "8px" }}>
-      <div style={{ width: "48px", height: "48px", borderRadius: "8px", background: "#28405C", flexShrink: 0, overflow: "hidden", display: "flex", alignItems: "center", justifyContent: "center" }}>
-        {photo ? <img src={photo} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} /> : <span style={{ color: "#8792A6", fontSize: "18px" }}>—</span>}
-      </div>
-      <div style={{ minWidth: 0, flex: 1 }}>
-        <p style={{ fontWeight: 700, color: "#F2F2E8", margin: 0, fontSize: "13.5px" }}>{details.name}</p>
-        {entityType === "venue" && (
-          <p style={{ fontSize: "11.5px", color: "#8792A6", margin: "2px 0 0" }}>
-            {[details.street_name, details.street_number].filter(Boolean).join(" ")}
-            {details.city ? `, ${details.city}` : ""}
+    <div style={{ display: "flex", flexDirection: "column", gap: "8px", padding: "10px", background: "#0D1B2A", borderRadius: "8px" }}>
+      <div style={{ display: "flex", gap: "10px", alignItems: "center" }}>
+        <div style={{ width: "48px", height: "48px", borderRadius: "8px", background: "#28405C", flexShrink: 0, overflow: "hidden", display: "flex", alignItems: "center", justifyContent: "center" }}>
+          {photo ? <img src={photo} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} /> : <span style={{ color: "#8792A6", fontSize: "18px" }}>—</span>}
+        </div>
+        <div style={{ minWidth: 0, flex: 1 }}>
+          <p style={{ fontWeight: 700, color: "#F2F2E8", margin: 0, fontSize: "13.5px" }}>
+            {details.name} {isCertified && <span style={{ color: "#39FF66", fontSize: "11px" }}>🛡️ Certifiée</span>}
           </p>
+          {entityType === "venue" && (
+            <p style={{ fontSize: "11.5px", color: "#8792A6", margin: "2px 0 0" }}>
+              {[details.street_name, details.street_number].filter(Boolean).join(" ")}
+              {details.city ? `, ${details.city}` : ""}
+            </p>
+          )}
+          {entityType === "drink" && <p style={{ fontSize: "11.5px", color: "#8792A6", margin: "2px 0 0" }}>{drinkTypeLabel(details.type)}</p>}
+          {entityType === "producer" && <p style={{ fontSize: "11.5px", color: "#8792A6", margin: "2px 0 0" }}>{details.country}</p>}
+          <p style={{ fontSize: "11px", color: "#8792A6", margin: "2px 0 0" }}>Statut : {statusLabel(details.status)}</p>
+        </div>
+        {onOpen && (
+          <button onClick={onOpen} style={{ background: "none", border: "none", color: "#39FF66", fontSize: "12px", fontWeight: 700, cursor: "pointer", flexShrink: 0 }}>
+            Ouvrir la fiche complète
+          </button>
         )}
-        {entityType === "drink" && <p style={{ fontSize: "11.5px", color: "#8792A6", margin: "2px 0 0" }}>{drinkTypeLabel(details.type)}</p>}
-        {entityType === "producer" && <p style={{ fontSize: "11.5px", color: "#8792A6", margin: "2px 0 0" }}>{details.country}</p>}
-        <p style={{ fontSize: "11px", color: "#8792A6", margin: "2px 0 0" }}>Statut : {statusLabel(details.status)}</p>
       </div>
-      {onOpen && (
-        <button onClick={onOpen} style={{ background: "none", border: "none", color: "#39FF66", fontSize: "12px", fontWeight: 700, cursor: "pointer", flexShrink: 0 }}>
-          Ouvrir la fiche complète
+      {keeperControl && (
+        <button
+          onClick={keeperControl.onSelect}
+          style={{
+            padding: "7px",
+            borderRadius: "6px",
+            border: `2px solid ${keeperControl.selected ? "#39FF66" : "#28405C"}`,
+            background: keeperControl.selected ? "#39FF66" : "none",
+            color: keeperControl.selected ? "#0D1B2A" : "#F2F2E8",
+            fontWeight: 700,
+            fontSize: "12px",
+            cursor: "pointer",
+          }}
+        >
+          {keeperControl.selected ? "✓ Fiche à conserver" : "Conserver celle-ci"}
         </button>
       )}
     </div>
@@ -69,6 +91,9 @@ export function ReportsScreen() {
   const [expandedId, setExpandedId] = useState(null);
   // Fiche complète actuellement ouverte en édition — { entityType, data } ou null.
   const [openEntity, setOpenEntity] = useState(null);
+  // Quelle fiche garder, par signalement — aucune présumée par défaut, un choix explicite est
+  // requis avant de pouvoir confirmer un doublon.
+  const [keeperChoice, setKeeperChoice] = useState({});
 
   const refresh = () => loadReports(tab).then(setReports);
   useEffect(() => {
@@ -103,8 +128,15 @@ export function ReportsScreen() {
   };
 
   const handleConfirmDuplicate = async (report) => {
+    const keeperId = keeperChoice[report.id];
+    const loserId = keeperId === report.entity_id ? report.duplicate_of_id : report.entity_id;
+    const loserDetails = loserId === report.entity_id ? report.entityDetails : report.duplicateDetails;
+    if (loserDetails && ["bibamus", "producteur"].includes(loserDetails.certification_level)) {
+      alert("Cette fiche est certifiée — elle ne peut pas être marquée comme doublon.");
+      return;
+    }
     setBusyId(report.id);
-    const result = await confirmDuplicate(report.id, report.entity_type, report.entity_id, report.duplicate_of_id);
+    const result = await confirmDuplicate(report.id, report.entity_type, loserId, keeperId);
     setBusyId(null);
     if (result.error) {
       alert("Erreur : " + result.error);
@@ -183,27 +215,60 @@ export function ReportsScreen() {
 
                 {expanded && (
                   <div style={{ display: "flex", flexDirection: "column", gap: "8px", marginBottom: "12px" }}>
-                    <EntityPreview entityType={r.entity_type} details={r.entityDetails} onOpen={() => handleOpenEntity(r.entity_type, r.entity_id)} />
+                    <EntityPreview
+                      entityType={r.entity_type}
+                      details={r.entityDetails}
+                      onOpen={() => handleOpenEntity(r.entity_type, r.entity_id)}
+                      keeperControl={
+                        r.reason === "duplicate" && r.duplicate_of_id
+                          ? { selected: keeperChoice[r.id] === r.entity_id, onSelect: () => setKeeperChoice((prev) => ({ ...prev, [r.id]: r.entity_id })) }
+                          : null
+                      }
+                    />
                     {r.reason === "duplicate" && (
                       <>
                         <p style={{ fontSize: "11px", color: "#8792A6", margin: 0, textAlign: "center" }}>signalée comme doublon de</p>
-                        <EntityPreview entityType={r.entity_type} details={r.duplicateDetails} onOpen={() => handleOpenEntity(r.entity_type, r.duplicate_of_id)} />
+                        <EntityPreview
+                          entityType={r.entity_type}
+                          details={r.duplicateDetails}
+                          onOpen={() => handleOpenEntity(r.entity_type, r.duplicate_of_id)}
+                          keeperControl={
+                            r.duplicate_of_id
+                              ? { selected: keeperChoice[r.id] === r.duplicate_of_id, onSelect: () => setKeeperChoice((prev) => ({ ...prev, [r.id]: r.duplicate_of_id })) }
+                              : null
+                          }
+                        />
                       </>
                     )}
                   </div>
                 )}
 
                 {tab === "pending" ? (
-                  <div style={{ display: "flex", gap: "8px" }}>
-                    {r.reason === "duplicate" && r.duplicate_of_id && (
-                      <button
-                        onClick={() => handleConfirmDuplicate(r)}
-                        disabled={busyId === r.id}
-                        style={{ flex: 1, background: "#00C8FF", border: "none", borderRadius: "8px", padding: "9px", fontWeight: 700, color: "#0D1B2A", cursor: "pointer", opacity: busyId === r.id ? 0.6 : 1, fontSize: "12.5px" }}
-                      >
-                        Confirmer le doublon
-                      </button>
+                  <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
+                    {r.reason === "duplicate" && r.duplicate_of_id && !keeperChoice[r.id] && (
+                      <p style={{ fontSize: "11.5px", color: "#8792A6", margin: 0 }}>▶ Dépliez la fiche ci-dessus et choisissez laquelle conserver avant de confirmer le doublon.</p>
                     )}
+                    <div style={{ display: "flex", gap: "8px" }}>
+                      {r.reason === "duplicate" && r.duplicate_of_id && (
+                        <button
+                          onClick={() => handleConfirmDuplicate(r)}
+                          disabled={busyId === r.id || !keeperChoice[r.id]}
+                          style={{
+                            flex: 1,
+                            background: "#00C8FF",
+                            border: "none",
+                            borderRadius: "8px",
+                            padding: "9px",
+                            fontWeight: 700,
+                            color: "#0D1B2A",
+                            cursor: "pointer",
+                            opacity: busyId === r.id || !keeperChoice[r.id] ? 0.4 : 1,
+                            fontSize: "12.5px",
+                          }}
+                        >
+                          Confirmer le doublon
+                        </button>
+                      )}
                     <button
                       onClick={() => handleArchive(r)}
                       disabled={busyId === r.id}
@@ -225,6 +290,7 @@ export function ReportsScreen() {
                     >
                       Ignorer
                     </button>
+                  </div>
                   </div>
                 ) : (
                   <p style={{ fontSize: "11px", color: "#8792A6", margin: 0 }}>{r.resolved_at ? `Traité le ${r.resolved_at.slice(0, 10)}` : ""}</p>

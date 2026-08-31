@@ -32,10 +32,10 @@ const CAPABILITY_MATRIX = {
 
 const ENTITY_TABLE_BY_TYPE = { venue: "public_venues", drink: "drinks_directory", brand: "brands_directory", producer: "breweries_directory" };
 const ENTITY_SELECT_FIELDS = {
-  venue: "id, name, street_name, street_number, city, cover_photo_url, profile_photo_url, status",
-  drink: "id, name, type, main_photo_url, status",
-  brand: "id, name, logo_url, status",
-  producer: "id, name, country, profile_photo_url, cover_photo_url, status",
+  venue: "id, name, street_name, street_number, city, cover_photo_url, profile_photo_url, status, certification_level",
+  drink: "id, name, type, main_photo_url, status, certification_level",
+  brand: "id, name, logo_url, status, certification_level",
+  producer: "id, name, country, profile_photo_url, cover_photo_url, status, certification_level",
 };
 
 export async function loadReports(status = "pending") {
@@ -103,11 +103,11 @@ export async function loadEntityDetail(entityType, entityId) {
   return null;
 }
 
-export async function confirmDuplicate(reportId, entityType, entityId, duplicateOfId) {
+export async function confirmDuplicate(reportId, entityType, loserId, keeperId) {
   const table = ENTITY_TABLE_BY_TYPE[entityType];
   if (!table) return { error: "Type de fiche inconnu." };
 
-  const { error: updateError } = await supabase.from(table).update({ status: "duplicate", duplicate_of_id: duplicateOfId }).eq("id", entityId);
+  const { error: updateError } = await supabase.from(table).update({ status: "duplicate", duplicate_of_id: keeperId }).eq("id", loserId);
   if (updateError) return { error: updateError.message };
 
   const { error: resolveError } = await supabase.from("entity_reports").update({ status: "resolved", resolved_at: new Date().toISOString() }).eq("id", reportId);
