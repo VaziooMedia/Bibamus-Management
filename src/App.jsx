@@ -13,6 +13,7 @@ import { UsersScreen } from "./components/UsersScreen.jsx";
 import { ReportsScreen } from "./components/ReportsScreen.jsx";
 import { AuditLogScreen } from "./components/AuditLogScreen.jsx";
 import { ClaimsScreen } from "./components/ClaimsScreen.jsx";
+import { BusinessAccountsScreen } from "./components/BusinessAccountsScreen.jsx";
 import { MyBusinessEntitiesScreen } from "./components/MyBusinessEntitiesScreen.jsx";
 import { CountryRulesScreen } from "./components/CountryRulesScreen.jsx";
 import { FeatureFlagsScreen } from "./components/FeatureFlagsScreen.jsx";
@@ -96,6 +97,7 @@ export default function App() {
       {screen === "stats" && <AnalyticsScreen />}
       {screen === "finances" && <ComingSoon title="Finances" />}
       {screen === "claims" && <ClaimsScreen />}
+      {screen === "businessAccounts" && <BusinessAccountsScreen />}
       {screen === "notifications" && <ComingSoon title="Notifications" />}
       {screen === "admins" && <CollaboratorsScreen />}
       {screen === "users" && <UsersScreen />}

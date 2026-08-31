@@ -17,7 +17,10 @@ const BOTTOM_ITEMS_BEFORE_BUSINESS = [
   { key: "finances", label: "Finances" },
 ];
 
-const BUSINESS_ITEMS = [{ key: "claims", label: "Revendications" }];
+const BUSINESS_ITEMS = [
+  { key: "businessAccounts", label: "Comptes Business" },
+  { key: "claims", label: "Revendications" },
+];
 
 const BOTTOM_ITEMS_AFTER_BUSINESS = [
   { key: "notifications", label: "Notifications" },
@@ -204,7 +207,7 @@ export function Layout({ current, onNavigate, onLogout, myRole, myCanModerate, c
 
             <button
               onClick={() => {
-                onNavigate("claims");
+                onNavigate("businessAccounts");
                 setBusinessOpen(true);
               }}
               style={{

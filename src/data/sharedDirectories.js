@@ -251,6 +251,45 @@ export async function loadClaims(status = "pending") {
   return data.map((c) => ({ ...c, claimant: byId[c.claimant_id] || null }));
 }
 
+const BUSINESS_FIELDS =
+  "id, email, name, last_name, active, company_name, vat_number, company_email, company_phone, company_street, company_street_number, " +
+  "company_address_line2, company_postal_code, company_city, company_country, contact_function, contact_email, contact_phone, contact_languages";
+
+export async function loadBusinessAccountsFull() {
+  const { data, error } = await supabase.from("profiles").select(BUSINESS_FIELDS).eq("role", "business").order("company_name");
+  if (error) {
+    console.error("loadBusinessAccountsFull:", error);
+    return [];
+  }
+  return data;
+}
+
+export async function updateBusinessAccount(userId, patch) {
+  const { error } = await supabase
+    .from("profiles")
+    .update({
+      name: patch.firstName,
+      last_name: patch.lastName,
+      company_name: patch.companyName,
+      vat_number: patch.vatNumber,
+      company_email: patch.companyEmail,
+      company_phone: patch.companyPhone,
+      company_street: patch.companyStreet,
+      company_street_number: patch.companyStreetNumber,
+      company_address_line2: patch.companyAddressLine2,
+      company_postal_code: patch.companyPostalCode,
+      company_city: patch.companyCity,
+      company_country: patch.companyCountry,
+      contact_function: patch.contactFunction,
+      contact_email: patch.contactEmail,
+      contact_phone: patch.contactPhone,
+      contact_languages: patch.contactLanguages,
+    })
+    .eq("id", userId);
+  if (error) return { error: error.message };
+  return { ok: true };
+}
+
 export async function loadBusinessAccounts() {
   const { data, error } = await supabase.from("profiles").select("id, name, last_name, email, company_name").eq("role", "business").order("company_name");
   if (error) {
