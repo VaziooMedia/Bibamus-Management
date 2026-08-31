@@ -373,7 +373,11 @@ export function DrinkDetailPanel({ drink, onClose, onSaved }) {
 
   const remove = async () => {
     if (!confirm(`Supprimer définitivement "${drink.name}" ?`)) return;
-    await deleteDrink(drink.id);
+    const result = await deleteDrink(drink.id);
+    if (result?.error) {
+      alert("La suppression a échoué : " + result.error);
+      return;
+    }
     onSaved(null);
   };
 

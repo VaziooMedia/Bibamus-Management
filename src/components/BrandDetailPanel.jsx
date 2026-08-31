@@ -180,7 +180,11 @@ export function BrandDetailPanel({ brand, onClose, onSaved }) {
 
   const remove = async () => {
     if (!confirm(`Supprimer définitivement "${brand.name}" ?`)) return;
-    await deleteBrand(brand.id);
+    const result = await deleteBrand(brand.id);
+    if (result?.error) {
+      alert("La suppression a échoué : " + result.error);
+      return;
+    }
     onSaved(null);
   };
 

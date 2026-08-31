@@ -254,7 +254,11 @@ export function VenueDetailPanel({ venue, onClose, onSaved, onManageMenu }) {
 
   const remove = async () => {
     if (!confirm(`Supprimer définitivement "${venue.name}" ?`)) return;
-    await deletePublicVenue(venue.id);
+    const result = await deletePublicVenue(venue.id);
+    if (result?.error) {
+      alert("La suppression a échoué : " + result.error);
+      return;
+    }
     onSaved(null);
   };
 

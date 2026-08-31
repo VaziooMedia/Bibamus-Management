@@ -213,7 +213,11 @@ export function BreweryDetailPanel({ brewery, onClose, onSaved }) {
 
   const remove = async () => {
     if (!confirm(`Supprimer définitivement "${brewery.name}" ?`)) return;
-    await deleteBrewery(brewery.id);
+    const result = await deleteBrewery(brewery.id);
+    if (result?.error) {
+      alert("La suppression a échoué : " + result.error);
+      return;
+    }
     onSaved(null);
   };
 

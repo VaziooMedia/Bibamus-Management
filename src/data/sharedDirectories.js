@@ -299,7 +299,11 @@ export async function updatePublicVenue(id, patch) {
 
 export async function deletePublicVenue(id) {
   const { error } = await supabase.from("public_venues").delete().eq("id", id);
-  if (error) console.error("deletePublicVenue:", error);
+  if (error) {
+    console.error("deletePublicVenue:", error);
+    return { error: error.message };
+  }
+  return { ok: true };
 }
 
 function rowToVenue(row) {
@@ -730,7 +734,11 @@ export async function updateDrink(id, patch) {
 
 export async function deleteDrink(id) {
   const { error } = await supabase.from("drinks_directory").delete().eq("id", id);
-  if (error) console.error("deleteDrink:", error);
+  if (error) {
+    console.error("deleteDrink:", error);
+    return { error: error.message };
+  }
+  return { ok: true };
 }
 
 function rowToDrink(row) {
@@ -1116,7 +1124,11 @@ export async function updateBrewery(id, patch) {
 
 export async function deleteBrewery(id) {
   const { error } = await supabase.from("breweries_directory").delete().eq("id", id);
-  if (error) console.error("deleteBrewery:", error);
+  if (error) {
+    console.error("deleteBrewery:", error);
+    return { error: error.message };
+  }
+  return { ok: true };
 }
 
 function rowToBrewery(row) {
@@ -1242,7 +1254,11 @@ export async function updateBrand(id, patch) {
 
 export async function deleteBrand(id) {
   const { error } = await supabase.from("brands_directory").delete().eq("id", id);
-  if (error) console.error("deleteBrand:", error);
+  if (error) {
+    console.error("deleteBrand:", error);
+    return { error: error.message };
+  }
+  return { ok: true };
 }
 
 function rowToBrand(row) {
