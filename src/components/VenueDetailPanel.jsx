@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { updatePublicVenue, deletePublicVenue, createPublicVenue, uploadVenuePhoto, uploadVenueMenuPdf, geocodeAddress, saveGeocodeResult, loadPublicVenues } from "../data/sharedDirectories.js";
+import { updatePublicVenue, deletePublicVenue, createPublicVenue, uploadVenuePhoto, uploadVenueMenuPdf, geocodeAddress, saveGeocodeResult, loadPublicVenues, mergeEntities } from "../data/sharedDirectories.js";
 import { CertificationLevelSelector } from "./CertificationLevelSelector.jsx";
 import { SearchableSelect } from "./SearchableSelect.jsx";
 import { StatusSelector } from "./StatusSelector.jsx";
@@ -240,6 +240,15 @@ export function VenueDetailPanel({ venue, onClose, onSaved, onManageMenu }) {
       const created = await createPublicVenue({ id, ...buildPatch(), menu: [], likes: [] });
       setSaving(false);
       onSaved(created);
+    } else if (status === "duplicate" && duplicateOfId) {
+      // Passe par la vraie fusion (transfert des relations) plutôt qu'un simple tombstone.
+      const result = await mergeEntities("venue", venue.id, duplicateOfId);
+      setSaving(false);
+      if (result.error) {
+        alert("La fusion a échoué : " + result.error);
+        return;
+      }
+      onSaved({ ...venue, status: "duplicate", duplicateOfId });
     } else {
       const patch = buildPatch();
       const result = await updatePublicVenue(venue.id, patch);

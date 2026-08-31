@@ -103,12 +103,18 @@ export async function loadEntityDetail(entityType, entityId) {
   return null;
 }
 
-export async function confirmDuplicate(reportId, entityType, loserId, keeperId) {
-  const table = ENTITY_TABLE_BY_TYPE[entityType];
-  if (!table) return { error: "Type de fiche inconnu." };
+// Fusion réelle — transfère les relations (propriété Business, produits liés à une
+// marque/producteur fusionné, revendications en attente), pas seulement le tombstone.
+export async function mergeEntities(entityType, loserId, keeperId) {
+  const { data, error } = await supabase.rpc("merge_entities", { p_entity_type: entityType, p_loser_id: loserId, p_keeper_id: keeperId });
+  if (error) return { error: error.message };
+  if (data?.error) return { error: data.error };
+  return { ok: true };
+}
 
-  const { error: updateError } = await supabase.from(table).update({ status: "duplicate", duplicate_of_id: keeperId }).eq("id", loserId);
-  if (updateError) return { error: updateError.message };
+export async function confirmDuplicate(reportId, entityType, loserId, keeperId) {
+  const mergeResult = await mergeEntities(entityType, loserId, keeperId);
+  if (mergeResult.error) return { error: mergeResult.error };
 
   const { error: resolveError } = await supabase.from("entity_reports").update({ status: "resolved", resolved_at: new Date().toISOString() }).eq("id", reportId);
   if (resolveError) return { error: resolveError.message };

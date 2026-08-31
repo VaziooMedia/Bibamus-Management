@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { updateDrink, deleteDrink, createDrink, uploadDrinkMainPhoto, uploadDrinkGalleryPhoto, uploadDrinkAwardBadge, loadBrandsDirectory, loadBreweriesDirectory, loadDrinksDirectory } from "../data/sharedDirectories.js";
+import { updateDrink, deleteDrink, createDrink, uploadDrinkMainPhoto, uploadDrinkGalleryPhoto, uploadDrinkAwardBadge, loadBrandsDirectory, loadBreweriesDirectory, loadDrinksDirectory, mergeEntities } from "../data/sharedDirectories.js";
 import { StatusSelector } from "./StatusSelector.jsx";
 import { AdminPhotoField } from "./AdminPhotoField.jsx";
 import { GalleryManager } from "./GalleryManager.jsx";
@@ -359,6 +359,14 @@ export function DrinkDetailPanel({ drink, onClose, onSaved }) {
       const created = await createDrink({ id, ...buildPatch() });
       setSaving(false);
       onSaved(created);
+    } else if (status === "duplicate" && duplicateOfId) {
+      const result = await mergeEntities("drink", drink.id, duplicateOfId);
+      setSaving(false);
+      if (result.error) {
+        alert("La fusion a échoué : " + result.error);
+        return;
+      }
+      onSaved({ ...drink, status: "duplicate", duplicateOfId });
     } else {
       const patch = buildPatch();
       const result = await updateDrink(drink.id, patch);

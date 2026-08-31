@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { updateBrand, deleteBrand, createBrand, uploadBrandLogo, loadBreweriesDirectory, loadBrandsDirectory } from "../data/sharedDirectories.js";
+import { updateBrand, deleteBrand, createBrand, uploadBrandLogo, loadBreweriesDirectory, loadBrandsDirectory, mergeEntities } from "../data/sharedDirectories.js";
 import { StatusSelector } from "./StatusSelector.jsx";
 import { AdminPhotoField } from "./AdminPhotoField.jsx";
 import { SearchableSelect } from "./SearchableSelect.jsx";
@@ -166,6 +166,14 @@ export function BrandDetailPanel({ brand, onClose, onSaved }) {
       const created = await createBrand({ id, ...buildPatch() });
       setSaving(false);
       onSaved(created);
+    } else if (status === "duplicate" && duplicateOfId) {
+      const result = await mergeEntities("brand", brand.id, duplicateOfId);
+      setSaving(false);
+      if (result.error) {
+        alert("La fusion a échoué : " + result.error);
+        return;
+      }
+      onSaved({ ...brand, status: "duplicate", duplicateOfId });
     } else {
       const patch = buildPatch();
       const result = await updateBrand(brand.id, patch);

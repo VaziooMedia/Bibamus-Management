@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { updateBrewery, deleteBrewery, createBrewery, uploadBreweryPhoto, loadPublicVenues, loadBreweriesDirectory } from "../data/sharedDirectories.js";
+import { updateBrewery, deleteBrewery, createBrewery, uploadBreweryPhoto, loadPublicVenues, loadBreweriesDirectory, mergeEntities } from "../data/sharedDirectories.js";
 import { StatusSelector } from "./StatusSelector.jsx";
 import { AdminPhotoField } from "./AdminPhotoField.jsx";
 import { AddressAutocomplete } from "./AddressAutocomplete.jsx";
@@ -199,6 +199,14 @@ export function BreweryDetailPanel({ brewery, onClose, onSaved }) {
       const created = await createBrewery({ id, ...buildPatch() });
       setSaving(false);
       onSaved(created);
+    } else if (status === "duplicate" && duplicateOfId) {
+      const result = await mergeEntities("producer", brewery.id, duplicateOfId);
+      setSaving(false);
+      if (result.error) {
+        alert("La fusion a échoué : " + result.error);
+        return;
+      }
+      onSaved({ ...brewery, status: "duplicate", duplicateOfId });
     } else {
       const patch = buildPatch();
       const result = await updateBrewery(brewery.id, patch);
