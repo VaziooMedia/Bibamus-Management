@@ -237,6 +237,29 @@ export async function loadMyActivity() {
   return data;
 }
 
+// Seuil d'âge minimum pour un pays donné — piloté depuis "Configuration pays", plus besoin de
+// déploiement de code pour ajuster un seuil ou ajouter un pays.
+export async function getMinimumAge(countryCode) {
+  const { data, error } = await supabase.from("country_rules").select("minimum_age").eq("country_code", countryCode).maybeSingle();
+  if (error || !data) return 18;
+  return data.minimum_age;
+}
+
+export async function loadCountryRules() {
+  const { data, error } = await supabase.from("country_rules").select("*").order("country_code");
+  if (error) {
+    console.error("loadCountryRules:", error);
+    return [];
+  }
+  return data;
+}
+
+export async function updateCountryRule(countryCode, minimumAge) {
+  const { error } = await supabase.from("country_rules").upsert({ country_code: countryCode, minimum_age: minimumAge, updated_at: new Date().toISOString() });
+  if (error) return { error: error.message };
+  return { ok: true };
+}
+
 export async function loadCollaborators() {
   const { data, error } = await supabase.from("profiles").select("id, email, name, last_name, birth_date, avatar_url, role, active, can_moderate").order("name");
   if (error) {

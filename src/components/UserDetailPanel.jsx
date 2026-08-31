@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { updateAppUserProfile, createAppUser, deleteAppUser } from "../data/sharedDirectories.js";
+import { updateAppUserProfile, createAppUser, deleteAppUser, getMinimumAge } from "../data/sharedDirectories.js";
 import { COUNTRIES } from "../constants.js";
 
 const fieldStyle = { padding: "10px 12px", borderRadius: "8px", border: "2px solid #28405C", fontSize: "14px", width: "100%", color: "#F2F2E8", background: "#0D1B2A", boxSizing: "border-box" };
@@ -68,12 +68,6 @@ function EyeIcon({ crossed }) {
     </svg>
   );
 }
-
-// Âge minimum par pays — pour l'instant, seule la Belgique est réglée (16 ans, seuil légal
-// bière/vin). Les autres pays retombent sur un seuil par défaut plus prudent, en attendant un
-// vrai moteur de règles par pays (country_rules, chantier à part).
-const MINIMUM_AGE_BY_COUNTRY = { belgique: 16 };
-const DEFAULT_MINIMUM_AGE = 18;
 
 const PRESET_REASONS = [
   "Non-respect des conditions d'utilisation",
@@ -171,7 +165,7 @@ export function UserDetailPanel({ user, onClose, onSaved }) {
       }
 
       const computedAge = ageFromBirthDate(birthDate);
-      const minimumAge = MINIMUM_AGE_BY_COUNTRY[country] ?? DEFAULT_MINIMUM_AGE;
+      const minimumAge = await getMinimumAge(country);
       if (computedAge == null || computedAge < minimumAge) {
         setFieldErrors({ birthDate: true, country: true });
         setError(`Bibamus concerne des boissons alcoolisées — un âge minimum de ${minimumAge} ans est requis pour ce pays.`);

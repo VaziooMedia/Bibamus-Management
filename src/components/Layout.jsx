@@ -18,6 +18,7 @@ const BOTTOM_ITEMS = [
   { key: "business", label: "Business" },
   { key: "notifications", label: "Notifications" },
   { key: "audit", label: "Audit" },
+  { key: "countryRules", label: "Configuration pays" },
   { key: "admins", label: "Administrateurs" },
   { key: "settings", label: "Paramètres" },
 ];
