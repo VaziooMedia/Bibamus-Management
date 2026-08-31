@@ -69,6 +69,7 @@ export function DrinkDetailPanel({ drink, onClose, onSaved }) {
   const isNew = !drink;
   const [form, setForm] = useState({
     name: drink?.name || "",
+    aliasesText: (drink?.aliases || []).join(", "),
     type: drink?.type || DRINK_TYPES[0].code,
     beverageSubtype: drink?.beverageSubtype || BEER_CIDER_SUBTYPES[0].code,
     defaultVolumeCl: drink?.defaultVolumeCl ?? "",
@@ -229,6 +230,7 @@ export function DrinkDetailPanel({ drink, onClose, onSaved }) {
   const buildPatch = () => {
     const base = {
       name: form.name.trim(),
+      aliases: form.aliasesText.split(",").map((a) => a.trim()).filter(Boolean),
       type: form.type,
       abv: form.abv === "" ? null : parseFloat(form.abv),
       kcalPer100ml: form.kcalPer100ml === "" ? null : parseFloat(form.kcalPer100ml),
@@ -446,6 +448,14 @@ export function DrinkDetailPanel({ drink, onClose, onSaved }) {
 
         <label style={labelStyle}>Nom du produit *</label>
         <input value={form.name} onChange={(e) => set("name", e.target.value)} style={{ ...fieldStyle, marginBottom: "14px" }} />
+
+        <label style={labelStyle}>Alias / traductions (séparés par une virgule)</label>
+        <input
+          value={form.aliasesText}
+          onChange={(e) => set("aliasesText", e.target.value)}
+          placeholder="Ex. anciens noms, traductions dans une autre langue..."
+          style={{ ...fieldStyle, marginBottom: "14px" }}
+        />
 
         {isBeerOrCider ? (
           <>

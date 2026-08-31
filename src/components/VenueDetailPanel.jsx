@@ -87,6 +87,7 @@ export function VenueDetailPanel({ venue, onClose, onSaved, onManageMenu }) {
   const isNew = !venue;
   const [form, setForm] = useState({
     name: venue?.name || "",
+    aliasesText: (venue?.aliases || []).join(", "),
     subtitle: venue?.subtitle || "",
     streetName: venue?.streetName || "",
     streetNumber: venue?.streetNumber || "",
@@ -187,6 +188,7 @@ export function VenueDetailPanel({ venue, onClose, onSaved, onManageMenu }) {
 
   const buildPatch = () => ({
     name: capitalizeWords(form.name.trim()),
+    aliases: form.aliasesText.split(",").map((a) => a.trim()).filter(Boolean),
     subtitle: capitalizeWords(form.subtitle.trim()),
     streetName: capitalizeWords(form.streetName.trim()),
     streetNumber: form.streetNumber.trim(),
@@ -338,6 +340,14 @@ export function VenueDetailPanel({ venue, onClose, onSaved, onManageMenu }) {
 
         <label style={labelStyle}>Nom *</label>
         <input value={form.name} onChange={(e) => set("name", e.target.value)} onBlur={capitalizeOnBlur("name")} style={{ ...fieldStyle, marginBottom: "14px" }} />
+
+        <label style={labelStyle}>Alias / traductions (séparés par une virgule)</label>
+        <input
+          value={form.aliasesText}
+          onChange={(e) => set("aliasesText", e.target.value)}
+          placeholder="Ex. anciens noms, traductions dans une autre langue..."
+          style={{ ...fieldStyle, marginBottom: "14px" }}
+        />
 
         <label style={labelStyle}>Sous-titre</label>
         <input value={form.subtitle} onChange={(e) => set("subtitle", e.target.value)} onBlur={capitalizeOnBlur("subtitle")} style={fieldStyle} />

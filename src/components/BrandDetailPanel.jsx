@@ -94,6 +94,7 @@ export function BrandDetailPanel({ brand, onClose, onSaved }) {
   const isNew = !brand;
   const [form, setForm] = useState({
     name: brand?.name || "",
+    aliasesText: (brand?.aliases || []).join(", "),
     alternateName: brand?.alternateName || "",
     slogan: brand?.slogan || "",
     foundedYear: brand?.foundedYear ?? "",
@@ -137,6 +138,7 @@ export function BrandDetailPanel({ brand, onClose, onSaved }) {
 
   const buildPatch = () => ({
     name: capitalizeWords(form.name.trim()),
+    aliases: form.aliasesText.split(",").map((a) => a.trim()).filter(Boolean),
     alternateName: capitalizeWords(form.alternateName.trim()),
     slogan: capitalizeWords(form.slogan.trim()),
     foundedYear: form.foundedYear === "" ? null : parseInt(form.foundedYear, 10),
@@ -218,6 +220,14 @@ export function BrandDetailPanel({ brand, onClose, onSaved }) {
 
         <label style={labelStyle}>Nom *</label>
         <input value={form.name} onChange={(e) => set("name", e.target.value)} onBlur={capitalizeOnBlur("name")} style={{ ...fieldStyle, marginBottom: "14px" }} />
+
+        <label style={labelStyle}>Alias / traductions (séparés par une virgule)</label>
+        <input
+          value={form.aliasesText}
+          onChange={(e) => set("aliasesText", e.target.value)}
+          placeholder="Ex. anciens noms, traductions dans une autre langue..."
+          style={{ ...fieldStyle, marginBottom: "14px" }}
+        />
 
         <label style={labelStyle}>Nom alternatif / Ancien nom</label>
         <input value={form.alternateName} onChange={(e) => set("alternateName", e.target.value)} style={{ ...fieldStyle, marginBottom: "14px" }} />
