@@ -33,6 +33,12 @@ function EyeIcon({ crossed }) {
   );
 }
 
+// Âge minimum par pays — pour l'instant, seule la Belgique est réglée (16 ans, seuil légal
+// bière/vin). Les autres pays retombent sur un seuil par défaut plus prudent, en attendant un
+// vrai moteur de règles par pays (country_rules, chantier à part).
+const MINIMUM_AGE_BY_COUNTRY = { belgique: 16 };
+const DEFAULT_MINIMUM_AGE = 18;
+
 function ageFromBirthDate(dateStr) {
   if (!dateStr) return null;
   const birth = new Date(dateStr);
@@ -84,9 +90,19 @@ export function UserDetailPanel({ user, onClose, onSaved }) {
       if (!username.trim()) missing.username = true;
       if (!email.trim()) missing.email = true;
       if (!password.trim()) missing.password = true;
+      if (!birthDate) missing.birthDate = true;
+      if (!country) missing.country = true;
       setFieldErrors(missing);
       if (Object.keys(missing).length > 0) {
         setError("Merci de compléter tous les champs obligatoires (*).");
+        return;
+      }
+
+      const computedAge = ageFromBirthDate(birthDate);
+      const minimumAge = MINIMUM_AGE_BY_COUNTRY[country] ?? DEFAULT_MINIMUM_AGE;
+      if (computedAge == null || computedAge < minimumAge) {
+        setFieldErrors({ birthDate: true, country: true });
+        setError(`Bibamus concerne des boissons alcoolisées — un âge minimum de ${minimumAge} ans est requis pour ce pays.`);
         return;
       }
 
@@ -242,8 +258,13 @@ export function UserDetailPanel({ user, onClose, onSaved }) {
 
         <div style={{ display: "flex", gap: "10px", marginBottom: "12px" }}>
           <div style={{ flex: 1 }}>
-            <label style={labelStyle}>Date de naissance</label>
-            <input type="date" value={birthDate || ""} onChange={(e) => setBirthDate(e.target.value)} style={{ ...fieldStyle, colorScheme: "dark" }} />
+            <RequiredLabel required={isNew}>Date de naissance</RequiredLabel>
+            <input
+              type="date"
+              value={birthDate || ""}
+              onChange={(e) => setBirthDate(e.target.value)}
+              style={{ ...fieldStyle, colorScheme: "dark", ...(fieldErrors.birthDate ? errorBorder : {}) }}
+            />
           </div>
           <div style={{ width: "80px" }}>
             <label style={labelStyle}>Âge</label>
@@ -253,8 +274,8 @@ export function UserDetailPanel({ user, onClose, onSaved }) {
 
         <div style={separatorStyle} />
 
-        <label style={labelStyle}>Pays</label>
-        <select value={country} onChange={(e) => setCountry(e.target.value)} style={{ ...fieldStyle, marginBottom: "12px" }}>
+        <RequiredLabel required={isNew}>Pays</RequiredLabel>
+        <select value={country} onChange={(e) => setCountry(e.target.value)} style={{ ...fieldStyle, marginBottom: "12px", ...(fieldErrors.country ? errorBorder : {}) }}>
           <option value="">—</option>
           {COUNTRIES.map((c) => (
             <option key={c.code} value={c.code}>

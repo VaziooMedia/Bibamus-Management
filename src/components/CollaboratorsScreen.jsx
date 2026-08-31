@@ -27,6 +27,7 @@ export function CollaboratorsScreen() {
   const [selected, setSelected] = useState(null);
   const [creating, setCreating] = useState(false);
   const [sort, setSort] = useState({ key: "last_name", dir: 1 });
+  const [query, setQuery] = useState("");
 
   const refresh = () => loadCollaborators().then(setAdministrators);
   useEffect(() => {
@@ -46,19 +47,21 @@ export function CollaboratorsScreen() {
   const sorted = useMemo(() => {
     if (!administrators) return null;
     const list = administrators.filter((a) => a.role !== "user");
+    const q = query.trim().toLowerCase();
+    const filtered = q ? list.filter((a) => [a.name, a.last_name, a.email].some((field) => (field || "").toLowerCase().includes(q))) : list;
     const getValue = (a) => {
       if (sort.key === "active") return a.active !== false ? 1 : 0;
       if (sort.key === "role") return roleLabel(a.role);
       return (a[sort.key] || "").toString().toLowerCase();
     };
-    return [...list].sort((a, b) => {
+    return [...filtered].sort((a, b) => {
       const va = getValue(a);
       const vb = getValue(b);
       if (va < vb) return -1 * sort.dir;
       if (va > vb) return 1 * sort.dir;
       return 0;
     });
-  }, [administrators, sort]);
+  }, [administrators, sort, query]);
 
   return (
     <div>
@@ -87,10 +90,17 @@ export function CollaboratorsScreen() {
         </button>
       </div>
 
+      <input
+        value={query}
+        onChange={(e) => setQuery(e.target.value)}
+        placeholder="Rechercher (nom, prénom, email)..."
+        style={{ padding: "10px 14px", borderRadius: "8px", border: "2px solid #28405C", fontSize: "13.5px", color: "#F2F2E8", background: "#0D1B2A", width: "100%", marginBottom: "20px", boxSizing: "border-box" }}
+      />
+
       {!sorted ? (
         <p style={{ color: "#8792A6" }}>Chargement...</p>
       ) : sorted.length === 0 ? (
-        <p style={{ color: "#8792A6", fontSize: "13px" }}>Aucun administrateur pour l'instant.</p>
+        <p style={{ color: "#8792A6", fontSize: "13px" }}>{query ? "Aucun résultat pour cette recherche." : "Aucun administrateur pour l'instant."}</p>
       ) : (
         <table style={{ width: "100%", borderCollapse: "collapse" }}>
           <thead>

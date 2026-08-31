@@ -22,6 +22,7 @@ export function UsersScreen() {
   const [selected, setSelected] = useState(null);
   const [creating, setCreating] = useState(false);
   const [sort, setSort] = useState({ key: "created_at", dir: -1 });
+  const [query, setQuery] = useState("");
 
   const refresh = () => loadAppUsers().then(setUsers);
   useEffect(() => {
@@ -40,19 +41,23 @@ export function UsersScreen() {
 
   const sorted = useMemo(() => {
     if (!users) return null;
+    const q = query.trim().toLowerCase();
+    const filtered = q
+      ? users.filter((u) => [u.name, u.last_name, u.username, u.email].some((field) => (field || "").toLowerCase().includes(q)))
+      : users;
     const getValue = (u) => {
       if (sort.key === "active") return u.active !== false ? 1 : 0;
       if (sort.key === "created_at") return u.created_at || "";
       return (u[sort.key] || "").toString().toLowerCase();
     };
-    return [...users].sort((a, b) => {
+    return [...filtered].sort((a, b) => {
       const va = getValue(a);
       const vb = getValue(b);
       if (va < vb) return -1 * sort.dir;
       if (va > vb) return 1 * sort.dir;
       return 0;
     });
-  }, [users, sort]);
+  }, [users, sort, query]);
 
   return (
     <div>
@@ -81,10 +86,17 @@ export function UsersScreen() {
         </button>
       </div>
 
+      <input
+        value={query}
+        onChange={(e) => setQuery(e.target.value)}
+        placeholder="Rechercher (nom, prénom, nom d'utilisateur, email)..."
+        style={{ padding: "10px 14px", borderRadius: "8px", border: "2px solid #28405C", fontSize: "13.5px", color: "#F2F2E8", background: "#0D1B2A", width: "100%", marginBottom: "20px", boxSizing: "border-box" }}
+      />
+
       {!sorted ? (
         <p style={{ color: "#8792A6" }}>Chargement...</p>
       ) : sorted.length === 0 ? (
-        <p style={{ color: "#8792A6", fontSize: "13px" }}>Aucun utilisateur inscrit pour l'instant.</p>
+        <p style={{ color: "#8792A6", fontSize: "13px" }}>{query ? "Aucun résultat pour cette recherche." : "Aucun utilisateur inscrit pour l'instant."}</p>
       ) : (
         <table style={{ width: "100%", borderCollapse: "collapse" }}>
           <thead>
@@ -106,7 +118,7 @@ export function UsersScreen() {
                 <td style={{ padding: "10px", color: "#F2F2E8", fontSize: "13.5px" }}>{u.username || "—"}</td>
                 <td style={{ padding: "10px", color: "#F2F2E8", fontSize: "13.5px" }}>{u.email}</td>
                 <td style={{ padding: "10px", color: "#8792A6", fontSize: "13px" }}>{u.bibro_code}</td>
-                <td style={{ padding: "10px", color: "#8792A6", fontSize: "13px" }}>{u.created_at ? new Date(u.created_at).toLocaleDateString("fr-BE") : "—"}</td>
+                <td style={{ padding: "10px", color: "#8792A6", fontSize: "13px" }}>{u.created_at ? u.created_at.slice(0, 10) : "—"}</td>
                 <td style={{ padding: "10px" }}>
                   <span
                     title={u.active !== false ? "Actif" : "Non actif"}
