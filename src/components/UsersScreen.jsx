@@ -3,6 +3,11 @@ import { loadAppUsers } from "../data/sharedDirectories.js";
 import { PageTitle } from "./PageTitle.jsx";
 import { UserDetailPanel } from "./UserDetailPanel.jsx";
 
+function isEffectivelyActive(u) {
+  if (u.active !== false) return true;
+  return !!(u.blocked_until && new Date(u.blocked_until) <= new Date());
+}
+
 function SortHeader({ label, sortKey, currentSort, onSort }) {
   const active = currentSort.key === sortKey;
   return (
@@ -46,7 +51,7 @@ export function UsersScreen() {
       ? users.filter((u) => [u.name, u.last_name, u.username, u.email].some((field) => (field || "").toLowerCase().includes(q)))
       : users;
     const getValue = (u) => {
-      if (sort.key === "active") return u.active !== false ? 1 : 0;
+      if (sort.key === "active") return isEffectivelyActive(u) ? 1 : 0;
       if (sort.key === "created_at") return u.created_at || "";
       return (u[sort.key] || "").toString().toLowerCase();
     };
@@ -121,8 +126,8 @@ export function UsersScreen() {
                 <td style={{ padding: "10px", color: "#8792A6", fontSize: "13px" }}>{u.created_at ? u.created_at.slice(0, 10) : "—"}</td>
                 <td style={{ padding: "10px" }}>
                   <span
-                    title={u.active !== false ? "Actif" : `Bloqué${u.blocked_reason ? " — " + u.blocked_reason : ""}`}
-                    style={{ display: "inline-block", width: "10px", height: "10px", borderRadius: "50%", background: u.active !== false ? "#39FF66" : "#FF3B4E" }}
+                    title={isEffectivelyActive(u) ? "Actif" : `Bloqué${u.blocked_reason ? " — " + u.blocked_reason : ""}${u.blocked_until ? " (jusqu'au " + u.blocked_until.slice(0, 10) + ")" : ""}`}
+                    style={{ display: "inline-block", width: "10px", height: "10px", borderRadius: "50%", background: isEffectivelyActive(u) ? "#39FF66" : "#FF3B4E" }}
                   />
                 </td>
               </tr>

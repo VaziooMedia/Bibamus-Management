@@ -22,7 +22,7 @@ export function LoginScreen({ onUnlock }) {
       return;
     }
 
-    const { data: profile, error: profileError } = await supabase.from("profiles").select("role, active").eq("id", data.user.id).single();
+    const { data: profile, error: profileError } = await supabase.from("profiles").select("role, active, blocked_until").eq("id", data.user.id).single();
     setLoading(false);
 
     if (profileError || !profile || !["admin", "super_admin"].includes(profile.role)) {
@@ -31,7 +31,8 @@ export function LoginScreen({ onUnlock }) {
       return;
     }
 
-    if (profile.active === false) {
+    const stillBlocked = profile.active === false && (!profile.blocked_until || new Date(profile.blocked_until) > new Date());
+    if (stillBlocked) {
       await supabase.auth.signOut();
       setError("Ce compte a été bloqué.");
       return;

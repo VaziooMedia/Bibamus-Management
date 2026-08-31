@@ -39,6 +39,32 @@ function EyeIcon({ crossed }) {
 const MINIMUM_AGE_BY_COUNTRY = { belgique: 16 };
 const DEFAULT_MINIMUM_AGE = 18;
 
+const PRESET_REASONS = [
+  "Non-respect des conditions d'utilisation",
+  "Comportement abusif envers d'autres utilisateurs",
+  "Contenu inapproprié",
+  "Spam ou activité suspecte",
+];
+
+const DURATION_OPTIONS = [
+  { key: "1d", label: "1 jour", days: 1 },
+  { key: "3d", label: "3 jours", days: 3 },
+  { key: "7d", label: "7 jours", days: 7 },
+  { key: "30d", label: "30 jours", days: 30 },
+  { key: "permanent", label: "Permanent", days: null },
+];
+
+function addDays(days) {
+  const d = new Date();
+  d.setDate(d.getDate() + days);
+  return d.toISOString();
+}
+
+function formatDateFr(iso) {
+  if (!iso) return "";
+  return new Date(iso).toLocaleDateString("fr-BE", { day: "2-digit", month: "2-digit", year: "numeric" });
+}
+
 function ageFromBirthDate(dateStr) {
   if (!dateStr) return null;
   const birth = new Date(dateStr);
@@ -71,6 +97,8 @@ export function UserDetailPanel({ user, onClose, onSaved }) {
   const [appLanguage, setAppLanguage] = useState(user?.app_language || "fr");
   const [active, setActive] = useState(user?.active !== false);
   const [blockedReason, setBlockedReason] = useState(user?.blocked_reason || "");
+  const [blockedUntil, setBlockedUntil] = useState(user?.blocked_until || null);
+  const [customReason, setCustomReason] = useState(!PRESET_REASONS.includes(user?.blocked_reason) && !!user?.blocked_reason);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState(null);
   const [fieldErrors, setFieldErrors] = useState({});
@@ -137,6 +165,7 @@ export function UserDetailPanel({ user, onClose, onSaved }) {
       appLanguage,
       active,
       blockedReason,
+      blockedUntil,
     });
     setSaving(false);
     if (result.error) {
@@ -360,8 +389,81 @@ export function UserDetailPanel({ user, onClose, onSaved }) {
             </div>
             {!active && (
               <>
-                <label style={labelStyle}>Raison du blocage (visible en interne uniquement)</label>
-                <input value={blockedReason} onChange={(e) => setBlockedReason(e.target.value)} style={{ ...fieldStyle, marginBottom: "12px" }} />
+                <label style={labelStyle}>Durée du blocage</label>
+                <div style={{ display: "flex", gap: "6px", marginBottom: "12px", flexWrap: "wrap" }}>
+                  {DURATION_OPTIONS.map((d) => (
+                    <button
+                      key={d.key}
+                      onClick={() => setBlockedUntil(d.days === null ? null : addDays(d.days))}
+                      style={{
+                        padding: "7px 12px",
+                        borderRadius: "8px",
+                        border: "2px solid #28405C",
+                        background: "none",
+                        color: "#F2F2E8",
+                        fontWeight: 700,
+                        fontSize: "12.5px",
+                        cursor: "pointer",
+                      }}
+                    >
+                      {d.label}
+                    </button>
+                  ))}
+                </div>
+                <p style={{ fontSize: "12px", color: "#8792A6", marginBottom: "14px" }}>
+                  {blockedUntil ? `Réactivation automatique le ${formatDateFr(blockedUntil)}.` : "Blocage permanent — pas de date de réactivation."}
+                </p>
+
+                <label style={labelStyle}>Raison</label>
+                <div style={{ display: "flex", flexDirection: "column", gap: "6px", marginBottom: "12px" }}>
+                  {PRESET_REASONS.map((r) => (
+                    <button
+                      key={r}
+                      onClick={() => {
+                        setBlockedReason(r);
+                        setCustomReason(false);
+                      }}
+                      style={{
+                        textAlign: "left",
+                        padding: "9px 12px",
+                        borderRadius: "8px",
+                        border: `2px solid ${!customReason && blockedReason === r ? "#39FF66" : "#28405C"}`,
+                        background: !customReason && blockedReason === r ? "#0D1B2A" : "none",
+                        color: "#F2F2E8",
+                        fontSize: "13px",
+                        cursor: "pointer",
+                      }}
+                    >
+                      {r}
+                    </button>
+                  ))}
+                  <button
+                    onClick={() => {
+                      setCustomReason(true);
+                      setBlockedReason("");
+                    }}
+                    style={{
+                      textAlign: "left",
+                      padding: "9px 12px",
+                      borderRadius: "8px",
+                      border: `2px solid ${customReason ? "#39FF66" : "#28405C"}`,
+                      background: customReason ? "#0D1B2A" : "none",
+                      color: "#F2F2E8",
+                      fontSize: "13px",
+                      cursor: "pointer",
+                    }}
+                  >
+                    Autre raison (texte libre)
+                  </button>
+                </div>
+                {customReason && (
+                  <input
+                    value={blockedReason}
+                    onChange={(e) => setBlockedReason(e.target.value)}
+                    placeholder="Précisez la raison"
+                    style={{ ...fieldStyle, marginBottom: "12px" }}
+                  />
+                )}
               </>
             )}
           </>

@@ -30,8 +30,9 @@ export default function App() {
         setAuthChecked(true);
         return;
       }
-      const { data: profile } = await supabase.from("profiles").select("role, active").eq("id", data.session.user.id).single();
-      if (profile && ["admin", "super_admin"].includes(profile.role) && profile.active !== false) {
+      const { data: profile } = await supabase.from("profiles").select("role, active, blocked_until").eq("id", data.session.user.id).single();
+      const stillBlocked = profile && profile.active === false && (!profile.blocked_until || new Date(profile.blocked_until) > new Date());
+      if (profile && ["admin", "super_admin"].includes(profile.role) && !stillBlocked) {
         setUnlocked(true);
       } else {
         await supabase.auth.signOut();
