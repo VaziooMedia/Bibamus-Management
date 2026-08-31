@@ -22,12 +22,18 @@ export function LoginScreen({ onUnlock }) {
       return;
     }
 
-    const { data: profile, error: profileError } = await supabase.from("profiles").select("role").eq("id", data.user.id).single();
+    const { data: profile, error: profileError } = await supabase.from("profiles").select("role, active").eq("id", data.user.id).single();
     setLoading(false);
 
     if (profileError || !profile || !["admin", "super_admin"].includes(profile.role)) {
       await supabase.auth.signOut();
       setError("Ce compte n'a pas accès à la plateforme de gestion.");
+      return;
+    }
+
+    if (profile.active === false) {
+      await supabase.auth.signOut();
+      setError("Ce compte a été bloqué.");
       return;
     }
 

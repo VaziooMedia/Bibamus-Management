@@ -121,7 +121,7 @@ export function UsersScreen() {
                 <td style={{ padding: "10px", color: "#8792A6", fontSize: "13px" }}>{u.created_at ? u.created_at.slice(0, 10) : "—"}</td>
                 <td style={{ padding: "10px" }}>
                   <span
-                    title={u.active !== false ? "Actif" : "Non actif"}
+                    title={u.active !== false ? "Actif" : `Bloqué${u.blocked_reason ? " — " + u.blocked_reason : ""}`}
                     style={{ display: "inline-block", width: "10px", height: "10px", borderRadius: "50%", background: u.active !== false ? "#39FF66" : "#FF3B4E" }}
                   />
                 </td>

@@ -69,6 +69,8 @@ export function UserDetailPanel({ user, onClose, onSaved }) {
   const [snapchatUrl, setSnapchatUrl] = useState(user?.snapchat_url || "");
   const [linkedinUrl, setLinkedinUrl] = useState(user?.linkedin_url || "");
   const [appLanguage, setAppLanguage] = useState(user?.app_language || "fr");
+  const [active, setActive] = useState(user?.active !== false);
+  const [blockedReason, setBlockedReason] = useState(user?.blocked_reason || "");
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState(null);
   const [fieldErrors, setFieldErrors] = useState({});
@@ -133,6 +135,8 @@ export function UserDetailPanel({ user, onClose, onSaved }) {
       snapchatUrl,
       linkedinUrl,
       appLanguage,
+      active,
+      blockedReason,
     });
     setSaving(false);
     if (result.error) {
@@ -322,11 +326,44 @@ export function UserDetailPanel({ user, onClose, onSaved }) {
         {!isNew && (
           <>
             <label style={labelStyle}>Statut</label>
-            <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "20px" }}>
-              <span style={{ width: "10px", height: "10px", borderRadius: "50%", background: user.active !== false ? "#39FF66" : "#FF3B4E" }} />
-              <span style={{ color: "#F2F2E8", fontSize: "13.5px" }}>{user.active !== false ? "Actif" : "Non actif"}</span>
-              <span style={{ color: "#8792A6", fontSize: "11px" }}>(les actions de modération arriveront avec le chantier dédié)</span>
+            <div style={{ display: "flex", gap: "8px", marginBottom: "12px" }}>
+              <button
+                onClick={() => setActive(true)}
+                style={{
+                  flex: 1,
+                  padding: "9px",
+                  borderRadius: "8px",
+                  border: `2px solid ${active ? "#39FF66" : "#28405C"}`,
+                  background: active ? "#39FF66" : "none",
+                  color: active ? "#0D1B2A" : "#F2F2E8",
+                  fontWeight: 700,
+                  cursor: "pointer",
+                }}
+              >
+                Actif
+              </button>
+              <button
+                onClick={() => setActive(false)}
+                style={{
+                  flex: 1,
+                  padding: "9px",
+                  borderRadius: "8px",
+                  border: `2px solid ${!active ? "#FF3B4E" : "#28405C"}`,
+                  background: !active ? "#FF3B4E" : "none",
+                  color: !active ? "#0D1B2A" : "#F2F2E8",
+                  fontWeight: 700,
+                  cursor: "pointer",
+                }}
+              >
+                Bloqué
+              </button>
             </div>
+            {!active && (
+              <>
+                <label style={labelStyle}>Raison du blocage (visible en interne uniquement)</label>
+                <input value={blockedReason} onChange={(e) => setBlockedReason(e.target.value)} style={{ ...fieldStyle, marginBottom: "12px" }} />
+              </>
+            )}
           </>
         )}
 
