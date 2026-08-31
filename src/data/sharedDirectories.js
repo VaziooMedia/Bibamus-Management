@@ -76,6 +76,22 @@ export async function loadReports() {
   }));
 }
 
+// Confirme un doublon : marque le lien officiel (duplicate_of_id) et passe la fiche au statut
+// "duplicate" — plus juste qu'un archivage générique, puisque ça garde la trace de quelle
+// fiche est la bonne à conserver.
+export async function confirmDuplicate(reportId, entityType, entityId, duplicateOfId) {
+  const table = ENTITY_TABLE_BY_TYPE[entityType];
+  if (!table) return { error: "Type de fiche inconnu." };
+
+  const { error: updateError } = await supabase.from(table).update({ status: "duplicate", duplicate_of_id: duplicateOfId }).eq("id", entityId);
+  if (updateError) return { error: updateError.message };
+
+  const { error: resolveError } = await supabase.from("entity_reports").update({ status: "resolved", resolved_at: new Date().toISOString() }).eq("id", reportId);
+  if (resolveError) return { error: resolveError.message };
+
+  return { ok: true };
+}
+
 export async function archiveReportedEntity(reportId, entityType, entityId) {
   const table = ENTITY_TABLE_BY_TYPE[entityType];
   if (!table) return { error: "Type de fiche inconnu." };

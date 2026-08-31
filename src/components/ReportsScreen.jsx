@@ -1,6 +1,11 @@
 import React, { useState, useEffect } from "react";
-import { loadReports, resolveReport, dismissReport, archiveReportedEntity } from "../data/sharedDirectories.js";
+import { loadReports, resolveReport, dismissReport, archiveReportedEntity, confirmDuplicate } from "../data/sharedDirectories.js";
 import { PageTitle } from "./PageTitle.jsx";
+import { STATUSES } from "./StatusSelector.jsx";
+import { DRINK_TYPES } from "./DrinkDetailPanel.jsx";
+
+const statusLabel = (key) => STATUSES.find((s) => s.key === key)?.label || key;
+const drinkTypeLabel = (key) => DRINK_TYPES.find((t) => t.code === key)?.fr || key;
 
 const REASON_LABELS = {
   closed_permanently: "Établissement fermé définitivement",
@@ -33,9 +38,9 @@ function EntityPreview({ entityType, details }) {
             {details.city ? `, ${details.city}` : ""}
           </p>
         )}
-        {entityType === "drink" && <p style={{ fontSize: "11.5px", color: "#8792A6", margin: "2px 0 0" }}>{details.type}</p>}
+        {entityType === "drink" && <p style={{ fontSize: "11.5px", color: "#8792A6", margin: "2px 0 0" }}>{drinkTypeLabel(details.type)}</p>}
         {entityType === "producer" && <p style={{ fontSize: "11.5px", color: "#8792A6", margin: "2px 0 0" }}>{details.country}</p>}
-        <p style={{ fontSize: "11px", color: "#8792A6", margin: "2px 0 0" }}>Statut : {details.status}</p>
+        <p style={{ fontSize: "11px", color: "#8792A6", margin: "2px 0 0" }}>Statut : {statusLabel(details.status)}</p>
       </div>
     </div>
   );
@@ -68,6 +73,17 @@ export function ReportsScreen() {
   const handleArchive = async (report) => {
     setBusyId(report.id);
     const result = await archiveReportedEntity(report.id, report.entity_type, report.entity_id);
+    setBusyId(null);
+    if (result.error) {
+      alert("Erreur : " + result.error);
+      return;
+    }
+    refresh();
+  };
+
+  const handleConfirmDuplicate = async (report) => {
+    setBusyId(report.id);
+    const result = await confirmDuplicate(report.id, report.entity_type, report.entity_id, report.duplicate_of_id);
     setBusyId(null);
     if (result.error) {
       alert("Erreur : " + result.error);
@@ -123,6 +139,15 @@ export function ReportsScreen() {
                 )}
 
                 <div style={{ display: "flex", gap: "8px" }}>
+                  {r.reason === "duplicate" && r.duplicate_of_id && (
+                    <button
+                      onClick={() => handleConfirmDuplicate(r)}
+                      disabled={busyId === r.id}
+                      style={{ flex: 1, background: "#C74B4B", border: "none", borderRadius: "8px", padding: "9px", fontWeight: 700, color: "#fff", cursor: "pointer", opacity: busyId === r.id ? 0.6 : 1, fontSize: "12.5px" }}
+                    >
+                      Confirmer le doublon
+                    </button>
+                  )}
                   <button
                     onClick={() => handleArchive(r)}
                     disabled={busyId === r.id}
