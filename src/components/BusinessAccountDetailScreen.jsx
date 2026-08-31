@@ -101,7 +101,7 @@ export function BusinessAccountDetailScreen({ accountId, onBack }) {
   const handleUnlink = async (entity) => {
     if (!confirm(`Délier "${entity.name}" de ce compte Business ?`)) return;
     setLinkBusy(true);
-    await unlinkEntityFromBusiness(entity.entityType, entity.id);
+    await unlinkEntityFromBusiness(entity.entityType, entity.id, entity.name);
     setLinkBusy(false);
     refresh();
   };
@@ -118,7 +118,7 @@ export function BusinessAccountDetailScreen({ accountId, onBack }) {
 
   const handleLink = async (entity) => {
     setLinkBusy(true);
-    await linkEntityToBusiness(searchType, entity.id, accountId);
+    await linkEntityToBusiness(searchType, entity.id, accountId, entity.name);
     setLinkBusy(false);
     setAddingEntity(false);
     setSearchQuery("");

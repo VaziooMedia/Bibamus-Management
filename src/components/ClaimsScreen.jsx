@@ -90,7 +90,7 @@ function NewBusinessForm({ claim, onCreated }) {
       setError(result.error);
       return;
     }
-    const linkResult = await approveClaim(claim.id, claim.entity_type, claim.entity_id, result.userId);
+    const linkResult = await approveClaim(claim.id, claim.entity_type, claim.entity_id, result.userId, claim.entity_name);
     setSaving(false);
     if (linkResult.error) {
       setError("Compte créé, mais la liaison a échoué : " + linkResult.error);
@@ -223,7 +223,7 @@ export function ClaimsScreen() {
     const businessId = selectedBusinessFor[claim.id];
     if (!businessId) return;
     setBusyId(claim.id);
-    const result = await approveClaim(claim.id, claim.entity_type, claim.entity_id, businessId);
+    const result = await approveClaim(claim.id, claim.entity_type, claim.entity_id, businessId, claim.entity_name);
     setBusyId(null);
     if (result.error) {
       alert("Erreur : " + result.error);

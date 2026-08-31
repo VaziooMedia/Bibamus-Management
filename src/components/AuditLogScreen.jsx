@@ -9,6 +9,9 @@ const ACTION_LABELS = {
   block: "Blocage",
   unblock: "Déblocage",
   role_change: "Changement de rôle",
+  ownership_granted: "Fiche liée à un compte Business",
+  ownership_revoked: "Fiche déliée d'un compte Business",
+  ownership_transferred: "Fiche transférée à un autre compte Business",
 };
 
 const ACTION_COLORS = {
@@ -18,6 +21,9 @@ const ACTION_COLORS = {
   block: "#FF3B4E",
   unblock: "#39FF66",
   role_change: "#FFC145",
+  ownership_granted: "#39FF66",
+  ownership_revoked: "#FF3B4E",
+  ownership_transferred: "#FFC145",
 };
 
 const ENTITY_TYPE_LABELS = { venue: "Établissement", drink: "Produit", brand: "Marque", producer: "Producteur", user: "Utilisateur" };
@@ -30,6 +36,9 @@ const ACTION_FILTERS = [
   { key: "block", label: "Blocage" },
   { key: "unblock", label: "Déblocage" },
   { key: "role_change", label: "Changement de rôle" },
+  { key: "ownership_granted", label: "Fiche liée" },
+  { key: "ownership_revoked", label: "Fiche déliée" },
+  { key: "ownership_transferred", label: "Fiche transférée" },
 ];
 
 function formatDetails(action, details) {
@@ -45,6 +54,9 @@ function formatDetails(action, details) {
   }
   if (action === "block") {
     return [details.reason, details.until ? `jusqu'au ${details.until.slice(0, 10)}` : null].filter(Boolean).join(" — ");
+  }
+  if (action === "ownership_transferred") {
+    return "vers un autre compte Business";
   }
   return null;
 }

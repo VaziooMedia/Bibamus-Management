@@ -267,19 +267,34 @@ export async function loadBusinessAccountsFull() {
 
 const BUSINESS_ENTITY_TABLE = { venue: "public_venues", drink: "drinks_directory", brand: "brands_directory", producer: "breweries_directory" };
 
-export async function unlinkEntityFromBusiness(entityType, entityId) {
+export async function unlinkEntityFromBusiness(entityType, entityId, entityName) {
   const table = BUSINESS_ENTITY_TABLE[entityType];
   if (!table) return { error: "Type de fiche inconnu." };
   const { error } = await supabase.from(table).update({ business_owner_id: null }).eq("id", entityId);
   if (error) return { error: error.message };
+  await supabase.rpc("log_audit_event", { p_action: "ownership_revoked", p_entity_type: entityType, p_entity_id: entityId, p_entity_name: entityName || null, p_details: null });
   return { ok: true };
 }
 
-export async function linkEntityToBusiness(entityType, entityId, businessId) {
+export async function linkEntityToBusiness(entityType, entityId, businessId, entityName) {
   const table = BUSINESS_ENTITY_TABLE[entityType];
   if (!table) return { error: "Type de fiche inconnu." };
+  // Le lien précédent (le cas échéant) permet de distinguer une première attribution d'un
+  // transfert d'un compte Business à un autre (ex. revente d'un établissement).
+  const { data: current } = await supabase.from(table).select("business_owner_id").eq("id", entityId).single();
+  const previousOwnerId = current?.business_owner_id || null;
+
   const { error } = await supabase.from(table).update({ business_owner_id: businessId }).eq("id", entityId);
   if (error) return { error: error.message };
+
+  const action = previousOwnerId && previousOwnerId !== businessId ? "ownership_transferred" : "ownership_granted";
+  await supabase.rpc("log_audit_event", {
+    p_action: action,
+    p_entity_type: entityType,
+    p_entity_id: entityId,
+    p_entity_name: entityName || null,
+    p_details: previousOwnerId ? { from_business_id: previousOwnerId, to_business_id: businessId } : { to_business_id: businessId },
+  });
   return { ok: true };
 }
 
@@ -345,7 +360,7 @@ export async function loadBusinessAccounts() {
 
 // Lie une fiche à un compte Business (existant ou nouvellement créé) et marque la
 // revendication comme approuvée.
-export async function approveClaim(claimId, entityType, entityId, businessId) {
+export async function approveClaim(claimId, entityType, entityId, businessId, entityName) {
   const table = CLAIM_ENTITY_TABLE[entityType];
   if (!table) return { error: "Type de fiche inconnu." };
 
@@ -354,6 +369,14 @@ export async function approveClaim(claimId, entityType, entityId, businessId) {
 
   const { error: claimError } = await supabase.from("entity_claims").update({ status: "approved", reviewed_at: new Date().toISOString() }).eq("id", claimId);
   if (claimError) return { error: claimError.message };
+
+  await supabase.rpc("log_audit_event", {
+    p_action: "ownership_granted",
+    p_entity_type: entityType,
+    p_entity_id: entityId,
+    p_entity_name: entityName || null,
+    p_details: { claim_id: claimId, to_business_id: businessId },
+  });
 
   return { ok: true };
 }
