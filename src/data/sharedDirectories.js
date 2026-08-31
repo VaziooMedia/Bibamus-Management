@@ -216,6 +216,27 @@ export async function updateAppUserProfile(userId, patch) {
   return { ok: true };
 }
 
+export async function loadAuditLog(filters = {}) {
+  let query = supabase.from("audit_log").select("*").order("created_at", { ascending: false }).limit(200);
+  if (filters.action) query = query.eq("action", filters.action);
+  if (filters.entityType) query = query.eq("entity_type", filters.entityType);
+  const { data, error } = await query;
+  if (error) {
+    console.error("loadAuditLog:", error);
+    return [];
+  }
+  return data;
+}
+
+export async function loadMyActivity() {
+  const { data, error } = await supabase.rpc("my_audit_activity");
+  if (error) {
+    console.error("loadMyActivity:", error);
+    return [];
+  }
+  return data;
+}
+
 export async function loadCollaborators() {
   const { data, error } = await supabase.from("profiles").select("id, email, name, last_name, birth_date, avatar_url, role, active, can_moderate").order("name");
   if (error) {

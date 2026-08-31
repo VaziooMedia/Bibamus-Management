@@ -17,6 +17,7 @@ const BOTTOM_ITEMS = [
   { key: "finances", label: "Finances" },
   { key: "business", label: "Business" },
   { key: "notifications", label: "Notifications" },
+  { key: "audit", label: "Audit" },
   { key: "admins", label: "Administrateurs" },
   { key: "settings", label: "Paramètres" },
 ];
@@ -128,6 +129,7 @@ export function Layout({ current, onNavigate, onLogout, myRole, myCanModerate, c
               </div>
             )}
             {myCanModerate && <NavButton item={{ key: "reports", label: "Signalements" }} current={current} onNavigate={onNavigate} />}
+            <NavButton item={{ key: "myActivity", label: "Mon activité" }} current={current} onNavigate={onNavigate} />
           </>
         ) : (
           <>
