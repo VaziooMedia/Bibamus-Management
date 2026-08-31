@@ -89,6 +89,20 @@ export async function updateEntityField(entityType, entityId, patch) {
   return { ok: true };
 }
 
+// Charge une fiche complète (même format que dans la Database), quel que soit son type — pour
+// pouvoir ouvrir la vraie fiche d'édition directement depuis un signalement.
+export async function loadEntityDetail(entityType, entityId) {
+  const table = ENTITY_TABLE_BY_TYPE[entityType];
+  if (!table) return null;
+  const { data, error } = await supabase.from(table).select("*").eq("id", entityId).single();
+  if (error || !data) return null;
+  if (entityType === "venue") return rowToVenue(data);
+  if (entityType === "drink") return rowToDrink(data);
+  if (entityType === "producer") return rowToBrewery(data);
+  if (entityType === "brand") return rowToBrand(data);
+  return null;
+}
+
 export async function confirmDuplicate(reportId, entityType, entityId, duplicateOfId) {
   const table = ENTITY_TABLE_BY_TYPE[entityType];
   if (!table) return { error: "Type de fiche inconnu." };
