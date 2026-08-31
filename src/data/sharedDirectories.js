@@ -13,6 +13,21 @@
 
 import { supabase } from "../supabaseClient.js";
 
+// supabase-js masque le vrai message renvoyé par une Edge Function derrière un texte
+// générique ("Edge Function returned a non-2xx status code") — cette fonction va lire le
+// vrai contenu de la réponse pour afficher le message utile à la place.
+async function extractFunctionError(error) {
+  if (error?.context) {
+    try {
+      const body = await error.context.json();
+      if (body?.error) return body.error;
+    } catch {
+      // le corps n'était pas du JSON exploitable — on retombe sur le message générique
+    }
+  }
+  return error?.message || "Une erreur est survenue.";
+}
+
 /* ---------------- COLLABORATEURS (comptes pro de la plateforme de gestion) ---------------- */
 
 export async function loadAppUsers() {
@@ -34,14 +49,14 @@ export async function createAppUser(email, password, firstName, lastName, nickna
   const { data, error } = await supabase.functions.invoke("admin-create-user", {
     body: { email, password, firstName, lastName, nickname, username, birthDate },
   });
-  if (error) return { error: error.message };
+  if (error) return { error: await extractFunctionError(error) };
   if (data?.error) return { error: data.error };
   return { ok: true };
 }
 
 export async function deleteAppUser(targetUserId, confirmPassword) {
   const { data, error } = await supabase.functions.invoke("admin-delete-user", { body: { targetUserId, confirmPassword } });
-  if (error) return { error: error.message };
+  if (error) return { error: await extractFunctionError(error) };
   if (data?.error) return { error: data.error };
   return { ok: true };
 }
@@ -85,7 +100,7 @@ export async function createCollaborator(email, password, firstName, lastName, b
   const { data, error } = await supabase.functions.invoke("admin-create-collaborator", {
     body: { email, password, firstName, lastName, birthDate, role },
   });
-  if (error) return { error: error.message };
+  if (error) return { error: await extractFunctionError(error) };
   if (data?.error) return { error: data.error };
   return { ok: true };
 }
@@ -104,7 +119,7 @@ export async function updateCollaboratorProfile(userId, { firstName, lastName, b
 
 export async function deleteCollaborator(targetUserId, confirmPassword) {
   const { data, error } = await supabase.functions.invoke("admin-delete-collaborator", { body: { targetUserId, confirmPassword } });
-  if (error) return { error: error.message };
+  if (error) return { error: await extractFunctionError(error) };
   if (data?.error) return { error: data.error };
   return { ok: true };
 }
