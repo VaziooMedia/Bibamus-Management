@@ -327,6 +327,7 @@ export async function updateBusinessAccount(userId, patch) {
       contact_languages: patch.contactLanguages,
       business_label: patch.businessLabel,
       business_status: patch.businessStatus,
+      active: patch.active,
     })
     .eq("id", userId);
   if (error) return { error: error.message };

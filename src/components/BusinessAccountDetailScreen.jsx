@@ -63,6 +63,7 @@ export function BusinessAccountDetailScreen({ accountId, onBack }) {
       lastName: account.last_name || "",
       businessLabel: account.business_label || "",
       businessStatus: account.business_status || "",
+      active: account.active !== false,
       companyName: account.company_name || "",
       vatNumber: account.vat_number || "",
       companyEmail: account.company_email || "",
@@ -273,6 +274,40 @@ export function BusinessAccountDetailScreen({ accountId, onBack }) {
           <input value={form.businessLabel} onChange={(e) => setForm({ ...form, businessLabel: e.target.value })} style={{ ...fieldStyle, marginBottom: "12px" }} />
           <label style={labelStyle}>Statut</label>
           <input value={form.businessStatus} onChange={(e) => setForm({ ...form, businessStatus: e.target.value })} style={{ ...fieldStyle, marginBottom: "12px" }} />
+
+          <label style={labelStyle}>État</label>
+          <div style={{ display: "flex", gap: "8px", marginBottom: "12px" }}>
+            <button
+              onClick={() => setForm({ ...form, active: true })}
+              style={{
+                flex: 1,
+                padding: "9px",
+                borderRadius: "8px",
+                border: `2px solid ${form.active ? "#39FF66" : "#28405C"}`,
+                background: form.active ? "#39FF66" : "none",
+                color: form.active ? "#0D1B2A" : "#F2F2E8",
+                fontWeight: 700,
+                cursor: "pointer",
+              }}
+            >
+              Actif
+            </button>
+            <button
+              onClick={() => setForm({ ...form, active: false })}
+              style={{
+                flex: 1,
+                padding: "9px",
+                borderRadius: "8px",
+                border: `2px solid ${!form.active ? "#FF3B4E" : "#28405C"}`,
+                background: !form.active ? "#FF3B4E" : "none",
+                color: !form.active ? "#0D1B2A" : "#F2F2E8",
+                fontWeight: 700,
+                cursor: "pointer",
+              }}
+            >
+              Non actif
+            </button>
+          </div>
 
           <p style={sectionTitleStyle}>Société</p>
           <label style={labelStyle}>Nom de la société</label>
