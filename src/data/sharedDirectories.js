@@ -28,8 +28,48 @@ const CAPABILITY_MATRIX = {
   moderate_content: ["moderator", "admin", "super_admin"],
 };
 
-export function can(role, capability) {
-  return CAPABILITY_MATRIX[capability]?.includes(role) ?? false;
+/* ---------------- SIGNALEMENTS ---------------- */
+
+const ENTITY_TABLE_BY_TYPE = { venue: "public_venues", drink: "drinks_directory", brand: "brands_directory", producer: "breweries_directory" };
+
+export async function loadReports() {
+  const { data: reports, error } = await supabase.from("entity_reports").select("*").eq("status", "pending").order("created_at", { ascending: false });
+  if (error) {
+    console.error("loadReports:", error);
+    return [];
+  }
+
+  // Récupère le nom de chaque fiche concernée — 4 tables différentes possibles, une requête
+  // groupée par table plutôt qu'une requête par signalement.
+  const idsByTable = {};
+  reports.forEach((r) => {
+    const table = ENTITY_TABLE_BY_TYPE[r.entity_type];
+    if (!table) return;
+    idsByTable[table] = idsByTable[table] || new Set();
+    idsByTable[table].add(r.entity_id);
+  });
+
+  const namesById = {};
+  await Promise.all(
+    Object.entries(idsByTable).map(async ([table, ids]) => {
+      const { data } = await supabase.from(table).select("id, name").in("id", Array.from(ids));
+      (data || []).forEach((row) => (namesById[row.id] = row.name));
+    })
+  );
+
+  return reports.map((r) => ({ ...r, entityName: namesById[r.entity_id] || "(fiche introuvable)" }));
+}
+
+export async function resolveReport(id, resolverId) {
+  const { error } = await supabase.from("entity_reports").update({ status: "resolved", resolved_by: resolverId || null, resolved_at: new Date().toISOString() }).eq("id", id);
+  if (error) return { error: error.message };
+  return { ok: true };
+}
+
+export async function dismissReport(id, resolverId) {
+  const { error } = await supabase.from("entity_reports").update({ status: "dismissed", resolved_by: resolverId || null, resolved_at: new Date().toISOString() }).eq("id", id);
+  if (error) return { error: error.message };
+  return { ok: true };
 }
 
 // supabase-js masque le vrai message renvoyé par une Edge Function derrière un texte

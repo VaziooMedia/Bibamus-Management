@@ -124,6 +124,7 @@ export function Layout({ current, onNavigate, onLogout, children }) {
         )}
 
         <NavButton item={{ key: "users", label: "Utilisateurs" }} current={current} onNavigate={onNavigate} />
+        <NavButton item={{ key: "reports", label: "Signalements" }} current={current} onNavigate={onNavigate} />
 
         {BOTTOM_ITEMS.map((item) => (
           <NavButton key={item.key} item={item} current={current} onNavigate={onNavigate} />
