@@ -245,6 +245,21 @@ export async function getMinimumAge(countryCode) {
   return data.minimum_age;
 }
 
+export async function loadFeatureFlags() {
+  const { data, error } = await supabase.from("feature_flags").select("*").order("flag_key");
+  if (error) {
+    console.error("loadFeatureFlags:", error);
+    return [];
+  }
+  return data;
+}
+
+export async function updateFeatureFlag(flagKey, enabled) {
+  const { error } = await supabase.from("feature_flags").update({ enabled, updated_at: new Date().toISOString() }).eq("flag_key", flagKey);
+  if (error) return { error: error.message };
+  return { ok: true };
+}
+
 export async function loadCountryRules() {
   const { data, error } = await supabase.from("country_rules").select("*").order("country_code");
   if (error) {
