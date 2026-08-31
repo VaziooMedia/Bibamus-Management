@@ -9,6 +9,7 @@ function CountryOverrides({ flagKey }) {
   const [overrides, setOverrides] = useState(null);
   const [addingCountry, setAddingCountry] = useState("");
   const [busy, setBusy] = useState(false);
+  const [error, setError] = useState(null);
 
   const refresh = () => loadFeatureFlagOverrides(flagKey).then(setOverrides);
   useEffect(() => {
@@ -19,23 +20,38 @@ function CountryOverrides({ flagKey }) {
   const handleAdd = async (enabled) => {
     if (!addingCountry) return;
     setBusy(true);
-    await setFeatureFlagOverride(flagKey, addingCountry, enabled);
+    setError(null);
+    const result = await setFeatureFlagOverride(flagKey, addingCountry, enabled);
     setBusy(false);
+    if (result.error) {
+      setError(result.error);
+      return;
+    }
     setAddingCountry("");
     refresh();
   };
 
   const handleToggle = async (o) => {
     setBusy(true);
-    await setFeatureFlagOverride(flagKey, o.country_code, !o.enabled);
+    setError(null);
+    const result = await setFeatureFlagOverride(flagKey, o.country_code, !o.enabled);
     setBusy(false);
+    if (result.error) {
+      setError(result.error);
+      return;
+    }
     refresh();
   };
 
   const handleRemove = async (o) => {
     setBusy(true);
-    await removeFeatureFlagOverride(flagKey, o.country_code);
+    setError(null);
+    const result = await removeFeatureFlagOverride(flagKey, o.country_code);
     setBusy(false);
+    if (result.error) {
+      setError(result.error);
+      return;
+    }
     refresh();
   };
 
@@ -69,6 +85,8 @@ function CountryOverrides({ flagKey }) {
           ))}
         </div>
       )}
+
+      {error && <p style={{ fontSize: "11.5px", color: "#FF3B4E", marginBottom: "8px" }}>{error}</p>}
 
       <div style={{ display: "flex", gap: "6px" }}>
         <select

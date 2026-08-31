@@ -446,7 +446,7 @@ export async function loadFeatureFlagOverrides(flagKey) {
 export async function setFeatureFlagOverride(flagKey, countryCode, enabled) {
   const { error } = await supabase
     .from("feature_flag_overrides")
-    .upsert({ flag_key: flagKey, country_code: countryCode, enabled, updated_at: new Date().toISOString() });
+    .upsert({ flag_key: flagKey, country_code: countryCode, enabled, updated_at: new Date().toISOString() }, { onConflict: "flag_key,country_code" });
   if (error) return { error: error.message };
   return { ok: true };
 }
