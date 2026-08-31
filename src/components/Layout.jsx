@@ -13,7 +13,7 @@ const DATABASE_ITEMS = [
 ];
 
 const BOTTOM_ITEMS = [
-  { key: "stats", label: "Statistiques" },
+  { key: "stats", label: "Analytics" },
   { key: "finances", label: "Finances" },
   { key: "business", label: "Business" },
   { key: "notifications", label: "Notifications" },
