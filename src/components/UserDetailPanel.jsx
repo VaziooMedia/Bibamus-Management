@@ -44,8 +44,9 @@ function SectionHeader({ title, open, onToggle, indicator }) {
       }}
     >
       <div style={{ width: "4px", height: "18px", background: "#39FF66", borderRadius: "2px" }} />
-      <span style={{ color: "#F2F2E8", fontWeight: 800, fontSize: "15px", flex: 1 }}>{title}</span>
+      <span style={{ color: "#F2F2E8", fontWeight: 800, fontSize: "15px" }}>{title}</span>
       {indicator}
+      <div style={{ flex: 1 }} />
       <ChevronIcon open={open} />
     </button>
   );
@@ -453,17 +454,7 @@ export function UserDetailPanel({ user, onClose, onSaved }) {
                     <label style={{ ...labelStyle, color: blockErrors.duration ? "#FF3B4E" : labelStyle.color }}>
                       Durée du blocage {blockErrors.duration && <span style={{ color: "#39FF66" }}>*</span>}
                     </label>
-                    <div
-                      style={{
-                        display: "flex",
-                        gap: "6px",
-                        marginBottom: "8px",
-                        flexWrap: "wrap",
-                        padding: "10px",
-                        borderRadius: "10px",
-                        border: `2px solid ${blockErrors.duration ? "#FF3B4E" : "#39FF66"}`,
-                      }}
-                    >
+                    <div style={{ display: "flex", gap: "6px", marginBottom: "8px", flexWrap: "wrap" }}>
                       {DURATION_OPTIONS.map((d) => {
                         const isSelected = selectedDurationKey === d.key;
                         return (
@@ -478,7 +469,7 @@ export function UserDetailPanel({ user, onClose, onSaved }) {
                             style={{
                               padding: "7px 12px",
                               borderRadius: "8px",
-                              border: `2px solid ${isSelected ? "#39FF66" : "#28405C"}`,
+                              border: `2px solid ${isSelected ? "#39FF66" : blockErrors.duration ? "#FF3B4E" : "#28405C"}`,
                               background: isSelected ? "#39FF66" : "none",
                               color: isSelected ? "#0D1B2A" : "#F2F2E8",
                               fontWeight: 700,
