@@ -22,10 +22,10 @@ export function LoginScreen({ onUnlock }) {
       return;
     }
 
-    const { data: profile, error: profileError } = await supabase.from("profiles").select("role, active, blocked_until").eq("id", data.user.id).single();
+    const { data: profile, error: profileError } = await supabase.from("profiles").select("role, active, blocked_until, can_moderate").eq("id", data.user.id).single();
     setLoading(false);
 
-    if (profileError || !profile || !["moderator", "admin", "super_admin"].includes(profile.role)) {
+    if (profileError || !profile || !["editor", "super_editor", "moderator", "admin", "super_admin"].includes(profile.role)) {
       await supabase.auth.signOut();
       setError("Ce compte n'a pas accès à la plateforme de gestion.");
       return;
@@ -38,7 +38,7 @@ export function LoginScreen({ onUnlock }) {
       return;
     }
 
-    onUnlock(profile.role);
+    onUnlock(profile.role, profile.can_moderate);
   };
 
   return (

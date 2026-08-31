@@ -4,6 +4,8 @@ import { PageTitle } from "./PageTitle.jsx";
 import { AdministratorDetailPanel } from "./AdministratorDetailPanel.jsx";
 
 const ROLES = [
+  { key: "editor", label: "Éditeur" },
+  { key: "super_editor", label: "Super éditeur" },
   { key: "moderator", label: "Modérateur" },
   { key: "admin", label: "Admin" },
   { key: "super_admin", label: "Super admin" },

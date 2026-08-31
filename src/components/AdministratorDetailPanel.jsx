@@ -6,6 +6,8 @@ const labelStyle = { fontSize: "12.5px", color: "#8792A6", marginBottom: "4px", 
 const separatorStyle = { borderBottom: "1px solid #28405C", margin: "20px 0" };
 
 const ROLES = [
+  { key: "editor", label: "Éditeur" },
+  { key: "super_editor", label: "Super éditeur" },
   { key: "moderator", label: "Modérateur" },
   { key: "admin", label: "Admin" },
   { key: "super_admin", label: "Super admin" },
@@ -21,6 +23,7 @@ export function AdministratorDetailPanel({ administrator, onClose, onSaved }) {
   const [lastName, setLastName] = useState(administrator?.last_name || "");
   const [birthDate, setBirthDate] = useState(administrator?.birth_date || "");
   const [role, setRole] = useState(administrator?.role || "admin");
+  const [canModerate, setCanModerate] = useState(administrator?.can_moderate || false);
   const [active, setActive] = useState(administrator?.active !== false);
   const [avatarUrl, setAvatarUrl] = useState(administrator?.avatar_url || null);
   const [uploadingAvatar, setUploadingAvatar] = useState(false);
@@ -46,14 +49,14 @@ export function AdministratorDetailPanel({ administrator, onClose, onSaved }) {
     setError(null);
 
     if (isNew) {
-      const result = await createCollaborator(email, password, firstName, lastName, birthDate, role);
+      const result = await createCollaborator(email, password, firstName, lastName, birthDate, role, canModerate);
       setSaving(false);
       if (result.error) {
         setError(result.error);
         return;
       }
     } else {
-      const result = await updateCollaboratorProfile(administrator.id, { firstName, lastName, birthDate, role, active });
+      const result = await updateCollaboratorProfile(administrator.id, { firstName, lastName, birthDate, role, active, canModerate });
       setSaving(false);
       if (result.error) {
         setError(result.error);
@@ -141,6 +144,13 @@ export function AdministratorDetailPanel({ administrator, onClose, onSaved }) {
             </option>
           ))}
         </select>
+
+        {(role === "editor" || role === "super_editor") && (
+          <label style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "14px", cursor: "pointer" }}>
+            <input type="checkbox" checked={canModerate} onChange={(e) => setCanModerate(e.target.checked)} />
+            <span style={{ fontSize: "13px", color: "#F2F2E8" }}>Peut aussi modérer les signalements</span>
+          </label>
+        )}
 
         <label style={labelStyle}>Statut</label>
         <div style={{ display: "flex", gap: "8px", marginBottom: "20px" }}>

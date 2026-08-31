@@ -20,6 +20,7 @@ export default function App() {
   const [authChecked, setAuthChecked] = useState(false);
   const [unlocked, setUnlocked] = useState(false);
   const [myRole, setMyRole] = useState(null);
+  const [myCanModerate, setMyCanModerate] = useState(false);
   const [screen, setScreen] = useState("dashboard");
 
   // Vérifie une session déjà active (ex. après un rafraîchissement de page) — revérifie le
@@ -31,12 +32,14 @@ export default function App() {
         setAuthChecked(true);
         return;
       }
-      const { data: profile } = await supabase.from("profiles").select("role, active, blocked_until").eq("id", data.session.user.id).single();
+      const { data: profile } = await supabase.from("profiles").select("role, active, blocked_until, can_moderate").eq("id", data.session.user.id).single();
       const stillBlocked = profile && profile.active === false && (!profile.blocked_until || new Date(profile.blocked_until) > new Date());
-      if (profile && ["moderator", "admin", "super_admin"].includes(profile.role) && !stillBlocked) {
+      if (profile && ["editor", "super_editor", "moderator", "admin", "super_admin"].includes(profile.role) && !stillBlocked) {
         setUnlocked(true);
         setMyRole(profile.role);
+        setMyCanModerate(!!profile.can_moderate);
         if (profile.role === "moderator") setScreen("reports");
+        else if (["editor", "super_editor"].includes(profile.role)) setScreen("database");
       } else {
         await supabase.auth.signOut();
       }
@@ -48,12 +51,15 @@ export default function App() {
     await supabase.auth.signOut();
     setUnlocked(false);
     setMyRole(null);
+    setMyCanModerate(false);
   };
 
-  const handleUnlock = (role) => {
+  const handleUnlock = (role, canModerate) => {
     setUnlocked(true);
     setMyRole(role);
+    setMyCanModerate(!!canModerate);
     if (role === "moderator") setScreen("reports");
+    else if (["editor", "super_editor"].includes(role)) setScreen("database");
   };
 
   if (!authChecked) {
@@ -65,7 +71,7 @@ export default function App() {
   }
 
   return (
-    <Layout current={screen} onNavigate={setScreen} onLogout={handleLogout} myRole={myRole}>
+    <Layout current={screen} onNavigate={setScreen} onLogout={handleLogout} myRole={myRole} myCanModerate={myCanModerate}>
       {screen === "dashboard" && <Dashboard />}
       {screen === "database" && <DataBaseOverviewScreen onNavigate={setScreen} supabaseUrl={SUPABASE_PROJECT_URL} />}
       {screen === "venues" && <VenuesScreen />}

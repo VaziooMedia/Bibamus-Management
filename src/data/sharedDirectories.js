@@ -217,7 +217,7 @@ export async function updateAppUserProfile(userId, patch) {
 }
 
 export async function loadCollaborators() {
-  const { data, error } = await supabase.from("profiles").select("id, email, name, last_name, birth_date, avatar_url, role, active").order("name");
+  const { data, error } = await supabase.from("profiles").select("id, email, name, last_name, birth_date, avatar_url, role, active, can_moderate").order("name");
   if (error) {
     console.error("loadCollaborators:", error);
     return [];
@@ -227,22 +227,22 @@ export async function loadCollaborators() {
 
 // Passe par la fonction serveur dédiée — un compte ne peut jamais être créé directement
 // depuis le navigateur, quel que soit le rôle de la personne connectée.
-export async function createCollaborator(email, password, firstName, lastName, birthDate, role) {
+export async function createCollaborator(email, password, firstName, lastName, birthDate, role, canModerate) {
   const { data, error } = await supabase.functions.invoke("admin-create-collaborator", {
-    body: { email, password, firstName, lastName, birthDate, role },
+    body: { email, password, firstName, lastName, birthDate, role, canModerate },
   });
   if (error) return { error: await extractFunctionError(error) };
   if (data?.error) return { error: data.error };
   return { ok: true };
 }
 
-// Modification de la fiche (nom/prénom/date de naissance/rôle/statut actif) — le rôle et le
-// statut actif restent malgré tout protégés côté base de données (réservés aux super_admin),
-// peu importe qui appelle cette fonction.
-export async function updateCollaboratorProfile(userId, { firstName, lastName, birthDate, role, active }) {
+// Modification de la fiche (nom/prénom/date de naissance/rôle/statut actif/modération) — le
+// rôle, le statut actif, et le droit de modération restent malgré tout protégés côté base de
+// données (réservés au super_admin), peu importe qui appelle cette fonction.
+export async function updateCollaboratorProfile(userId, { firstName, lastName, birthDate, role, active, canModerate }) {
   const { error } = await supabase
     .from("profiles")
-    .update({ name: firstName, last_name: lastName, birth_date: birthDate || null, role, active })
+    .update({ name: firstName, last_name: lastName, birth_date: birthDate || null, role, active, can_moderate: canModerate })
     .eq("id", userId);
   if (error) return { error: error.message };
   return { ok: true };
