@@ -18,7 +18,6 @@ const BOTTOM_ITEMS = [
   { key: "business", label: "Business" },
   { key: "notifications", label: "Notifications" },
   { key: "audit", label: "Audit" },
-  { key: "claims", label: "Revendications" },
   { key: "countryRules", label: "Configuration pays" },
   { key: "featureFlags", label: "Feature flags" },
   { key: "crashReports", label: "Crash reports" },

@@ -22,6 +22,8 @@ function NewBusinessForm({ claim, onCreated }) {
   const [lastName, setLastName] = useState("");
   const [companyName, setCompanyName] = useState(claim.company_name || "");
   const [vatNumber, setVatNumber] = useState(claim.vat_number || "");
+  const [phone, setPhone] = useState("");
+  const [companyAddress, setCompanyAddress] = useState("");
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState(null);
 
@@ -30,7 +32,19 @@ function NewBusinessForm({ claim, onCreated }) {
   const handleCreate = async () => {
     setSaving(true);
     setError(null);
-    const result = await createCollaborator(email.trim(), password, firstName.trim(), lastName.trim(), null, "business", false, companyName.trim(), vatNumber.trim());
+    const result = await createCollaborator(
+      email.trim(),
+      password,
+      firstName.trim(),
+      lastName.trim(),
+      null,
+      "business",
+      false,
+      companyName.trim(),
+      vatNumber.trim(),
+      phone.trim(),
+      companyAddress.trim()
+    );
     if (result.error) {
       setSaving(false);
       setError(result.error);
@@ -47,20 +61,27 @@ function NewBusinessForm({ claim, onCreated }) {
 
   return (
     <div style={{ marginTop: "10px", padding: "12px", background: "#0D1B2A", borderRadius: "8px", display: "flex", flexDirection: "column", gap: "8px" }}>
+      <p style={{ fontSize: "11px", color: "#39FF66", fontWeight: 700, textTransform: "uppercase", margin: "0 0 2px" }}>Société</p>
+      <label style={labelStyle}>Nom de la société</label>
+      <input value={companyName} onChange={(e) => setCompanyName(e.target.value)} style={fieldStyle} />
+      <label style={labelStyle}>Numéro d'entreprise</label>
+      <input value={vatNumber} onChange={(e) => setVatNumber(e.target.value)} style={fieldStyle} />
+      <label style={labelStyle}>Siège social</label>
+      <input value={companyAddress} onChange={(e) => setCompanyAddress(e.target.value)} style={fieldStyle} />
+      <label style={labelStyle}>Téléphone</label>
+      <input value={phone} onChange={(e) => setPhone(e.target.value)} style={fieldStyle} />
+
+      <p style={{ fontSize: "11px", color: "#39FF66", fontWeight: 700, textTransform: "uppercase", margin: "10px 0 2px" }}>Personne de contact</p>
       <div style={{ display: "flex", gap: "8px" }}>
         <div style={{ flex: 1 }}>
-          <label style={labelStyle}>Prénom (contact)</label>
+          <label style={labelStyle}>Prénom</label>
           <input value={firstName} onChange={(e) => setFirstName(e.target.value)} style={fieldStyle} />
         </div>
         <div style={{ flex: 1 }}>
-          <label style={labelStyle}>Nom (contact)</label>
+          <label style={labelStyle}>Nom</label>
           <input value={lastName} onChange={(e) => setLastName(e.target.value)} style={fieldStyle} />
         </div>
       </div>
-      <label style={labelStyle}>Nom de la société</label>
-      <input value={companyName} onChange={(e) => setCompanyName(e.target.value)} style={fieldStyle} />
-      <label style={labelStyle}>Numéro d'entreprise / TVA</label>
-      <input value={vatNumber} onChange={(e) => setVatNumber(e.target.value)} style={fieldStyle} />
       <label style={labelStyle}>Email professionnel (différent du compte personnel)</label>
       <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} style={fieldStyle} />
       <label style={labelStyle}>Mot de passe provisoire</label>
@@ -165,7 +186,10 @@ export function ClaimsScreen() {
                 </p>
                 {c.officers && <p style={{ fontSize: "12.5px", color: "#8792A6", margin: "0 0 8px" }}>Administrateurs déclarés : {c.officers}</p>}
                 <p style={{ fontSize: "13px", color: "#F2F2E8", fontStyle: "italic", margin: "0 0 8px" }}>"{c.justification}"</p>
-                <p style={{ fontSize: "11px", color: "#8792A6", marginBottom: "12px" }}>Demandé par le compte : {c.claimant_bibro_code || "(inconnu)"}</p>
+                <p style={{ fontSize: "11px", color: "#8792A6", marginBottom: "12px" }}>
+                  Demandé par : {c.claimant ? `${c.claimant.name || ""} ${c.claimant.last_name || ""}`.trim() : "(compte inconnu)"}
+                  {c.claimant?.email ? ` — ${c.claimant.email}` : ""}
+                </p>
 
                 {c.status === "rejected" && c.rejection_reason && <p style={{ fontSize: "12.5px", color: "#FF3B4E", marginBottom: "10px" }}>Refusée : {c.rejection_reason}</p>}
 

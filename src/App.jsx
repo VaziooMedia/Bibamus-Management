@@ -95,13 +95,12 @@ export default function App() {
       {screen === "chat" && <ComingSoon title="Chat" />}
       {screen === "stats" && <AnalyticsScreen />}
       {screen === "finances" && <ComingSoon title="Finances" />}
-      {screen === "business" && <ComingSoon title="Business" />}
+      {screen === "business" && <ClaimsScreen />}
       {screen === "notifications" && <ComingSoon title="Notifications" />}
       {screen === "admins" && <CollaboratorsScreen />}
       {screen === "users" && <UsersScreen />}
       {screen === "reports" && <ReportsScreen />}
       {screen === "audit" && <AuditLogScreen />}
-      {screen === "claims" && <ClaimsScreen />}
       {screen === "myEntities" && <MyBusinessEntitiesScreen myUserId={myUserId} />}
       {screen === "countryRules" && <CountryRulesScreen />}
       {screen === "featureFlags" && <FeatureFlagsScreen />}

@@ -241,7 +241,14 @@ export async function loadClaims(status = "pending") {
     console.error("loadClaims:", error);
     return [];
   }
-  return data;
+
+  const claimantIds = [...new Set(data.map((c) => c.claimant_id).filter(Boolean))];
+  if (claimantIds.length === 0) return data;
+
+  const { data: claimants } = await supabase.from("profiles").select("id, name, last_name, email").in("id", claimantIds);
+  const byId = Object.fromEntries((claimants || []).map((p) => [p.id, p]));
+
+  return data.map((c) => ({ ...c, claimant: byId[c.claimant_id] || null }));
 }
 
 export async function loadBusinessAccounts() {
@@ -362,9 +369,9 @@ export async function loadCollaborators() {
 
 // Passe par la fonction serveur dédiée — un compte ne peut jamais être créé directement
 // depuis le navigateur, quel que soit le rôle de la personne connectée.
-export async function createCollaborator(email, password, firstName, lastName, birthDate, role, canModerate, companyName, vatNumber) {
+export async function createCollaborator(email, password, firstName, lastName, birthDate, role, canModerate, companyName, vatNumber, phone, companyAddress) {
   const { data, error } = await supabase.functions.invoke("admin-create-collaborator", {
-    body: { email, password, firstName, lastName, birthDate, role, canModerate, companyName, vatNumber },
+    body: { email, password, firstName, lastName, birthDate, role, canModerate, companyName, vatNumber, phone, companyAddress },
   });
   if (error) return { error: await extractFunctionError(error) };
   if (data?.error) return { error: data.error };
