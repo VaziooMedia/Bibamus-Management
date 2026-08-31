@@ -18,6 +18,7 @@ const BOTTOM_ITEMS = [
   { key: "business", label: "Business" },
   { key: "notifications", label: "Notifications" },
   { key: "audit", label: "Audit" },
+  { key: "claims", label: "Revendications" },
   { key: "countryRules", label: "Configuration pays" },
   { key: "featureFlags", label: "Feature flags" },
   { key: "crashReports", label: "Crash reports" },
@@ -66,12 +67,13 @@ export function Layout({ current, onNavigate, onLogout, myRole, myCanModerate, c
   const [databaseOpen, setDatabaseOpen] = useState(isDatabaseScreen);
   const isModerator = myRole === "moderator";
   const isEditorTier = myRole === "editor" || myRole === "super_editor";
+  const isBusiness = myRole === "business";
 
   return (
     <div style={{ display: "flex", minHeight: "100vh" }}>
       <div style={{ width: "220px", flexShrink: 0, background: "#16273D", padding: "24px 0", display: "flex", flexDirection: "column" }}>
         <button
-          onClick={() => onNavigate(isModerator ? "reports" : isEditorTier ? "database" : "dashboard")}
+          onClick={() => onNavigate(isModerator ? "reports" : isBusiness ? "myEntities" : isEditorTier ? "database" : "dashboard")}
           style={{ background: "none", border: "none", cursor: "pointer", padding: "0 20px 28px 20px", textAlign: "left" }}
         >
           <img src="/bibamus-logo.svg" alt="Bibamus" style={{ height: "26px", display: "block" }} />
@@ -84,6 +86,9 @@ export function Layout({ current, onNavigate, onLogout, myRole, myCanModerate, c
           // Accès volontairement restreint — un modérateur ne voit que les signalements, pas
           // la Database ni les autres utilisateurs.
           <NavButton item={{ key: "reports", label: "Signalements" }} current={current} onNavigate={onNavigate} />
+        ) : isBusiness ? (
+          // Un compte Business ne voit que ses propres fiches liées, rien d'autre.
+          <NavButton item={{ key: "myEntities", label: "Mes fiches" }} current={current} onNavigate={onNavigate} />
         ) : isEditorTier ? (
           // Un éditeur/super éditeur voit la Database (création/modification de fiches), et
           // aussi les Signalements si la case "peut modérer" est cochée sur son compte.

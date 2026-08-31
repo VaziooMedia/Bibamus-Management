@@ -216,6 +216,64 @@ export async function updateAppUserProfile(userId, patch) {
   return { ok: true };
 }
 
+const CLAIM_ENTITY_TABLE = { venue: "public_venues", drink: "drinks_directory", brand: "brands_directory", producer: "breweries_directory" };
+
+// Toutes les fiches liées au compte Business actuellement connecté, tous types confondus.
+export async function loadMyBusinessEntities(userId) {
+  const tables = [
+    { table: "public_venues", type: "venue", label: "Établissement" },
+    { table: "drinks_directory", type: "drink", label: "Produit" },
+    { table: "brands_directory", type: "brand", label: "Marque" },
+    { table: "breweries_directory", type: "producer", label: "Producteur" },
+  ];
+  const results = await Promise.all(
+    tables.map(async ({ table, type, label }) => {
+      const { data } = await supabase.from(table).select("id, name, status").eq("business_owner_id", userId);
+      return (data || []).map((row) => ({ ...row, entityType: type, entityTypeLabel: label }));
+    })
+  );
+  return results.flat();
+}
+
+export async function loadClaims(status = "pending") {
+  const { data, error } = await supabase.from("entity_claims").select("*").eq("status", status).order("created_at", { ascending: false });
+  if (error) {
+    console.error("loadClaims:", error);
+    return [];
+  }
+  return data;
+}
+
+export async function loadBusinessAccounts() {
+  const { data, error } = await supabase.from("profiles").select("id, name, last_name, email, company_name").eq("role", "business").order("company_name");
+  if (error) {
+    console.error("loadBusinessAccounts:", error);
+    return [];
+  }
+  return data;
+}
+
+// Lie une fiche à un compte Business (existant ou nouvellement créé) et marque la
+// revendication comme approuvée.
+export async function approveClaim(claimId, entityType, entityId, businessId) {
+  const table = CLAIM_ENTITY_TABLE[entityType];
+  if (!table) return { error: "Type de fiche inconnu." };
+
+  const { error: linkError } = await supabase.from(table).update({ business_owner_id: businessId }).eq("id", entityId);
+  if (linkError) return { error: linkError.message };
+
+  const { error: claimError } = await supabase.from("entity_claims").update({ status: "approved", reviewed_at: new Date().toISOString() }).eq("id", claimId);
+  if (claimError) return { error: claimError.message };
+
+  return { ok: true };
+}
+
+export async function rejectClaim(claimId, reason) {
+  const { error } = await supabase.from("entity_claims").update({ status: "rejected", rejection_reason: reason || null, reviewed_at: new Date().toISOString() }).eq("id", claimId);
+  if (error) return { error: error.message };
+  return { ok: true };
+}
+
 export async function loadAuditLog(filters = {}) {
   let query = supabase.from("audit_log").select("*").order("created_at", { ascending: false }).limit(200);
   if (filters.action) query = query.eq("action", filters.action);
@@ -304,13 +362,13 @@ export async function loadCollaborators() {
 
 // Passe par la fonction serveur dédiée — un compte ne peut jamais être créé directement
 // depuis le navigateur, quel que soit le rôle de la personne connectée.
-export async function createCollaborator(email, password, firstName, lastName, birthDate, role, canModerate) {
+export async function createCollaborator(email, password, firstName, lastName, birthDate, role, canModerate, companyName, vatNumber) {
   const { data, error } = await supabase.functions.invoke("admin-create-collaborator", {
-    body: { email, password, firstName, lastName, birthDate, role, canModerate },
+    body: { email, password, firstName, lastName, birthDate, role, canModerate, companyName, vatNumber },
   });
   if (error) return { error: await extractFunctionError(error) };
   if (data?.error) return { error: data.error };
-  return { ok: true };
+  return { ok: true, userId: data.userId };
 }
 
 // Modification de la fiche (nom/prénom/date de naissance/rôle/statut actif/modération) — le

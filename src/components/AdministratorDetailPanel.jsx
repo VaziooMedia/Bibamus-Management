@@ -9,6 +9,7 @@ const ROLES = [
   { key: "editor", label: "Éditeur" },
   { key: "super_editor", label: "Super éditeur" },
   { key: "moderator", label: "Modérateur" },
+  { key: "business", label: "Business" },
   { key: "admin", label: "Admin" },
   { key: "super_admin", label: "Super admin" },
 ];

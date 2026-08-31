@@ -12,6 +12,8 @@ import { CollaboratorsScreen } from "./components/CollaboratorsScreen.jsx";
 import { UsersScreen } from "./components/UsersScreen.jsx";
 import { ReportsScreen } from "./components/ReportsScreen.jsx";
 import { AuditLogScreen } from "./components/AuditLogScreen.jsx";
+import { ClaimsScreen } from "./components/ClaimsScreen.jsx";
+import { MyBusinessEntitiesScreen } from "./components/MyBusinessEntitiesScreen.jsx";
 import { CountryRulesScreen } from "./components/CountryRulesScreen.jsx";
 import { FeatureFlagsScreen } from "./components/FeatureFlagsScreen.jsx";
 import { CrashReportsScreen } from "./components/CrashReportsScreen.jsx";
@@ -27,6 +29,7 @@ export default function App() {
   const [unlocked, setUnlocked] = useState(false);
   const [myRole, setMyRole] = useState(null);
   const [myCanModerate, setMyCanModerate] = useState(false);
+  const [myUserId, setMyUserId] = useState(null);
   const [screen, setScreen] = useState("dashboard");
 
   // Vérifie une session déjà active (ex. après un rafraîchissement de page) — revérifie le
@@ -40,11 +43,13 @@ export default function App() {
       }
       const { data: profile } = await supabase.from("profiles").select("role, active, blocked_until, can_moderate").eq("id", data.session.user.id).single();
       const stillBlocked = profile && profile.active === false && (!profile.blocked_until || new Date(profile.blocked_until) > new Date());
-      if (profile && ["editor", "super_editor", "moderator", "admin", "super_admin"].includes(profile.role) && !stillBlocked) {
+      if (profile && ["editor", "super_editor", "moderator", "business", "admin", "super_admin"].includes(profile.role) && !stillBlocked) {
         setUnlocked(true);
         setMyRole(profile.role);
         setMyCanModerate(!!profile.can_moderate);
+        setMyUserId(data.session.user.id);
         if (profile.role === "moderator") setScreen("reports");
+        else if (profile.role === "business") setScreen("myEntities");
         else if (["editor", "super_editor"].includes(profile.role)) setScreen("database");
       } else {
         await supabase.auth.signOut();
@@ -58,13 +63,16 @@ export default function App() {
     setUnlocked(false);
     setMyRole(null);
     setMyCanModerate(false);
+    setMyUserId(null);
   };
 
-  const handleUnlock = (role, canModerate) => {
+  const handleUnlock = (role, canModerate, userId) => {
     setUnlocked(true);
     setMyRole(role);
     setMyCanModerate(!!canModerate);
+    setMyUserId(userId);
     if (role === "moderator") setScreen("reports");
+    else if (role === "business") setScreen("myEntities");
     else if (["editor", "super_editor"].includes(role)) setScreen("database");
   };
 
@@ -93,6 +101,8 @@ export default function App() {
       {screen === "users" && <UsersScreen />}
       {screen === "reports" && <ReportsScreen />}
       {screen === "audit" && <AuditLogScreen />}
+      {screen === "claims" && <ClaimsScreen />}
+      {screen === "myEntities" && <MyBusinessEntitiesScreen myUserId={myUserId} />}
       {screen === "countryRules" && <CountryRulesScreen />}
       {screen === "featureFlags" && <FeatureFlagsScreen />}
       {screen === "crashReports" && <CrashReportsScreen />}
