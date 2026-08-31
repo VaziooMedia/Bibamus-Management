@@ -245,6 +245,15 @@ export async function getMinimumAge(countryCode) {
   return data.minimum_age;
 }
 
+export async function loadAnalyticsEvents() {
+  const { data, error } = await supabase.from("analytics_events").select("*").order("created_at", { ascending: false }).limit(5000);
+  if (error) {
+    console.error("loadAnalyticsEvents:", error);
+    return [];
+  }
+  return data;
+}
+
 export async function loadCrashReports() {
   const { data, error } = await supabase.from("crash_reports").select("*").order("created_at", { ascending: false }).limit(200);
   if (error) {

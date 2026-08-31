@@ -15,6 +15,7 @@ import { AuditLogScreen } from "./components/AuditLogScreen.jsx";
 import { CountryRulesScreen } from "./components/CountryRulesScreen.jsx";
 import { FeatureFlagsScreen } from "./components/FeatureFlagsScreen.jsx";
 import { CrashReportsScreen } from "./components/CrashReportsScreen.jsx";
+import { AnalyticsScreen } from "./components/AnalyticsScreen.jsx";
 import { MyActivityScreen } from "./components/MyActivityScreen.jsx";
 
 const SUPABASE_PROJECT_URL = "https://supabase.com/dashboard/project/rkmmrzkqzqpntgiguajz";
@@ -84,7 +85,7 @@ export default function App() {
       {screen === "breweries" && <BreweriesScreen />}
       {screen === "brands" && <BrandsScreen />}
       {screen === "chat" && <ComingSoon title="Chat" />}
-      {screen === "stats" && <ComingSoon title="Statistiques" />}
+      {screen === "stats" && <AnalyticsScreen />}
       {screen === "finances" && <ComingSoon title="Finances" />}
       {screen === "business" && <ComingSoon title="Business" />}
       {screen === "notifications" && <ComingSoon title="Notifications" />}
