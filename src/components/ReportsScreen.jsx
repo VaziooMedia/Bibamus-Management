@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { loadReports, resolveReport, dismissReport } from "../data/sharedDirectories.js";
+import { loadReports, resolveReport, dismissReport, archiveReportedEntity } from "../data/sharedDirectories.js";
 import { PageTitle } from "./PageTitle.jsx";
 
 const REASON_LABELS = {
@@ -35,6 +35,17 @@ export function ReportsScreen() {
     refresh();
   };
 
+  const handleArchive = async (report) => {
+    setBusyId(report.id);
+    const result = await archiveReportedEntity(report.id, report.entity_type, report.entity_id);
+    setBusyId(null);
+    if (result.error) {
+      alert("Erreur : " + result.error);
+      return;
+    }
+    refresh();
+  };
+
   return (
     <div>
       <PageTitle>Signalements</PageTitle>
@@ -61,6 +72,13 @@ export function ReportsScreen() {
               <p style={{ fontSize: "11px", color: "#8792A6", marginBottom: "12px" }}>Signalé par : {r.reported_by || "(anonymisé)"}</p>
 
               <div style={{ display: "flex", gap: "8px" }}>
+                <button
+                  onClick={() => handleArchive(r)}
+                  disabled={busyId === r.id}
+                  style={{ flex: 1, background: "#FF3B4E", border: "none", borderRadius: "8px", padding: "9px", fontWeight: 700, color: "#fff", cursor: "pointer", opacity: busyId === r.id ? 0.6 : 1, fontSize: "12.5px" }}
+                >
+                  Archiver la fiche
+                </button>
                 <button
                   onClick={() => handleResolve(r.id)}
                   disabled={busyId === r.id}

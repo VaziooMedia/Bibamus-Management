@@ -60,6 +60,19 @@ export async function loadReports() {
   return reports.map((r) => ({ ...r, entityName: namesById[r.entity_id] || "(fiche introuvable)" }));
 }
 
+export async function archiveReportedEntity(reportId, entityType, entityId) {
+  const table = ENTITY_TABLE_BY_TYPE[entityType];
+  if (!table) return { error: "Type de fiche inconnu." };
+
+  const { error: archiveError } = await supabase.from(table).update({ status: "archived" }).eq("id", entityId);
+  if (archiveError) return { error: archiveError.message };
+
+  const { error: resolveError } = await supabase.from("entity_reports").update({ status: "resolved", resolved_at: new Date().toISOString() }).eq("id", reportId);
+  if (resolveError) return { error: resolveError.message };
+
+  return { ok: true };
+}
+
 export async function resolveReport(id, resolverId) {
   const { error } = await supabase.from("entity_reports").update({ status: "resolved", resolved_by: resolverId || null, resolved_at: new Date().toISOString() }).eq("id", id);
   if (error) return { error: error.message };

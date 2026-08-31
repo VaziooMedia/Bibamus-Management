@@ -19,6 +19,7 @@ export default function App() {
   // flash de l'écran de connexion pendant la vérification initiale de session.
   const [authChecked, setAuthChecked] = useState(false);
   const [unlocked, setUnlocked] = useState(false);
+  const [myRole, setMyRole] = useState(null);
   const [screen, setScreen] = useState("dashboard");
 
   // Vérifie une session déjà active (ex. après un rafraîchissement de page) — revérifie le
@@ -32,8 +33,10 @@ export default function App() {
       }
       const { data: profile } = await supabase.from("profiles").select("role, active, blocked_until").eq("id", data.session.user.id).single();
       const stillBlocked = profile && profile.active === false && (!profile.blocked_until || new Date(profile.blocked_until) > new Date());
-      if (profile && ["admin", "super_admin"].includes(profile.role) && !stillBlocked) {
+      if (profile && ["moderator", "admin", "super_admin"].includes(profile.role) && !stillBlocked) {
         setUnlocked(true);
+        setMyRole(profile.role);
+        if (profile.role === "moderator") setScreen("reports");
       } else {
         await supabase.auth.signOut();
       }
@@ -44,6 +47,13 @@ export default function App() {
   const handleLogout = async () => {
     await supabase.auth.signOut();
     setUnlocked(false);
+    setMyRole(null);
+  };
+
+  const handleUnlock = (role) => {
+    setUnlocked(true);
+    setMyRole(role);
+    if (role === "moderator") setScreen("reports");
   };
 
   if (!authChecked) {
@@ -51,11 +61,11 @@ export default function App() {
   }
 
   if (!unlocked) {
-    return <LoginScreen onUnlock={() => setUnlocked(true)} />;
+    return <LoginScreen onUnlock={handleUnlock} />;
   }
 
   return (
-    <Layout current={screen} onNavigate={setScreen} onLogout={handleLogout}>
+    <Layout current={screen} onNavigate={setScreen} onLogout={handleLogout} myRole={myRole}>
       {screen === "dashboard" && <Dashboard />}
       {screen === "database" && <DataBaseOverviewScreen onNavigate={setScreen} supabaseUrl={SUPABASE_PROJECT_URL} />}
       {screen === "venues" && <VenuesScreen />}

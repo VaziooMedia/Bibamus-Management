@@ -57,15 +57,16 @@ function NavButton({ item, current, onNavigate, indent }) {
   );
 }
 
-export function Layout({ current, onNavigate, onLogout, children }) {
+export function Layout({ current, onNavigate, onLogout, myRole, children }) {
   const isDatabaseScreen = DATABASE_ITEMS.some((i) => i.key === current) || current === "database";
   const [databaseOpen, setDatabaseOpen] = useState(isDatabaseScreen);
+  const isModerator = myRole === "moderator";
 
   return (
     <div style={{ display: "flex", minHeight: "100vh" }}>
       <div style={{ width: "220px", flexShrink: 0, background: "#16273D", padding: "24px 0", display: "flex", flexDirection: "column" }}>
         <button
-          onClick={() => onNavigate("dashboard")}
+          onClick={() => onNavigate(isModerator ? "reports" : "dashboard")}
           style={{ background: "none", border: "none", cursor: "pointer", padding: "0 20px 28px 20px", textAlign: "left" }}
         >
           <img src="/bibamus-logo.svg" alt="Bibamus" style={{ height: "26px", display: "block" }} />
@@ -74,61 +75,69 @@ export function Layout({ current, onNavigate, onLogout, children }) {
           </div>
         </button>
 
-        <NavButton item={{ key: "dashboard", label: "Tableau de bord" }} current={current} onNavigate={onNavigate} />
-        {TOP_ITEMS.map((item) => (
-          <NavButton key={item.key} item={item} current={current} onNavigate={onNavigate} />
-        ))}
-
-        <button
-          onClick={() => {
-            onNavigate("database");
-            setDatabaseOpen(true);
-          }}
-          style={{
-            textAlign: "left",
-            background: isDatabaseScreen ? "#28405C" : "none",
-            border: "none",
-            borderLeft: isDatabaseScreen ? "3px solid #39FF66" : "3px solid transparent",
-            padding: "12px 20px",
-            fontSize: "14px",
-            fontWeight: isDatabaseScreen ? 700 : 500,
-            color: isDatabaseScreen ? "#39FF66" : "#F2F2E8",
-            cursor: "pointer",
-            width: "100%",
-            display: "flex",
-            justifyContent: "space-between",
-            alignItems: "center",
-            gap: "10px",
-          }}
-        >
-          <span style={{ display: "flex", alignItems: "center", gap: "10px" }}>
-            <span style={{ width: "4px", height: "16px", background: "#39FF66", borderRadius: "2px", display: "inline-block", flexShrink: 0 }} />
-            DataBase
-          </span>
-          <span
-            onClick={(e) => {
-              e.stopPropagation();
-              setDatabaseOpen((o) => !o);
-            }}
-            style={{ fontSize: "11px", color: "#39FF66", padding: "4px", display: "inline-block" }}
-          >
-            {databaseOpen ? "▼" : "▶"}
-          </span>
-        </button>
-        {databaseOpen && (
-          <div style={{ paddingLeft: "14px" }}>
-            {DATABASE_ITEMS.map((item) => (
-              <NavButton key={item.key} item={item} current={current} onNavigate={onNavigate} indent />
+        {isModerator ? (
+          // Accès volontairement restreint — un modérateur ne voit que les signalements, pas
+          // la Database ni les autres utilisateurs.
+          <NavButton item={{ key: "reports", label: "Signalements" }} current={current} onNavigate={onNavigate} />
+        ) : (
+          <>
+            <NavButton item={{ key: "dashboard", label: "Tableau de bord" }} current={current} onNavigate={onNavigate} />
+            {TOP_ITEMS.map((item) => (
+              <NavButton key={item.key} item={item} current={current} onNavigate={onNavigate} />
             ))}
-          </div>
+
+            <button
+              onClick={() => {
+                onNavigate("database");
+                setDatabaseOpen(true);
+              }}
+              style={{
+                textAlign: "left",
+                background: isDatabaseScreen ? "#28405C" : "none",
+                border: "none",
+                borderLeft: isDatabaseScreen ? "3px solid #39FF66" : "3px solid transparent",
+                padding: "12px 20px",
+                fontSize: "14px",
+                fontWeight: isDatabaseScreen ? 700 : 500,
+                color: isDatabaseScreen ? "#39FF66" : "#F2F2E8",
+                cursor: "pointer",
+                width: "100%",
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "center",
+                gap: "10px",
+              }}
+            >
+              <span style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+                <span style={{ width: "4px", height: "16px", background: "#39FF66", borderRadius: "2px", display: "inline-block", flexShrink: 0 }} />
+                DataBase
+              </span>
+              <span
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setDatabaseOpen((o) => !o);
+                }}
+                style={{ fontSize: "11px", color: "#39FF66", padding: "4px", display: "inline-block" }}
+              >
+                {databaseOpen ? "▼" : "▶"}
+              </span>
+            </button>
+            {databaseOpen && (
+              <div style={{ paddingLeft: "14px" }}>
+                {DATABASE_ITEMS.map((item) => (
+                  <NavButton key={item.key} item={item} current={current} onNavigate={onNavigate} indent />
+                ))}
+              </div>
+            )}
+
+            <NavButton item={{ key: "users", label: "Utilisateurs" }} current={current} onNavigate={onNavigate} />
+            <NavButton item={{ key: "reports", label: "Signalements" }} current={current} onNavigate={onNavigate} />
+
+            {BOTTOM_ITEMS.map((item) => (
+              <NavButton key={item.key} item={item} current={current} onNavigate={onNavigate} />
+            ))}
+          </>
         )}
-
-        <NavButton item={{ key: "users", label: "Utilisateurs" }} current={current} onNavigate={onNavigate} />
-        <NavButton item={{ key: "reports", label: "Signalements" }} current={current} onNavigate={onNavigate} />
-
-        {BOTTOM_ITEMS.map((item) => (
-          <NavButton key={item.key} item={item} current={current} onNavigate={onNavigate} />
-        ))}
 
         <div style={{ flex: 1 }} />
         <button
