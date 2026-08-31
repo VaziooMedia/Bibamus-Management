@@ -55,17 +55,27 @@ function EntityPreview({ entityType, details, onOpen }) {
   );
 }
 
+const TABS = [
+  { key: "pending", label: "À traiter" },
+  { key: "archived", label: "Archivés" },
+  { key: "resolved", label: "Traités" },
+  { key: "dismissed", label: "Ignorés" },
+];
+
 export function ReportsScreen() {
+  const [tab, setTab] = useState("pending");
   const [reports, setReports] = useState(null);
   const [busyId, setBusyId] = useState(null);
   const [expandedId, setExpandedId] = useState(null);
   // Fiche complète actuellement ouverte en édition — { entityType, data } ou null.
   const [openEntity, setOpenEntity] = useState(null);
 
-  const refresh = () => loadReports().then(setReports);
+  const refresh = () => loadReports(tab).then(setReports);
   useEffect(() => {
+    setReports(null);
     refresh();
-  }, []);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [tab]);
 
   const handleResolve = async (id) => {
     setBusyId(id);
@@ -120,12 +130,32 @@ export function ReportsScreen() {
   return (
     <div>
       <PageTitle>Signalements</PageTitle>
-      <p style={{ fontSize: "12.5px", color: "#8792A6", marginBottom: "20px" }}>Signalements en attente de traitement, envoyés par les utilisateurs de l'app.</p>
+
+      <div style={{ display: "flex", gap: "8px", marginBottom: "20px" }}>
+        {TABS.map((t) => (
+          <button
+            key={t.key}
+            onClick={() => setTab(t.key)}
+            style={{
+              padding: "8px 16px",
+              borderRadius: "8px",
+              border: `2px solid ${tab === t.key ? "#39FF66" : "#28405C"}`,
+              background: tab === t.key ? "#39FF66" : "none",
+              color: tab === t.key ? "#0D1B2A" : "#F2F2E8",
+              fontWeight: 700,
+              fontSize: "13px",
+              cursor: "pointer",
+            }}
+          >
+            {t.label}
+          </button>
+        ))}
+      </div>
 
       {!reports ? (
         <p style={{ color: "#8792A6" }}>Chargement...</p>
       ) : reports.length === 0 ? (
-        <p style={{ color: "#8792A6", fontSize: "13px" }}>Aucun signalement en attente.</p>
+        <p style={{ color: "#8792A6", fontSize: "13px" }}>Aucun signalement dans cette catégorie.</p>
       ) : (
         <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
           {reports.map((r) => {
@@ -163,38 +193,42 @@ export function ReportsScreen() {
                   </div>
                 )}
 
-                <div style={{ display: "flex", gap: "8px" }}>
-                  {r.reason === "duplicate" && r.duplicate_of_id && (
+                {tab === "pending" ? (
+                  <div style={{ display: "flex", gap: "8px" }}>
+                    {r.reason === "duplicate" && r.duplicate_of_id && (
+                      <button
+                        onClick={() => handleConfirmDuplicate(r)}
+                        disabled={busyId === r.id}
+                        style={{ flex: 1, background: "#00C8FF", border: "none", borderRadius: "8px", padding: "9px", fontWeight: 700, color: "#0D1B2A", cursor: "pointer", opacity: busyId === r.id ? 0.6 : 1, fontSize: "12.5px" }}
+                      >
+                        Confirmer le doublon
+                      </button>
+                    )}
                     <button
-                      onClick={() => handleConfirmDuplicate(r)}
+                      onClick={() => handleArchive(r)}
                       disabled={busyId === r.id}
-                      style={{ flex: 1, background: "#C74B4B", border: "none", borderRadius: "8px", padding: "9px", fontWeight: 700, color: "#fff", cursor: "pointer", opacity: busyId === r.id ? 0.6 : 1, fontSize: "12.5px" }}
+                      style={{ flex: 1, background: "#FF3B4E", border: "none", borderRadius: "8px", padding: "9px", fontWeight: 700, color: "#fff", cursor: "pointer", opacity: busyId === r.id ? 0.6 : 1, fontSize: "12.5px" }}
                     >
-                      Confirmer le doublon
+                      Archiver la fiche
                     </button>
-                  )}
-                  <button
-                    onClick={() => handleArchive(r)}
-                    disabled={busyId === r.id}
-                    style={{ flex: 1, background: "#FF3B4E", border: "none", borderRadius: "8px", padding: "9px", fontWeight: 700, color: "#fff", cursor: "pointer", opacity: busyId === r.id ? 0.6 : 1, fontSize: "12.5px" }}
-                  >
-                    Archiver la fiche
-                  </button>
-                  <button
-                    onClick={() => handleResolve(r.id)}
-                    disabled={busyId === r.id}
-                    style={{ flex: 1, background: "#39FF66", border: "none", borderRadius: "8px", padding: "9px", fontWeight: 700, color: "#0D1B2A", cursor: "pointer", opacity: busyId === r.id ? 0.6 : 1 }}
-                  >
-                    Traité
-                  </button>
-                  <button
-                    onClick={() => handleDismiss(r.id)}
-                    disabled={busyId === r.id}
-                    style={{ flex: 1, background: "none", border: "2px solid #28405C", borderRadius: "8px", padding: "9px", fontWeight: 700, color: "#F2F2E8", cursor: "pointer", opacity: busyId === r.id ? 0.6 : 1 }}
-                  >
-                    Ignorer
-                  </button>
-                </div>
+                    <button
+                      onClick={() => handleResolve(r.id)}
+                      disabled={busyId === r.id}
+                      style={{ flex: 1, background: "#39FF66", border: "none", borderRadius: "8px", padding: "9px", fontWeight: 700, color: "#0D1B2A", cursor: "pointer", opacity: busyId === r.id ? 0.6 : 1 }}
+                    >
+                      Traité
+                    </button>
+                    <button
+                      onClick={() => handleDismiss(r.id)}
+                      disabled={busyId === r.id}
+                      style={{ flex: 1, background: "none", border: "2px solid #28405C", borderRadius: "8px", padding: "9px", fontWeight: 700, color: "#F2F2E8", cursor: "pointer", opacity: busyId === r.id ? 0.6 : 1 }}
+                    >
+                      Ignorer
+                    </button>
+                  </div>
+                ) : (
+                  <p style={{ fontSize: "11px", color: "#8792A6", margin: 0 }}>{r.resolved_at ? `Traité le ${r.resolved_at.slice(0, 10)}` : ""}</p>
+                )}
               </div>
             );
           })}

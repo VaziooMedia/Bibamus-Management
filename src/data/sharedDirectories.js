@@ -38,8 +38,8 @@ const ENTITY_SELECT_FIELDS = {
   producer: "id, name, country, profile_photo_url, cover_photo_url, status",
 };
 
-export async function loadReports() {
-  const { data: reports, error } = await supabase.from("entity_reports").select("*").eq("status", "pending").order("created_at", { ascending: false });
+export async function loadReports(status = "pending") {
+  const { data: reports, error } = await supabase.from("entity_reports").select("*").eq("status", status).order("created_at", { ascending: false });
   if (error) {
     console.error("loadReports:", error);
     return [];
@@ -123,7 +123,7 @@ export async function archiveReportedEntity(reportId, entityType, entityId) {
   const { error: archiveError } = await supabase.from(table).update({ status: "archived" }).eq("id", entityId);
   if (archiveError) return { error: archiveError.message };
 
-  const { error: resolveError } = await supabase.from("entity_reports").update({ status: "resolved", resolved_at: new Date().toISOString() }).eq("id", reportId);
+  const { error: resolveError } = await supabase.from("entity_reports").update({ status: "archived", resolved_at: new Date().toISOString() }).eq("id", reportId);
   if (resolveError) return { error: resolveError.message };
 
   return { ok: true };
