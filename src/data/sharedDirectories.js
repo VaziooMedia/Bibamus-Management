@@ -13,6 +13,25 @@
 
 import { supabase } from "../supabaseClient.js";
 
+/* ---------------- PERMISSIONS CENTRALISÉES ---------------- */
+
+// Miroir côté code de la fonction SQL has_capability() — une seule matrice à consulter pour
+// savoir "ce rôle a-t-il cette capacité ?", plutôt que de comparer des rôles un peu partout
+// dans l'interface. À tenir à jour en même temps que la fonction SQL équivalente.
+const CAPABILITY_MATRIX = {
+  view_reports: ["moderator", "admin", "super_admin"],
+  resolve_reports: ["moderator", "admin", "super_admin"],
+  block_users: ["admin", "super_admin"],
+  manage_admins: ["super_admin"],
+  manage_database: ["admin", "super_admin"],
+  view_all_statuses: ["moderator", "admin", "super_admin"],
+  moderate_content: ["moderator", "admin", "super_admin"],
+};
+
+export function can(role, capability) {
+  return CAPABILITY_MATRIX[capability]?.includes(role) ?? false;
+}
+
 // supabase-js masque le vrai message renvoyé par une Edge Function derrière un texte
 // générique ("Edge Function returned a non-2xx status code") — cette fonction va lire le
 // vrai contenu de la réponse pour afficher le message utile à la place.
