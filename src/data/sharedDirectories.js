@@ -534,16 +534,33 @@ export async function deleteCollaborator(targetUserId, confirmPassword) {
   return { ok: true };
 }
 
+// Convertit un blob en base64 — nécessaire pour l'envoyer à la fonction serveur de pipeline
+// média (vérification de contenu + enregistrement dans media_assets).
+function blobToBase64(blob) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onloadend = () => resolve(reader.result.split(",")[1]);
+    reader.onerror = reject;
+    reader.readAsDataURL(blob);
+  });
+}
+
 export async function uploadAdminAvatar(userId, file) {
   const blob = await resizeImageTo(file, 400, 400);
+  const imageBase64 = await blobToBase64(blob);
   const path = `${userId}-${Date.now()}.jpg`;
-  const { error: uploadError } = await supabase.storage.from("admin-avatars").upload(path, blob, { contentType: "image/jpeg", upsert: true });
-  if (uploadError) {
-    console.error("uploadAdminAvatar:", uploadError);
+  const { data, error } = await supabase.functions.invoke("moderate-and-upload-photo", {
+    body: { bucket: "admin-avatars", path, imageBase64, contentType: "image/jpeg", entityType: "admin", entityId: userId, kind: "avatar" },
+  });
+  if (error) {
+    console.error("uploadAdminAvatar:", error);
     return null;
   }
-  const { data } = supabase.storage.from("admin-avatars").getPublicUrl(path);
-  return data.publicUrl;
+  if (data?.error) {
+    console.error("uploadAdminAvatar:", data.error);
+    return null;
+  }
+  return data.url;
 }
 
 /* ---------------- ÉTABLISSEMENTS & LIEUX ---------------- */
@@ -834,14 +851,20 @@ async function resizeImageTo(file, targetW, targetH, quality = 0.85) {
 export async function uploadVenuePhoto(venueId, file, kind) {
   const dims = kind === "cover" ? [1200, 400] : [400, 400];
   const blob = await resizeImageTo(file, dims[0], dims[1]);
+  const imageBase64 = await blobToBase64(blob);
   const path = `${venueId}-${kind}-${Date.now()}.jpg`;
-  const { error: uploadError } = await supabase.storage.from("venue-photos").upload(path, blob, { contentType: "image/jpeg", upsert: true });
-  if (uploadError) {
-    console.error("uploadVenuePhoto:", uploadError);
+  const { data, error } = await supabase.functions.invoke("moderate-and-upload-photo", {
+    body: { bucket: "venue-photos", path, imageBase64, contentType: "image/jpeg", entityType: "venue", entityId: venueId, kind: kind === "cover" ? "cover" : "profile_photo" },
+  });
+  if (error) {
+    console.error("uploadVenuePhoto:", error);
     return null;
   }
-  const { data } = supabase.storage.from("venue-photos").getPublicUrl(path);
-  return data.publicUrl;
+  if (data?.error) {
+    console.error("uploadVenuePhoto:", data.error);
+    return null;
+  }
+  return data.url;
 }
 
 export async function uploadVenueMenuPdf(venueId, file) {
@@ -879,38 +902,56 @@ export async function loadBreweriesForSelect() {
 
 export async function uploadDrinkMainPhoto(drinkId, file) {
   const blob = await resizeImageTo(file, 800, 800);
+  const imageBase64 = await blobToBase64(blob);
   const path = `${drinkId}-main-${Date.now()}.jpg`;
-  const { error: uploadError } = await supabase.storage.from("drink-photos").upload(path, blob, { contentType: "image/jpeg", upsert: true });
-  if (uploadError) {
-    console.error("uploadDrinkMainPhoto:", uploadError);
+  const { data, error } = await supabase.functions.invoke("moderate-and-upload-photo", {
+    body: { bucket: "drink-photos", path, imageBase64, contentType: "image/jpeg", entityType: "drink", entityId: drinkId, kind: "profile_photo" },
+  });
+  if (error) {
+    console.error("uploadDrinkMainPhoto:", error);
     return null;
   }
-  const { data } = supabase.storage.from("drink-photos").getPublicUrl(path);
-  return data.publicUrl;
+  if (data?.error) {
+    console.error("uploadDrinkMainPhoto:", data.error);
+    return null;
+  }
+  return data.url;
 }
 
 export async function uploadDrinkGalleryPhoto(drinkId, file) {
   const blob = await resizeImageTo(file, 1000, 1000);
+  const imageBase64 = await blobToBase64(blob);
   const path = `${drinkId}-gallery-${Date.now()}-${Math.floor(Math.random() * 10000)}.jpg`;
-  const { error: uploadError } = await supabase.storage.from("drink-photos").upload(path, blob, { contentType: "image/jpeg", upsert: true });
-  if (uploadError) {
-    console.error("uploadDrinkGalleryPhoto:", uploadError);
+  const { data, error } = await supabase.functions.invoke("moderate-and-upload-photo", {
+    body: { bucket: "drink-photos", path, imageBase64, contentType: "image/jpeg", entityType: "drink", entityId: drinkId, kind: "gallery" },
+  });
+  if (error) {
+    console.error("uploadDrinkGalleryPhoto:", error);
     return null;
   }
-  const { data } = supabase.storage.from("drink-photos").getPublicUrl(path);
-  return data.publicUrl;
+  if (data?.error) {
+    console.error("uploadDrinkGalleryPhoto:", data.error);
+    return null;
+  }
+  return data.url;
 }
 
 export async function uploadDrinkAwardBadge(drinkId, file) {
   const blob = await resizeImageTo(file, 600, 600);
+  const imageBase64 = await blobToBase64(blob);
   const path = `${drinkId}-award-${Date.now()}-${Math.floor(Math.random() * 10000)}.jpg`;
-  const { error: uploadError } = await supabase.storage.from("drink-photos").upload(path, blob, { contentType: "image/jpeg", upsert: true });
-  if (uploadError) {
-    console.error("uploadDrinkAwardBadge:", uploadError);
+  const { data, error } = await supabase.functions.invoke("moderate-and-upload-photo", {
+    body: { bucket: "drink-photos", path, imageBase64, contentType: "image/jpeg", entityType: "drink", entityId: drinkId, kind: "award_badge" },
+  });
+  if (error) {
+    console.error("uploadDrinkAwardBadge:", error);
     return null;
   }
-  const { data } = supabase.storage.from("drink-photos").getPublicUrl(path);
-  return data.publicUrl;
+  if (data?.error) {
+    console.error("uploadDrinkAwardBadge:", data.error);
+    return null;
+  }
+  return data.url;
 }
 
 export async function loadDrinksDirectory() {
@@ -1507,14 +1548,20 @@ function breweryToRow(b, partial = false) {
 export async function uploadBreweryPhoto(breweryId, file, kind) {
   const dims = kind === "cover" ? [1200, 400] : [400, 400];
   const blob = await resizeImageTo(file, dims[0], dims[1]);
+  const imageBase64 = await blobToBase64(blob);
   const path = `${breweryId}-${kind}-${Date.now()}.jpg`;
-  const { error: uploadError } = await supabase.storage.from("brewery-photos").upload(path, blob, { contentType: "image/jpeg", upsert: true });
-  if (uploadError) {
-    console.error("uploadBreweryPhoto:", uploadError);
+  const { data, error } = await supabase.functions.invoke("moderate-and-upload-photo", {
+    body: { bucket: "brewery-photos", path, imageBase64, contentType: "image/jpeg", entityType: "producer", entityId: breweryId, kind: kind === "cover" ? "cover" : "profile_photo" },
+  });
+  if (error) {
+    console.error("uploadBreweryPhoto:", error);
     return null;
   }
-  const { data } = supabase.storage.from("brewery-photos").getPublicUrl(path);
-  return data.publicUrl;
+  if (data?.error) {
+    console.error("uploadBreweryPhoto:", data.error);
+    return null;
+  }
+  return data.url;
 }
 
 /* ---------------- MARQUES ---------------- */
@@ -1625,12 +1672,18 @@ function brandToRow(b, partial = false) {
 
 export async function uploadBrandLogo(brandId, file) {
   const blob = await resizeImageTo(file, 400, 400);
+  const imageBase64 = await blobToBase64(blob);
   const path = `${brandId}-logo-${Date.now()}.jpg`;
-  const { error: uploadError } = await supabase.storage.from("brand-logos").upload(path, blob, { contentType: "image/jpeg", upsert: true });
-  if (uploadError) {
-    console.error("uploadBrandLogo:", uploadError);
+  const { data, error } = await supabase.functions.invoke("moderate-and-upload-photo", {
+    body: { bucket: "brand-logos", path, imageBase64, contentType: "image/jpeg", entityType: "brand", entityId: brandId, kind: "logo" },
+  });
+  if (error) {
+    console.error("uploadBrandLogo:", error);
     return null;
   }
-  const { data } = supabase.storage.from("brand-logos").getPublicUrl(path);
-  return data.publicUrl;
+  if (data?.error) {
+    console.error("uploadBrandLogo:", data.error);
+    return null;
+  }
+  return data.url;
 }
