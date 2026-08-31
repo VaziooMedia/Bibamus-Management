@@ -253,13 +253,23 @@ export async function loadClaims(status = "pending") {
 
 const BUSINESS_FIELDS =
   "id, email, name, last_name, active, company_name, vat_number, company_email, company_phone, company_street, company_street_number, " +
-  "company_address_line2, company_postal_code, company_city, company_country, contact_function, contact_email, contact_phone, contact_languages";
+  "company_address_line2, company_postal_code, company_city, company_country, contact_function, contact_email, contact_phone, contact_languages, " +
+  "business_label, business_status";
 
 export async function loadBusinessAccountsFull() {
   const { data, error } = await supabase.from("profiles").select(BUSINESS_FIELDS).eq("role", "business").order("company_name");
   if (error) {
     console.error("loadBusinessAccountsFull:", error);
     return [];
+  }
+  return data;
+}
+
+export async function loadBusinessAccountById(userId) {
+  const { data, error } = await supabase.from("profiles").select(BUSINESS_FIELDS).eq("id", userId).single();
+  if (error) {
+    console.error("loadBusinessAccountById:", error);
+    return null;
   }
   return data;
 }
@@ -284,6 +294,8 @@ export async function updateBusinessAccount(userId, patch) {
       contact_email: patch.contactEmail,
       contact_phone: patch.contactPhone,
       contact_languages: patch.contactLanguages,
+      business_label: patch.businessLabel,
+      business_status: patch.businessStatus,
     })
     .eq("id", userId);
   if (error) return { error: error.message };

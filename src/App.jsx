@@ -14,6 +14,7 @@ import { ReportsScreen } from "./components/ReportsScreen.jsx";
 import { AuditLogScreen } from "./components/AuditLogScreen.jsx";
 import { ClaimsScreen } from "./components/ClaimsScreen.jsx";
 import { BusinessAccountsScreen } from "./components/BusinessAccountsScreen.jsx";
+import { BusinessAccountDetailScreen } from "./components/BusinessAccountDetailScreen.jsx";
 import { MyBusinessEntitiesScreen } from "./components/MyBusinessEntitiesScreen.jsx";
 import { CountryRulesScreen } from "./components/CountryRulesScreen.jsx";
 import { FeatureFlagsScreen } from "./components/FeatureFlagsScreen.jsx";
@@ -32,6 +33,7 @@ export default function App() {
   const [myCanModerate, setMyCanModerate] = useState(false);
   const [myUserId, setMyUserId] = useState(null);
   const [screen, setScreen] = useState("dashboard");
+  const [viewedBusinessAccountId, setViewedBusinessAccountId] = useState(null);
 
   // Vérifie une session déjà active (ex. après un rafraîchissement de page) — revérifie le
   // rôle à chaque fois, pas seulement à la connexion, au cas où il aurait changé depuis.
@@ -97,7 +99,17 @@ export default function App() {
       {screen === "stats" && <AnalyticsScreen />}
       {screen === "finances" && <ComingSoon title="Finances" />}
       {screen === "claims" && <ClaimsScreen />}
-      {screen === "businessAccounts" && <BusinessAccountsScreen />}
+      {screen === "businessAccounts" && (
+        <BusinessAccountsScreen
+          onOpenAccount={(id) => {
+            setViewedBusinessAccountId(id);
+            setScreen("businessAccountDetail");
+          }}
+        />
+      )}
+      {screen === "businessAccountDetail" && (
+        <BusinessAccountDetailScreen accountId={viewedBusinessAccountId} onBack={() => setScreen("businessAccounts")} />
+      )}
       {screen === "notifications" && <ComingSoon title="Notifications" />}
       {screen === "admins" && <CollaboratorsScreen />}
       {screen === "users" && <UsersScreen />}
