@@ -4,7 +4,7 @@ import { COUNTRIES } from "../constants.js";
 
 const fieldStyle = { padding: "10px 12px", borderRadius: "8px", border: "2px solid #28405C", fontSize: "14px", width: "100%", color: "#F2F2E8", background: "#0D1B2A", boxSizing: "border-box" };
 const labelStyle = { fontSize: "12.5px", color: "#8792A6", marginBottom: "4px", display: "block", fontWeight: 600 };
-const separatorStyle = { borderBottom: "1px solid #28405C", margin: "20px 0" };
+const separatorStyle = { borderBottom: "1px solid #28405C", margin: "16px 0" };
 const errorBorder = { borderColor: "#FF3B4E" };
 
 // Astérisque vert fluo pour signaler un champ obligatoire (uniquement affiché en création).
@@ -13,6 +13,41 @@ function RequiredLabel({ children, required }) {
     <label style={labelStyle}>
       {children} {required && <span style={{ color: "#39FF66" }}>*</span>}
     </label>
+  );
+}
+
+// Flèche simple (sans hampe) — pointe vers la droite repliée, vers le bas dépliée.
+function ChevronIcon({ open }) {
+  return (
+    <svg width="12" height="12" viewBox="0 0 12 12" style={{ transform: open ? "rotate(90deg)" : "none", transition: "transform 0.15s" }}>
+      <path d="M3 1 L9 6 L3 11" stroke="#39FF66" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  );
+}
+
+// En-tête de section repliable — barre verticale verte fluo, titre blanc, flèche, et un
+// indicateur optionnel (la pastille de statut) visible même quand la section est repliée.
+function SectionHeader({ title, open, onToggle, indicator }) {
+  return (
+    <button
+      onClick={onToggle}
+      style={{
+        display: "flex",
+        alignItems: "center",
+        gap: "10px",
+        width: "100%",
+        background: "none",
+        border: "none",
+        cursor: "pointer",
+        padding: "10px 0",
+        textAlign: "left",
+      }}
+    >
+      <div style={{ width: "4px", height: "18px", background: "#39FF66", borderRadius: "2px" }} />
+      <span style={{ color: "#F2F2E8", fontWeight: 800, fontSize: "15px", flex: 1 }}>{title}</span>
+      {indicator}
+      <ChevronIcon open={open} />
+    </button>
   );
 }
 
@@ -99,14 +134,20 @@ export function UserDetailPanel({ user, onClose, onSaved }) {
   const [blockedReason, setBlockedReason] = useState(user?.blocked_reason || "");
   const [blockedUntil, setBlockedUntil] = useState(user?.blocked_until || null);
   const [customReason, setCustomReason] = useState(!PRESET_REASONS.includes(user?.blocked_reason) && !!user?.blocked_reason);
+  const [selectedDurationKey, setSelectedDurationKey] = useState(() => (user?.active === false && !user?.blocked_until ? "permanent" : null));
+  const [durationTouched, setDurationTouched] = useState(user?.active === false);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState(null);
   const [fieldErrors, setFieldErrors] = useState({});
+  const [blockErrors, setBlockErrors] = useState({});
 
   const [confirmingDelete, setConfirmingDelete] = useState(false);
   const [deletePassword, setDeletePassword] = useState("");
   const [deleting, setDeleting] = useState(false);
   const [deleteError, setDeleteError] = useState(null);
+
+  const [openSections, setOpenSections] = useState({ info: true, social: false, status: false });
+  const toggleSection = (key) => setOpenSections((prev) => ({ ...prev, [key]: !prev[key] }));
 
   const age = ageFromBirthDate(birthDate);
 
@@ -145,6 +186,18 @@ export function UserDetailPanel({ user, onClose, onSaved }) {
       }
       onSaved();
       return;
+    }
+
+    if (!active) {
+      const missing = {};
+      if (!durationTouched) missing.duration = true;
+      if (!blockedReason.trim()) missing.reason = true;
+      setBlockErrors(missing);
+      if (Object.keys(missing).length > 0) {
+        setOpenSections((prev) => ({ ...prev, status: true }));
+        setError("Merci de préciser une durée et une raison de blocage.");
+        return;
+      }
     }
 
     setSaving(true);
@@ -199,17 +252,7 @@ export function UserDetailPanel({ user, onClose, onSaved }) {
 
         {!isNew && (
           <div style={{ display: "flex", flexDirection: "column", alignItems: "center", marginBottom: "20px" }}>
-            <div
-              style={{
-                width: "88px",
-                height: "88px",
-                borderRadius: "50%",
-                background: "#28405C",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-              }}
-            >
+            <div style={{ width: "88px", height: "88px", borderRadius: "50%", background: "#28405C", display: "flex", alignItems: "center", justifyContent: "center" }}>
               {user.avatar_emoji ? (
                 <span style={{ fontSize: "40px" }}>{user.avatar_emoji}</span>
               ) : (
@@ -231,250 +274,300 @@ export function UserDetailPanel({ user, onClose, onSaved }) {
           </div>
         )}
 
-        <RequiredLabel required={isNew}>Prénom</RequiredLabel>
-        <input
-          value={firstName}
-          onChange={(e) => setFirstName(e.target.value)}
-          style={{ ...fieldStyle, marginBottom: "12px", ...(fieldErrors.firstName ? errorBorder : {}) }}
-        />
-
-        <RequiredLabel required={isNew}>Nom</RequiredLabel>
-        <input
-          value={lastName}
-          onChange={(e) => setLastName(e.target.value)}
-          style={{ ...fieldStyle, marginBottom: "12px", ...(fieldErrors.lastName ? errorBorder : {}) }}
-        />
-
-        <label style={labelStyle}>Surnom</label>
-        <input value={nickname} onChange={(e) => setNickname(e.target.value)} style={{ ...fieldStyle, marginBottom: "12px" }} />
-
-        <RequiredLabel required={isNew}>Nom d'utilisateur</RequiredLabel>
-        <input
-          value={username}
-          onChange={(e) => setUsername(e.target.value)}
-          style={{ ...fieldStyle, marginBottom: "12px", ...(fieldErrors.username ? errorBorder : {}) }}
-        />
-
-        <RequiredLabel required={isNew}>Email</RequiredLabel>
-        {isNew ? (
-          <input
-            type="email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            style={{ ...fieldStyle, marginBottom: "12px", ...(fieldErrors.email ? errorBorder : {}) }}
-          />
-        ) : (
-          <p style={{ ...fieldStyle, marginBottom: "12px", color: "#8792A6" }}>{email}</p>
-        )}
-
-        {isNew && (
-          <>
-            <RequiredLabel required>Mot de passe</RequiredLabel>
-            <div style={{ position: "relative", marginBottom: "12px" }}>
-              <input
-                type={passwordVisible ? "text" : "password"}
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                style={{ ...fieldStyle, paddingRight: "40px", ...(fieldErrors.password ? errorBorder : {}) }}
-              />
-              <button
-                type="button"
-                onClick={() => setPasswordVisible((v) => !v)}
-                aria-label={passwordVisible ? "Masquer le mot de passe" : "Afficher le mot de passe"}
-                style={{ position: "absolute", right: "8px", top: "50%", transform: "translateY(-50%)", background: "none", border: "none", cursor: "pointer", padding: "4px", display: "flex" }}
-              >
-                <EyeIcon crossed={passwordVisible} />
-              </button>
-            </div>
-          </>
-        )}
-
-        <div style={{ display: "flex", gap: "10px", marginBottom: "12px" }}>
-          <div style={{ flex: 1 }}>
-            <RequiredLabel required={isNew}>Date de naissance</RequiredLabel>
+        {/* ---------------- INFORMATIONS ---------------- */}
+        <SectionHeader title="Informations" open={openSections.info} onToggle={() => toggleSection("info")} />
+        {openSections.info && (
+          <div style={{ marginBottom: "8px" }}>
+            <RequiredLabel required={isNew}>Prénom</RequiredLabel>
             <input
-              type="date"
-              value={birthDate || ""}
-              onChange={(e) => setBirthDate(e.target.value)}
-              style={{ ...fieldStyle, colorScheme: "dark", ...(fieldErrors.birthDate ? errorBorder : {}) }}
+              value={firstName}
+              onChange={(e) => setFirstName(e.target.value)}
+              style={{ ...fieldStyle, marginBottom: "12px", ...(fieldErrors.firstName ? errorBorder : {}) }}
             />
+
+            <RequiredLabel required={isNew}>Nom</RequiredLabel>
+            <input
+              value={lastName}
+              onChange={(e) => setLastName(e.target.value)}
+              style={{ ...fieldStyle, marginBottom: "12px", ...(fieldErrors.lastName ? errorBorder : {}) }}
+            />
+
+            <label style={labelStyle}>Surnom</label>
+            <input value={nickname} onChange={(e) => setNickname(e.target.value)} style={{ ...fieldStyle, marginBottom: "12px" }} />
+
+            <RequiredLabel required={isNew}>Nom d'utilisateur</RequiredLabel>
+            <input
+              value={username}
+              onChange={(e) => setUsername(e.target.value)}
+              style={{ ...fieldStyle, marginBottom: "12px", ...(fieldErrors.username ? errorBorder : {}) }}
+            />
+
+            <RequiredLabel required={isNew}>Email</RequiredLabel>
+            {isNew ? (
+              <input
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                style={{ ...fieldStyle, marginBottom: "12px", ...(fieldErrors.email ? errorBorder : {}) }}
+              />
+            ) : (
+              <p style={{ ...fieldStyle, marginBottom: "12px", color: "#8792A6" }}>{email}</p>
+            )}
+
+            {isNew && (
+              <>
+                <RequiredLabel required>Mot de passe</RequiredLabel>
+                <div style={{ position: "relative", marginBottom: "12px" }}>
+                  <input
+                    type={passwordVisible ? "text" : "password"}
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    style={{ ...fieldStyle, paddingRight: "40px", ...(fieldErrors.password ? errorBorder : {}) }}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setPasswordVisible((v) => !v)}
+                    aria-label={passwordVisible ? "Masquer le mot de passe" : "Afficher le mot de passe"}
+                    style={{ position: "absolute", right: "8px", top: "50%", transform: "translateY(-50%)", background: "none", border: "none", cursor: "pointer", padding: "4px", display: "flex" }}
+                  >
+                    <EyeIcon crossed={passwordVisible} />
+                  </button>
+                </div>
+              </>
+            )}
+
+            <div style={{ display: "flex", gap: "10px", marginBottom: "12px" }}>
+              <div style={{ flex: 1 }}>
+                <RequiredLabel required={isNew}>Date de naissance</RequiredLabel>
+                <input
+                  type="date"
+                  value={birthDate || ""}
+                  onChange={(e) => setBirthDate(e.target.value)}
+                  style={{ ...fieldStyle, colorScheme: "dark", ...(fieldErrors.birthDate ? errorBorder : {}) }}
+                />
+              </div>
+              <div style={{ width: "80px" }}>
+                <label style={labelStyle}>Âge</label>
+                <p style={{ ...fieldStyle, margin: 0, color: "#8792A6", textAlign: "center" }}>{age != null ? age : "—"}</p>
+              </div>
+            </div>
+
+            <RequiredLabel required={isNew}>Pays</RequiredLabel>
+            <select value={country} onChange={(e) => setCountry(e.target.value)} style={{ ...fieldStyle, marginBottom: "12px", ...(fieldErrors.country ? errorBorder : {}) }}>
+              <option value="">—</option>
+              {COUNTRIES.map((c) => (
+                <option key={c.code} value={c.code}>
+                  {c.fr}
+                </option>
+              ))}
+            </select>
+
+            <div style={{ display: "flex", gap: "10px", marginBottom: "12px" }}>
+              <div style={{ flex: 1 }}>
+                <label style={labelStyle}>Région</label>
+                <input value={region} onChange={(e) => setRegion(e.target.value)} style={fieldStyle} />
+              </div>
+              <div style={{ flex: 1 }}>
+                <label style={labelStyle}>Ville de résidence</label>
+                <input value={city} onChange={(e) => setCity(e.target.value)} style={fieldStyle} />
+              </div>
+            </div>
+
+            <label style={labelStyle}>Langue utilisée sur l'app</label>
+            <select value={appLanguage} onChange={(e) => setAppLanguage(e.target.value)} style={fieldStyle}>
+              {APP_LANGUAGES.map((l) => (
+                <option key={l.code} value={l.code}>
+                  {l.label}
+                </option>
+              ))}
+            </select>
           </div>
-          <div style={{ width: "80px" }}>
-            <label style={labelStyle}>Âge</label>
-            <p style={{ ...fieldStyle, margin: 0, color: "#8792A6", textAlign: "center" }}>{age != null ? age : "—"}</p>
-          </div>
-        </div>
+        )}
 
         <div style={separatorStyle} />
 
-        <RequiredLabel required={isNew}>Pays</RequiredLabel>
-        <select value={country} onChange={(e) => setCountry(e.target.value)} style={{ ...fieldStyle, marginBottom: "12px", ...(fieldErrors.country ? errorBorder : {}) }}>
-          <option value="">—</option>
-          {COUNTRIES.map((c) => (
-            <option key={c.code} value={c.code}>
-              {c.fr}
-            </option>
-          ))}
-        </select>
-
-        <div style={{ display: "flex", gap: "10px", marginBottom: "12px" }}>
-          <div style={{ flex: 1 }}>
-            <label style={labelStyle}>Région</label>
-            <input value={region} onChange={(e) => setRegion(e.target.value)} style={fieldStyle} />
+        {/* ---------------- RÉSEAUX SOCIAUX ---------------- */}
+        <SectionHeader title="Réseaux sociaux" open={openSections.social} onToggle={() => toggleSection("social")} />
+        {openSections.social && (
+          <div style={{ marginBottom: "8px" }}>
+            <label style={labelStyle}>Lien Facebook</label>
+            <input value={facebookUrl} onChange={(e) => setFacebookUrl(e.target.value)} style={{ ...fieldStyle, marginBottom: "12px" }} />
+            <label style={labelStyle}>Lien Instagram</label>
+            <input value={instagramUrl} onChange={(e) => setInstagramUrl(e.target.value)} style={{ ...fieldStyle, marginBottom: "12px" }} />
+            <label style={labelStyle}>Lien TikTok</label>
+            <input value={tiktokUrl} onChange={(e) => setTiktokUrl(e.target.value)} style={{ ...fieldStyle, marginBottom: "12px" }} />
+            <label style={labelStyle}>Lien Snapchat</label>
+            <input value={snapchatUrl} onChange={(e) => setSnapchatUrl(e.target.value)} style={{ ...fieldStyle, marginBottom: "12px" }} />
+            <label style={labelStyle}>Lien LinkedIn</label>
+            <input value={linkedinUrl} onChange={(e) => setLinkedinUrl(e.target.value)} style={fieldStyle} />
           </div>
-          <div style={{ flex: 1 }}>
-            <label style={labelStyle}>Ville de résidence</label>
-            <input value={city} onChange={(e) => setCity(e.target.value)} style={fieldStyle} />
-          </div>
-        </div>
-
-        <div style={separatorStyle} />
-
-        <label style={labelStyle}>Lien Facebook</label>
-        <input value={facebookUrl} onChange={(e) => setFacebookUrl(e.target.value)} style={{ ...fieldStyle, marginBottom: "12px" }} />
-        <label style={labelStyle}>Lien Instagram</label>
-        <input value={instagramUrl} onChange={(e) => setInstagramUrl(e.target.value)} style={{ ...fieldStyle, marginBottom: "12px" }} />
-        <label style={labelStyle}>Lien TikTok</label>
-        <input value={tiktokUrl} onChange={(e) => setTiktokUrl(e.target.value)} style={{ ...fieldStyle, marginBottom: "12px" }} />
-        <label style={labelStyle}>Lien Snapchat</label>
-        <input value={snapchatUrl} onChange={(e) => setSnapchatUrl(e.target.value)} style={{ ...fieldStyle, marginBottom: "12px" }} />
-        <label style={labelStyle}>Lien LinkedIn</label>
-        <input value={linkedinUrl} onChange={(e) => setLinkedinUrl(e.target.value)} style={{ ...fieldStyle, marginBottom: "12px" }} />
-
-        <div style={separatorStyle} />
-
-        <label style={labelStyle}>Langue utilisée sur l'app</label>
-        <select value={appLanguage} onChange={(e) => setAppLanguage(e.target.value)} style={{ ...fieldStyle, marginBottom: "14px" }}>
-          {APP_LANGUAGES.map((l) => (
-            <option key={l.code} value={l.code}>
-              {l.label}
-            </option>
-          ))}
-        </select>
+        )}
 
         {!isNew && (
           <>
-            <label style={labelStyle}>Statut</label>
-            <div style={{ display: "flex", gap: "8px", marginBottom: "12px" }}>
-              <button
-                onClick={() => setActive(true)}
-                style={{
-                  flex: 1,
-                  padding: "9px",
-                  borderRadius: "8px",
-                  border: `2px solid ${active ? "#39FF66" : "#28405C"}`,
-                  background: active ? "#39FF66" : "none",
-                  color: active ? "#0D1B2A" : "#F2F2E8",
-                  fontWeight: 700,
-                  cursor: "pointer",
-                }}
-              >
-                Actif
-              </button>
-              <button
-                onClick={() => setActive(false)}
-                style={{
-                  flex: 1,
-                  padding: "9px",
-                  borderRadius: "8px",
-                  border: `2px solid ${!active ? "#FF3B4E" : "#28405C"}`,
-                  background: !active ? "#FF3B4E" : "none",
-                  color: !active ? "#0D1B2A" : "#F2F2E8",
-                  fontWeight: 700,
-                  cursor: "pointer",
-                }}
-              >
-                Bloqué
-              </button>
-            </div>
-            {!active && (
-              <>
-                <label style={labelStyle}>Durée du blocage</label>
-                <div style={{ display: "flex", gap: "6px", marginBottom: "12px", flexWrap: "wrap" }}>
-                  {DURATION_OPTIONS.map((d) => (
-                    <button
-                      key={d.key}
-                      onClick={() => setBlockedUntil(d.days === null ? null : addDays(d.days))}
-                      style={{
-                        padding: "7px 12px",
-                        borderRadius: "8px",
-                        border: "2px solid #28405C",
-                        background: "none",
-                        color: "#F2F2E8",
-                        fontWeight: 700,
-                        fontSize: "12.5px",
-                        cursor: "pointer",
-                      }}
-                    >
-                      {d.label}
-                    </button>
-                  ))}
-                </div>
-                <p style={{ fontSize: "12px", color: "#8792A6", marginBottom: "14px" }}>
-                  {blockedUntil ? `Réactivation automatique le ${formatDateFr(blockedUntil)}.` : "Blocage permanent — pas de date de réactivation."}
-                </p>
+            <div style={separatorStyle} />
 
-                <label style={labelStyle}>Raison</label>
-                <div style={{ display: "flex", flexDirection: "column", gap: "6px", marginBottom: "12px" }}>
-                  {PRESET_REASONS.map((r) => (
-                    <button
-                      key={r}
-                      onClick={() => {
-                        setBlockedReason(r);
-                        setCustomReason(false);
-                      }}
-                      style={{
-                        textAlign: "left",
-                        padding: "9px 12px",
-                        borderRadius: "8px",
-                        border: `2px solid ${!customReason && blockedReason === r ? "#39FF66" : "#28405C"}`,
-                        background: !customReason && blockedReason === r ? "#0D1B2A" : "none",
-                        color: "#F2F2E8",
-                        fontSize: "13px",
-                        cursor: "pointer",
-                      }}
-                    >
-                      {r}
-                    </button>
-                  ))}
+            {/* ---------------- STATUT ---------------- */}
+            <SectionHeader
+              title="Statut"
+              open={openSections.status}
+              onToggle={() => toggleSection("status")}
+              indicator={<span style={{ width: "9px", height: "9px", borderRadius: "50%", background: active ? "#39FF66" : "#FF3B4E", flexShrink: 0 }} />}
+            />
+            {openSections.status && (
+              <div style={{ marginBottom: "8px" }}>
+                <div style={{ display: "flex", gap: "8px", marginBottom: "12px" }}>
                   <button
-                    onClick={() => {
-                      setCustomReason(true);
-                      setBlockedReason("");
-                    }}
+                    onClick={() => setActive(true)}
                     style={{
-                      textAlign: "left",
-                      padding: "9px 12px",
+                      flex: 1,
+                      padding: "9px",
                       borderRadius: "8px",
-                      border: `2px solid ${customReason ? "#39FF66" : "#28405C"}`,
-                      background: customReason ? "#0D1B2A" : "none",
-                      color: "#F2F2E8",
-                      fontSize: "13px",
+                      border: `2px solid ${active ? "#39FF66" : "#28405C"}`,
+                      background: active ? "#39FF66" : "none",
+                      color: active ? "#0D1B2A" : "#F2F2E8",
+                      fontWeight: 700,
                       cursor: "pointer",
                     }}
                   >
-                    Autre raison (texte libre)
+                    Actif
+                  </button>
+                  <button
+                    onClick={() => setActive(false)}
+                    style={{
+                      flex: 1,
+                      padding: "9px",
+                      borderRadius: "8px",
+                      border: `2px solid ${!active ? "#FF3B4E" : "#28405C"}`,
+                      background: !active ? "#FF3B4E" : "none",
+                      color: !active ? "#0D1B2A" : "#F2F2E8",
+                      fontWeight: 700,
+                      cursor: "pointer",
+                    }}
+                  >
+                    Bloqué
                   </button>
                 </div>
-                {customReason && (
-                  <input
-                    value={blockedReason}
-                    onChange={(e) => setBlockedReason(e.target.value)}
-                    placeholder="Précisez la raison"
-                    style={{ ...fieldStyle, marginBottom: "12px" }}
-                  />
+                {!active && (
+                  <>
+                    <label style={{ ...labelStyle, color: blockErrors.duration ? "#FF3B4E" : labelStyle.color }}>
+                      Durée du blocage {blockErrors.duration && <span style={{ color: "#39FF66" }}>*</span>}
+                    </label>
+                    <div
+                      style={{
+                        display: "flex",
+                        gap: "6px",
+                        marginBottom: "8px",
+                        flexWrap: "wrap",
+                        padding: "10px",
+                        borderRadius: "10px",
+                        border: `2px solid ${blockErrors.duration ? "#FF3B4E" : "#39FF66"}`,
+                      }}
+                    >
+                      {DURATION_OPTIONS.map((d) => {
+                        const isSelected = selectedDurationKey === d.key;
+                        return (
+                          <button
+                            key={d.key}
+                            onClick={() => {
+                              setBlockedUntil(d.days === null ? null : addDays(d.days));
+                              setSelectedDurationKey(d.key);
+                              setDurationTouched(true);
+                              setBlockErrors((prev) => ({ ...prev, duration: false }));
+                            }}
+                            style={{
+                              padding: "7px 12px",
+                              borderRadius: "8px",
+                              border: `2px solid ${isSelected ? "#39FF66" : "#28405C"}`,
+                              background: isSelected ? "#39FF66" : "none",
+                              color: isSelected ? "#0D1B2A" : "#F2F2E8",
+                              fontWeight: 700,
+                              fontSize: "12.5px",
+                              cursor: "pointer",
+                            }}
+                          >
+                            {d.label}
+                          </button>
+                        );
+                      })}
+                    </div>
+                    <p style={{ fontSize: "12px", color: "#8792A6", marginBottom: "14px" }}>
+                      {!durationTouched
+                        ? "Choisissez une durée ci-dessus."
+                        : blockedUntil
+                        ? `Réactivation automatique le ${formatDateFr(blockedUntil)}.`
+                        : "Blocage permanent — pas de date de réactivation."}
+                    </p>
+
+                    <label style={{ ...labelStyle, color: blockErrors.reason ? "#FF3B4E" : labelStyle.color }}>
+                      Raison {blockErrors.reason && <span style={{ color: "#39FF66" }}>*</span>}
+                    </label>
+                    <div style={{ display: "flex", flexDirection: "column", gap: "6px", marginBottom: "12px" }}>
+                      {PRESET_REASONS.map((r) => (
+                        <button
+                          key={r}
+                          onClick={() => {
+                            setBlockedReason(r);
+                            setCustomReason(false);
+                            setBlockErrors((prev) => ({ ...prev, reason: false }));
+                          }}
+                          style={{
+                            textAlign: "left",
+                            padding: "9px 12px",
+                            borderRadius: "8px",
+                            border: `2px solid ${!customReason && blockedReason === r ? "#39FF66" : blockErrors.reason ? "#FF3B4E" : "#28405C"}`,
+                            background: !customReason && blockedReason === r ? "#0D1B2A" : "none",
+                            color: "#F2F2E8",
+                            fontSize: "13px",
+                            cursor: "pointer",
+                          }}
+                        >
+                          {r}
+                        </button>
+                      ))}
+                      <button
+                        onClick={() => {
+                          setCustomReason(true);
+                          setBlockedReason("");
+                        }}
+                        style={{
+                          textAlign: "left",
+                          padding: "9px 12px",
+                          borderRadius: "8px",
+                          border: `2px solid ${customReason ? "#39FF66" : blockErrors.reason ? "#FF3B4E" : "#28405C"}`,
+                          background: customReason ? "#0D1B2A" : "none",
+                          color: "#F2F2E8",
+                          fontSize: "13px",
+                          cursor: "pointer",
+                        }}
+                      >
+                        Autre raison (texte libre)
+                      </button>
+                    </div>
+                    {customReason && (
+                      <input
+                        value={blockedReason}
+                        onChange={(e) => {
+                          setBlockedReason(e.target.value);
+                          if (e.target.value.trim()) setBlockErrors((prev) => ({ ...prev, reason: false }));
+                        }}
+                        placeholder="Précisez la raison"
+                        style={{ ...fieldStyle, marginBottom: "12px", ...(blockErrors.reason ? errorBorder : {}) }}
+                      />
+                    )}
+                  </>
                 )}
-              </>
+              </div>
             )}
           </>
         )}
 
-        {error && <p style={{ color: "#FF3B4E", fontSize: "12.5px", marginBottom: "12px" }}>{error}</p>}
+        {error && <p style={{ color: "#FF3B4E", fontSize: "12.5px", margin: "12px 0" }}>{error}</p>}
 
         <button
           onClick={handleSave}
           disabled={saving}
-          style={{ width: "100%", background: "#39FF66", border: "none", borderRadius: "8px", padding: "12px", fontWeight: 700, color: "#0D1B2A", cursor: "pointer", opacity: saving ? 0.6 : 1 }}
+          style={{ width: "100%", background: "#39FF66", border: "none", borderRadius: "8px", padding: "12px", fontWeight: 700, color: "#0D1B2A", cursor: "pointer", opacity: saving ? 0.6 : 1, marginTop: "8px" }}
         >
           {saving ? "Enregistrement..." : isNew ? "Créer le compte" : "Enregistrer"}
         </button>
