@@ -361,8 +361,12 @@ export function DrinkDetailPanel({ drink, onClose, onSaved }) {
       onSaved(created);
     } else {
       const patch = buildPatch();
-      await updateDrink(drink.id, patch);
+      const result = await updateDrink(drink.id, patch);
       setSaving(false);
+      if (result?.error) {
+        alert("La sauvegarde a échoué : " + result.error);
+        return;
+      }
       onSaved({ ...drink, ...patch });
     }
   };

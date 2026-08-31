@@ -242,8 +242,12 @@ export function VenueDetailPanel({ venue, onClose, onSaved, onManageMenu }) {
       onSaved(created);
     } else {
       const patch = buildPatch();
-      await updatePublicVenue(venue.id, patch);
+      const result = await updatePublicVenue(venue.id, patch);
       setSaving(false);
+      if (result?.error) {
+        alert("La sauvegarde a échoué : " + result.error);
+        return;
+      }
       onSaved({ ...venue, ...patch });
     }
   };

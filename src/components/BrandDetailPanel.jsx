@@ -168,8 +168,12 @@ export function BrandDetailPanel({ brand, onClose, onSaved }) {
       onSaved(created);
     } else {
       const patch = buildPatch();
-      await updateBrand(brand.id, patch);
+      const result = await updateBrand(brand.id, patch);
       setSaving(false);
+      if (result?.error) {
+        alert("La sauvegarde a échoué : " + result.error);
+        return;
+      }
       onSaved({ ...brand, ...patch });
     }
   };

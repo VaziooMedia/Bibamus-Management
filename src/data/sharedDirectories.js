@@ -290,7 +290,11 @@ export async function createPublicVenue(venue) {
 
 export async function updatePublicVenue(id, patch) {
   const { error } = await supabase.from("public_venues").update(venueToRow(patch, true)).eq("id", id);
-  if (error) console.error("updatePublicVenue:", error);
+  if (error) {
+    console.error("updatePublicVenue:", error);
+    return { error: error.message };
+  }
+  return { ok: true };
 }
 
 export async function deletePublicVenue(id) {
@@ -717,7 +721,11 @@ export async function createDrink(drink) {
 
 export async function updateDrink(id, patch) {
   const { error } = await supabase.from("drinks_directory").update(drinkToRow(patch, true)).eq("id", id);
-  if (error) console.error("updateDrink:", error);
+  if (error) {
+    console.error("updateDrink:", error);
+    return { error: error.message };
+  }
+  return { ok: true };
 }
 
 export async function deleteDrink(id) {
@@ -1099,7 +1107,11 @@ export async function createBrewery(brewery) {
 
 export async function updateBrewery(id, patch) {
   const { error } = await supabase.from("breweries_directory").update(breweryToRow(patch, true)).eq("id", id);
-  if (error) console.error("updateBrewery:", error);
+  if (error) {
+    console.error("updateBrewery:", error);
+    return { error: error.message };
+  }
+  return { ok: true };
 }
 
 export async function deleteBrewery(id) {
@@ -1221,7 +1233,11 @@ export async function createBrand(brand) {
 
 export async function updateBrand(id, patch) {
   const { error } = await supabase.from("brands_directory").update(brandToRow(patch, true)).eq("id", id);
-  if (error) console.error("updateBrand:", error);
+  if (error) {
+    console.error("updateBrand:", error);
+    return { error: error.message };
+  }
+  return { ok: true };
 }
 
 export async function deleteBrand(id) {

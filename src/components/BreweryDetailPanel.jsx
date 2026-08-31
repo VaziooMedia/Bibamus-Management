@@ -201,8 +201,12 @@ export function BreweryDetailPanel({ brewery, onClose, onSaved }) {
       onSaved(created);
     } else {
       const patch = buildPatch();
-      await updateBrewery(brewery.id, patch);
+      const result = await updateBrewery(brewery.id, patch);
       setSaving(false);
+      if (result?.error) {
+        alert("La sauvegarde a échoué : " + result.error);
+        return;
+      }
       onSaved({ ...brewery, ...patch });
     }
   };
