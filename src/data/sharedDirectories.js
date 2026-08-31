@@ -265,6 +265,37 @@ export async function loadBusinessAccountsFull() {
   return data;
 }
 
+const BUSINESS_ENTITY_TABLE = { venue: "public_venues", drink: "drinks_directory", brand: "brands_directory", producer: "breweries_directory" };
+
+export async function unlinkEntityFromBusiness(entityType, entityId) {
+  const table = BUSINESS_ENTITY_TABLE[entityType];
+  if (!table) return { error: "Type de fiche inconnu." };
+  const { error } = await supabase.from(table).update({ business_owner_id: null }).eq("id", entityId);
+  if (error) return { error: error.message };
+  return { ok: true };
+}
+
+export async function linkEntityToBusiness(entityType, entityId, businessId) {
+  const table = BUSINESS_ENTITY_TABLE[entityType];
+  if (!table) return { error: "Type de fiche inconnu." };
+  const { error } = await supabase.from(table).update({ business_owner_id: businessId }).eq("id", entityId);
+  if (error) return { error: error.message };
+  return { ok: true };
+}
+
+// Recherche par nom, pour retrouver une fiche à lier manuellement (transfert suite à une
+// revente, par exemple) — indépendamment de son propriétaire Business actuel, s'il en a un.
+export async function searchEntitiesByName(entityType, query) {
+  const table = BUSINESS_ENTITY_TABLE[entityType];
+  if (!table || !query.trim()) return [];
+  const { data, error } = await supabase.from(table).select("id, name, business_owner_id").ilike("name", `%${query.trim()}%`).limit(8);
+  if (error) {
+    console.error("searchEntitiesByName:", error);
+    return [];
+  }
+  return data;
+}
+
 export async function loadBusinessAccountById(userId) {
   const { data, error } = await supabase.from("profiles").select(BUSINESS_FIELDS).eq("id", userId).single();
   if (error) {

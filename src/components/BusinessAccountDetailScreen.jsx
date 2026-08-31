@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { loadBusinessAccountById, updateBusinessAccount, loadMyBusinessEntities } from "../data/sharedDirectories.js";
+import { loadBusinessAccountById, updateBusinessAccount, loadMyBusinessEntities, unlinkEntityFromBusiness, linkEntityToBusiness, searchEntitiesByName } from "../data/sharedDirectories.js";
 import { PageTitle } from "./PageTitle.jsx";
 import { COUNTRIES } from "../constants.js";
 
@@ -13,6 +13,13 @@ const LANGUAGE_OPTIONS = [
 const fieldStyle = { padding: "10px 12px", borderRadius: "8px", border: "2px solid #28405C", fontSize: "14px", width: "100%", color: "#F2F2E8", background: "#0D1B2A", boxSizing: "border-box" };
 const labelStyle = { fontSize: "12.5px", color: "#8792A6", marginBottom: "4px", display: "block", fontWeight: 600 };
 const sectionTitleStyle = { fontSize: "12px", color: "#39FF66", fontWeight: 700, textTransform: "uppercase", margin: "24px 0 10px", paddingTop: "18px", borderTop: "1px solid #28405C" };
+
+const ENTITY_TYPE_OPTIONS = [
+  { key: "venue", label: "Établissement" },
+  { key: "drink", label: "Produit" },
+  { key: "brand", label: "Marque" },
+  { key: "producer", label: "Producteur" },
+];
 
 function ReadRow({ label, value }) {
   return (
@@ -32,6 +39,11 @@ export function BusinessAccountDetailScreen({ accountId, onBack }) {
   const [form, setForm] = useState(null);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState(null);
+  const [addingEntity, setAddingEntity] = useState(false);
+  const [searchType, setSearchType] = useState("venue");
+  const [searchQuery, setSearchQuery] = useState("");
+  const [searchResults, setSearchResults] = useState([]);
+  const [linkBusy, setLinkBusy] = useState(false);
 
   const refresh = () => {
     loadBusinessAccountById(accountId).then((a) => {
@@ -85,6 +97,34 @@ export function BusinessAccountDetailScreen({ accountId, onBack }) {
     refresh();
   };
 
+  const handleUnlink = async (entity) => {
+    if (!confirm(`Délier "${entity.name}" de ce compte Business ?`)) return;
+    setLinkBusy(true);
+    await unlinkEntityFromBusiness(entity.entityType, entity.id);
+    setLinkBusy(false);
+    refresh();
+  };
+
+  const handleSearch = async (query) => {
+    setSearchQuery(query);
+    if (query.trim().length < 2) {
+      setSearchResults([]);
+      return;
+    }
+    const results = await searchEntitiesByName(searchType, query);
+    setSearchResults(results);
+  };
+
+  const handleLink = async (entity) => {
+    setLinkBusy(true);
+    await linkEntityToBusiness(searchType, entity.id, accountId);
+    setLinkBusy(false);
+    setAddingEntity(false);
+    setSearchQuery("");
+    setSearchResults([]);
+    refresh();
+  };
+
   if (!account) return <p style={{ color: "#8792A6" }}>Chargement...</p>;
 
   const languages = account.contact_languages ? account.contact_languages.split(",").filter(Boolean).map((c) => LANGUAGE_OPTIONS.find((l) => l.code === c)?.label || c) : [];
@@ -118,7 +158,7 @@ export function BusinessAccountDetailScreen({ accountId, onBack }) {
           <div style={{ ...sectionTitleStyle, marginTop: 0, paddingTop: 0, borderTop: "none" }}>Aperçu</div>
           <ReadRow label="Étiquette" value={account.business_label} />
           <ReadRow label="Statut" value={account.business_status} />
-          <ReadRow label="État" value={account.active !== false ? "Actif" : "Bloqué"} />
+          <ReadRow label="État" value={account.active !== false ? "Actif" : "Non actif"} />
           <ReadRow label="Email de connexion" value={account.email} />
 
           <p style={sectionTitleStyle}>Société</p>
@@ -141,13 +181,85 @@ export function BusinessAccountDetailScreen({ accountId, onBack }) {
           ) : entities.length === 0 ? (
             <p style={{ color: "#8792A6", fontSize: "13px" }}>Aucune fiche liée pour l'instant.</p>
           ) : (
-            <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
+            <div style={{ display: "flex", flexDirection: "column", gap: "6px", marginBottom: "12px" }}>
               {entities.map((e) => (
-                <div key={`${e.entityType}-${e.id}`} style={{ background: "#16273D", borderRadius: "8px", padding: "10px 14px" }}>
-                  <span style={{ fontSize: "11px", color: "#8792A6", textTransform: "uppercase", fontWeight: 700 }}>{e.entityTypeLabel}</span>
-                  <p style={{ margin: "2px 0 0", fontSize: "13.5px", color: "#F2F2E8", fontWeight: 700 }}>{e.name}</p>
+                <div key={`${e.entityType}-${e.id}`} style={{ background: "#16273D", borderRadius: "8px", padding: "10px 14px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                  <div>
+                    <span style={{ fontSize: "11px", color: "#8792A6", textTransform: "uppercase", fontWeight: 700 }}>{e.entityTypeLabel}</span>
+                    <p style={{ margin: "2px 0 0", fontSize: "13.5px", color: "#F2F2E8", fontWeight: 700 }}>{e.name}</p>
+                  </div>
+                  <button
+                    onClick={() => handleUnlink(e)}
+                    disabled={linkBusy}
+                    style={{ background: "none", border: "2px solid #FF3B4E", borderRadius: "6px", padding: "6px 12px", fontWeight: 700, fontSize: "11.5px", color: "#FF3B4E", cursor: "pointer" }}
+                  >
+                    Délier
+                  </button>
                 </div>
               ))}
+            </div>
+          )}
+
+          {!addingEntity ? (
+            <button
+              onClick={() => setAddingEntity(true)}
+              style={{ background: "none", border: "2px solid #39FF66", borderRadius: "8px", padding: "9px 16px", fontWeight: 700, fontSize: "12.5px", color: "#39FF66", cursor: "pointer" }}
+            >
+              + Lier une fiche
+            </button>
+          ) : (
+            <div style={{ background: "#16273D", borderRadius: "10px", padding: "14px" }}>
+              <div style={{ display: "flex", gap: "8px", marginBottom: "10px" }}>
+                {ENTITY_TYPE_OPTIONS.map((t) => (
+                  <button
+                    key={t.key}
+                    onClick={() => {
+                      setSearchType(t.key);
+                      setSearchResults([]);
+                      setSearchQuery("");
+                    }}
+                    style={{
+                      padding: "6px 12px",
+                      borderRadius: "8px",
+                      border: `2px solid ${searchType === t.key ? "#39FF66" : "#28405C"}`,
+                      background: searchType === t.key ? "#39FF66" : "none",
+                      color: searchType === t.key ? "#0D1B2A" : "#F2F2E8",
+                      fontWeight: 700,
+                      fontSize: "12px",
+                      cursor: "pointer",
+                    }}
+                  >
+                    {t.label}
+                  </button>
+                ))}
+              </div>
+              <input
+                value={searchQuery}
+                onChange={(e) => handleSearch(e.target.value)}
+                placeholder="Rechercher par nom..."
+                autoFocus
+                style={{ ...fieldStyle, marginBottom: "8px" }}
+              />
+              {searchResults.length > 0 && (
+                <div style={{ display: "flex", flexDirection: "column", gap: "4px", marginBottom: "8px" }}>
+                  {searchResults.map((r) => (
+                    <button
+                      key={r.id}
+                      onClick={() => handleLink(r)}
+                      disabled={linkBusy}
+                      style={{ textAlign: "left", padding: "9px 12px", borderRadius: "8px", border: "1px solid #28405C", background: "none", color: "#F2F2E8", fontSize: "13px", cursor: "pointer" }}
+                    >
+                      {r.name}
+                      {r.business_owner_id && r.business_owner_id !== accountId && (
+                        <span style={{ color: "#FFC145", fontSize: "11px" }}> — déjà liée à un autre compte, sera transférée</span>
+                      )}
+                    </button>
+                  ))}
+                </div>
+              )}
+              <button onClick={() => setAddingEntity(false)} style={{ background: "none", border: "none", color: "#8792A6", fontSize: "12px", cursor: "pointer", padding: 0 }}>
+                Annuler
+              </button>
             </div>
           )}
 
