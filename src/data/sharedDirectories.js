@@ -369,9 +369,9 @@ export async function loadCollaborators() {
 
 // Passe par la fonction serveur dédiée — un compte ne peut jamais être créé directement
 // depuis le navigateur, quel que soit le rôle de la personne connectée.
-export async function createCollaborator(email, password, firstName, lastName, birthDate, role, canModerate, companyName, vatNumber, phone, companyAddress) {
+export async function createCollaborator(email, password, firstName, lastName, birthDate, role, canModerate, extra = {}) {
   const { data, error } = await supabase.functions.invoke("admin-create-collaborator", {
-    body: { email, password, firstName, lastName, birthDate, role, canModerate, companyName, vatNumber, phone, companyAddress },
+    body: { email, password, firstName, lastName, birthDate, role, canModerate, ...extra },
   });
   if (error) return { error: await extractFunctionError(error) };
   if (data?.error) return { error: data.error };

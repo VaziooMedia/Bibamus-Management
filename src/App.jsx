@@ -95,7 +95,7 @@ export default function App() {
       {screen === "chat" && <ComingSoon title="Chat" />}
       {screen === "stats" && <AnalyticsScreen />}
       {screen === "finances" && <ComingSoon title="Finances" />}
-      {screen === "business" && <ClaimsScreen />}
+      {screen === "claims" && <ClaimsScreen />}
       {screen === "notifications" && <ComingSoon title="Notifications" />}
       {screen === "admins" && <CollaboratorsScreen />}
       {screen === "users" && <UsersScreen />}

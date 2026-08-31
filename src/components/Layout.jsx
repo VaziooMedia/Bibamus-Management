@@ -12,10 +12,14 @@ const DATABASE_ITEMS = [
   { key: "breweries", label: "Producteurs" },
 ];
 
-const BOTTOM_ITEMS = [
+const BOTTOM_ITEMS_BEFORE_BUSINESS = [
   { key: "stats", label: "Analytics" },
   { key: "finances", label: "Finances" },
-  { key: "business", label: "Business" },
+];
+
+const BUSINESS_ITEMS = [{ key: "claims", label: "Revendications" }];
+
+const BOTTOM_ITEMS_AFTER_BUSINESS = [
   { key: "notifications", label: "Notifications" },
   { key: "audit", label: "Audit" },
   { key: "countryRules", label: "Configuration pays" },
@@ -64,6 +68,8 @@ function NavButton({ item, current, onNavigate, indent }) {
 export function Layout({ current, onNavigate, onLogout, myRole, myCanModerate, children }) {
   const isDatabaseScreen = DATABASE_ITEMS.some((i) => i.key === current) || current === "database";
   const [databaseOpen, setDatabaseOpen] = useState(isDatabaseScreen);
+  const isBusinessScreen = BUSINESS_ITEMS.some((i) => i.key === current);
+  const [businessOpen, setBusinessOpen] = useState(isBusinessScreen);
   const isModerator = myRole === "moderator";
   const isEditorTier = myRole === "editor" || myRole === "super_editor";
   const isBusiness = myRole === "business";
@@ -192,7 +198,55 @@ export function Layout({ current, onNavigate, onLogout, myRole, myCanModerate, c
             <NavButton item={{ key: "users", label: "Utilisateurs" }} current={current} onNavigate={onNavigate} />
             <NavButton item={{ key: "reports", label: "Signalements" }} current={current} onNavigate={onNavigate} />
 
-            {BOTTOM_ITEMS.map((item) => (
+            {BOTTOM_ITEMS_BEFORE_BUSINESS.map((item) => (
+              <NavButton key={item.key} item={item} current={current} onNavigate={onNavigate} />
+            ))}
+
+            <button
+              onClick={() => {
+                onNavigate("claims");
+                setBusinessOpen(true);
+              }}
+              style={{
+                textAlign: "left",
+                background: isBusinessScreen ? "#28405C" : "none",
+                border: "none",
+                borderLeft: isBusinessScreen ? "3px solid #39FF66" : "3px solid transparent",
+                padding: "12px 20px",
+                fontSize: "14px",
+                fontWeight: isBusinessScreen ? 700 : 500,
+                color: isBusinessScreen ? "#39FF66" : "#F2F2E8",
+                cursor: "pointer",
+                width: "100%",
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "center",
+                gap: "10px",
+              }}
+            >
+              <span style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+                <span style={{ width: "4px", height: "16px", background: "#39FF66", borderRadius: "2px", display: "inline-block", flexShrink: 0 }} />
+                Business
+              </span>
+              <span
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setBusinessOpen((o) => !o);
+                }}
+                style={{ fontSize: "11px", color: "#39FF66", padding: "4px", display: "inline-block" }}
+              >
+                {businessOpen ? "▼" : "▶"}
+              </span>
+            </button>
+            {businessOpen && (
+              <div style={{ paddingLeft: "14px" }}>
+                {BUSINESS_ITEMS.map((item) => (
+                  <NavButton key={item.key} item={item} current={current} onNavigate={onNavigate} indent />
+                ))}
+              </div>
+            )}
+
+            {BOTTOM_ITEMS_AFTER_BUSINESS.map((item) => (
               <NavButton key={item.key} item={item} current={current} onNavigate={onNavigate} />
             ))}
           </>
