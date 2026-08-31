@@ -68,6 +68,11 @@ export function ReportsScreen() {
               </div>
 
               <p style={{ fontSize: "13.5px", color: "#39FF66", fontWeight: 700, margin: "0 0 6px" }}>{REASON_LABELS[r.reason] || r.reason}</p>
+              {r.duplicate_of_name && (
+                <p style={{ fontSize: "13px", color: "#F2F2E8", margin: "0 0 8px" }}>
+                  Doublon de : <strong>{r.duplicate_of_name}</strong>
+                </p>
+              )}
               {r.comment && <p style={{ fontSize: "13px", color: "#F2F2E8", margin: "0 0 10px", fontStyle: "italic" }}>"{r.comment}"</p>}
               <p style={{ fontSize: "11px", color: "#8792A6", marginBottom: "12px" }}>Signalé par : {r.reported_by || "(anonymisé)"}</p>
 
