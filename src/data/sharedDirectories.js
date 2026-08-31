@@ -31,6 +31,12 @@ const CAPABILITY_MATRIX = {
 /* ---------------- SIGNALEMENTS ---------------- */
 
 const ENTITY_TABLE_BY_TYPE = { venue: "public_venues", drink: "drinks_directory", brand: "brands_directory", producer: "breweries_directory" };
+const ENTITY_SELECT_FIELDS = {
+  venue: "id, name, street_name, street_number, city, cover_photo_url, profile_photo_url, status",
+  drink: "id, name, type, main_photo_url, status",
+  brand: "id, name, logo_url, status",
+  producer: "id, name, country, profile_photo_url, cover_photo_url, status",
+};
 
 export async function loadReports() {
   const { data: reports, error } = await supabase.from("entity_reports").select("*").eq("status", "pending").order("created_at", { ascending: false });
@@ -39,25 +45,35 @@ export async function loadReports() {
     return [];
   }
 
-  // Récupère le nom de chaque fiche concernée — 4 tables différentes possibles, une requête
-  // groupée par table plutôt qu'une requête par signalement.
+  // Récupère les détails complets de chaque fiche concernée (et, pour un doublon, de la fiche
+  // identifiée aussi) — regroupé par table plutôt qu'une requête par signalement.
   const idsByTable = {};
-  reports.forEach((r) => {
-    const table = ENTITY_TABLE_BY_TYPE[r.entity_type];
-    if (!table) return;
+  const addId = (entityType, id) => {
+    const table = ENTITY_TABLE_BY_TYPE[entityType];
+    if (!table || !id) return;
     idsByTable[table] = idsByTable[table] || new Set();
-    idsByTable[table].add(r.entity_id);
+    idsByTable[table].add(id);
+  };
+  reports.forEach((r) => {
+    addId(r.entity_type, r.entity_id);
+    if (r.duplicate_of_id) addId(r.entity_type, r.duplicate_of_id);
   });
 
-  const namesById = {};
+  const detailsById = {};
   await Promise.all(
     Object.entries(idsByTable).map(async ([table, ids]) => {
-      const { data } = await supabase.from(table).select("id, name").in("id", Array.from(ids));
-      (data || []).forEach((row) => (namesById[row.id] = row.name));
+      const entityType = Object.keys(ENTITY_TABLE_BY_TYPE).find((k) => ENTITY_TABLE_BY_TYPE[k] === table);
+      const { data } = await supabase.from(table).select(ENTITY_SELECT_FIELDS[entityType]).in("id", Array.from(ids));
+      (data || []).forEach((row) => (detailsById[row.id] = row));
     })
   );
 
-  return reports.map((r) => ({ ...r, entityName: namesById[r.entity_id] || "(fiche introuvable)" }));
+  return reports.map((r) => ({
+    ...r,
+    entityName: detailsById[r.entity_id]?.name || "(fiche introuvable)",
+    entityDetails: detailsById[r.entity_id] || null,
+    duplicateDetails: r.duplicate_of_id ? detailsById[r.duplicate_of_id] || null : null,
+  }));
 }
 
 export async function archiveReportedEntity(reportId, entityType, entityId) {
