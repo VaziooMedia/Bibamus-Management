@@ -20,6 +20,7 @@ const BOTTOM_ITEMS = [
   { key: "audit", label: "Audit" },
   { key: "countryRules", label: "Configuration pays" },
   { key: "featureFlags", label: "Feature flags" },
+  { key: "crashReports", label: "Crash reports" },
   { key: "admins", label: "Administrateurs" },
   { key: "settings", label: "Paramètres" },
 ];
