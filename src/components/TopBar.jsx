@@ -1,13 +1,26 @@
 import React, { useState, useEffect } from "react";
 import { loadAppUsers } from "../data/sharedDirectories.js";
+import { supabase } from "../supabaseClient.js";
 
-// Nombre réel de comptes Bibax inscrits (rôle "user") — remplace l'ancienne approximation par
-// "codes ayant contribué à la base", devenue obsolète maintenant que les vrais comptes existent.
+// Se met à jour en temps réel via Supabase Realtime — dès qu'un compte est créé, supprimé, ou
+// change de rôle, le compteur se recalcule sans même changer d'écran. Recompte tout à chaque
+// changement (plutôt que d'incrémenter/décrémenter) pour rester juste même en cas de
+// changement de rôle (ex. utilisateur promu admin, qui doit alors sortir du compte).
 function useUserCount() {
   const [count, setCount] = useState(null);
 
   useEffect(() => {
-    loadAppUsers().then((users) => setCount(users.length));
+    const refresh = () => loadAppUsers().then((users) => setCount(users.length));
+    refresh();
+
+    const channel = supabase
+      .channel("bibax-count")
+      .on("postgres_changes", { event: "*", schema: "public", table: "profiles" }, refresh)
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, []);
 
   return count;
