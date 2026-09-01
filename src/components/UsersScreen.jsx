@@ -48,7 +48,7 @@ export function UsersScreen() {
     if (!users) return null;
     const q = query.trim().toLowerCase();
     const filtered = q
-      ? users.filter((u) => [u.name, u.last_name, u.username, u.email].some((field) => (field || "").toLowerCase().includes(q)))
+      ? users.filter((u) => [u.name, u.last_name, u.email].some((field) => (field || "").toLowerCase().includes(q)))
       : users;
     const getValue = (u) => {
       if (sort.key === "active") return isEffectivelyActive(u) ? 1 : 0;
@@ -108,7 +108,6 @@ export function UsersScreen() {
             <tr style={{ borderBottom: "2px solid #28405C" }}>
               <SortHeader label="Nom" sortKey="last_name" currentSort={sort} onSort={handleSort} />
               <SortHeader label="Prénom" sortKey="name" currentSort={sort} onSort={handleSort} />
-              <SortHeader label="Nom d'utilisateur" sortKey="username" currentSort={sort} onSort={handleSort} />
               <th style={{ textAlign: "left", padding: "10px", color: "#8792A6", fontSize: "12px" }}>Email</th>
               <th style={{ textAlign: "left", padding: "10px", color: "#8792A6", fontSize: "12px" }}>Code Bibax</th>
               <SortHeader label="Inscrit le" sortKey="created_at" currentSort={sort} onSort={handleSort} />
@@ -120,7 +119,6 @@ export function UsersScreen() {
               <tr key={u.id} onClick={() => setSelected(u)} style={{ borderBottom: "1px solid #28405C", cursor: "pointer" }}>
                 <td style={{ padding: "10px", color: "#F2F2E8", fontSize: "13.5px" }}>{u.last_name || "—"}</td>
                 <td style={{ padding: "10px", color: "#F2F2E8", fontSize: "13.5px" }}>{u.name || "—"}</td>
-                <td style={{ padding: "10px", color: "#F2F2E8", fontSize: "13.5px" }}>{u.username || "—"}</td>
                 <td style={{ padding: "10px", color: "#F2F2E8", fontSize: "13.5px" }}>{u.email}</td>
                 <td style={{ padding: "10px", color: "#8792A6", fontSize: "13px" }}>{u.bibro_code}</td>
                 <td style={{ padding: "10px", color: "#8792A6", fontSize: "13px" }}>{u.created_at ? u.created_at.slice(0, 10) : "—"}</td>

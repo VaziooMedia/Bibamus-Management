@@ -114,7 +114,6 @@ export function UserDetailPanel({ user, onClose, onSaved }) {
   const [firstName, setFirstName] = useState(user?.name || "");
   const [lastName, setLastName] = useState(user?.last_name || "");
   const [nickname, setNickname] = useState(user?.nickname || "");
-  const [username, setUsername] = useState(user?.username || "");
   const [birthDate, setBirthDate] = useState(user?.birth_date || "");
   const [country, setCountry] = useState(user?.country || "");
   const [region, setRegion] = useState(user?.region || "");
@@ -153,7 +152,6 @@ export function UserDetailPanel({ user, onClose, onSaved }) {
       const missing = {};
       if (!firstName.trim()) missing.firstName = true;
       if (!lastName.trim()) missing.lastName = true;
-      if (!username.trim()) missing.username = true;
       if (!email.trim()) missing.email = true;
       if (!password.trim()) missing.password = true;
       if (!birthDate) missing.birthDate = true;
@@ -173,7 +171,7 @@ export function UserDetailPanel({ user, onClose, onSaved }) {
       }
 
       setSaving(true);
-      const result = await createAppUser(email, password, firstName, lastName, nickname, username, birthDate);
+      const result = await createAppUser(email, password, firstName, lastName, nickname, birthDate);
       setSaving(false);
       if (result.error) {
         setError(result.error);
@@ -200,7 +198,6 @@ export function UserDetailPanel({ user, onClose, onSaved }) {
       firstName,
       lastName,
       nickname,
-      username,
       birthDate,
       country,
       region,
@@ -289,13 +286,6 @@ export function UserDetailPanel({ user, onClose, onSaved }) {
 
             <label style={labelStyle}>Surnom</label>
             <input value={nickname} onChange={(e) => setNickname(e.target.value)} style={{ ...fieldStyle, marginBottom: "12px" }} />
-
-            <RequiredLabel required={isNew}>Nom d'utilisateur</RequiredLabel>
-            <input
-              value={username}
-              onChange={(e) => setUsername(e.target.value)}
-              style={{ ...fieldStyle, marginBottom: "12px", ...(fieldErrors.username ? errorBorder : {}) }}
-            />
 
             <RequiredLabel required={isNew}>Email</RequiredLabel>
             {isNew ? (

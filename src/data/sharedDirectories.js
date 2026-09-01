@@ -168,7 +168,7 @@ export async function loadAppUsers() {
   const { data, error } = await supabase
     .from("profiles")
     .select(
-      "id, email, name, last_name, nickname, username, bibro_code, birth_date, avatar_emoji, country, region, city, facebook_url, instagram_url, tiktok_url, snapchat_url, linkedin_url, app_language, active, blocked_reason, blocked_until, created_at"
+      "id, email, name, last_name, nickname, bibro_code, birth_date, avatar_emoji, country, region, city, facebook_url, instagram_url, tiktok_url, snapchat_url, linkedin_url, app_language, active, blocked_reason, blocked_until, created_at"
     )
     .eq("role", "user")
     .order("created_at", { ascending: false });
@@ -179,9 +179,9 @@ export async function loadAppUsers() {
   return data;
 }
 
-export async function createAppUser(email, password, firstName, lastName, nickname, username, birthDate) {
+export async function createAppUser(email, password, firstName, lastName, nickname, birthDate) {
   const { data, error } = await supabase.functions.invoke("admin-create-user", {
-    body: { email, password, firstName, lastName, nickname, username, birthDate },
+    body: { email, password, firstName, lastName, nickname, birthDate },
   });
   if (error) return { error: await extractFunctionError(error) };
   if (data?.error) return { error: data.error };
@@ -202,7 +202,6 @@ export async function updateAppUserProfile(userId, patch) {
       name: patch.firstName,
       last_name: patch.lastName,
       nickname: patch.nickname,
-      username: patch.username,
       birth_date: patch.birthDate || null,
       country: patch.country,
       region: patch.region,
