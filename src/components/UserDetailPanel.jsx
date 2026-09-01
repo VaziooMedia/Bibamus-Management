@@ -371,7 +371,7 @@ export function UserDetailPanel({ user, onClose, onSaved }) {
               </div>
               <div style={{ flex: 1 }}>
                 <label style={labelStyle}>Ville / Village (optionnel)</label>
-                <input value={locality} onChange={(e) => setLocality(e.target.value)} placeholder="Ex. un hameau" style={fieldStyle} />
+                <input value={locality} onChange={(e) => setLocality(e.target.value)} style={fieldStyle} />
               </div>
             </div>
 
