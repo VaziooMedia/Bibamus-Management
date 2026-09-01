@@ -1,12 +1,24 @@
 // ============================================================
-// Autocomplétion de ville selon le pays choisi — copiée telle
-// quelle depuis le prototype Claude.
+// Autocomplétion de ville selon le pays choisi — évite les
+// fautes de frappe et les villes fantaisistes. Le pays est ici
+// stocké sous forme de code (ex. "belgique"), converti en
+// libellé français ("Belgique") pour retrouver la bonne liste
+// de villes dans CITIES_BY_COUNTRY.
 // ============================================================
-import React, { useState, useRef, useEffect } from "react";
-import { COLORS, CITIES_BY_COUNTRY } from "../constants.js";
-import { normalizeForSearch } from "../utils.js";
+import React, { useState } from "react";
+import { CITIES_BY_COUNTRY, COUNTRIES } from "../constants.js";
 
-export function CityAutocomplete({ value, onChange, country, placeholder, style }) {
+const normalizeForSearch = (text) =>
+  (text || "")
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/\./g, "")
+    .replace(/[-']/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+
+export function CityAutocomplete({ value, onChange, countryCode, placeholder, style }) {
   const [open, setOpen] = useState(false);
   const containerRef = React.useRef(null);
 
@@ -19,8 +31,9 @@ export function CityAutocomplete({ value, onChange, country, placeholder, style 
     return () => document.removeEventListener("mousedown", handler);
   }, [open]);
 
-  const cityList = CITIES_BY_COUNTRY[country] || [];
-  const q = normalizeForSearch(value.trim());
+  const countryLabel = COUNTRIES.find((c) => c.code === countryCode)?.fr || "";
+  const cityList = CITIES_BY_COUNTRY[countryLabel] || [];
+  const q = normalizeForSearch((value || "").trim());
   const suggestions = q.length > 0 ? cityList.filter((c) => normalizeForSearch(c).startsWith(q)).slice(0, 6) : [];
 
   return (
@@ -32,20 +45,21 @@ export function CityAutocomplete({ value, onChange, country, placeholder, style 
           setOpen(true);
         }}
         onFocus={() => setOpen(true)}
-        placeholder={placeholder}
+        placeholder={countryCode ? placeholder : "Choisissez d'abord un pays"}
+        disabled={!countryCode}
         style={style}
       />
       {open && suggestions.length > 0 && (
         <div
           style={{
             position: "absolute",
-            top: "calc(100% - 10px)",
+            top: "calc(100% - 6px)",
             left: 0,
             right: 0,
-            background: COLORS.surface,
-            border: `2px solid ${COLORS.paperAlt}`,
+            background: "#0D1B2A",
+            border: "2px solid #28405C",
             borderRadius: "10px",
-            boxShadow: "0 6px 16px rgba(0,0,0,0.15)",
+            boxShadow: "0 6px 16px rgba(0,0,0,0.4)",
             zIndex: 30,
             overflow: "hidden",
           }}
@@ -57,7 +71,7 @@ export function CityAutocomplete({ value, onChange, country, placeholder, style 
                 onChange(c);
                 setOpen(false);
               }}
-              style={{ display: "block", width: "100%", textAlign: "left", padding: "10px 14px", background: "transparent", border: "none", cursor: "pointer", fontSize: "13.5px" }}
+              style={{ display: "block", width: "100%", textAlign: "left", padding: "10px 14px", background: "transparent", border: "none", cursor: "pointer", fontSize: "13.5px", color: "#F2F2E8" }}
             >
               {c}
             </button>

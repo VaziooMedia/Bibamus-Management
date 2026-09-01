@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { updateAppUserProfile, createAppUser, deleteAppUser, getMinimumAge } from "../data/sharedDirectories.js";
 import { COUNTRIES } from "../constants.js";
+import { CityAutocomplete } from "./CityAutocomplete.jsx";
 
 const fieldStyle = { padding: "10px 12px", borderRadius: "8px", border: "2px solid #28405C", fontSize: "14px", width: "100%", color: "#F2F2E8", background: "#0D1B2A", boxSizing: "border-box" };
 const labelStyle = { fontSize: "12.5px", color: "#8792A6", marginBottom: "4px", display: "block", fontWeight: 600 };
@@ -354,7 +355,7 @@ export function UserDetailPanel({ user, onClose, onSaved }) {
               </div>
               <div style={{ flex: 1 }}>
                 <label style={labelStyle}>Ville de résidence</label>
-                <input value={city} onChange={(e) => setCity(e.target.value)} style={fieldStyle} />
+                <CityAutocomplete value={city} onChange={setCity} countryCode={country} placeholder="Ex. Bruxelles" style={fieldStyle} />
               </div>
             </div>
 
