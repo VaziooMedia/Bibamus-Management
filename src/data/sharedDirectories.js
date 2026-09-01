@@ -168,7 +168,7 @@ export async function loadAppUsers() {
   const { data, error } = await supabase
     .from("profiles")
     .select(
-      "id, email, name, last_name, nickname, bibro_code, birth_date, avatar_emoji, country, region, city, facebook_url, instagram_url, tiktok_url, snapchat_url, linkedin_url, app_language, active, blocked_reason, blocked_until, created_at"
+      "id, email, name, last_name, nickname, bibro_code, birth_date, avatar_emoji, country, city, locality, facebook_url, instagram_url, tiktok_url, snapchat_url, linkedin_url, app_language, active, blocked_reason, blocked_until, created_at"
     )
     .eq("role", "user")
     .order("created_at", { ascending: false });
@@ -204,7 +204,7 @@ export async function updateAppUserProfile(userId, patch) {
       nickname: patch.nickname,
       birth_date: patch.birthDate || null,
       country: patch.country,
-      region: patch.region,
+      locality: patch.locality,
       city: patch.city,
       facebook_url: patch.facebookUrl,
       instagram_url: patch.instagramUrl,

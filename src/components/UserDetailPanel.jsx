@@ -117,8 +117,8 @@ export function UserDetailPanel({ user, onClose, onSaved }) {
   const [nickname, setNickname] = useState(user?.nickname || "");
   const [birthDate, setBirthDate] = useState(user?.birth_date || "");
   const [country, setCountry] = useState(user?.country || "");
-  const [region, setRegion] = useState(user?.region || "");
   const [city, setCity] = useState(user?.city || "");
+  const [locality, setLocality] = useState(user?.locality || "");
   const [facebookUrl, setFacebookUrl] = useState(user?.facebook_url || "");
   const [instagramUrl, setInstagramUrl] = useState(user?.instagram_url || "");
   const [tiktokUrl, setTiktokUrl] = useState(user?.tiktok_url || "");
@@ -157,6 +157,7 @@ export function UserDetailPanel({ user, onClose, onSaved }) {
       if (!password.trim()) missing.password = true;
       if (!birthDate) missing.birthDate = true;
       if (!country) missing.country = true;
+      if (!city.trim()) missing.city = true;
       setFieldErrors(missing);
       if (Object.keys(missing).length > 0) {
         setError("Merci de compléter tous les champs obligatoires (*).");
@@ -194,6 +195,12 @@ export function UserDetailPanel({ user, onClose, onSaved }) {
       }
     }
 
+    if (!country || !city.trim()) {
+      setFieldErrors({ country: !country, city: !city.trim() });
+      setError("Le pays et la commune de résidence sont obligatoires.");
+      return;
+    }
+
     setSaving(true);
     const result = await updateAppUserProfile(user.id, {
       firstName,
@@ -201,8 +208,8 @@ export function UserDetailPanel({ user, onClose, onSaved }) {
       nickname,
       birthDate,
       country,
-      region,
       city,
+      locality,
       facebookUrl,
       instagramUrl,
       tiktokUrl,
@@ -338,8 +345,17 @@ export function UserDetailPanel({ user, onClose, onSaved }) {
               </div>
             </div>
 
-            <RequiredLabel required={isNew}>Pays</RequiredLabel>
-            <select value={country} onChange={(e) => setCountry(e.target.value)} style={{ ...fieldStyle, marginBottom: "12px", ...(fieldErrors.country ? errorBorder : {}) }}>
+            <RequiredLabel required>Pays</RequiredLabel>
+            <select
+              value={country}
+              onChange={(e) => {
+                setCountry(e.target.value);
+                // La commune dépend du pays choisi — si le pays change, une commune déjà
+                // saisie appartiendrait à la liste de l'ancien pays.
+                setCity("");
+              }}
+              style={{ ...fieldStyle, marginBottom: "12px", ...(fieldErrors.country ? errorBorder : {}) }}
+            >
               <option value="">—</option>
               {COUNTRIES.map((c) => (
                 <option key={c.code} value={c.code}>
@@ -350,12 +366,12 @@ export function UserDetailPanel({ user, onClose, onSaved }) {
 
             <div style={{ display: "flex", gap: "10px", marginBottom: "12px" }}>
               <div style={{ flex: 1 }}>
-                <label style={labelStyle}>Région</label>
-                <input value={region} onChange={(e) => setRegion(e.target.value)} style={fieldStyle} />
+                <RequiredLabel required>Commune de résidence</RequiredLabel>
+                <CityAutocomplete value={city} onChange={setCity} countryCode={country} placeholder="Ex. Bruxelles" style={{ ...fieldStyle, ...(fieldErrors.city ? errorBorder : {}) }} />
               </div>
               <div style={{ flex: 1 }}>
-                <label style={labelStyle}>Ville de résidence</label>
-                <CityAutocomplete value={city} onChange={setCity} countryCode={country} placeholder="Ex. Bruxelles" style={fieldStyle} />
+                <label style={labelStyle}>Ville / Village (optionnel)</label>
+                <input value={locality} onChange={(e) => setLocality(e.target.value)} placeholder="Ex. un hameau" style={fieldStyle} />
               </div>
             </div>
 
