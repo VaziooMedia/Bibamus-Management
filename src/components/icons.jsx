@@ -74,7 +74,7 @@ export function BibamusIcon({ size = 22 }) {
   );
 }
 
-export function NavIcon({ name, size = 20, color = "currentColor" }) {
+export function NavIcon({ name, size = 20, color = "currentColor", filled = false }) {
   const common = { width: size, height: size, viewBox: "0 0 24 24", fill: "none", stroke: color, strokeWidth: "2", strokeLinecap: "round", strokeLinejoin: "round" };
   switch (name) {
     case "home":
@@ -82,6 +82,24 @@ export function NavIcon({ name, size = 20, color = "currentColor" }) {
         <svg {...common}>
           <path d="M4 11.5 12 4l8 7.5" />
           <path d="M6 10v9a1 1 0 0 0 1 1h3v-5h4v5h3a1 1 0 0 0 1-1v-9" />
+        </svg>
+      );
+    case "comment":
+      return (
+        <svg {...common}>
+          <path d="M4 5h16a1 1 0 0 1 1 1v10a1 1 0 0 1-1 1H9l-4.5 4v-4H4a1 1 0 0 1-1-1V6a1 1 0 0 1 1-1Z" />
+        </svg>
+      );
+    case "chevron-right":
+      return (
+        <svg {...common}>
+          <path d="M9 5l7 7-7 7" />
+        </svg>
+      );
+    case "plus":
+      return (
+        <svg {...common}>
+          <path d="M12 5v14M5 12h14" />
         </svg>
       );
     case "map-pin":
@@ -188,6 +206,12 @@ M 591 35 L 579 41 L 574 47 L 571 53 L 571 56 L 570 57 L 570 67 L 571 68 L 571 72
             fill={color}
             d="M 142 808 L 141 822 L 140 823 L 140 836 L 139 837 L 139 872 L 140 873 L 141 884 L 142 885 L 142 888 L 143 889 L 145 897 L 154 915 L 159 921 L 159 922 L 163 926 L 163 927 L 170 934 L 171 934 L 180 942 L 186 945 L 188 947 L 208 956 L 211 956 L 212 957 L 215 957 L 216 958 L 221 958 L 222 959 L 231 959 L 232 960 L 792 960 L 793 959 L 801 959 L 802 958 L 807 958 L 808 957 L 811 957 L 812 956 L 815 956 L 816 955 L 821 954 L 835 947 L 837 945 L 847 939 L 863 923 L 863 922 L 868 916 L 872 908 L 874 906 L 874 904 L 877 899 L 877 897 L 879 894 L 879 892 L 881 888 L 882 880 L 883 879 L 883 872 L 884 871 L 884 839 L 883 838 L 883 826 L 882 825 L 881 809 L 880 808 L 880 803 L 879 802 L 879 798 L 878 797 L 878 794 L 877 793 L 877 789 L 876 788 L 874 777 L 872 773 L 872 770 L 871 769 L 871 767 L 870 766 L 866 752 L 864 749 L 864 747 L 860 739 L 860 737 L 846 709 L 842 704 L 841 701 L 839 699 L 838 696 L 836 694 L 830 684 L 827 681 L 822 673 L 812 662 L 812 661 L 788 636 L 787 636 L 780 629 L 779 629 L 769 620 L 768 620 L 761 614 L 751 608 L 745 603 L 738 600 L 736 598 L 720 590 L 718 588 L 714 587 L 700 580 L 698 580 L 695 578 L 688 576 L 685 574 L 683 574 L 676 571 L 673 571 L 669 569 L 666 569 L 659 566 L 651 565 L 650 564 L 642 563 L 641 562 L 637 562 L 636 561 L 624 560 L 623 559 L 616 559 L 615 558 L 603 558 L 602 557 L 421 557 L 420 558 L 408 558 L 407 559 L 399 559 L 398 560 L 392 560 L 391 561 L 380 562 L 379 563 L 376 563 L 375 564 L 372 564 L 371 565 L 367 565 L 366 566 L 359 567 L 352 570 L 349 570 L 348 571 L 334 575 L 331 577 L 326 578 L 323 580 L 321 580 L 312 585 L 310 585 L 296 592 L 294 594 L 282 600 L 280 602 L 277 603 L 275 605 L 268 609 L 265 612 L 264 612 L 254 620 L 253 620 L 234 637 L 233 637 L 213 658 L 213 659 L 207 665 L 207 666 L 203 670 L 203 671 L 199 675 L 194 683 L 191 686 L 191 687 L 185 695 L 184 698 L 182 700 L 181 703 L 179 705 L 177 710 L 175 712 L 165 732 L 165 734 L 161 741 L 161 743 L 157 751 L 157 753 L 156 754 L 156 756 L 155 757 L 155 759 L 154 760 L 154 762 L 153 763 L 153 765 L 150 772 L 149 779 L 147 783 L 146 792 L 145 793 L 145 796 L 144 797 L 143 807 Z M 202 832 L 203 831 L 203 824 L 204 823 L 204 817 L 205 816 L 206 806 L 207 805 L 208 798 L 210 794 L 210 791 L 212 787 L 212 784 L 213 783 L 216 772 L 219 767 L 221 760 L 231 740 L 242 724 L 245 718 L 257 704 L 257 703 L 264 696 L 264 695 L 276 683 L 277 683 L 284 676 L 285 676 L 291 670 L 292 670 L 299 664 L 303 662 L 306 659 L 314 655 L 319 651 L 324 649 L 326 647 L 336 642 L 338 642 L 343 639 L 345 639 L 350 636 L 352 636 L 355 634 L 360 633 L 366 630 L 369 630 L 373 628 L 376 628 L 377 627 L 380 627 L 381 626 L 384 626 L 385 625 L 388 625 L 389 624 L 393 624 L 394 623 L 398 623 L 399 622 L 404 622 L 405 621 L 412 621 L 413 620 L 424 620 L 425 619 L 596 619 L 597 620 L 608 620 L 609 621 L 616 621 L 617 622 L 623 622 L 624 623 L 633 624 L 634 625 L 637 625 L 638 626 L 649 628 L 653 630 L 656 630 L 662 633 L 664 633 L 670 636 L 672 636 L 675 638 L 677 638 L 682 641 L 684 641 L 708 654 L 713 658 L 719 661 L 726 667 L 730 669 L 743 681 L 744 681 L 762 699 L 762 700 L 768 706 L 768 707 L 772 711 L 772 712 L 781 723 L 784 729 L 788 734 L 789 737 L 794 744 L 795 748 L 806 770 L 806 772 L 807 773 L 807 775 L 808 776 L 808 778 L 809 779 L 809 781 L 810 782 L 810 784 L 813 791 L 813 794 L 814 795 L 814 798 L 815 799 L 815 802 L 816 803 L 816 806 L 817 807 L 817 811 L 818 812 L 818 817 L 819 818 L 819 824 L 820 825 L 820 834 L 821 835 L 821 870 L 820 871 L 820 873 L 817 880 L 808 890 L 799 895 L 793 896 L 792 897 L 231 897 L 230 896 L 224 895 L 215 890 L 208 883 L 203 874 L 203 871 L 202 870 L 202 865 L 201 864 Z M 484 64 L 483 65 L 469 66 L 468 67 L 459 68 L 458 69 L 451 70 L 447 72 L 444 72 L 443 73 L 429 77 L 426 79 L 421 80 L 418 82 L 416 82 L 394 93 L 392 95 L 387 97 L 385 99 L 369 109 L 360 117 L 355 120 L 344 131 L 343 131 L 337 138 L 335 139 L 335 140 L 321 155 L 319 159 L 316 162 L 314 166 L 311 169 L 311 170 L 305 178 L 304 181 L 300 186 L 295 197 L 293 199 L 290 205 L 290 207 L 286 214 L 286 216 L 283 221 L 282 226 L 280 229 L 280 231 L 279 232 L 279 234 L 276 241 L 276 244 L 275 245 L 274 251 L 273 252 L 273 255 L 272 256 L 272 260 L 271 261 L 271 265 L 270 266 L 270 271 L 269 272 L 269 277 L 268 278 L 268 285 L 267 286 L 267 299 L 266 300 L 266 321 L 267 322 L 267 334 L 268 335 L 268 342 L 269 343 L 270 354 L 271 355 L 271 359 L 272 360 L 272 363 L 273 364 L 274 372 L 275 373 L 275 375 L 276 376 L 276 378 L 277 379 L 281 393 L 283 396 L 283 398 L 287 405 L 287 407 L 296 425 L 298 427 L 299 430 L 301 432 L 311 448 L 315 452 L 315 453 L 322 461 L 322 462 L 335 475 L 335 476 L 338 479 L 339 479 L 354 493 L 355 493 L 366 502 L 367 502 L 381 512 L 386 514 L 388 516 L 393 518 L 395 520 L 409 527 L 411 527 L 416 530 L 418 530 L 423 533 L 431 535 L 434 537 L 436 537 L 440 539 L 443 539 L 447 541 L 455 542 L 456 543 L 459 543 L 460 544 L 470 545 L 471 546 L 475 546 L 476 547 L 484 547 L 485 548 L 498 548 L 499 549 L 522 549 L 523 548 L 537 548 L 538 547 L 551 546 L 552 545 L 556 545 L 557 544 L 561 544 L 562 543 L 566 543 L 567 542 L 570 542 L 571 541 L 582 539 L 588 536 L 590 536 L 591 535 L 599 533 L 602 531 L 604 531 L 631 518 L 633 516 L 636 515 L 641 511 L 644 510 L 646 508 L 653 504 L 661 497 L 666 494 L 671 489 L 672 489 L 696 465 L 696 464 L 702 458 L 704 454 L 708 450 L 708 449 L 711 446 L 711 445 L 719 434 L 720 431 L 725 424 L 728 417 L 730 415 L 730 413 L 737 400 L 737 398 L 739 395 L 739 393 L 741 390 L 741 388 L 743 385 L 743 383 L 744 382 L 744 380 L 747 373 L 747 370 L 748 369 L 748 366 L 749 365 L 749 362 L 750 361 L 750 358 L 751 357 L 752 348 L 753 347 L 754 334 L 755 333 L 755 325 L 756 324 L 756 293 L 755 292 L 755 283 L 754 282 L 753 270 L 752 269 L 752 265 L 751 264 L 751 261 L 750 260 L 750 257 L 749 256 L 747 245 L 746 244 L 742 230 L 740 227 L 740 225 L 736 217 L 736 215 L 725 192 L 723 190 L 717 178 L 715 176 L 707 163 L 704 160 L 702 156 L 696 150 L 696 149 L 691 144 L 691 143 L 663 116 L 662 116 L 655 110 L 651 108 L 648 105 L 647 105 L 636 97 L 631 95 L 629 93 L 607 82 L 605 82 L 597 78 L 595 78 L 594 77 L 592 77 L 591 76 L 589 76 L 588 75 L 586 75 L 585 74 L 583 74 L 576 71 L 573 71 L 572 70 L 569 70 L 568 69 L 565 69 L 564 68 L 560 68 L 559 67 L 555 67 L 554 66 L 541 65 L 540 64 L 530 64 L 529 63 L 496 63 L 495 64 Z M 502 125 L 522 125 L 523 126 L 539 127 L 540 128 L 544 128 L 545 129 L 553 130 L 557 132 L 560 132 L 561 133 L 572 136 L 575 138 L 580 139 L 598 148 L 600 150 L 603 151 L 605 153 L 611 156 L 614 159 L 615 159 L 618 162 L 619 162 L 622 165 L 627 168 L 642 182 L 642 183 L 654 196 L 654 197 L 658 201 L 658 202 L 666 213 L 670 221 L 672 223 L 676 231 L 676 233 L 679 238 L 679 240 L 682 245 L 682 247 L 685 254 L 685 257 L 688 264 L 689 272 L 690 273 L 690 278 L 691 279 L 691 285 L 692 286 L 692 295 L 693 296 L 693 316 L 692 317 L 692 328 L 691 329 L 690 341 L 689 342 L 689 345 L 687 349 L 687 352 L 686 353 L 686 356 L 685 357 L 684 362 L 682 365 L 682 367 L 679 373 L 679 375 L 666 400 L 661 406 L 656 414 L 653 417 L 653 418 L 647 424 L 647 425 L 623 448 L 622 448 L 619 451 L 618 451 L 615 454 L 614 454 L 606 460 L 596 465 L 594 467 L 590 468 L 579 474 L 577 474 L 574 476 L 572 476 L 571 477 L 569 477 L 568 478 L 566 478 L 559 481 L 556 481 L 555 482 L 552 482 L 551 483 L 547 483 L 546 484 L 542 484 L 541 485 L 536 485 L 535 486 L 528 486 L 527 487 L 496 487 L 495 486 L 489 486 L 488 485 L 476 484 L 475 483 L 472 483 L 471 482 L 467 482 L 463 480 L 460 480 L 459 479 L 451 477 L 448 475 L 443 474 L 432 468 L 430 468 L 424 465 L 422 463 L 419 462 L 414 458 L 408 455 L 405 452 L 404 452 L 397 446 L 396 446 L 389 439 L 388 439 L 368 418 L 368 417 L 362 410 L 362 409 L 356 401 L 355 398 L 353 396 L 352 393 L 350 391 L 346 383 L 346 381 L 342 374 L 341 369 L 339 366 L 339 364 L 336 357 L 336 354 L 335 353 L 335 350 L 334 349 L 334 346 L 333 345 L 333 341 L 332 340 L 331 325 L 330 324 L 330 295 L 331 294 L 331 285 L 332 284 L 332 279 L 333 278 L 333 274 L 334 273 L 335 265 L 336 264 L 336 262 L 337 261 L 341 247 L 343 244 L 345 237 L 356 216 L 358 214 L 361 208 L 364 205 L 366 201 L 370 197 L 370 196 L 374 192 L 374 191 L 378 187 L 378 186 L 398 167 L 403 164 L 407 160 L 408 160 L 419 152 L 427 148 L 429 146 L 439 141 L 441 141 L 451 136 L 453 136 L 454 135 L 456 135 L 463 132 L 466 132 L 467 131 L 470 131 L 471 130 L 474 130 L 475 129 L 478 129 L 479 128 L 484 128 L 485 127 L 490 127 L 491 126 L 501 126 Z"
           />
+        </svg>
+      );
+    case "star":
+      return (
+        <svg width={size} height={size} viewBox="0 0 24 24" fill={filled ? color : "none"} stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <path d="M12 2.5l2.9 6.1 6.6.7-4.9 4.6 1.3 6.6L12 17.3l-5.9 3.2 1.3-6.6-4.9-4.6 6.6-.7z" />
         </svg>
       );
     case "back-triangle":
@@ -309,12 +333,66 @@ M 418 169 L 410 176 L 406 186 L 406 194 L 412 211 L 415 216 L 419 229 L 422 234 
           <path d="M20 5.5V11H14.5" stroke={color} strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" fill="none" />
         </svg>
       );
-    case "heart":
+    case "settings":
+      return (
+        <svg width={size} height={size} viewBox="0 0 24 24" fill={color}>
+          <path
+            fillRule="evenodd"
+            clipRule="evenodd"
+            d="M12 1a1 1 0 0 1 1 1v1.09a6.97 6.97 0 0 1 2.6 1.08l.77-.77a1 1 0 1 1 1.42 1.42l-.77.77c.5.75.87 1.61 1.08 2.6H19a1 1 0 1 1 0 2h-1.09a6.97 6.97 0 0 1-1.08 2.6l.77.77a1 1 0 1 1-1.42 1.42l-.77-.77a6.97 6.97 0 0 1-2.6 1.08V19a1 1 0 1 1-2 0v-1.09a6.97 6.97 0 0 1-2.6-1.08l-.77.77a1 1 0 1 1-1.42-1.42l.77-.77A6.97 6.97 0 0 1 5.09 13H4a1 1 0 1 1 0-2h1.09a6.97 6.97 0 0 1 1.08-2.6l-.77-.77a1 1 0 0 1 1.42-1.42l.77.77A6.97 6.97 0 0 1 11 3.09V2a1 1 0 0 1 1-1Zm0 7.5a3.5 3.5 0 1 0 0 7 3.5 3.5 0 0 0 0-7Z"
+          />
+        </svg>
+      );
+    case "crown":
       return (
         <svg width={size} height={size} viewBox="0 0 24 24" fill="none">
+          <path d="M3 8.5l4 3 5-6 5 6 4-3-1.6 9.5H4.6L3 8.5Z" stroke={color} strokeWidth="1.7" strokeLinejoin="round" fill={filled ? color : "none"} />
+        </svg>
+      );
+    case "bar-chart":
+      return (
+        <svg width={size} height={size} viewBox="0 0 24 24" fill="none">
+          <rect x="4" y="12" width="4" height="8" rx="1" fill={color} />
+          <rect x="10" y="7" width="4" height="13" rx="1" fill={color} />
+          <rect x="16" y="3" width="4" height="17" rx="1" fill={color} />
+        </svg>
+      );
+    case "calendar":
+      return (
+        <svg width={size} height={size} viewBox="0 0 24 24" fill="none">
+          <rect x="3.5" y="5" width="17" height="15" rx="2.5" stroke={color} strokeWidth="1.7" />
+          <path d="M3.5 9.5h17M8 3v3.5M16 3v3.5" stroke={color} strokeWidth="1.7" strokeLinecap="round" />
+        </svg>
+      );
+    case "map-pin-check":
+      return (
+        <svg width={size} height={size} viewBox="0 0 24 24" fill="none">
+          <path d="M12 21s7-6.5 7-11.5A7 7 0 1 0 5 9.5C5 14.5 12 21 12 21Z" stroke={color} strokeWidth="1.7" strokeLinejoin="round" />
+          <path d="M9 9.3l2 2 3.3-3.6" stroke={color} strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" />
+        </svg>
+      );
+    case "trash":
+      return (
+        <svg width={size} height={size} viewBox="0 0 24 24" fill="none">
+          <path d="M4 7h16M9 7V4.5A1.5 1.5 0 0 1 10.5 3h3A1.5 1.5 0 0 1 15 4.5V7M6.5 7l.7 12.2A2 2 0 0 0 9.2 21h5.6a2 2 0 0 0 2-1.8L17.5 7" stroke={color} strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" />
+          <path d="M10 11v6M14 11v6" stroke={color} strokeWidth="1.7" strokeLinecap="round" />
+        </svg>
+      );
+    case "heart":
+      return filled ? (
+        <svg width={size} height={size} viewBox="0 0 24 24" fill="none">
           <path
-            d="M12 20.5s-7.5-4.6-10-9.3C.5 8 2.3 5 5.4 5c1.9 0 3.4 1 4.6 2.6C11.2 6 12.7 5 14.6 5c3.1 0 4.9 3 3.4 6.2-2.5 4.7-10 9.3-10 9.3Z"
+            d="M12 21s-6.7-4.35-9.33-8.66C.94 9.4 1.9 5.6 5.4 4.62c2.15-.6 4.2.2 5.6 2.1a.5.5 0 0 0 .8 0c1.4-1.9 3.45-2.7 5.6-2.1 3.5.98 4.46 4.78 2.73 7.72C18.7 16.65 12 21 12 21Z"
             fill={color}
+          />
+        </svg>
+      ) : (
+        <svg width={size} height={size} viewBox="0 0 24 24" fill="none">
+          <path
+            d="M12 21s-6.7-4.35-9.33-8.66C.94 9.4 1.9 5.6 5.4 4.62c2.15-.6 4.2.2 5.6 2.1a.5.5 0 0 0 .8 0c1.4-1.9 3.45-2.7 5.6-2.1 3.5.98 4.46 4.78 2.73 7.72C18.7 16.65 12 21 12 21Z"
+            stroke={color}
+            strokeWidth="1.8"
+            strokeLinejoin="round"
           />
         </svg>
       );
@@ -362,7 +440,7 @@ M 418 169 L 410 176 L 406 186 L 406 194 L 412 211 L 415 216 L 419 229 L 422 234 
       );
     case "bottle":
       return (
-        <svg width={Math.round(size * (1254 / 1254))} height={size} viewBox="0 0 1254 1254" fill="none">
+        <svg width={Math.round(size * (405 / 1070))} height={size} viewBox="425 130 405 1070" fill="none">
           <path
             fillRule="evenodd"
             clipRule="evenodd"
@@ -370,6 +448,13 @@ M 418 169 L 410 176 L 406 186 L 406 194 L 412 211 L 415 216 L 419 229 L 422 234 
             d="M 542 146 C 543 198, 538 276, 530 361 C 526 410, 516 445, 489 474 C 458 507, 443 548, 443 600 L 443 1083 C 443 1143, 487 1185, 547 1185 L 707 1185 C 767 1185, 811 1143, 811 1083 L 811 600 C 811 548, 796 507, 765 474 C 738 445, 728 410, 724 361 C 716 276, 711 198, 712 146 Z M 578 157 C 578 153, 581 151, 585 151 L 669 151 C 673 151, 676 153, 676 157 L 672 222 C 672 227, 669 230, 664 230 L 590 230 C 585 230, 582 227, 582 222 Z M 596 626 C 546 626, 518 657, 518 707 L 518 920 C 518 970, 546 1001, 596 1001 L 658 1001 C 708 1001, 736 970, 736 920 L 736 707 C 736 657, 708 626, 658 626 Z"
           />
           <rect x="514" y="69" width="226" height="92" rx="46" ry="46" fill={color} />
+        </svg>
+      );
+    case "camera":
+      return (
+        <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z" />
+          <circle cx="12" cy="13" r="4" />
         </svg>
       );
     default:
@@ -399,18 +484,25 @@ export function WebsiteIcon({ size = 22 }) {
   );
 }
 
+import facebookLogoUrl from "../assets/brand/facebook.svg";
+import tiktokLogoUrl from "../assets/brand/tiktok.svg";
+import snapchatLogoUrl from "../assets/brand/snapchat.svg";
+import whatsappLogoUrl from "../assets/brand/whatsapp.svg";
+import xLogoUrl from "../assets/brand/X.svg";
+import threadsLogoUrl from "../assets/brand/threads.svg";
+import linkedinLogoUrl from "../assets/brand/linkedIn.svg";
+
+// Facebook est déjà un rond plein (fond bleu, "f" blanc) dans le fichier officiel — rien à
+// corriger.
 export function FacebookIcon({ size = 22 }) {
-  return (
-    <svg width={size} height={size} viewBox="0 0 24 24">
-      <circle cx="12" cy="12" r="11" fill="#1877F2" />
-      <path
-        d="M13.6 20v-6.6h2.2l.33-2.56h-2.53v-1.64c0-.74.2-1.25 1.27-1.25h1.36V5.66c-.24-.03-1.04-.1-1.98-.1-1.96 0-3.3 1.2-3.3 3.4v1.88H8.7v2.56h2.25V20h2.65z"
-        fill="#fff"
-      />
-    </svg>
-  );
+  return <img src={facebookLogoUrl} alt="Facebook" width={size} height={size} style={{ display: "block", borderRadius: "50%" }} />;
 }
 
+// Instagram reste dessiné à la main pour l'instant — le fichier officiel présent sur GitHub
+// pèse 10,8 Mo (anormal, les 7 autres font entre 400 octets et 176 Ko), inutilisable tel quel
+// sans plomber le temps de chargement de l'app. À remplacer dès qu'un fichier plus léger est
+// disponible. Passé en rond plein (au lieu du carré arrondi) pour rester cohérent avec les
+// autres réseaux.
 export function InstagramIcon({ size = 22 }) {
   return (
     <svg width={size} height={size} viewBox="0 0 24 24">
@@ -421,25 +513,22 @@ export function InstagramIcon({ size = 22 }) {
           <stop offset="100%" stopColor="#8134af" />
         </linearGradient>
       </defs>
-      <rect x="1" y="1" width="22" height="22" rx="6.5" fill="url(#ig-gradient-badge)" />
+      <circle cx="12" cy="12" r="11" fill="url(#ig-gradient-badge)" />
       <circle cx="12" cy="12" r="5" fill="none" stroke="#fff" strokeWidth="1.8" />
       <circle cx="17.3" cy="6.7" r="1.1" fill="#fff" />
     </svg>
   );
 }
 
+// TikTok — le fichier officiel a un fond carré noir plein ; recadré en rond (les coins du
+// carré sont coupés, le logo lui-même reste bien centré et intact).
 export function TiktokIcon({ size = 22 }) {
   return (
-    <svg width={size} height={size} viewBox="0 0 24 24">
-      <circle cx="12" cy="12" r="11" fill="#000" />
-      <path
-        d="M14.2 6h-2.1v8.3c0 1.15-.95 2.1-2.1 2.1s-2.1-.95-2.1-2.1.95-2.1 2.1-2.1c.16 0 .32.02.47.05v-2.15a4.3 4.3 0 00-.47-.03 4.25 4.25 0 100 8.5 4.25 4.25 0 004.25-4.25V9.9c.7.5 1.55.8 2.45.8V8.6a2.85 2.85 0 01-2.05-.87A2.9 2.9 0 0114 6.2V6z"
-        fill="#fff"
-      />
-    </svg>
+    <span style={{ display: "inline-flex", width: size, height: size, borderRadius: "50%", overflow: "hidden" }}>
+      <img src={tiktokLogoUrl} alt="TikTok" width={size} height={size} style={{ display: "block", objectFit: "cover" }} />
+    </span>
   );
 }
-
 
 export function EyeOffIcon({ size = 14, color = COLORS.inkSoft, title = "Privé — jamais visible par tes Bibax" }) {
   return (
@@ -456,14 +545,50 @@ export function EyeOffIcon({ size = 14, color = COLORS.inkSoft, title = "Privé 
   );
 }
 
+// Snapchat — même souci que TikTok, fond carré jaune plein ; recadré en rond.
 export function SnapchatIcon({ size = 22 }) {
   return (
-    <svg width={size} height={size} viewBox="0 0 24 24">
-      <circle cx="12" cy="12" r="11" fill="#FFFC00" />
-      <path
-        d="M12 6.2c1.9 0 3 1.4 3.05 3.2.02.75-.02 1.4-.06 1.95.5.28 1.05.1 1.35-.05.2-.1.45-.05.55.15.1.22 0 .45-.2.58-.35.22-.9.5-1.55.6-.05.35-.02.6.35.85.5.35 1.3.5 1.85.58.25.03.3.35.1.5-.25.18-.7.35-1.15.42-.05.15-.1.4-.2.6-.1.2-.3.22-.55.18-.4-.05-.85-.1-1.3.05-.5.15-1 .65-2.34.65s-1.84-.5-2.34-.65c-.45-.15-.9-.1-1.3-.05-.25.04-.45.02-.55-.18-.1-.2-.15-.45-.2-.6-.45-.07-.9-.24-1.15-.42-.2-.15-.15-.47.1-.5.55-.08 1.35-.23 1.85-.58.37-.25.4-.5.35-.85-.65-.1-1.2-.38-1.55-.6-.2-.13-.3-.36-.2-.58.1-.2.35-.25.55-.15.3.15.85.33 1.35.05-.04-.55-.08-1.2-.06-1.95C9 7.6 10.1 6.2 12 6.2z"
-        fill="#000"
-      />
-    </svg>
+    <span style={{ display: "inline-flex", width: size, height: size, borderRadius: "50%", overflow: "hidden" }}>
+      <img src={snapchatLogoUrl} alt="Snapchat" width={size} height={size} style={{ display: "block", objectFit: "cover" }} />
+    </span>
+  );
+}
+
+// WhatsApp — le fichier officiel n'a aucun fond (juste le tracé vert sur transparent) ; ajout
+// d'un rond blanc derrière, convention habituelle pour ce logo.
+export function WhatsappIcon({ size = 22 }) {
+  return (
+    <span style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", width: size, height: size, borderRadius: "50%", background: "#fff", overflow: "hidden" }}>
+      <img src={whatsappLogoUrl} alt="WhatsApp" width={Math.round(size * 0.82)} height={Math.round(size * 0.82)} style={{ display: "block" }} />
+    </span>
+  );
+}
+
+// X — le tracé officiel est blanc sur transparent ; ajout d'un rond noir derrière, couleur de
+// marque officielle.
+export function XIcon({ size = 22 }) {
+  return (
+    <span style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", width: size, height: size, borderRadius: "50%", background: "#000", overflow: "hidden" }}>
+      <img src={xLogoUrl} alt="X" width={Math.round(size * 0.55)} height={Math.round(size * 0.55)} style={{ display: "block" }} />
+    </span>
+  );
+}
+
+// Threads — le tracé officiel est noir sur transparent ; inversé en blanc et posé sur un rond
+// noir, comme l'icône d'app officielle de Threads.
+export function ThreadsIcon({ size = 22 }) {
+  return (
+    <span style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", width: size, height: size, borderRadius: "50%", background: "#000", overflow: "hidden" }}>
+      <img src={threadsLogoUrl} alt="Threads" width={Math.round(size * 0.6)} height={Math.round(size * 0.6)} style={{ display: "block", filter: "invert(1)" }} />
+    </span>
+  );
+}
+
+// LinkedIn — le fichier officiel a un fond carré arrondi bleu plein ; recadré en rond.
+export function LinkedinIcon({ size = 22 }) {
+  return (
+    <span style={{ display: "inline-flex", width: size, height: size, borderRadius: "50%", overflow: "hidden" }}>
+      <img src={linkedinLogoUrl} alt="LinkedIn" width={size} height={size} style={{ display: "block", objectFit: "cover" }} />
+    </span>
   );
 }
