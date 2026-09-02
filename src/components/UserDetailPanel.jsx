@@ -123,6 +123,9 @@ export function UserDetailPanel({ user, onClose, onSaved }) {
   const [instagramUrl, setInstagramUrl] = useState(user?.instagram_url || "");
   const [tiktokUrl, setTiktokUrl] = useState(user?.tiktok_url || "");
   const [snapchatUrl, setSnapchatUrl] = useState(user?.snapchat_url || "");
+  const [whatsappUrl, setWhatsappUrl] = useState(user?.whatsapp_url || "");
+  const [xUrl, setXUrl] = useState(user?.x_url || "");
+  const [threadsUrl, setThreadsUrl] = useState(user?.threads_url || "");
   const [linkedinUrl, setLinkedinUrl] = useState(user?.linkedin_url || "");
   const [appLanguage, setAppLanguage] = useState(user?.app_language || "fr");
   const [active, setActive] = useState(user?.active !== false);
@@ -214,6 +217,9 @@ export function UserDetailPanel({ user, onClose, onSaved }) {
       instagramUrl,
       tiktokUrl,
       snapchatUrl,
+      whatsappUrl,
+      xUrl,
+      threadsUrl,
       linkedinUrl,
       appLanguage,
       active,
@@ -400,6 +406,12 @@ export function UserDetailPanel({ user, onClose, onSaved }) {
             <input value={tiktokUrl} onChange={(e) => setTiktokUrl(e.target.value)} style={{ ...fieldStyle, marginBottom: "12px" }} />
             <label style={labelStyle}>Lien Snapchat</label>
             <input value={snapchatUrl} onChange={(e) => setSnapchatUrl(e.target.value)} style={{ ...fieldStyle, marginBottom: "12px" }} />
+            <label style={labelStyle}>Lien WhatsApp</label>
+            <input value={whatsappUrl} onChange={(e) => setWhatsappUrl(e.target.value)} style={{ ...fieldStyle, marginBottom: "12px" }} />
+            <label style={labelStyle}>Lien X</label>
+            <input value={xUrl} onChange={(e) => setXUrl(e.target.value)} style={{ ...fieldStyle, marginBottom: "12px" }} />
+            <label style={labelStyle}>Lien Threads</label>
+            <input value={threadsUrl} onChange={(e) => setThreadsUrl(e.target.value)} style={{ ...fieldStyle, marginBottom: "12px" }} />
             <label style={labelStyle}>Lien LinkedIn</label>
             <input value={linkedinUrl} onChange={(e) => setLinkedinUrl(e.target.value)} style={fieldStyle} />
           </div>
