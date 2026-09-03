@@ -2,11 +2,41 @@ import React, { useState } from "react";
 import { updateAppUserProfile, createAppUser, deleteAppUser, getMinimumAge } from "../data/sharedDirectories.js";
 import { COUNTRIES } from "../constants.js";
 import { CityAutocomplete } from "./CityAutocomplete.jsx";
+import { FacebookIcon, InstagramIcon, TiktokIcon, SnapchatIcon, XIcon, ThreadsIcon, LinkedinIcon, PinterestIcon, TwitchIcon } from "./icons.jsx";
 
 const fieldStyle = { padding: "10px 12px", borderRadius: "8px", border: "2px solid #28405C", fontSize: "14px", width: "100%", color: "#F2F2E8", background: "#0D1B2A", boxSizing: "border-box" };
 const labelStyle = { fontSize: "12.5px", color: "#8792A6", marginBottom: "4px", display: "block", fontWeight: 600 };
 const separatorStyle = { borderBottom: "1px solid #28405C", margin: "16px 0" };
 const errorBorder = { borderColor: "#FF3B4E" };
+
+function stripPrefix(value, prefix) {
+  if (!value) return "";
+  return value.startsWith(prefix) ? value.slice(prefix.length) : value;
+}
+
+// Réseau social — préfixe fixe préaffiché sur sa propre ligne (non modifiable), le champ en
+// dessous ne contient que l'identifiant. La valeur stockée (préfixe + identifiant) est
+// reconstituée à chaque frappe.
+function SocialLinkField({ icon, label, prefix, value, onChange, last }) {
+  const handle = stripPrefix(value, prefix);
+  return (
+    <div style={{ marginBottom: last ? 0 : "16px" }}>
+      <label style={{ ...labelStyle, display: "flex", alignItems: "center", gap: "8px" }}>
+        {icon}
+        {label}
+      </label>
+      <div style={{ padding: "8px 12px", borderRadius: "8px 8px 0 0", border: "2px solid #28405C", borderBottom: "none", background: "#16273D", fontSize: "13px", color: "#8792A6", overflowWrap: "anywhere" }}>
+        {prefix}
+      </div>
+      <input
+        value={handle}
+        onChange={(e) => onChange(e.target.value.trim() ? prefix + e.target.value : "")}
+        placeholder="identifiant"
+        style={{ ...fieldStyle, borderRadius: "0 0 8px 8px" }}
+      />
+    </div>
+  );
+}
 
 // Astérisque vert fluo pour signaler un champ obligatoire (uniquement affiché en création).
 function RequiredLabel({ children, required }) {
@@ -123,10 +153,11 @@ export function UserDetailPanel({ user, onClose, onSaved }) {
   const [instagramUrl, setInstagramUrl] = useState(user?.instagram_url || "");
   const [tiktokUrl, setTiktokUrl] = useState(user?.tiktok_url || "");
   const [snapchatUrl, setSnapchatUrl] = useState(user?.snapchat_url || "");
-  const [whatsappUrl, setWhatsappUrl] = useState(user?.whatsapp_url || "");
   const [xUrl, setXUrl] = useState(user?.x_url || "");
   const [threadsUrl, setThreadsUrl] = useState(user?.threads_url || "");
   const [linkedinUrl, setLinkedinUrl] = useState(user?.linkedin_url || "");
+  const [pinterestUrl, setPinterestUrl] = useState(user?.pinterest_url || "");
+  const [twitchUrl, setTwitchUrl] = useState(user?.twitch_url || "");
   const [appLanguage, setAppLanguage] = useState(user?.app_language || "fr");
   const [active, setActive] = useState(user?.active !== false);
   const [blockedReason, setBlockedReason] = useState(user?.blocked_reason || "");
@@ -217,10 +248,11 @@ export function UserDetailPanel({ user, onClose, onSaved }) {
       instagramUrl,
       tiktokUrl,
       snapchatUrl,
-      whatsappUrl,
       xUrl,
       threadsUrl,
       linkedinUrl,
+      pinterestUrl,
+      twitchUrl,
       appLanguage,
       active,
       blockedReason,
@@ -398,22 +430,15 @@ export function UserDetailPanel({ user, onClose, onSaved }) {
         <SectionHeader title="Réseaux sociaux" open={openSections.social} onToggle={() => toggleSection("social")} />
         {openSections.social && (
           <div style={{ marginBottom: "8px" }}>
-            <label style={labelStyle}>Lien Facebook</label>
-            <input value={facebookUrl} onChange={(e) => setFacebookUrl(e.target.value)} style={{ ...fieldStyle, marginBottom: "12px" }} />
-            <label style={labelStyle}>Lien Instagram</label>
-            <input value={instagramUrl} onChange={(e) => setInstagramUrl(e.target.value)} style={{ ...fieldStyle, marginBottom: "12px" }} />
-            <label style={labelStyle}>Lien TikTok</label>
-            <input value={tiktokUrl} onChange={(e) => setTiktokUrl(e.target.value)} style={{ ...fieldStyle, marginBottom: "12px" }} />
-            <label style={labelStyle}>Lien Snapchat</label>
-            <input value={snapchatUrl} onChange={(e) => setSnapchatUrl(e.target.value)} style={{ ...fieldStyle, marginBottom: "12px" }} />
-            <label style={labelStyle}>Lien WhatsApp</label>
-            <input value={whatsappUrl} onChange={(e) => setWhatsappUrl(e.target.value)} style={{ ...fieldStyle, marginBottom: "12px" }} />
-            <label style={labelStyle}>Lien X</label>
-            <input value={xUrl} onChange={(e) => setXUrl(e.target.value)} style={{ ...fieldStyle, marginBottom: "12px" }} />
-            <label style={labelStyle}>Lien Threads</label>
-            <input value={threadsUrl} onChange={(e) => setThreadsUrl(e.target.value)} style={{ ...fieldStyle, marginBottom: "12px" }} />
-            <label style={labelStyle}>Lien LinkedIn</label>
-            <input value={linkedinUrl} onChange={(e) => setLinkedinUrl(e.target.value)} style={fieldStyle} />
+            <SocialLinkField icon={<FacebookIcon size={20} />} label="Facebook" prefix="https://www.facebook.com/" value={facebookUrl} onChange={setFacebookUrl} />
+            <SocialLinkField icon={<InstagramIcon size={20} />} label="Instagram" prefix="https://www.instagram.com/" value={instagramUrl} onChange={setInstagramUrl} />
+            <SocialLinkField icon={<TiktokIcon size={20} />} label="TikTok" prefix="https://www.tiktok.com/@" value={tiktokUrl} onChange={setTiktokUrl} />
+            <SocialLinkField icon={<SnapchatIcon size={20} />} label="Snapchat" prefix="https://www.snapchat.com/add/" value={snapchatUrl} onChange={setSnapchatUrl} />
+            <SocialLinkField icon={<XIcon size={20} />} label="X" prefix="https://x.com/" value={xUrl} onChange={setXUrl} />
+            <SocialLinkField icon={<ThreadsIcon size={20} />} label="Threads" prefix="https://www.threads.net/@" value={threadsUrl} onChange={setThreadsUrl} />
+            <SocialLinkField icon={<LinkedinIcon size={20} />} label="LinkedIn" prefix="https://www.linkedin.com/in/" value={linkedinUrl} onChange={setLinkedinUrl} />
+            <SocialLinkField icon={<PinterestIcon size={20} />} label="Pinterest" prefix="https://www.pinterest.com/" value={pinterestUrl} onChange={setPinterestUrl} />
+            <SocialLinkField icon={<TwitchIcon size={20} />} label="Twitch" prefix="https://www.twitch.tv/" value={twitchUrl} onChange={setTwitchUrl} last />
           </div>
         )}
 

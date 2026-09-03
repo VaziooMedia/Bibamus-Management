@@ -399,18 +399,20 @@ export function WebsiteIcon({ size = 22 }) {
   );
 }
 
+import facebookLogoUrl from "../assets/brand/facebook.svg";
+import tiktokLogoUrl from "../assets/brand/tiktok.svg";
+import snapchatLogoUrl from "../assets/brand/snapchat.svg";
+import xLogoUrl from "../assets/brand/X.svg";
+import threadsLogoUrl from "../assets/brand/threads.svg";
+import linkedinLogoUrl from "../assets/brand/linkedIn.svg";
+import pinterestLogoUrl from "../assets/brand/pinterest.svg";
+import twitchLogoUrl from "../assets/brand/twitch.svg";
+
 export function FacebookIcon({ size = 22 }) {
-  return (
-    <svg width={size} height={size} viewBox="0 0 24 24">
-      <circle cx="12" cy="12" r="11" fill="#1877F2" />
-      <path
-        d="M13.6 20v-6.6h2.2l.33-2.56h-2.53v-1.64c0-.74.2-1.25 1.27-1.25h1.36V5.66c-.24-.03-1.04-.1-1.98-.1-1.96 0-3.3 1.2-3.3 3.4v1.88H8.7v2.56h2.25V20h2.65z"
-        fill="#fff"
-      />
-    </svg>
-  );
+  return <img src={facebookLogoUrl} alt="Facebook" width={size} height={size} style={{ display: "block", borderRadius: "50%" }} />;
 }
 
+// Instagram — vrai tracé officiel, posé sur le dégradé de marque habituel.
 export function InstagramIcon({ size = 22 }) {
   return (
     <svg width={size} height={size} viewBox="0 0 24 24">
@@ -421,25 +423,75 @@ export function InstagramIcon({ size = 22 }) {
           <stop offset="100%" stopColor="#8134af" />
         </linearGradient>
       </defs>
-      <rect x="1" y="1" width="22" height="22" rx="6.5" fill="url(#ig-gradient-badge)" />
-      <circle cx="12" cy="12" r="5" fill="none" stroke="#fff" strokeWidth="1.8" />
-      <circle cx="17.3" cy="6.7" r="1.1" fill="#fff" />
+      <circle cx="12" cy="12" r="12" fill="url(#ig-gradient-badge)" />
+      <g transform="translate(4.2,4.2) scale(0.65)">
+        <path
+          fill="#fff"
+          d="M7.0301.084c-1.2768.0602-2.1487.264-2.911.5634-.7888.3075-1.4575.72-2.1228 1.3877-.6652.6677-1.075 1.3368-1.3802 2.127-.2954.7638-.4956 1.6365-.552 2.914-.0564 1.2775-.0689 1.6882-.0626 4.947.0062 3.2586.0206 3.6671.0825 4.9473.061 1.2765.264 2.1482.5635 2.9107.308.7889.72 1.4573 1.388 2.1228.6679.6655 1.3365 1.0743 2.1285 1.38.7632.295 1.6361.4961 2.9134.552 1.2773.056 1.6884.069 4.9462.0627 3.2578-.0062 3.668-.0207 4.9478-.0814 1.28-.0607 2.147-.2652 2.9098-.5633.7889-.3086 1.4578-.72 2.1228-1.3881.665-.6682 1.0745-1.3378 1.3795-2.1284.2957-.7632.4966-1.636.552-2.9124.056-1.2809.0692-1.6898.063-4.948-.0063-3.2583-.021-3.6668-.0817-4.9465-.0607-1.2797-.264-2.1487-.5633-2.9117-.3084-.7889-.72-1.4568-1.3876-2.1228C21.2982 1.33 20.628.9208 19.8378.6165 19.074.321 18.2017.1197 16.9244.0645 15.6471.0093 15.236-.005 11.977.0014 8.718.0076 8.31.0215 7.0301.0839m.1402 21.6932c-1.17-.0509-1.8053-.2453-2.2287-.408-.5606-.216-.96-.4771-1.3819-.895-.422-.4178-.6811-.8186-.9-1.378-.1644-.4234-.3624-1.058-.4171-2.228-.0595-1.2645-.072-1.6442-.079-4.848-.007-3.2037.0053-3.583.0607-4.848.05-1.169.2456-1.805.408-2.2282.216-.5613.4762-.96.895-1.3816.4188-.4217.8184-.6814 1.3783-.9003.423-.1651 1.0575-.3614 2.227-.4171 1.2655-.06 1.6447-.072 4.848-.079 3.2033-.007 3.5835.005 4.8495.0608 1.169.0508 1.8053.2445 2.228.408.5608.216.96.4754 1.3816.895.4217.4194.6816.8176.9005 1.3787.1653.4217.3617 1.056.4169 2.2263.0602 1.2655.0739 1.645.0796 4.848.0058 3.203-.0055 3.5834-.061 4.848-.051 1.17-.245 1.8055-.408 2.2294-.216.5604-.4763.96-.8954 1.3814-.419.4215-.8181.6811-1.3783.9-.4224.1649-1.0577.3617-2.2262.4174-1.2656.0595-1.6448.072-4.8493.079-3.2045.007-3.5825-.006-4.848-.0608M16.953 5.5864A1.44 1.44 0 1 0 18.39 4.144a1.44 1.44 0 0 0-1.437 1.4424M5.8385 12.012c.0067 3.4032 2.7706 6.1557 6.173 6.1493 3.4026-.0065 6.157-2.7701 6.1506-6.1733-.0065-3.4032-2.771-6.1565-6.174-6.1498-3.403.0067-6.156 2.771-6.1496 6.1738M8 12.0077a4 4 0 1 1 4.008 3.9921A3.9996 3.9996 0 0 1 8 12.0077"
+        />
+      </g>
     </svg>
   );
 }
 
+// TikTok — fond carré noir plein ; recadré en rond.
 export function TiktokIcon({ size = 22 }) {
   return (
-    <svg width={size} height={size} viewBox="0 0 24 24">
-      <circle cx="12" cy="12" r="11" fill="#000" />
-      <path
-        d="M14.2 6h-2.1v8.3c0 1.15-.95 2.1-2.1 2.1s-2.1-.95-2.1-2.1.95-2.1 2.1-2.1c.16 0 .32.02.47.05v-2.15a4.3 4.3 0 00-.47-.03 4.25 4.25 0 100 8.5 4.25 4.25 0 004.25-4.25V9.9c.7.5 1.55.8 2.45.8V8.6a2.85 2.85 0 01-2.05-.87A2.9 2.9 0 0114 6.2V6z"
-        fill="#fff"
-      />
-    </svg>
+    <span style={{ display: "inline-flex", width: size, height: size, borderRadius: "50%", overflow: "hidden" }}>
+      <img src={tiktokLogoUrl} alt="TikTok" width={size} height={size} style={{ display: "block", objectFit: "cover" }} />
+    </span>
   );
 }
 
+// Snapchat — même souci que TikTok, fond carré jaune plein ; recadré en rond.
+export function SnapchatIcon({ size = 22 }) {
+  return (
+    <span style={{ display: "inline-flex", width: size, height: size, borderRadius: "50%", overflow: "hidden" }}>
+      <img src={snapchatLogoUrl} alt="Snapchat" width={size} height={size} style={{ display: "block", objectFit: "cover" }} />
+    </span>
+  );
+}
+
+// X — tracé blanc sur transparent ; ajout d'un rond noir derrière.
+export function XIcon({ size = 22 }) {
+  return (
+    <span style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", width: size, height: size, borderRadius: "50%", background: "#000", overflow: "hidden" }}>
+      <img src={xLogoUrl} alt="X" width={Math.round(size * 0.55)} height={Math.round(size * 0.55)} style={{ display: "block" }} />
+    </span>
+  );
+}
+
+// Threads — tracé noir sur transparent ; inversé en blanc, posé sur un rond noir.
+export function ThreadsIcon({ size = 22 }) {
+  return (
+    <span style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", width: size, height: size, borderRadius: "50%", background: "#000", overflow: "hidden" }}>
+      <img src={threadsLogoUrl} alt="Threads" width={Math.round(size * 0.6)} height={Math.round(size * 0.6)} style={{ display: "block", filter: "invert(1)" }} />
+    </span>
+  );
+}
+
+// LinkedIn — fond carré arrondi bleu plein, "in" déjà blanc dans le fichier ; recadré en rond.
+export function LinkedinIcon({ size = 22 }) {
+  return (
+    <span style={{ display: "inline-flex", width: size, height: size, borderRadius: "50%", overflow: "hidden" }}>
+      <img src={linkedinLogoUrl} alt="LinkedIn" width={size} height={size} style={{ display: "block", objectFit: "cover" }} />
+    </span>
+  );
+}
+
+// Pinterest — le tracé encode le rond ET le "P" en un seul chemin plein.
+export function PinterestIcon({ size = 22 }) {
+  return <img src={pinterestLogoUrl} alt="Pinterest" width={size} height={size} style={{ display: "block", borderRadius: "50%" }} />;
+}
+
+// Twitch — tracé glyphe seul sur transparent ; posé sur un rond violet de marque.
+export function TwitchIcon({ size = 22 }) {
+  return (
+    <span style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", width: size, height: size, borderRadius: "50%", background: "#9146FF", overflow: "hidden" }}>
+      <img src={twitchLogoUrl} alt="Twitch" width={Math.round(size * 0.62)} height={Math.round(size * 0.62)} style={{ display: "block", filter: "invert(1) brightness(2)" }} />
+    </span>
+  );
+}
 
 export function EyeOffIcon({ size = 14, color = COLORS.inkSoft, title = "Privé — jamais visible par tes Bibax" }) {
   return (
@@ -451,18 +503,6 @@ export function EyeOffIcon({ size = 14, color = COLORS.inkSoft, title = "Privé 
         strokeWidth="1.8"
         strokeLinecap="round"
         strokeLinejoin="round"
-      />
-    </svg>
-  );
-}
-
-export function SnapchatIcon({ size = 22 }) {
-  return (
-    <svg width={size} height={size} viewBox="0 0 24 24">
-      <circle cx="12" cy="12" r="11" fill="#FFFC00" />
-      <path
-        d="M12 6.2c1.9 0 3 1.4 3.05 3.2.02.75-.02 1.4-.06 1.95.5.28 1.05.1 1.35-.05.2-.1.45-.05.55.15.1.22 0 .45-.2.58-.35.22-.9.5-1.55.6-.05.35-.02.6.35.85.5.35 1.3.5 1.85.58.25.03.3.35.1.5-.25.18-.7.35-1.15.42-.05.15-.1.4-.2.6-.1.2-.3.22-.55.18-.4-.05-.85-.1-1.3.05-.5.15-1 .65-2.34.65s-1.84-.5-2.34-.65c-.45-.15-.9-.1-1.3-.05-.25.04-.45.02-.55-.18-.1-.2-.15-.45-.2-.6-.45-.07-.9-.24-1.15-.42-.2-.15-.15-.47.1-.5.55-.08 1.35-.23 1.85-.58.37-.25.4-.5.35-.85-.65-.1-1.2-.38-1.55-.6-.2-.13-.3-.36-.2-.58.1-.2.35-.25.55-.15.3.15.85.33 1.35.05-.04-.55-.08-1.2-.06-1.95C9 7.6 10.1 6.2 12 6.2z"
-        fill="#000"
       />
     </svg>
   );

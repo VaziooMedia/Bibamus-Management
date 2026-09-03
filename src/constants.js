@@ -1,3 +1,15 @@
+// Palette reprise de l'app principale — n'était pas encore exportée ici, alors que
+// icons.jsx s'y référait déjà (jamais déclenché tant que ce fichier n'était pas utilisé).
+export const COLORS = {
+  paper: "#0D1B2A",
+  paperAlt: "#28405C",
+  surface: "#16273D",
+  ink: "#F2F2E8",
+  inkSoft: "#8792A6",
+  amber: "#39FF66",
+  amberDark: "#2BD955",
+};
+
 export const COUNTRIES = [
   { code: "belgique", fr: "Belgique" },
   { code: "france", fr: "France" },
