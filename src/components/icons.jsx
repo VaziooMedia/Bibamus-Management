@@ -404,7 +404,7 @@ import tiktokLogoUrl from "../assets/brand/tiktok.svg";
 import snapchatLogoUrl from "../assets/brand/snapchat.svg";
 import xLogoUrl from "../assets/brand/X.svg";
 import threadsLogoUrl from "../assets/brand/threads.svg";
-import linkedinLogoUrl from "../assets/brand/linkedIn.svg";
+import linkedinLogoUrl from "../assets/brand/linkedin.png";
 import pinterestLogoUrl from "../assets/brand/pinterest.svg";
 import twitchLogoUrl from "../assets/brand/twitch.svg";
 
