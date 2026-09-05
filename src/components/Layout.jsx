@@ -10,6 +10,7 @@ const DATABASE_ITEMS = [
   { key: "drinks", label: "Produits" },
   { key: "brands", label: "Marques" },
   { key: "breweries", label: "Producteurs" },
+  { key: "officialStories", label: "Stories officielles" },
 ];
 
 const BOTTOM_ITEMS_BEFORE_BUSINESS = [

@@ -862,6 +862,43 @@ async function resizeImageTo(file, targetW, targetH, quality = 0.85) {
   return new Promise((resolve) => canvas.toBlob(resolve, "image/jpeg", quality));
 }
 
+// ============================================================
+// Stories officielles Bibamus — déposées uniquement depuis la
+// plateforme de gestion, visibles par tout le monde dans l'app.
+// ============================================================
+export async function uploadOfficialStoryMedia(adminUserId, file) {
+  const blob = await resizeImageTo(file, 720, 1280);
+  const imageBase64 = await blobToBase64(blob);
+  const path = `official-${Date.now()}.jpg`;
+  const { data, error } = await supabase.functions.invoke("moderate-and-upload-photo", {
+    body: { bucket: "stories", path, imageBase64, contentType: "image/jpeg", entityType: "story", entityId: adminUserId, kind: "story" },
+  });
+  if (error) return { error: error.message };
+  if (data?.error) return { error: data.error };
+  return { url: data.url };
+}
+
+export async function createOfficialStory(mediaUrl, caption, createdBy) {
+  const { error } = await supabase.from("official_stories").insert({ media_url: mediaUrl, caption: caption || null, created_by: createdBy });
+  if (error) return { error: error.message };
+  return { ok: true };
+}
+
+export async function loadOfficialStoriesAdmin() {
+  const { data, error } = await supabase.from("official_stories").select("*").order("created_at", { ascending: false });
+  if (error) {
+    console.error("loadOfficialStoriesAdmin:", error);
+    return [];
+  }
+  return data.map((s) => ({ id: s.id, mediaUrl: s.media_url, caption: s.caption, createdAt: s.created_at }));
+}
+
+export async function deleteOfficialStory(id) {
+  const { error } = await supabase.from("official_stories").delete().eq("id", id);
+  if (error) return { error: error.message };
+  return { ok: true };
+}
+
 export async function uploadVenuePhoto(venueId, file, kind) {
   const dims = kind === "cover" ? [1200, 400] : [400, 400];
   const blob = await resizeImageTo(file, dims[0], dims[1]);

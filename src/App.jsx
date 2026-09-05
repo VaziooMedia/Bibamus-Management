@@ -17,6 +17,7 @@ import { BusinessAccountsScreen } from "./components/BusinessAccountsScreen.jsx"
 import { BusinessAccountDetailScreen } from "./components/BusinessAccountDetailScreen.jsx";
 import { MyBusinessEntitiesScreen } from "./components/MyBusinessEntitiesScreen.jsx";
 import { CountryRulesScreen } from "./components/CountryRulesScreen.jsx";
+import { OfficialStoriesScreen } from "./components/OfficialStoriesScreen.jsx";
 import { FeatureFlagsScreen } from "./components/FeatureFlagsScreen.jsx";
 import { CrashReportsScreen } from "./components/CrashReportsScreen.jsx";
 import { AnalyticsScreen } from "./components/AnalyticsScreen.jsx";
@@ -94,6 +95,7 @@ export default function App() {
       {screen === "venues" && <VenuesScreen />}
       {screen === "drinks" && <DrinksScreen />}
       {screen === "breweries" && <BreweriesScreen />}
+      {screen === "officialStories" && <OfficialStoriesScreen myUserId={myUserId} />}
       {screen === "brands" && <BrandsScreen />}
       {screen === "chat" && <ComingSoon title="Chat" />}
       {screen === "stats" && <AnalyticsScreen />}
