@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { updateAppUserProfile, createAppUser, deleteAppUser, getMinimumAge } from "../data/sharedDirectories.js";
 import { COUNTRIES } from "../constants.js";
 import { CityAutocomplete } from "./CityAutocomplete.jsx";
-import { FacebookIcon, InstagramIcon, TiktokIcon, SnapchatIcon, XIcon, ThreadsIcon, LinkedinIcon, PinterestIcon, TwitchIcon } from "./icons.jsx";
+import { FacebookIcon, WhatsappIcon, InstagramIcon, TiktokIcon, SnapchatIcon, XIcon, ThreadsIcon, LinkedinIcon, PinterestIcon, TwitchIcon } from "./icons.jsx";
 
 const fieldStyle = { padding: "10px 12px", borderRadius: "8px", border: "2px solid #28405C", fontSize: "14px", width: "100%", color: "#F2F2E8", background: "#0D1B2A", boxSizing: "border-box" };
 const labelStyle = { fontSize: "12.5px", color: "#8792A6", marginBottom: "4px", display: "block", fontWeight: 600 };
@@ -149,6 +149,7 @@ export function UserDetailPanel({ user, onClose, onSaved }) {
   const [country, setCountry] = useState(user?.country || "");
   const [city, setCity] = useState(user?.city || "");
   const [locality, setLocality] = useState(user?.locality || "");
+  const [whatsappUrl, setWhatsappUrl] = useState(user?.whatsapp_url || "");
   const [facebookUrl, setFacebookUrl] = useState(user?.facebook_url || "");
   const [instagramUrl, setInstagramUrl] = useState(user?.instagram_url || "");
   const [tiktokUrl, setTiktokUrl] = useState(user?.tiktok_url || "");
@@ -244,6 +245,7 @@ export function UserDetailPanel({ user, onClose, onSaved }) {
       country,
       city,
       locality,
+      whatsappUrl,
       facebookUrl,
       instagramUrl,
       tiktokUrl,
@@ -430,6 +432,7 @@ export function UserDetailPanel({ user, onClose, onSaved }) {
         <SectionHeader title="Réseaux sociaux" open={openSections.social} onToggle={() => toggleSection("social")} />
         {openSections.social && (
           <div style={{ marginBottom: "8px" }}>
+            <SocialLinkField icon={<WhatsappIcon size={20} />} label="WhatsApp" prefix="https://wa.me/" value={whatsappUrl} onChange={setWhatsappUrl} />
             <SocialLinkField icon={<FacebookIcon size={20} />} label="Facebook" prefix="https://www.facebook.com/" value={facebookUrl} onChange={setFacebookUrl} />
             <SocialLinkField icon={<InstagramIcon size={20} />} label="Instagram" prefix="https://www.instagram.com/" value={instagramUrl} onChange={setInstagramUrl} />
             <SocialLinkField icon={<TiktokIcon size={20} />} label="TikTok" prefix="https://www.tiktok.com/@" value={tiktokUrl} onChange={setTiktokUrl} />

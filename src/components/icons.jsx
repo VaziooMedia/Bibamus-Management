@@ -407,9 +407,18 @@ import threadsLogoUrl from "../assets/brand/threads.svg";
 import linkedinLogoUrl from "../assets/brand/linkedin.png";
 import pinterestLogoUrl from "../assets/brand/pinterest.svg";
 import twitchLogoUrl from "../assets/brand/twitch.svg";
+import whatsappLogoUrl from "../assets/brand/whatsapp.svg";
 
 export function FacebookIcon({ size = 22 }) {
   return <img src={facebookLogoUrl} alt="Facebook" width={size} height={size} style={{ display: "block", borderRadius: "50%" }} />;
+}
+
+export function WhatsappIcon({ size = 22 }) {
+  return (
+    <span style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", width: size, height: size, borderRadius: "50%", background: "#fff", overflow: "hidden" }}>
+      <img src={whatsappLogoUrl} alt="WhatsApp" width={Math.round(size * 0.82)} height={Math.round(size * 0.82)} style={{ display: "block" }} />
+    </span>
+  );
 }
 
 // Instagram — vrai tracé officiel, posé sur le dégradé de marque habituel.
