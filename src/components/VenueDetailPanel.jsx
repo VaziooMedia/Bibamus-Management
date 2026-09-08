@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { WhatsappIcon } from "./icons.jsx";
 import { updatePublicVenue, deletePublicVenue, createPublicVenue, uploadVenuePhoto, uploadVenueMenuPdf, geocodeAddress, saveGeocodeResult, loadPublicVenues, mergeEntities } from "../data/sharedDirectories.js";
 import { CertificationLevelSelector } from "./CertificationLevelSelector.jsx";
 import { SearchableSelect } from "./SearchableSelect.jsx";
@@ -470,7 +471,10 @@ export function VenueDetailPanel({ venue, onClose, onSaved, onManageMenu }) {
           <input value={form.phone} onChange={(e) => set("phone", e.target.value)} placeholder="000 00 00 00" style={fieldStyle} />
         </div>
 
-        <label style={labelStyle}>WhatsApp</label>
+        <label style={{ ...labelStyle, display: "flex", alignItems: "center", gap: "8px" }}>
+          <WhatsappIcon size={18} />
+          WhatsApp
+        </label>
         <div style={{ display: "flex", gap: "8px", marginBottom: "12px" }}>
           <div style={{ ...fieldStyle, width: "64px", flexShrink: 0, textAlign: "center", color: "#8792A6" }}>{phonePrefix || "—"}</div>
           <input value={form.whatsapp} onChange={(e) => set("whatsapp", e.target.value)} placeholder="000 00 00 00" style={fieldStyle} />

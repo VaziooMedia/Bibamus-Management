@@ -415,8 +415,8 @@ export function FacebookIcon({ size = 22 }) {
 
 export function WhatsappIcon({ size = 22 }) {
   return (
-    <span style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", width: size, height: size, borderRadius: "50%", background: "#fff", overflow: "hidden" }}>
-      <img src={whatsappLogoUrl} alt="WhatsApp" width={Math.round(size * 0.82)} height={Math.round(size * 0.82)} style={{ display: "block" }} />
+    <span style={{ display: "inline-flex", width: size, height: size, borderRadius: "50%", overflow: "hidden" }}>
+      <img src={whatsappLogoUrl} alt="WhatsApp" width={size} height={size} style={{ display: "block", objectFit: "cover" }} />
     </span>
   );
 }

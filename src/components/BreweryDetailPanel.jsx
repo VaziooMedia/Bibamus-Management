@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { WhatsappIcon } from "./icons.jsx";
 import { updateBrewery, deleteBrewery, createBrewery, uploadBreweryPhoto, loadPublicVenues, loadBreweriesDirectory, mergeEntities } from "../data/sharedDirectories.js";
 import { StatusSelector } from "./StatusSelector.jsx";
 import { AdminPhotoField } from "./AdminPhotoField.jsx";
@@ -123,6 +124,7 @@ export function BreweryDetailPanel({ brewery, onClose, onSaved }) {
     email: brewery?.email || "",
     website: brewery?.website || "",
     googleUrl: brewery?.googleUrl || "",
+    whatsappUrl: brewery?.whatsappUrl || "",
     facebookUrl: brewery?.facebookUrl || "",
     instagramUrl: brewery?.instagramUrl || "",
     linkedinUrl: brewery?.linkedinUrl || "",
@@ -177,6 +179,7 @@ export function BreweryDetailPanel({ brewery, onClose, onSaved }) {
     email: form.email.trim(),
     website: form.website.trim(),
     googleUrl: form.googleUrl.trim(),
+    whatsappUrl: form.whatsappUrl.trim(),
     facebookUrl: form.facebookUrl.trim(),
     instagramUrl: form.instagramUrl.trim(),
     linkedinUrl: form.linkedinUrl.trim(),
@@ -370,6 +373,11 @@ export function BreweryDetailPanel({ brewery, onClose, onSaved }) {
         <input value={form.website} onChange={(e) => set("website", e.target.value)} style={{ ...fieldStyle, marginBottom: "12px" }} />
         <label style={labelStyle}>Lien Google</label>
         <input value={form.googleUrl} onChange={(e) => set("googleUrl", e.target.value)} style={{ ...fieldStyle, marginBottom: "12px" }} />
+        <label style={{ ...labelStyle, display: "flex", alignItems: "center", gap: "8px" }}>
+          <WhatsappIcon size={18} />
+          Lien WhatsApp
+        </label>
+        <input value={form.whatsappUrl} onChange={(e) => set("whatsappUrl", e.target.value)} placeholder="https://wa.me/..." style={{ ...fieldStyle, marginBottom: "12px" }} />
         <label style={labelStyle}>Lien Facebook</label>
         <input value={form.facebookUrl} onChange={(e) => set("facebookUrl", e.target.value)} style={{ ...fieldStyle, marginBottom: "12px" }} />
         <label style={labelStyle}>Lien Instagram</label>
