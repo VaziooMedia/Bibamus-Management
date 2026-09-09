@@ -4,8 +4,42 @@
 // le prototype Claude.
 // ============================================================
 import React from "react";
-import { COLORS, COUNTRY_ISO_CODES, GLUTEN_BIO_ELIGIBLE_TYPES, NATIONALITY_ELIGIBLE_TYPES, NON_ALCOHOLIC_DRINK_TYPES } from "../constants.js";
+import { COLORS, COUNTRY_ISO_CODES, GLUTEN_BIO_ELIGIBLE_TYPES, NATIONALITY_ELIGIBLE_TYPES, NON_ALCOHOLIC_DRINK_TYPES, SERVING_MODE_LABELS } from "../constants.js";
 import { CountryFlagImg } from "./icons.jsx";
+
+// Disposition partagée des infos d'un produit, en 3 lignes — base commune à tous les endroits
+// qui affichent une "carte produit" (carte d'un lieu, sélecteur de répertoire...) pour rester
+// cohérents. Ligne 1 : nom + volume. Ligne 2 : badges (pays, 0.0%, Bio, sans gluten) + séparateur
+// + type de service. Ligne 3 : degré d'alcool + séparateur (point vert) + producteur.
+export function ProductSummaryLines({ drink, trailing }) {
+  return (
+    <>
+      <div style={{ display: "flex", alignItems: "baseline", gap: "6px", flexWrap: "wrap" }}>
+        <span style={{ fontWeight: 700, fontSize: "13px", color: COLORS.ink }}>{drink.name}</span>
+        {drink.volumeCl && <span style={{ fontSize: "12px", color: COLORS.amber, fontWeight: 800 }}>{String(drink.volumeCl).replace(".", ",")}cl.</span>}
+      </div>
+      <div style={{ display: "flex", alignItems: "center", gap: "6px", flexWrap: "wrap", marginTop: "3px" }}>
+        <DrinkBadges drink={drink} size={9} />
+        {drink.servingMode && (
+          <>
+            <span style={{ width: "1px", height: "10px", background: COLORS.paperAlt, display: "inline-block" }} />
+            <span style={{ fontSize: "10.5px", color: COLORS.inkSoft, fontWeight: 600 }}>{SERVING_MODE_LABELS[drink.servingMode]}</span>
+          </>
+        )}
+      </div>
+      {(drink.abv != null || drink.brewery || trailing) && (
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: "8px", marginTop: "3px" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: "6px", flexWrap: "wrap", fontSize: "10.5px", color: COLORS.inkSoft }}>
+            {drink.abv != null && <span>{drink.abv.toFixed(1)}% ABV</span>}
+            {drink.abv != null && drink.brewery && <span style={{ width: "5px", height: "5px", borderRadius: "50%", background: COLORS.amber, display: "inline-block" }} />}
+            {drink.brewery && <span>{drink.brewery}</span>}
+          </div>
+          {trailing}
+        </div>
+      )}
+    </>
+  );
+}
 
 export function GlutenFreeIcon({ size = 14, color = COLORS.amberDark, title = "Sans gluten" }) {
   return (

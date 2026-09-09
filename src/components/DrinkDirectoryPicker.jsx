@@ -4,9 +4,8 @@
 // ============================================================
 import React, { useState } from "react";
 import { COLORS } from "../constants.js";
-import { VerifiedBadge } from "./icons.jsx";
-import { DrinkBadges } from "./DrinkDisplay.jsx";
-import { normalizeForSearch, drinkSummaryLine } from "../utils.js";
+import { ProductSummaryLines } from "./DrinkDisplay.jsx";
+import { normalizeForSearch } from "../utils.js";
 
 export function DrinkDirectoryPicker({ drinks, onPick }) {
   const [open, setOpen] = useState(false);
@@ -90,14 +89,7 @@ export function DrinkDirectoryPicker({ drinks, onPick }) {
                 onClick={() => pick(d)}
                 style={{ display: "block", width: "100%", textAlign: "left", padding: "10px 14px", background: "transparent", border: "none", cursor: "pointer" }}
               >
-                <div style={{ display: "flex", alignItems: "center", gap: "6px", fontWeight: 700, fontSize: "13.5px", color: COLORS.ink, flexWrap: "wrap" }}>
-                  {d.name}
-                  {d.status === "certified" && <VerifiedBadge size={13} />}
-                </div>
-                <div style={{ display: "flex", alignItems: "center", gap: "6px", flexWrap: "wrap", marginTop: "1px" }}>
-                  <DrinkBadges drink={d} />
-                </div>
-                {drinkSummaryLine(d) && <div style={{ fontSize: "11.5px", color: COLORS.inkSoft, marginTop: "1px" }}>{drinkSummaryLine(d)}</div>}
+                <ProductSummaryLines drink={d} />
               </button>
             ))}
           </div>

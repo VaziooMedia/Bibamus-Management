@@ -7,8 +7,8 @@
 import React, { useState, useRef } from "react";
 import { MENU_CATEGORIES, DRINK_VOLUMES_CL, SERVING_MODE_LABELS, BEER_TYPES } from "../constants.js";
 import { updatePublicVenue } from "../data/sharedDirectories.js";
-import { DrinkBadges } from "./DrinkDisplay.jsx";
-import { resolveMenuItem, nextId, normalizeForSearch, drinkSummaryLine } from "../utils.js";
+import { DrinkBadges, ProductSummaryLines } from "./DrinkDisplay.jsx";
+import { resolveMenuItem, nextId, normalizeForSearch } from "../utils.js";
 
 const categoryOf = (d) => (MENU_CATEGORIES.includes(d.menuCategory) ? d.menuCategory : MENU_CATEGORIES.includes(d.type) ? d.type : "Non classé");
 const LETTER_BUCKETS = ["0-9", ..."ABCDEFGHIJKLMNOPQRSTUVWXYZ".split("")];
@@ -58,19 +58,19 @@ function CompactProductRow({ drink, price, onChangePrice, priceStep = 0.1, onCha
     <div style={{ background: "#16273D", border: "2px solid #28405C", borderRadius: "8px", padding: "8px 10px" }}>
       <div style={{ display: "flex", alignItems: "flex-start", gap: "8px" }}>
         <div style={{ flex: 1, minWidth: 0 }}>
-          <div style={{ display: "flex", alignItems: "baseline", gap: "6px", flexWrap: "wrap" }}>
-            <span style={{ fontWeight: 700, fontSize: "13px", color: "#F2F2E8" }}>{drink.name}</span>
-            {drink.volumeCl && <span style={{ fontSize: "12px", color: "#39FF66", fontWeight: 800 }}>{String(drink.volumeCl).replace(".", ",")}cl.</span>}
-          </div>
-          <div style={{ display: "flex", alignItems: "center", gap: "6px", flexWrap: "wrap", marginTop: "3px" }}>
-            <DrinkBadges drink={drink} size={9} />
-            {drink.servingMode && (
-              <>
-                <span style={{ width: "1px", height: "10px", background: "#28405C", display: "inline-block" }} />
-                <span style={{ fontSize: "10.5px", color: "#8792A6", fontWeight: 600 }}>{SERVING_MODE_LABELS[drink.servingMode]}</span>
-              </>
-            )}
-          </div>
+          <ProductSummaryLines
+            drink={drink}
+            trailing={
+              <div style={{ display: "flex", alignItems: "center", gap: "12px", flexShrink: 0 }}>
+                <button onClick={() => setExpanded((e) => !e)} style={{ background: "none", border: "none", color: "#39FF66", fontSize: "11px", cursor: "pointer", padding: "2px", fontWeight: 700 }} aria-label="Réglages">
+                  {expanded ? "▲" : "▾"}
+                </button>
+                <button onClick={onRemove} style={{ background: "none", border: "none", color: "#FF3B4E", fontSize: "15px", cursor: "pointer", padding: "0 2px", lineHeight: 1 }} aria-label={`Supprimer ${drink.name}`}>
+                  ×
+                </button>
+              </div>
+            }
+          />
         </div>
         <div style={{ display: "flex", alignItems: "stretch", border: "2px solid #28405C", borderRadius: "6px", overflow: "hidden", flexShrink: 0 }}>
           <span style={{ fontSize: "11.5px", color: "#8792A6", padding: "0 6px", display: "flex", alignItems: "center", background: "#0D1B2A" }}>€</span>
@@ -102,21 +102,6 @@ function CompactProductRow({ drink, price, onChangePrice, priceStep = 0.1, onCha
               ▼
             </button>
           </div>
-        </div>
-      </div>
-      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: "8px", marginTop: "4px" }}>
-        <div style={{ display: "flex", alignItems: "center", gap: "6px", flexWrap: "wrap", fontSize: "10.5px", color: "#8792A6" }}>
-          {drink.abv != null && <span>{drink.abv.toFixed(1)}% ABV</span>}
-          {drink.abv != null && drink.brewery && <span style={{ width: "5px", height: "5px", borderRadius: "50%", background: "#39FF66", display: "inline-block" }} />}
-          {drink.brewery && <span>{drink.brewery}</span>}
-        </div>
-        <div style={{ display: "flex", alignItems: "center", gap: "12px", flexShrink: 0 }}>
-          <button onClick={() => setExpanded((e) => !e)} style={{ background: "none", border: "none", color: "#39FF66", fontSize: "11px", cursor: "pointer", padding: "2px", fontWeight: 700 }} aria-label="Réglages">
-            {expanded ? "▲" : "▾"}
-          </button>
-          <button onClick={onRemove} style={{ background: "none", border: "none", color: "#FF3B4E", fontSize: "15px", cursor: "pointer", padding: "0 2px", lineHeight: 1 }} aria-label={`Supprimer ${drink.name}`}>
-            ×
-          </button>
         </div>
       </div>
       {expanded && (
@@ -327,6 +312,13 @@ export function VenueCategoryMenuScreen({ venue, category, drinksDirectory, onCl
 
         <div style={{ borderBottom: "1px solid #28405C", margin: "20px 0" }} />
 
+        <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "12px" }}>
+          <span style={{ width: "4px", height: "14px", background: "#39FF66", borderRadius: "2px", display: "inline-block" }} />
+          <span style={{ fontSize: "13px", fontWeight: 700, color: "#F2F2E8" }}>
+            Ajouter depuis la base produits <span style={{ color: "#8792A6", fontWeight: 600 }}>({matchingDirectoryItems.length})</span>
+          </span>
+        </div>
+
         <input
           value={query}
           onChange={(e) => {
@@ -334,40 +326,46 @@ export function VenueCategoryMenuScreen({ venue, category, drinksDirectory, onCl
             if (e.target.value.trim() && !directoryExpanded) setDirectoryExpanded(true);
           }}
           placeholder="Rechercher un produit ou une brasserie..."
-          style={{ padding: "10px 12px", borderRadius: "8px", border: "2px solid #28405C", fontSize: "14px", width: "100%", marginBottom: "14px", background: "#16273D", color: "#F2F2E8", boxSizing: "border-box" }}
+          style={{ padding: "10px 12px", borderRadius: "8px", border: "2px solid #28405C", fontSize: "14px", width: "100%", marginBottom: "10px", background: "#16273D", color: "#F2F2E8", boxSizing: "border-box" }}
         />
 
-        <CollapsibleSection title="Ajouter depuis la base produits" count={matchingDirectoryItems.length} expanded={directoryExpanded} onToggle={() => setDirectoryExpanded((e) => !e)}>
-          {matchingDirectoryItems.length === 0 && (
-            <p style={{ fontSize: "12.5px", color: "#8792A6", fontStyle: "italic" }}>
-              {drinksDirectory && drinksDirectory.length > 0 ? "Aucun résultat." : "La base produits est vide pour l'instant."}
-            </p>
-          )}
+        <button
+          onClick={() => setDirectoryExpanded((e) => !e)}
+          style={{ display: "flex", justifyContent: "flex-end", width: "100%", background: "none", border: "none", padding: "4px 2px", cursor: "pointer", marginBottom: directoryExpanded ? "10px" : 0 }}
+        >
+          <span style={{ color: "#39FF66", fontSize: "12px", fontWeight: 700, transform: directoryExpanded ? "rotate(90deg)" : "rotate(0deg)", transition: "transform 0.15s" }}>▶</span>
+        </button>
 
-          {directoryGroups.map(([letterLabel, items]) => {
+        {directoryExpanded && (
+          <>
+            {matchingDirectoryItems.length === 0 && (
+              <p style={{ fontSize: "12.5px", color: "#8792A6", fontStyle: "italic" }}>
+                {drinksDirectory && drinksDirectory.length > 0 ? "Aucun résultat." : "La base produits est vide pour l'instant."}
+              </p>
+            )}
+
+            {directoryGroups.map(([letterLabel, items]) => {
             const rows = (
               <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
                 {items.map((d) => {
                   const count = countInMenu(d.id);
                   return (
-                    <div key={d.id} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: "10px", background: "#16273D", border: "2px solid #28405C", borderRadius: "8px", padding: "10px 12px" }}>
-                      <div style={{ flex: 1, minWidth: 0 }}>
-                        <div style={{ display: "flex", alignItems: "center", gap: "6px", fontWeight: 700, fontSize: "13.5px", color: "#F2F2E8", flexWrap: "wrap" }}>{d.name}</div>
-                        <div style={{ display: "flex", alignItems: "center", gap: "6px", flexWrap: "wrap", marginTop: "2px" }}>
-                          <DrinkBadges drink={d} />
-                        </div>
-                        {drinkSummaryLine(d) && <div style={{ fontSize: "11.5px", color: "#8792A6", marginTop: "1px" }}>{drinkSummaryLine(d)}</div>}
-                      </div>
-                      <div style={{ display: "flex", alignItems: "center", gap: "8px", flexShrink: 0 }}>
-                        {count > 0 && <span style={{ fontSize: "12px", color: "#8792A6" }}>{count} sur la carte</span>}
-                        <button
-                          onClick={() => addProduct(d)}
-                          title={`Ajouter ${d.name}`}
-                          style={{ width: "28px", height: "28px", flexShrink: 0, background: "#39FF66", color: "#0D1B2A", border: "none", borderRadius: "6px", fontSize: "16px", fontWeight: 800, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", padding: 0, lineHeight: 1 }}
-                        >
-                          +
-                        </button>
-                      </div>
+                    <div key={d.id} style={{ background: "#16273D", border: "2px solid #28405C", borderRadius: "8px", padding: "10px 12px" }}>
+                      <ProductSummaryLines
+                        drink={d}
+                        trailing={
+                          <div style={{ display: "flex", alignItems: "center", gap: "8px", flexShrink: 0 }}>
+                            {count > 0 && <span style={{ fontSize: "10.5px", color: "#8792A6" }}>{count} sur la carte</span>}
+                            <button
+                              onClick={() => addProduct(d)}
+                              title={`Ajouter ${d.name}`}
+                              style={{ width: "24px", height: "24px", flexShrink: 0, background: "#39FF66", color: "#0D1B2A", border: "none", borderRadius: "6px", fontSize: "14px", fontWeight: 800, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", padding: 0, lineHeight: 1 }}
+                            >
+                              +
+                            </button>
+                          </div>
+                        }
+                      />
                     </div>
                   );
                 })}
@@ -393,7 +391,8 @@ export function VenueCategoryMenuScreen({ venue, category, drinksDirectory, onCl
               </div>
             );
           })}
-        </CollapsibleSection>
+          </>
+        )}
 
         <div style={{ borderBottom: "1px solid #28405C", margin: "0 0 20px 0" }} />
 
