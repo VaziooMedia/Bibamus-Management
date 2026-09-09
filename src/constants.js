@@ -474,3 +474,207 @@ export const CITIES_BY_COUNTRY = {
   Suisse: ["Genève", "Zurich", "Berne", "Bâle", "Lausanne", "Lucerne", "Lugano", "Fribourg"],
   Tunisie: ["Tunis", "Sfax", "Sousse", "Kairouan", "Bizerte"],
 };
+
+// Constantes liées aux produits/menus — reprises de bibamus-web pour rester cohérentes avec
+// l'app publique. Étaient importées par utils.js mais jamais exportées ici (jamais déclenché
+// tant qu'aucun écran de cette plateforme n'utilisait la gestion de carte).
+export const MENU_CATEGORIES = ["Bières & Cidres", "Vins & Bulles", "Spiritueux", "Shots", "Cocktails / Mocktails", "Softs & Eaux", "Boissons chaudes", "Snacks"];
+
+export const DRINK_TYPES = ["Bières & Cidres", "Vins & Bulles", "Spiritueux", "Cocktails / Mocktails", "Softs & Eaux", "Boissons chaudes", "Snacks", "Génériques"];
+
+export const DRINK_TYPE_MIGRATIONS = {
+  "Bière pils": "Bières & Cidres",
+  "Bière spéciales": "Bières & Cidres",
+  Bière: "Bières & Cidres",
+  Bières: "Bières & Cidres",
+  "Vin & bulles": "Vins & Bulles",
+  "Vins & bulles": "Vins & Bulles",
+  Alcools: "Spiritueux",
+  Cocktails: "Cocktails / Mocktails",
+  Shooters: "Spiritueux",
+  Shots: "Spiritueux",
+  Eau: "Softs & Eaux",
+  Soft: "Softs & Eaux",
+  "Softs & eaux": "Softs & Eaux",
+  "Boisson chaude": "Boissons chaudes",
+  Snack: "Snacks",
+};
+
+export const NON_ALCOHOLIC_DRINK_TYPES = ["Softs & Eaux", "Boissons chaudes", "Snacks"];
+
+export const SERVING_MODE_LABELS = { bouteille: "Bouteille", canette: "Canette", verre: "Au verre", fut: "On tap" };
+
+export const MONTH_NAMES_FR = ["janvier", "février", "mars", "avril", "mai", "juin", "juillet", "août", "septembre", "octobre", "novembre", "décembre"];
+
+export const DRINK_FIELD_LABELS = {
+  name: "Nom complet du produit",
+  type: "Type",
+  kcalPer100ml: "Calories (pour 100ml)",
+  beerTags: "Style & caractéristiques",
+  abv: "Degré d'alcool",
+  brand: "Marque du produit",
+  brewery: "Producteur",
+  nationality: "Pays d'origine de la marque",
+  glutenFree: "Sans gluten",
+  bio: "Label Bio",
+  volumeCl: "Volume par défaut",
+  servingMode: "Type de service par défaut",
+  snackType: "Type de produit",
+  weightG: "Poids par défaut",
+  isGeneric: "Produit générique",
+  averagePrice: "Prix indicatif",
+  countsAsDrinkId: "Compte comme",
+  description: "Description",
+};
+
+// Constantes supplémentaires liées aux produits — mêmes découvertes tardives (imports jamais
+// déclenchés jusqu'ici) que le bloc ci-dessus.
+export const COUNTRY_FLAGS = {
+  Belgique: "🇧🇪",
+  France: "🇫🇷",
+  Luxembourg: "🇱🇺",
+  Allemagne: "🇩🇪",
+  "Pays-Bas": "🇳🇱",
+  Algérie: "🇩🇿",
+  Angleterre: "🏴󠁧󠁢󠁥󠁮󠁧󠁿",
+  Autriche: "🇦🇹",
+  Bermudes: "🇧🇲",
+  Bulgarie: "🇧🇬",
+  Canada: "🇨🇦",
+  Chypre: "🇨🇾",
+  "Côte d'Ivoire": "🇨🇮",
+  Croatie: "🇭🇷",
+  Cuba: "🇨🇺",
+  Danemark: "🇩🇰",
+  Écosse: "🏴󠁧󠁢󠁳󠁣󠁴󠁿",
+  Espagne: "🇪🇸",
+  Estonie: "🇪🇪",
+  "États-Unis": "🇺🇸",
+  Finlande: "🇫🇮",
+  Grèce: "🇬🇷",
+  Hongrie: "🇭🇺",
+  Irlande: "🇮🇪",
+  Islande: "🇮🇸",
+  Italie: "🇮🇹",
+  Japon: "🇯🇵",
+  Lettonie: "🇱🇻",
+  Lituanie: "🇱🇹",
+  Malte: "🇲🇹",
+  Maroc: "🇲🇦",
+  Mexique: "🇲🇽",
+  Norvège: "🇳🇴",
+  Pologne: "🇵🇱",
+  Portugal: "🇵🇹",
+  "République tchèque": "🇨🇿",
+  Roumanie: "🇷🇴",
+  "Royaume-Uni": "🇬🇧",
+  Sénégal: "🇸🇳",
+  Slovaquie: "🇸🇰",
+  Slovénie: "🇸🇮",
+  Suède: "🇸🇪",
+  Suisse: "🇨🇭",
+  Tunisie: "🇹🇳",
+  Vénézuéla: "🇻🇪",
+};
+
+export const GLUTEN_BIO_ELIGIBLE_TYPES = ["Bières & Cidres"];
+export const NATIONALITY_ELIGIBLE_TYPES = ["Bières & Cidres", "Vins & Bulles", "Spiritueux", "Softs & Eaux", "Boissons chaudes"];
+export const DRINK_VOLUMES_CL = [2, 2.5, 3, 3.5, 4, 4.5, 5, 6, 7, 8, 9, 10, 12, 12.5, 15, 17, 18, 20, 22, 25, 28, 30, 33, 35, 40, 50, 66, 70, 75, 100, 120, 150, 200, 300];
+export const SNACK_WEIGHTS_G = [25, 40, 45, 50, 75, 100, 125, 150, 200, 250, 300, 400, 500];
+export const BEER_TYPES = ["Bières & Cidres"];
+export const VOLUME_DISPLAY_TYPES = ["Bières & Cidres", "Softs & Eaux"];
+
+export const BEER_STYLE_TAGS = [
+  "Blonde",
+  "Blonde dorée",
+  "Ambrée",
+  "Rousse",
+  "Brune",
+  "Noire",
+  "Blanche",
+  "Rouge",
+  "Rubis",
+  "Pils",
+  "Fruitée",
+  "Lager blonde",
+  "Export",
+  "Session Lager",
+  "Pale Lager",
+  "Bière de table",
+  "Sans alcool",
+  "Faible en alcool",
+  "Bière légère",
+  "Low calories",
+  "Blonde belge",
+  "Bière forte",
+  "Blonde forte",
+  "Brune forte",
+  "Fruitée forte",
+  "Spéciale belge",
+  "Bière d'Abbaye",
+  "Bière Trappiste",
+  "Double",
+  "Triple",
+  "Quadrupel",
+  "Belgian Strong Ale",
+  "Dark Strong Ale",
+  "Saison",
+  "Bière de garde",
+  "Bière brut",
+  "Bière de Noël",
+  "Bière estivale",
+  "Bière d'Hiver",
+  "Bière de récolte",
+  "Weissbier",
+  "Gose",
+  "Amber Ale",
+  "Porter",
+  "Stout",
+  "Irish Dry Stout",
+  "Chocolate Stout",
+  "Black IPA",
+  "Pale Ale",
+  "Hoppy Pale Ale",
+  "IPA",
+  "New England IPA",
+  "Hazy IPA",
+  "Sour IPA",
+  "Pilsner",
+  "Lambic",
+  "Gueuze",
+  "Kriek",
+  "Cerise",
+  "Framboise",
+  "Pêche",
+  "Faro",
+  "Biologique",
+  "Sans gluten",
+  "Premium",
+];
+
+export const SOFT_DRINK_TAGS = [
+  "Soda",
+  "Cola",
+  "Limonade",
+  "Orangeade",
+  "Tonic",
+  "Thé glacé",
+  "Jus de fruits",
+  "Boissons énergisantes",
+  "Light",
+  "Zero",
+  "Pétillant",
+  "Fortement pétillant",
+  "Non-pétillant",
+  "Ginger Ale",
+  "Ginger Beer",
+  "Sirop",
+  "Aromatisé",
+  "Bio",
+  "Caféiné",
+  "Sans caféine",
+  "Végane",
+];
+
+export const SPIRIT_TAGS = ["Vodka", "Whisky", "Gin", "Rhum", "Tequila"];
+export const WINE_TAGS = ["Sec", "Demi-sec", "Doux"];
