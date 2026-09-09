@@ -5,15 +5,12 @@
 // dans une autre.
 // ============================================================
 import React, { useState, useRef } from "react";
-import { COLORS, MENU_CATEGORIES } from "../constants.js";
+import { MENU_CATEGORIES } from "../constants.js";
 import { updatePublicVenue } from "../data/sharedDirectories.js";
-import { DrinkRow } from "./DrinkRow.jsx";
 import { DrinkBadges } from "./DrinkDisplay.jsx";
-import { BEER_CIDER_SUBTYPES } from "./DrinkDetailPanel.jsx";
 import { resolveMenuItem, nextId, normalizeForSearch, drinkSummaryLine } from "../utils.js";
 
 const categoryOf = (d) => (MENU_CATEGORIES.includes(d.menuCategory) ? d.menuCategory : MENU_CATEGORIES.includes(d.type) ? d.type : "Non classé");
-const subtypeLabel = (code) => BEER_CIDER_SUBTYPES.find((s) => s.code === code)?.fr || "Autre";
 const LETTER_BUCKETS = ["0-9", ..."ABCDEFGHIJKLMNOPQRSTUVWXYZ".split("")];
 const letterBucketOf = (name) => {
   const first = (name || "").trim().charAt(0).toUpperCase();
@@ -35,6 +32,75 @@ function CollapsibleSection({ title, count, expanded, onToggle, children }) {
         <span style={{ color: "#8792A6", fontSize: "12px", transform: expanded ? "rotate(90deg)" : "rotate(0deg)", transition: "transform 0.15s" }}>▶</span>
       </button>
       {expanded && children}
+    </div>
+  );
+}
+
+// Ligne compacte d'un produit déjà ajouté à la carte — volontairement plus resserrée que le
+// DrinkRow partagé (utilisé aussi par d'autres écrans avec d'autres contraintes) : prix précédé
+// du symbole €, cadre du prix fermé en un seul bloc, actions secondaires (détails, suppression)
+// regroupées en bas à droite.
+function CompactProductRow({ drink, price, onChangePrice, priceStep = 0.1, onRemove }) {
+  const [priceInput, setPriceInput] = useState(() => String(price ?? "").replace(".", ","));
+  const [expanded, setExpanded] = useState(false);
+
+  const commit = (next) => {
+    const rounded = Math.round(next * 100) / 100;
+    setPriceInput(String(rounded).replace(".", ","));
+    onChangePrice(rounded);
+  };
+
+  return (
+    <div style={{ background: "#16273D", border: "2px solid #28405C", borderRadius: "8px", padding: "8px 10px" }}>
+      <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+        <div style={{ flex: 1, minWidth: 0 }}>
+          <div style={{ fontWeight: 700, fontSize: "13px", color: "#F2F2E8" }}>{drink.name}</div>
+          <div style={{ display: "flex", alignItems: "center", gap: "5px", flexWrap: "wrap", marginTop: "1px" }}>
+            {drink.volumeCl && <span style={{ fontSize: "10.5px", color: "#8792A6", fontWeight: 700 }}>{drink.volumeCl}cl.</span>}
+            <DrinkBadges drink={drink} size={9} />
+          </div>
+        </div>
+        <div style={{ display: "flex", alignItems: "stretch", border: "2px solid #28405C", borderRadius: "6px", overflow: "hidden", flexShrink: 0 }}>
+          <span style={{ fontSize: "11.5px", color: "#8792A6", padding: "0 6px", display: "flex", alignItems: "center", background: "#0D1B2A" }}>€</span>
+          <input
+            type="text"
+            inputMode="decimal"
+            value={priceInput}
+            onChange={(e) => {
+              const raw = e.target.value;
+              setPriceInput(raw);
+              const parsed = parseFloat(raw.replace(",", "."));
+              onChangePrice(isNaN(parsed) ? 0 : parsed);
+            }}
+            style={{ width: "44px", padding: "5px 4px", border: "none", borderLeft: "2px solid #28405C", fontSize: "12.5px", textAlign: "right", fontFamily: "'Urbanist', sans-serif", background: "#16273D", color: "#F2F2E8" }}
+          />
+          <div style={{ display: "flex", flexDirection: "column", borderLeft: "2px solid #28405C" }}>
+            <button
+              onClick={() => commit((parseFloat(priceInput.replace(",", ".")) || 0) + priceStep)}
+              style={{ background: "none", border: "none", borderBottom: "1px solid #28405C", cursor: "pointer", padding: "0 5px", fontSize: "8px", lineHeight: 1.3, color: "#8792A6" }}
+              aria-label="Augmenter le prix"
+            >
+              ▲
+            </button>
+            <button
+              onClick={() => commit(Math.max(0, (parseFloat(priceInput.replace(",", ".")) || 0) - priceStep))}
+              style={{ background: "none", border: "none", cursor: "pointer", padding: "0 5px", fontSize: "8px", lineHeight: 1.3, color: "#8792A6" }}
+              aria-label="Diminuer le prix"
+            >
+              ▼
+            </button>
+          </div>
+        </div>
+      </div>
+      {expanded && drinkSummaryLine(drink) && <div style={{ fontSize: "11px", color: "#8792A6", marginTop: "6px" }}>{drinkSummaryLine(drink)}</div>}
+      <div style={{ display: "flex", justifyContent: "flex-end", alignItems: "center", gap: "12px", marginTop: "4px" }}>
+        <button onClick={() => setExpanded((e) => !e)} style={{ background: "none", border: "none", color: "#8792A6", fontSize: "11px", cursor: "pointer", padding: "2px" }} aria-label="Détails">
+          {expanded ? "▲" : "▾"}
+        </button>
+        <button onClick={onRemove} style={{ background: "none", border: "none", color: "#8792A6", fontSize: "15px", cursor: "pointer", padding: "0 2px", lineHeight: 1 }} aria-label={`Supprimer ${drink.name}`}>
+          ×
+        </button>
+      </div>
     </div>
   );
 }
@@ -64,31 +130,13 @@ export function VenueCategoryMenuScreen({ venue, category, drinksDirectory, onCl
     .filter((d) => (category === "Non classé" ? !MENU_CATEGORIES.includes(d.type) : d.type === category))
     .filter((d) => !q || normalizeForSearch(d.name).includes(q) || normalizeForSearch(d.brewery).includes(q));
 
-  // Sous-catégories (Bière / Cidre / Poiré) — seulement là où ce champ existe vraiment, pour
-  // éviter de créer un groupement artificiel sur les catégories qui n'en ont pas.
-  const hasSubtypes = matchingDirectoryItems.some((d) => d.beverageSubtype);
-  const subtypeGroups = hasSubtypes
-    ? Object.entries(
-        matchingDirectoryItems.reduce((acc, d) => {
-          const key = d.beverageSubtype || "autre";
-          (acc[key] = acc[key] || []).push(d);
-          return acc;
-        }, {})
-      )
-        .sort((a, b) => subtypeLabel(a[0]).localeCompare(subtypeLabel(b[0])))
-        .map(([key, items]) => [subtypeLabel(key), items])
-    : [[null, matchingDirectoryItems]];
-
-  // "Bières & Cidres" peut vite compter des centaines de références — un découpage 0-9/A-Z à
-  // l'intérieur de chaque sous-catégorie garde chaque liste gérable. Les autres catégories, moins
-  // fournies, restent en une seule liste alphabétique.
+  // "Bières & Cidres" peut vite compter des centaines de références, tous types confondus
+  // (bières, cidres, poirés mélangés) — un découpage 0-9/A-Z garde la liste gérable. Les autres
+  // catégories, moins fournies, restent en une seule liste alphabétique.
   const isBeerCategory = category === "Bières & Cidres";
-  const directoryGroups = subtypeGroups.map(([subLabel, items]) => [
-    subLabel,
-    isBeerCategory
-      ? LETTER_BUCKETS.map((letter) => [letter, items.filter((d) => letterBucketOf(d.name) === letter).sort((a, b) => a.name.localeCompare(b.name))]).filter(([, its]) => its.length > 0)
-      : [[null, [...items].sort((a, b) => a.name.localeCompare(b.name))]],
-  ]);
+  const directoryGroups = isBeerCategory
+    ? LETTER_BUCKETS.map((letter) => [letter, matchingDirectoryItems.filter((d) => letterBucketOf(d.name) === letter).sort((a, b) => a.name.localeCompare(b.name))]).filter(([, its]) => its.length > 0)
+    : [[null, [...matchingDirectoryItems].sort((a, b) => a.name.localeCompare(b.name))]];
 
   const countInMenu = (drinkId) => menu.filter((item) => item.fromDirectory && item.sourceDrinkId === drinkId).length;
 
@@ -188,9 +236,12 @@ export function VenueCategoryMenuScreen({ venue, category, drinksDirectory, onCl
 
         <CollapsibleSection title="Produits ajoutés" count={currentItems.length} expanded={currentExpanded} onToggle={() => setCurrentExpanded((e) => !e)}>
           {currentItems.length === 0 && <p style={{ fontSize: "12.5px", color: "#8792A6", fontStyle: "italic", margin: 0 }}>Aucun produit dans cette catégorie pour l'instant.</p>}
-          <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+          <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
             {currentItems.map(({ raw, resolved }, idx) => (
               <div key={raw.id} style={{ display: "flex", alignItems: "stretch", gap: "6px" }}>
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <CompactProductRow drink={resolved} price={resolved.price} onChangePrice={(price) => updateRaw(raw.id, { price })} onRemove={() => removeItem(raw.id)} />
+                </div>
                 <div style={{ display: "flex", flexDirection: "column", justifyContent: "center", gap: "2px" }}>
                   <button
                     onClick={() => moveItem(raw.id, "up")}
@@ -208,27 +259,6 @@ export function VenueCategoryMenuScreen({ venue, category, drinksDirectory, onCl
                   >
                     ▼
                   </button>
-                </div>
-                <div style={{ flex: 1, minWidth: 0 }}>
-                  <DrinkRow
-                    drink={resolved}
-                    priceStep="0.10"
-                    priceSymbol="€"
-                    forceLocked
-                    onChangeName={() => {}}
-                    onChangePrice={(price) => updateRaw(raw.id, { price })}
-                    onChangeType={() => {}}
-                    onChangeVolume={(vol) => updateRaw(raw.id, { volumeCl: vol })}
-                    onChangeKcal={() => {}}
-                    onChangeServingMode={(mode) => updateRaw(raw.id, { servingMode: mode })}
-                    onToggleBeerTag={() => {}}
-                    onChangeBrewery={() => {}}
-                    onChangeAbv={() => {}}
-                    onChangeMenuCategory={() => {}}
-                    breweriesDirectory={[]}
-                    onRegisterBrewery={() => {}}
-                    onRemove={() => removeItem(raw.id)}
-                  />
                 </div>
               </div>
             ))}
@@ -251,60 +281,55 @@ export function VenueCategoryMenuScreen({ venue, category, drinksDirectory, onCl
             </p>
           )}
 
-          {directoryGroups.map(([subLabel, letterGroups]) =>
-            letterGroups.length === 0 ? null : (
-              <div key={subLabel || "all"} style={{ marginBottom: "16px" }}>
-                {subLabel && <p style={{ fontSize: "12px", fontWeight: 700, color: "#8792A6", margin: "0 0 8px 0" }}>{subLabel}</p>}
-                {letterGroups.map(([letterLabel, items]) => {
-                  const rows = (
-                    <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
-                      {items.map((d) => {
-                        const count = countInMenu(d.id);
-                        return (
-                          <div key={d.id} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: "10px", background: "#16273D", border: "2px solid #28405C", borderRadius: "8px", padding: "10px 12px" }}>
-                            <div style={{ flex: 1, minWidth: 0 }}>
-                              <div style={{ display: "flex", alignItems: "center", gap: "6px", fontWeight: 700, fontSize: "13.5px", color: "#F2F2E8", flexWrap: "wrap" }}>{d.name}</div>
-                              <div style={{ display: "flex", alignItems: "center", gap: "6px", flexWrap: "wrap", marginTop: "2px" }}>
-                                <DrinkBadges drink={d} />
-                              </div>
-                              {drinkSummaryLine(d) && <div style={{ fontSize: "11.5px", color: "#8792A6", marginTop: "1px" }}>{drinkSummaryLine(d)}</div>}
-                            </div>
-                            <div style={{ display: "flex", alignItems: "center", gap: "8px", flexShrink: 0 }}>
-                              {count > 0 && <span style={{ fontSize: "12px", color: "#8792A6" }}>{count} sur la carte</span>}
-                              <button
-                                onClick={() => addProduct(d)}
-                                title={`Ajouter ${d.name}`}
-                                style={{ width: "28px", height: "28px", flexShrink: 0, background: "#39FF66", color: "#0D1B2A", border: "none", borderRadius: "6px", fontSize: "16px", fontWeight: 800, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", padding: 0, lineHeight: 1 }}
-                              >
-                                +
-                              </button>
-                            </div>
-                          </div>
-                        );
-                      })}
-                    </div>
-                  );
-                  if (letterLabel === null) return <div key="flat">{rows}</div>;
-                  const key = `${subLabel || ""}::${letterLabel}`;
-                  const isOpen = expandedLetterKeys.has(key);
+          {directoryGroups.map(([letterLabel, items]) => {
+            const rows = (
+              <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
+                {items.map((d) => {
+                  const count = countInMenu(d.id);
                   return (
-                    <div key={key} style={{ marginLeft: "8px", marginBottom: "6px" }}>
-                      <button
-                        onClick={() => toggleLetterKey(key)}
-                        style={{ display: "flex", alignItems: "center", justifyContent: "space-between", width: "100%", background: "#16273D", border: "2px solid #28405C", borderRadius: "8px", padding: "8px 12px", cursor: "pointer", marginBottom: isOpen ? "6px" : 0 }}
-                      >
-                        <span style={{ fontSize: "12.5px", fontWeight: 700, color: "#F2F2E8" }}>
-                          {letterLabel} <span style={{ color: "#8792A6", fontWeight: 600 }}>({items.length})</span>
-                        </span>
-                        <span style={{ color: "#8792A6", fontSize: "11px", transform: isOpen ? "rotate(90deg)" : "rotate(0deg)", transition: "transform 0.15s" }}>▶</span>
-                      </button>
-                      {isOpen && rows}
+                    <div key={d.id} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: "10px", background: "#16273D", border: "2px solid #28405C", borderRadius: "8px", padding: "10px 12px" }}>
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <div style={{ display: "flex", alignItems: "center", gap: "6px", fontWeight: 700, fontSize: "13.5px", color: "#F2F2E8", flexWrap: "wrap" }}>{d.name}</div>
+                        <div style={{ display: "flex", alignItems: "center", gap: "6px", flexWrap: "wrap", marginTop: "2px" }}>
+                          <DrinkBadges drink={d} />
+                        </div>
+                        {drinkSummaryLine(d) && <div style={{ fontSize: "11.5px", color: "#8792A6", marginTop: "1px" }}>{drinkSummaryLine(d)}</div>}
+                      </div>
+                      <div style={{ display: "flex", alignItems: "center", gap: "8px", flexShrink: 0 }}>
+                        {count > 0 && <span style={{ fontSize: "12px", color: "#8792A6" }}>{count} sur la carte</span>}
+                        <button
+                          onClick={() => addProduct(d)}
+                          title={`Ajouter ${d.name}`}
+                          style={{ width: "28px", height: "28px", flexShrink: 0, background: "#39FF66", color: "#0D1B2A", border: "none", borderRadius: "6px", fontSize: "16px", fontWeight: 800, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", padding: 0, lineHeight: 1 }}
+                        >
+                          +
+                        </button>
+                      </div>
                     </div>
                   );
                 })}
               </div>
-            )
-          )}
+            );
+            if (letterLabel === null) return <div key="flat">{rows}</div>;
+            const isOpen = expandedLetterKeys.has(letterLabel);
+            return (
+              <div key={letterLabel} style={{ marginBottom: "6px" }}>
+                <button
+                  onClick={() => toggleLetterKey(letterLabel)}
+                  style={{ display: "flex", alignItems: "center", justifyContent: "space-between", width: "100%", background: "#16273D", border: "2px solid #28405C", borderRadius: "8px", padding: "8px 12px", cursor: "pointer", marginBottom: isOpen ? "6px" : 0 }}
+                >
+                  <span style={{ display: "flex", alignItems: "center", gap: "8px", fontSize: "12.5px", fontWeight: 700, color: "#F2F2E8" }}>
+                    <span style={{ width: "4px", height: "13px", background: "#39FF66", borderRadius: "2px", display: "inline-block" }} />
+                    {letterLabel}
+                  </span>
+                  <span style={{ color: "#8792A6", fontSize: "12px" }}>
+                    {items.length} produit{items.length !== 1 ? "s" : ""} {isOpen ? "▼" : "→"}
+                  </span>
+                </button>
+                {isOpen && rows}
+              </div>
+            );
+          })}
         </CollapsibleSection>
 
         <SaveButton />
