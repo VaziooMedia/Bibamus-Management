@@ -6,7 +6,7 @@ const TOP_ITEMS = [
 ];
 
 const DATABASE_ITEMS = [
-  { key: "venues", label: "Établissements" },
+  { key: "venues", label: "Lieux" },
   { key: "drinks", label: "Produits" },
   { key: "brands", label: "Marques" },
   { key: "breweries", label: "Producteurs" },

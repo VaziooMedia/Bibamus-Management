@@ -44,7 +44,7 @@ export function VenuesScreen() {
   return (
     <div>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "20px" }}>
-        <PageTitle>Établissements</PageTitle>
+        <PageTitle>Lieux</PageTitle>
         <button onClick={refresh} style={{ background: "none", border: "2px solid #28405C", borderRadius: "8px", padding: "8px 14px", color: "#F2F2E8", cursor: "pointer", fontSize: "13px" }}>
           ⟳ Rafraîchir
         </button>

@@ -135,6 +135,7 @@ export function VenueDetailPanel({ venue, onClose, onSaved, onManageMenu }) {
   const [duplicateOfId, setDuplicateOfId] = useState(venue?.duplicateOfId || null);
   const [otherVenueOptions, setOtherVenueOptions] = useState([]);
   const [ratingSummary, setRatingSummary] = useState(null);
+  const [activeTab, setActiveTab] = useState("edit");
 
   useEffect(() => {
     if (venue?.id) {
@@ -315,13 +316,49 @@ export function VenueDetailPanel({ venue, onClose, onSaved, onManageMenu }) {
     <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.5)", display: "flex", justifyContent: "flex-end", zIndex: 100 }}>
       <div style={{ width: "540px", background: "#0D1B2A", height: "100%", overflowY: "auto", padding: "28px", borderLeft: "2px solid #28405C" }}>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "20px" }}>
-          <h2 style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "22px", margin: 0 }}>{isNew ? "Ajouter un établissement" : "Vérifier l'établissement"}</h2>
+          {isNew ? (
+            <h2 style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "22px", margin: 0 }}>Ajouter un établissement</h2>
+          ) : (
+            <h2 style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "22px", margin: 0, display: "flex", alignItems: "center", gap: "10px" }}>
+              <span style={{ width: "4px", height: "20px", background: "#39FF66", borderRadius: "2px", display: "inline-block" }} />
+              {form.name}
+            </h2>
+          )}
           <button onClick={onClose} style={{ background: "none", border: "none", color: "#8792A6", fontSize: "20px", cursor: "pointer" }}>
             ✕
           </button>
         </div>
 
-        {!isNew && onManageMenu && (
+        {!isNew && (
+          <div style={{ display: "flex", gap: "6px", marginBottom: "20px", borderBottom: "2px solid #28405C" }}>
+            {[
+              { key: "edit", label: "Édition" },
+              { key: "carte", label: "Carte" },
+              { key: "medias", label: "Médias" },
+              { key: "stats", label: "Statistiques" },
+            ].map((tab) => (
+              <button
+                key={tab.key}
+                onClick={() => setActiveTab(tab.key)}
+                style={{
+                  background: "none",
+                  border: "none",
+                  borderBottom: `2px solid ${activeTab === tab.key ? "#39FF66" : "transparent"}`,
+                  marginBottom: "-2px",
+                  padding: "8px 12px",
+                  fontSize: "13px",
+                  fontWeight: 700,
+                  color: activeTab === tab.key ? "#39FF66" : "#8792A6",
+                  cursor: "pointer",
+                }}
+              >
+                {tab.label}
+              </button>
+            ))}
+          </div>
+        )}
+
+        {!isNew && activeTab === "carte" && onManageMenu && (
           <button
             onClick={onManageMenu}
             style={{
@@ -344,26 +381,33 @@ export function VenueDetailPanel({ venue, onClose, onSaved, onManageMenu }) {
           </button>
         )}
 
-        <AdminPhotoField label="Photo de profil (400×400)" photoUrl={profilePhotoUrl} onUpload={handleUploadProfile} onDelete={() => setProfilePhotoUrl(null)} uploading={uploadingProfile} />
-        <AdminPhotoField label="Photo de couverture (1200×400)" photoUrl={coverPhotoUrl} aspect="banner" onUpload={handleUploadCover} onDelete={() => setCoverPhotoUrl(null)} uploading={uploadingCover} />
-
-        <label style={labelStyle}>Nom *</label>
-        <input value={form.name} onChange={(e) => set("name", e.target.value)} onBlur={capitalizeOnBlur("name")} style={{ ...fieldStyle, marginBottom: "14px" }} />
-
-        <label style={labelStyle}>Alias / traductions (séparés par une virgule)</label>
-        <input
-          value={form.aliasesText}
-          onChange={(e) => set("aliasesText", e.target.value)}
-          placeholder="Ex. anciens noms, traductions dans une autre langue..."
-          style={{ ...fieldStyle, marginBottom: "14px" }}
-        />
-
-        <label style={labelStyle}>Sous-titre</label>
-        <input value={form.subtitle} onChange={(e) => set("subtitle", e.target.value)} onBlur={capitalizeOnBlur("subtitle")} style={fieldStyle} />
-
-        {!isNew && ratingSummary && ratingSummary.rating_status !== "none" && (
+        {activeTab === "medias" && (
           <>
-            <div style={separatorStyle} />
+            <AdminPhotoField label="Photo de profil (400×400)" photoUrl={profilePhotoUrl} onUpload={handleUploadProfile} onDelete={() => setProfilePhotoUrl(null)} uploading={uploadingProfile} />
+            <AdminPhotoField label="Photo de couverture (1200×400)" photoUrl={coverPhotoUrl} aspect="banner" onUpload={handleUploadCover} onDelete={() => setCoverPhotoUrl(null)} uploading={uploadingCover} />
+          </>
+        )}
+
+        {activeTab === "edit" && (
+          <>
+            <label style={labelStyle}>Nom *</label>
+            <input value={form.name} onChange={(e) => set("name", e.target.value)} onBlur={capitalizeOnBlur("name")} style={{ ...fieldStyle, marginBottom: "14px" }} />
+
+            <label style={labelStyle}>Alias / traductions (séparés par une virgule)</label>
+            <input
+              value={form.aliasesText}
+              onChange={(e) => set("aliasesText", e.target.value)}
+              placeholder="Ex. anciens noms, traductions dans une autre langue..."
+              style={{ ...fieldStyle, marginBottom: "14px" }}
+            />
+
+            <label style={labelStyle}>Sous-titre</label>
+            <input value={form.subtitle} onChange={(e) => set("subtitle", e.target.value)} onBlur={capitalizeOnBlur("subtitle")} style={fieldStyle} />
+          </>
+        )}
+
+        {activeTab === "stats" && ratingSummary && ratingSummary.rating_status !== "none" && (
+          <>
             <SectionTitle>Appréciations</SectionTitle>
             <p style={{ fontSize: "13px", color: "#8792A6", marginBottom: "10px" }}>
               {ratingSummary.rating_status === "early"
@@ -389,9 +433,14 @@ export function VenueDetailPanel({ venue, onClose, onSaved, onManageMenu }) {
             </div>
           </>
         )}
+        {activeTab === "stats" && (!ratingSummary || ratingSummary.rating_status === "none") && (
+          <p style={{ fontSize: "13px", color: "#8792A6", fontStyle: "italic" }}>Aucune appréciation pour l'instant.</p>
+        )}
 
-        <div style={separatorStyle} />
-        <SectionTitle>Adresse</SectionTitle>
+        {activeTab === "edit" && (
+          <>
+            <div style={separatorStyle} />
+            <SectionTitle>Adresse</SectionTitle>
         <div style={{ display: "grid", gridTemplateColumns: "2fr 1fr", gap: "12px", marginBottom: "12px" }}>
           <div>
             <label style={labelStyle}>Rue / Place / Avenue *</label>
@@ -680,34 +729,6 @@ export function VenueDetailPanel({ venue, onClose, onSaved, onManageMenu }) {
           </label>
         </div>
 
-        <label style={labelStyle}>Menu (PDF)</label>
-        <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "6px" }}>
-          <label
-            style={{
-              background: "#16273D",
-              border: "2px solid #28405C",
-              borderRadius: "8px",
-              padding: "9px 14px",
-              fontSize: "12.5px",
-              color: "#F2F2E8",
-              cursor: "pointer",
-            }}
-          >
-            {uploadingMenu ? "Envoi..." : menuPdfUrl ? "Remplacer le PDF" : "Ajouter un PDF"}
-            <input type="file" accept="application/pdf" onChange={handleUploadMenuPdf} style={{ display: "none" }} disabled={uploadingMenu} />
-          </label>
-          {menuPdfUrl && (
-            <>
-              <a href={menuPdfUrl} target="_blank" rel="noreferrer" style={{ fontSize: "12.5px", color: "#39FF66" }}>
-                Voir le PDF actuel
-              </a>
-              <button onClick={() => setMenuPdfUrl(null)} style={{ background: "none", border: "none", color: "#FF3B4E", fontSize: "12px", cursor: "pointer" }}>
-                Retirer
-              </button>
-            </>
-          )}
-        </div>
-
         <div style={separatorStyle} />
         <label style={labelStyle}>Statut</label>
         <div style={{ marginBottom: "14px" }}>
@@ -725,6 +746,40 @@ export function VenueDetailPanel({ venue, onClose, onSaved, onManageMenu }) {
         <div style={{ marginBottom: "20px" }}>
           <CertificationLevelSelector value={certificationLevel} onChange={setCertificationLevel} />
         </div>
+          </>
+        )}
+
+        {activeTab === "carte" && (
+          <>
+            <label style={labelStyle}>Menu (PDF)</label>
+            <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "6px" }}>
+              <label
+                style={{
+                  background: "#16273D",
+                  border: "2px solid #28405C",
+                  borderRadius: "8px",
+                  padding: "9px 14px",
+                  fontSize: "12.5px",
+                  color: "#F2F2E8",
+                  cursor: "pointer",
+                }}
+              >
+                {uploadingMenu ? "Envoi..." : menuPdfUrl ? "Remplacer le PDF" : "Ajouter un PDF"}
+                <input type="file" accept="application/pdf" onChange={handleUploadMenuPdf} style={{ display: "none" }} disabled={uploadingMenu} />
+              </label>
+              {menuPdfUrl && (
+                <>
+                  <a href={menuPdfUrl} target="_blank" rel="noreferrer" style={{ fontSize: "12.5px", color: "#39FF66" }}>
+                    Voir le PDF actuel
+                  </a>
+                  <button onClick={() => setMenuPdfUrl(null)} style={{ background: "none", border: "none", color: "#FF3B4E", fontSize: "12px", cursor: "pointer" }}>
+                    Retirer
+                  </button>
+                </>
+              )}
+            </div>
+          </>
+        )}
 
         <div style={{ display: "flex", flexDirection: "column", gap: "10px", marginTop: "10px" }}>
           <button

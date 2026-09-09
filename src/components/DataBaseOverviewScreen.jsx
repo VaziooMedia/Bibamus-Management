@@ -2,7 +2,7 @@ import React from "react";
 import { PageTitle } from "./PageTitle.jsx";
 
 const TILES = [
-  { key: "venues", label: "Établissements" },
+  { key: "venues", label: "Lieux" },
   { key: "drinks", label: "Produits" },
   { key: "brands", label: "Marques" },
   { key: "breweries", label: "Producteurs" },
