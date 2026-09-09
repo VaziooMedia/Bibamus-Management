@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { supabase } from "../supabaseClient.js";
-import { WhatsappIcon } from "./icons.jsx";
+import { WhatsappIcon, NavIcon } from "./icons.jsx";
 import { updatePublicVenue, deletePublicVenue, createPublicVenue, uploadVenuePhoto, uploadVenueMenuPdf, geocodeAddress, saveGeocodeResult, loadPublicVenues, mergeEntities, loadVenueRatingSummary } from "../data/sharedDirectories.js";
 import { CertificationLevelSelector } from "./CertificationLevelSelector.jsx";
 import { SearchableSelect } from "./SearchableSelect.jsx";
@@ -160,6 +160,7 @@ export function VenueDetailPanel({ venue, onClose, onSaved, onManageMenu }) {
   const [amenitiesExpanded, setAmenitiesExpanded] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [deletePassword, setDeletePassword] = useState("");
+  const [showDeletePassword, setShowDeletePassword] = useState(false);
   const [deleteError, setDeleteError] = useState("");
   const [deleting, setDeleting] = useState(false);
 
@@ -866,17 +867,28 @@ export function VenueDetailPanel({ venue, onClose, onSaved, onManageMenu }) {
         <div style={{ width: "360px", background: "#0D1B2A", border: "2px solid #28405C", borderRadius: "12px", padding: "24px" }}>
           <h3 style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "18px", margin: "0 0 8px 0" }}>Confirmer la suppression</h3>
           <p style={{ fontSize: "13px", color: "#8792A6", margin: "0 0 16px 0" }}>
-            Cette action est définitive. Ressaisissez votre mot de passe pour supprimer "{venue?.name}".
+            Saisissez votre mot de passe Admin pour supprimer la fiche "{venue?.name}".
+            <br />
+            <span style={{ color: "#FF3B4E", fontWeight: 700 }}>Cette action est définitive</span>
           </p>
           <label style={labelStyle}>Mot de passe</label>
-          <input
-            type="password"
-            value={deletePassword}
-            onChange={(e) => setDeletePassword(e.target.value)}
-            onKeyDown={(e) => e.key === "Enter" && !deleting && deletePassword && confirmDelete()}
-            autoFocus
-            style={{ ...fieldStyle, marginBottom: "10px" }}
-          />
+          <div style={{ position: "relative", marginBottom: "10px" }}>
+            <input
+              type={showDeletePassword ? "text" : "password"}
+              value={deletePassword}
+              onChange={(e) => setDeletePassword(e.target.value)}
+              onKeyDown={(e) => e.key === "Enter" && !deleting && deletePassword && confirmDelete()}
+              autoFocus
+              style={{ ...fieldStyle, paddingRight: "40px" }}
+            />
+            <button
+              onClick={() => setShowDeletePassword((v) => !v)}
+              title={showDeletePassword ? "Masquer le mot de passe" : "Afficher le mot de passe"}
+              style={{ position: "absolute", right: "10px", top: "50%", transform: "translateY(-50%)", background: "none", border: "none", cursor: "pointer", padding: 0, display: "flex" }}
+            >
+              <NavIcon name={showDeletePassword ? "eye-off" : "eye"} size={18} color="#8792A6" />
+            </button>
+          </div>
           {deleteError && <p style={{ color: "#FF3B4E", fontSize: "12.5px", margin: "0 0 10px 0" }}>{deleteError}</p>}
           <div style={{ display: "flex", gap: "10px", marginTop: "6px" }}>
             <button
