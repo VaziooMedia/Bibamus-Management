@@ -5,7 +5,7 @@
 // dans une autre.
 // ============================================================
 import React, { useState, useRef } from "react";
-import { MENU_CATEGORIES } from "../constants.js";
+import { MENU_CATEGORIES, DRINK_VOLUMES_CL, SERVING_MODE_LABELS, BEER_TYPES } from "../constants.js";
 import { updatePublicVenue } from "../data/sharedDirectories.js";
 import { DrinkBadges } from "./DrinkDisplay.jsx";
 import { resolveMenuItem, nextId, normalizeForSearch, drinkSummaryLine } from "../utils.js";
@@ -40,15 +40,19 @@ function CollapsibleSection({ title, count, expanded, onToggle, children }) {
 // DrinkRow partagé (utilisé aussi par d'autres écrans avec d'autres contraintes) : prix précédé
 // du symbole €, cadre du prix fermé en un seul bloc, actions secondaires (détails, suppression)
 // regroupées en bas à droite.
-function CompactProductRow({ drink, price, onChangePrice, priceStep = 0.1, onRemove }) {
+function CompactProductRow({ drink, price, onChangePrice, priceStep = 0.1, onChangeVolume, onChangeServingMode, onRemove }) {
   const [priceInput, setPriceInput] = useState(() => String(price ?? "").replace(".", ","));
   const [expanded, setExpanded] = useState(false);
+  const isBeer = BEER_TYPES.includes(drink.type);
 
   const commit = (next) => {
     const rounded = Math.round(next * 100) / 100;
     setPriceInput(String(rounded).replace(".", ","));
     onChangePrice(rounded);
   };
+
+  const fieldLabelStyle = { fontSize: "10.5px", fontWeight: 600, color: "#8792A6", marginBottom: "3px", display: "block" };
+  const selectStyle = { padding: "6px 8px", borderRadius: "6px", border: "2px solid #28405C", fontSize: "12px", background: "#0D1B2A", color: "#F2F2E8", width: "100%" };
 
   return (
     <div style={{ background: "#16273D", border: "2px solid #28405C", borderRadius: "8px", padding: "8px 10px" }}>
@@ -92,9 +96,36 @@ function CompactProductRow({ drink, price, onChangePrice, priceStep = 0.1, onRem
           </div>
         </div>
       </div>
-      {expanded && drinkSummaryLine(drink) && <div style={{ fontSize: "11px", color: "#8792A6", marginTop: "6px" }}>{drinkSummaryLine(drink)}</div>}
-      <div style={{ display: "flex", justifyContent: "flex-end", alignItems: "center", gap: "12px", marginTop: "4px" }}>
-        <button onClick={() => setExpanded((e) => !e)} style={{ background: "none", border: "none", color: "#8792A6", fontSize: "11px", cursor: "pointer", padding: "2px" }} aria-label="Détails">
+      {expanded && (
+        <div style={{ display: "grid", gridTemplateColumns: isBeer ? "1fr 1fr" : "1fr", gap: "8px", marginTop: "8px" }}>
+          <div>
+            <label style={fieldLabelStyle}>Volume</label>
+            <select value={drink.volumeCl || ""} onChange={(e) => onChangeVolume(e.target.value ? parseFloat(e.target.value) : null)} style={selectStyle}>
+              <option value="">Non défini</option>
+              {DRINK_VOLUMES_CL.map((v) => (
+                <option key={v} value={v}>
+                  {String(v).replace(".", ",")} cl.
+                </option>
+              ))}
+            </select>
+          </div>
+          {isBeer && (
+            <div>
+              <label style={fieldLabelStyle}>Type de service</label>
+              <select value={drink.servingMode || ""} onChange={(e) => onChangeServingMode(e.target.value)} style={selectStyle}>
+                <option value="">Non défini</option>
+                {Object.entries(SERVING_MODE_LABELS).map(([key, label]) => (
+                  <option key={key} value={key}>
+                    {label}
+                  </option>
+                ))}
+              </select>
+            </div>
+          )}
+        </div>
+      )}
+      <div style={{ display: "flex", justifyContent: "flex-end", alignItems: "center", gap: "12px", marginTop: "6px" }}>
+        <button onClick={() => setExpanded((e) => !e)} style={{ background: "none", border: "none", color: "#8792A6", fontSize: "11px", cursor: "pointer", padding: "2px" }} aria-label="Réglages">
           {expanded ? "▲" : "▾"}
         </button>
         <button onClick={onRemove} style={{ background: "none", border: "none", color: "#8792A6", fontSize: "15px", cursor: "pointer", padding: "0 2px", lineHeight: 1 }} aria-label={`Supprimer ${drink.name}`}>
@@ -240,7 +271,14 @@ export function VenueCategoryMenuScreen({ venue, category, drinksDirectory, onCl
             {currentItems.map(({ raw, resolved }, idx) => (
               <div key={raw.id} style={{ display: "flex", alignItems: "stretch", gap: "6px" }}>
                 <div style={{ flex: 1, minWidth: 0 }}>
-                  <CompactProductRow drink={resolved} price={resolved.price} onChangePrice={(price) => updateRaw(raw.id, { price })} onRemove={() => removeItem(raw.id)} />
+                  <CompactProductRow
+                    drink={resolved}
+                    price={resolved.price}
+                    onChangePrice={(price) => updateRaw(raw.id, { price })}
+                    onChangeVolume={(volumeCl) => updateRaw(raw.id, { volumeCl })}
+                    onChangeServingMode={(servingMode) => updateRaw(raw.id, { servingMode })}
+                    onRemove={() => removeItem(raw.id)}
+                  />
                 </div>
                 <div style={{ display: "flex", flexDirection: "column", justifyContent: "center", gap: "2px" }}>
                   <button
