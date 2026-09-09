@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { supabase } from "../supabaseClient.js";
 import { WhatsappIcon } from "./icons.jsx";
 import { updatePublicVenue, deletePublicVenue, createPublicVenue, uploadVenuePhoto, uploadVenueMenuPdf, geocodeAddress, saveGeocodeResult, loadPublicVenues, mergeEntities, loadVenueRatingSummary } from "../data/sharedDirectories.js";
 import { CertificationLevelSelector } from "./CertificationLevelSelector.jsx";
@@ -156,6 +157,11 @@ export function VenueDetailPanel({ venue, onClose, onSaved, onManageMenu }) {
   const [activeTab, setActiveTab] = useState("edit");
   const [coordExpanded, setCoordExpanded] = useState(false);
   const [typeExpanded, setTypeExpanded] = useState(false);
+  const [amenitiesExpanded, setAmenitiesExpanded] = useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [deletePassword, setDeletePassword] = useState("");
+  const [deleteError, setDeleteError] = useState("");
+  const [deleting, setDeleting] = useState(false);
 
   useEffect(() => {
     if (venue?.id) {
@@ -293,13 +299,37 @@ export function VenueDetailPanel({ venue, onClose, onSaved, onManageMenu }) {
     }
   };
 
-  const remove = async () => {
-    if (!confirm(`Supprimer définitivement "${venue.name}" ?`)) return;
-    const result = await deletePublicVenue(venue.id);
-    if (result?.error) {
-      alert("La suppression a échoué : " + result.error);
+  const remove = () => {
+    setDeletePassword("");
+    setDeleteError("");
+    setShowDeleteConfirm(true);
+  };
+
+  const confirmDelete = async () => {
+    setDeleteError("");
+    setDeleting(true);
+    const { data: sessionData } = await supabase.auth.getSession();
+    const email = sessionData?.session?.user?.email;
+    if (!email) {
+      setDeleting(false);
+      setDeleteError("Session introuvable — reconnectez-vous.");
       return;
     }
+    // Revérifie le mot de passe réel de l'utilisateur connecté (côté serveur Supabase) —
+    // pas un mot de passe codé en dur, qui serait visible dans le code et ne protégerait rien.
+    const { error: signInError } = await supabase.auth.signInWithPassword({ email, password: deletePassword });
+    if (signInError) {
+      setDeleting(false);
+      setDeleteError("Mot de passe incorrect.");
+      return;
+    }
+    const result = await deletePublicVenue(venue.id);
+    setDeleting(false);
+    if (result?.error) {
+      setDeleteError("La suppression a échoué : " + result.error);
+      return;
+    }
+    setShowDeleteConfirm(false);
     onSaved(null);
   };
 
@@ -333,6 +363,7 @@ export function VenueDetailPanel({ venue, onClose, onSaved, onManageMenu }) {
   const requiredOk = form.name.trim() && form.streetName.trim() && form.streetNumber.trim();
 
   return (
+    <>
     <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.5)", display: "flex", justifyContent: "flex-end", zIndex: 100 }}>
       <div style={{ width: "540px", background: "#0D1B2A", height: "100%", overflowY: "auto", padding: "28px", borderLeft: "2px solid #28405C" }}>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "20px" }}>
@@ -687,6 +718,55 @@ export function VenueDetailPanel({ venue, onClose, onSaved, onManageMenu }) {
           </div>
         </CollapsibleSection>
 
+        <CollapsibleSection title="Aménités" expanded={amenitiesExpanded} onToggle={() => setAmenitiesExpanded((e) => !e)}>
+          <div style={{ display: "flex", flexDirection: "column", gap: "8px", marginBottom: "6px" }}>
+            <label style={{ display: "flex", alignItems: "center", gap: "6px", fontSize: "13px", cursor: "pointer" }}>
+              <input type="checkbox" checked={form.hasFood} onChange={(e) => set("hasFood", e.target.checked)} />
+              Restauration possible (en plus des boissons)
+            </label>
+            <label style={{ display: "flex", alignItems: "center", gap: "6px", fontSize: "13px", cursor: "pointer" }}>
+              <input type="checkbox" checked={form.hasTerrace} onChange={(e) => set("hasTerrace", e.target.checked)} />
+              Terrasse
+            </label>
+            <label style={{ display: "flex", alignItems: "center", gap: "6px", fontSize: "13px", cursor: "pointer" }}>
+              <input type="checkbox" checked={form.wheelchairAccessible} onChange={(e) => set("wheelchairAccessible", e.target.checked)} />
+              Accessible PMR
+            </label>
+            <label style={{ display: "flex", alignItems: "center", gap: "6px", fontSize: "13px", cursor: "pointer" }}>
+              <input type="checkbox" checked={form.hasWifi} onChange={(e) => set("hasWifi", e.target.checked)} />
+              WiFi gratuit
+            </label>
+            <label style={{ display: "flex", alignItems: "center", gap: "6px", fontSize: "13px", cursor: "pointer" }}>
+              <input type="checkbox" checked={form.hasDogs} onChange={(e) => set("hasDogs", e.target.checked)} />
+              Chiens acceptés
+            </label>
+            <label style={{ display: "flex", alignItems: "center", gap: "6px", fontSize: "13px", cursor: "pointer" }}>
+              <input type="checkbox" checked={form.canDance} onChange={(e) => set("canDance", e.target.checked)} />
+              Possibilité de danser (en soirée)
+            </label>
+            <label style={{ display: "flex", alignItems: "center", gap: "6px", fontSize: "13px", cursor: "pointer" }}>
+              <input type="checkbox" checked={form.reservationPossible} onChange={(e) => set("reservationPossible", e.target.checked)} />
+              Réservation possible
+            </label>
+            <label style={{ display: "flex", alignItems: "center", gap: "6px", fontSize: "13px", cursor: "pointer" }}>
+              <input type="checkbox" checked={form.goodForGroups} onChange={(e) => set("goodForGroups", e.target.checked)} />
+              Idéal pour des grands groupes
+            </label>
+            <label style={{ display: "flex", alignItems: "center", gap: "6px", fontSize: "13px", cursor: "pointer" }}>
+              <input type="checkbox" checked={form.privatizationPossible} onChange={(e) => set("privatizationPossible", e.target.checked)} />
+              Privatisation possible
+            </label>
+            <label style={{ display: "flex", alignItems: "center", gap: "6px", fontSize: "13px", cursor: "pointer" }}>
+              <input type="checkbox" checked={form.hasPrivateRoom} onChange={(e) => set("hasPrivateRoom", e.target.checked)} />
+              Salle annexe privée disponible
+            </label>
+            <label style={{ display: "flex", alignItems: "center", gap: "6px", fontSize: "13px", cursor: "pointer" }}>
+              <input type="checkbox" checked={form.smokingArea} onChange={(e) => set("smokingArea", e.target.checked)} />
+              Espace fumeurs
+            </label>
+          </div>
+        </CollapsibleSection>
+
         <label style={labelStyle}>Horaires d'ouverture</label>
         <div style={{ marginBottom: "14px" }}>
           <GooglePlaceLinker
@@ -701,53 +781,6 @@ export function VenueDetailPanel({ venue, onClose, onSaved, onManageMenu }) {
             onNoPresenceChange={setNoGooglePresenceState}
             onNoFixedHoursChange={setNoFixedHoursState}
           />
-        </div>
-
-        <div style={{ display: "flex", flexDirection: "column", gap: "8px", marginBottom: "6px" }}>
-          <label style={{ display: "flex", alignItems: "center", gap: "6px", fontSize: "13px", cursor: "pointer" }}>
-            <input type="checkbox" checked={form.hasFood} onChange={(e) => set("hasFood", e.target.checked)} />
-            Restauration possible (en plus des boissons)
-          </label>
-          <label style={{ display: "flex", alignItems: "center", gap: "6px", fontSize: "13px", cursor: "pointer" }}>
-            <input type="checkbox" checked={form.hasTerrace} onChange={(e) => set("hasTerrace", e.target.checked)} />
-            Terrasse
-          </label>
-          <label style={{ display: "flex", alignItems: "center", gap: "6px", fontSize: "13px", cursor: "pointer" }}>
-            <input type="checkbox" checked={form.wheelchairAccessible} onChange={(e) => set("wheelchairAccessible", e.target.checked)} />
-            Accessible PMR
-          </label>
-          <label style={{ display: "flex", alignItems: "center", gap: "6px", fontSize: "13px", cursor: "pointer" }}>
-            <input type="checkbox" checked={form.hasWifi} onChange={(e) => set("hasWifi", e.target.checked)} />
-            WiFi gratuit
-          </label>
-          <label style={{ display: "flex", alignItems: "center", gap: "6px", fontSize: "13px", cursor: "pointer" }}>
-            <input type="checkbox" checked={form.hasDogs} onChange={(e) => set("hasDogs", e.target.checked)} />
-            Chiens acceptés
-          </label>
-          <label style={{ display: "flex", alignItems: "center", gap: "6px", fontSize: "13px", cursor: "pointer" }}>
-            <input type="checkbox" checked={form.canDance} onChange={(e) => set("canDance", e.target.checked)} />
-            Possibilité de danser (en soirée)
-          </label>
-          <label style={{ display: "flex", alignItems: "center", gap: "6px", fontSize: "13px", cursor: "pointer" }}>
-            <input type="checkbox" checked={form.reservationPossible} onChange={(e) => set("reservationPossible", e.target.checked)} />
-            Réservation possible
-          </label>
-          <label style={{ display: "flex", alignItems: "center", gap: "6px", fontSize: "13px", cursor: "pointer" }}>
-            <input type="checkbox" checked={form.goodForGroups} onChange={(e) => set("goodForGroups", e.target.checked)} />
-            Idéal pour des grands groupes
-          </label>
-          <label style={{ display: "flex", alignItems: "center", gap: "6px", fontSize: "13px", cursor: "pointer" }}>
-            <input type="checkbox" checked={form.privatizationPossible} onChange={(e) => set("privatizationPossible", e.target.checked)} />
-            Privatisation possible
-          </label>
-          <label style={{ display: "flex", alignItems: "center", gap: "6px", fontSize: "13px", cursor: "pointer" }}>
-            <input type="checkbox" checked={form.hasPrivateRoom} onChange={(e) => set("hasPrivateRoom", e.target.checked)} />
-            Salle annexe privée disponible
-          </label>
-          <label style={{ display: "flex", alignItems: "center", gap: "6px", fontSize: "13px", cursor: "pointer" }}>
-            <input type="checkbox" checked={form.smokingArea} onChange={(e) => set("smokingArea", e.target.checked)} />
-            Espace fumeurs
-          </label>
         </div>
           </>
         )}
@@ -810,7 +843,8 @@ export function VenueDetailPanel({ venue, onClose, onSaved, onManageMenu }) {
           </>
         )}
 
-        <div style={{ display: "flex", flexDirection: "column", gap: "10px", marginTop: "10px" }}>
+        <div style={separatorStyle} />
+        <div style={{ display: "flex", flexDirection: "column", gap: "10px", marginTop: "24px" }}>
           <button
             onClick={save}
             disabled={saving || !requiredOk}
@@ -826,5 +860,42 @@ export function VenueDetailPanel({ venue, onClose, onSaved, onManageMenu }) {
         </div>
       </div>
     </div>
+
+    {showDeleteConfirm && (
+      <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.6)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 110 }}>
+        <div style={{ width: "360px", background: "#0D1B2A", border: "2px solid #28405C", borderRadius: "12px", padding: "24px" }}>
+          <h3 style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "18px", margin: "0 0 8px 0" }}>Confirmer la suppression</h3>
+          <p style={{ fontSize: "13px", color: "#8792A6", margin: "0 0 16px 0" }}>
+            Cette action est définitive. Ressaisissez votre mot de passe pour supprimer "{venue?.name}".
+          </p>
+          <label style={labelStyle}>Mot de passe</label>
+          <input
+            type="password"
+            value={deletePassword}
+            onChange={(e) => setDeletePassword(e.target.value)}
+            onKeyDown={(e) => e.key === "Enter" && !deleting && deletePassword && confirmDelete()}
+            autoFocus
+            style={{ ...fieldStyle, marginBottom: "10px" }}
+          />
+          {deleteError && <p style={{ color: "#FF3B4E", fontSize: "12.5px", margin: "0 0 10px 0" }}>{deleteError}</p>}
+          <div style={{ display: "flex", gap: "10px", marginTop: "6px" }}>
+            <button
+              onClick={() => setShowDeleteConfirm(false)}
+              style={{ flex: 1, background: "none", border: "2px solid #28405C", borderRadius: "8px", padding: "10px", color: "#F2F2E8", cursor: "pointer", fontSize: "13px" }}
+            >
+              Annuler
+            </button>
+            <button
+              onClick={confirmDelete}
+              disabled={deleting || !deletePassword}
+              style={{ flex: 1, background: "#FF3B4E", border: "none", borderRadius: "8px", padding: "10px", color: "#fff", fontWeight: 700, cursor: "pointer", fontSize: "13px", opacity: deleting || !deletePassword ? 0.5 : 1 }}
+            >
+              {deleting ? "..." : "Supprimer"}
+            </button>
+          </div>
+        </div>
+      </div>
+    )}
+    </>
   );
 }
