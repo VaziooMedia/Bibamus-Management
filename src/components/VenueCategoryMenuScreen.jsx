@@ -66,13 +66,21 @@ function CompactProductRow({ drink, price, onChangePrice, priceStep = 0.1, onCha
             <DrinkBadges drink={drink} size={9} />
             {drink.servingMode && <span style={{ fontSize: "10.5px", color: "#8792A6", fontWeight: 600 }}>{SERVING_MODE_LABELS[drink.servingMode]}</span>}
           </div>
-          {(drink.abv != null || drink.brewery) && (
-            <div style={{ display: "flex", alignItems: "center", gap: "5px", flexWrap: "wrap", marginTop: "3px", fontSize: "10.5px", color: "#8792A6" }}>
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: "8px", marginTop: "3px" }}>
+            <div style={{ display: "flex", alignItems: "center", gap: "5px", flexWrap: "wrap", fontSize: "10.5px", color: "#8792A6" }}>
               {drink.abv != null && <span>{drink.abv.toFixed(1)}% ABV</span>}
               {drink.abv != null && drink.brewery && <span>·</span>}
               {drink.brewery && <span>{drink.brewery}</span>}
             </div>
-          )}
+            <div style={{ display: "flex", alignItems: "center", gap: "12px", flexShrink: 0 }}>
+              <button onClick={() => setExpanded((e) => !e)} style={{ background: "none", border: "none", color: "#39FF66", fontSize: "11px", cursor: "pointer", padding: "2px", fontWeight: 700 }} aria-label="Réglages">
+                {expanded ? "▲" : "▾"}
+              </button>
+              <button onClick={onRemove} style={{ background: "none", border: "none", color: "#FF3B4E", fontSize: "15px", cursor: "pointer", padding: "0 2px", lineHeight: 1 }} aria-label={`Supprimer ${drink.name}`}>
+                ×
+              </button>
+            </div>
+          </div>
         </div>
         <div style={{ display: "flex", alignItems: "stretch", border: "2px solid #28405C", borderRadius: "6px", overflow: "hidden", flexShrink: 0 }}>
           <span style={{ fontSize: "11.5px", color: "#8792A6", padding: "0 6px", display: "flex", alignItems: "center", background: "#0D1B2A" }}>€</span>
@@ -107,8 +115,8 @@ function CompactProductRow({ drink, price, onChangePrice, priceStep = 0.1, onCha
         </div>
       </div>
       {expanded && (
-        <div style={{ display: "grid", gridTemplateColumns: isBeer ? "1fr 1fr" : "1fr", gap: "8px", marginTop: "8px" }}>
-          <div>
+        <div style={{ display: "flex", alignItems: "flex-start", gap: "10px", marginTop: "8px" }}>
+          <div style={{ width: "110px", flexShrink: 0 }}>
             <label style={fieldLabelStyle}>Volume</label>
             <select value={drink.volumeCl || ""} onChange={(e) => onChangeVolume(e.target.value ? parseFloat(e.target.value) : null)} style={selectStyle}>
               <option value="">Non défini</option>
@@ -120,28 +128,23 @@ function CompactProductRow({ drink, price, onChangePrice, priceStep = 0.1, onCha
             </select>
           </div>
           {isBeer && (
-            <div>
-              <label style={fieldLabelStyle}>Type de service</label>
-              <select value={drink.servingMode || ""} onChange={(e) => onChangeServingMode(e.target.value)} style={selectStyle}>
-                <option value="">Non défini</option>
-                {Object.entries(SERVING_MODE_LABELS).map(([key, label]) => (
-                  <option key={key} value={key}>
-                    {label}
-                  </option>
-                ))}
-              </select>
-            </div>
+            <>
+              <div style={{ width: "1px", alignSelf: "stretch", background: "#28405C", marginTop: "18px" }} />
+              <div style={{ width: "110px", flexShrink: 0 }}>
+                <label style={fieldLabelStyle}>Type de service</label>
+                <select value={drink.servingMode || ""} onChange={(e) => onChangeServingMode(e.target.value)} style={selectStyle}>
+                  <option value="">Non défini</option>
+                  {Object.entries(SERVING_MODE_LABELS).map(([key, label]) => (
+                    <option key={key} value={key}>
+                      {label}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            </>
           )}
         </div>
       )}
-      <div style={{ display: "flex", justifyContent: "flex-end", alignItems: "center", gap: "12px", marginTop: "6px" }}>
-        <button onClick={() => setExpanded((e) => !e)} style={{ background: "none", border: "none", color: "#39FF66", fontSize: "11px", cursor: "pointer", padding: "2px", fontWeight: 700 }} aria-label="Réglages">
-          {expanded ? "▲" : "▾"}
-        </button>
-        <button onClick={onRemove} style={{ background: "none", border: "none", color: "#FF3B4E", fontSize: "15px", cursor: "pointer", padding: "0 2px", lineHeight: 1 }} aria-label={`Supprimer ${drink.name}`}>
-          ×
-        </button>
-      </div>
     </div>
   );
 }
