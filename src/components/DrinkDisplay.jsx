@@ -4,8 +4,8 @@
 // le prototype Claude.
 // ============================================================
 import React from "react";
-import { COLORS, COUNTRY_FLAGS, GLUTEN_BIO_ELIGIBLE_TYPES, NATIONALITY_ELIGIBLE_TYPES, NON_ALCOHOLIC_DRINK_TYPES } from "../constants.js";
-import { FlagIcon } from "./icons.jsx";
+import { COLORS, COUNTRY_ISO_CODES, GLUTEN_BIO_ELIGIBLE_TYPES, NATIONALITY_ELIGIBLE_TYPES, NON_ALCOHOLIC_DRINK_TYPES } from "../constants.js";
+import { CountryFlagImg } from "./icons.jsx";
 
 export function GlutenFreeIcon({ size = 14, color = COLORS.amberDark, title = "Sans gluten" }) {
   return (
@@ -26,10 +26,10 @@ export function GlutenFreeIcon({ size = 14, color = COLORS.amberDark, title = "S
 export function DrinkBadges({ drink, onTagClick, size = 11 }) {
   const items = [];
   const isInherentlyNonAlcoholic = NON_ALCOHOLIC_DRINK_TYPES.includes(drink.type);
-  if (NATIONALITY_ELIGIBLE_TYPES.includes(drink.type) && drink.nationality && COUNTRY_FLAGS[drink.nationality]) {
+  if (NATIONALITY_ELIGIBLE_TYPES.includes(drink.type) && drink.nationality && COUNTRY_ISO_CODES[drink.nationality]) {
     items.push({
       key: "country",
-      label: <FlagIcon flag={COUNTRY_FLAGS[drink.nationality]} size={size + 4} />,
+      label: <CountryFlagImg isoCode={COUNTRY_ISO_CODES[drink.nationality]} size={size + 4} />,
       icon: true,
       title: drink.nationality,
       filter: { kind: "nationality", value: drink.nationality },
@@ -63,11 +63,14 @@ export function DrinkBadges({ drink, onTagClick, size = 11 }) {
   return (
     <>
       {items.map((it) => {
-        const style = it.icon
-          ? { ...badgeStyle, padding: "3px", display: "inline-flex", alignItems: "center", justifyContent: "center" }
-          : it.key === "alcoholic"
-          ? { ...badgeStyle, color: "#fff", background: COLORS.wine }
-          : badgeStyle;
+        const style =
+          it.key === "country"
+            ? { background: "none", padding: 0, display: "inline-flex", alignItems: "center" }
+            : it.icon
+            ? { ...badgeStyle, padding: "3px", display: "inline-flex", alignItems: "center", justifyContent: "center" }
+            : it.key === "alcoholic"
+            ? { ...badgeStyle, color: "#fff", background: COLORS.wine }
+            : badgeStyle;
         return onTagClick ? (
           <button
             key={it.key}

@@ -4,6 +4,115 @@
 import React from "react";
 import { COLORS } from "../constants.js";
 
+// Chaque drapeau réellement utilisé par cette plateforme est importé individuellement (même
+// approche que côté bibamus-web) — seule la quarantaine de pays de COUNTRY_ISO_CODES sert
+// réellement, pas besoin des 271 drapeaux disponibles dans le dépôt.
+import flagBe from "../assets/flags/be.svg";
+import flagFr from "../assets/flags/fr.svg";
+import flagNl from "../assets/flags/nl.svg";
+import flagDe from "../assets/flags/de.svg";
+import flagLu from "../assets/flags/lu.svg";
+import flagDz from "../assets/flags/dz.svg";
+import flagAt from "../assets/flags/at.svg";
+import flagBg from "../assets/flags/bg.svg";
+import flagCa from "../assets/flags/ca.svg";
+import flagCy from "../assets/flags/cy.svg";
+import flagCi from "../assets/flags/ci.svg";
+import flagHr from "../assets/flags/hr.svg";
+import flagCu from "../assets/flags/cu.svg";
+import flagDk from "../assets/flags/dk.svg";
+import flagEs from "../assets/flags/es.svg";
+import flagEe from "../assets/flags/ee.svg";
+import flagUs from "../assets/flags/us.svg";
+import flagFi from "../assets/flags/fi.svg";
+import flagGr from "../assets/flags/gr.svg";
+import flagHu from "../assets/flags/hu.svg";
+import flagIe from "../assets/flags/ie.svg";
+import flagIs from "../assets/flags/is.svg";
+import flagIt from "../assets/flags/it.svg";
+import flagLv from "../assets/flags/lv.svg";
+import flagLt from "../assets/flags/lt.svg";
+import flagMt from "../assets/flags/mt.svg";
+import flagMa from "../assets/flags/ma.svg";
+import flagMx from "../assets/flags/mx.svg";
+import flagNo from "../assets/flags/no.svg";
+import flagPl from "../assets/flags/pl.svg";
+import flagPt from "../assets/flags/pt.svg";
+import flagCz from "../assets/flags/cz.svg";
+import flagRo from "../assets/flags/ro.svg";
+import flagGb from "../assets/flags/gb.svg";
+import flagSn from "../assets/flags/sn.svg";
+import flagSk from "../assets/flags/sk.svg";
+import flagSi from "../assets/flags/si.svg";
+import flagSe from "../assets/flags/se.svg";
+import flagCh from "../assets/flags/ch.svg";
+import flagTn from "../assets/flags/tn.svg";
+import flagVe from "../assets/flags/ve.svg";
+
+const FLAG_URLS_BY_CODE = {
+  be: flagBe,
+  fr: flagFr,
+  nl: flagNl,
+  de: flagDe,
+  lu: flagLu,
+  dz: flagDz,
+  at: flagAt,
+  bg: flagBg,
+  ca: flagCa,
+  cy: flagCy,
+  ci: flagCi,
+  hr: flagHr,
+  cu: flagCu,
+  dk: flagDk,
+  es: flagEs,
+  ee: flagEe,
+  us: flagUs,
+  fi: flagFi,
+  gr: flagGr,
+  hu: flagHu,
+  ie: flagIe,
+  is: flagIs,
+  it: flagIt,
+  lv: flagLv,
+  lt: flagLt,
+  mt: flagMt,
+  ma: flagMa,
+  mx: flagMx,
+  no: flagNo,
+  pl: flagPl,
+  pt: flagPt,
+  cz: flagCz,
+  ro: flagRo,
+  gb: flagGb,
+  sn: flagSn,
+  sk: flagSk,
+  si: flagSi,
+  se: flagSe,
+  ch: flagCh,
+  tn: flagTn,
+  ve: flagVe,
+};
+
+// Vrai fichier SVG du pays (pas un emoji) — sans fond ni bordure, tel que demandé.
+export function CountryFlagImg({ isoCode, size = 16, style }) {
+  const url = isoCode && FLAG_URLS_BY_CODE[isoCode];
+  if (!url) return null;
+  return (
+    <img
+      src={url}
+      alt={isoCode}
+      style={{
+        width: `${size}px`,
+        height: `${Math.round((size * 3) / 4)}px`,
+        display: "inline-block",
+        verticalAlign: "middle",
+        objectFit: "cover",
+        ...style,
+      }}
+    />
+  );
+}
+
 export function FlagIcon({ flag, size = 15 }) {
   const width = Math.round(size * 1.4);
   return (

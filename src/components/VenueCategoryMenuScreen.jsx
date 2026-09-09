@@ -62,24 +62,14 @@ function CompactProductRow({ drink, price, onChangePrice, priceStep = 0.1, onCha
             <span style={{ fontWeight: 700, fontSize: "13px", color: "#F2F2E8" }}>{drink.name}</span>
             {drink.volumeCl && <span style={{ fontSize: "12px", color: "#39FF66", fontWeight: 800 }}>{String(drink.volumeCl).replace(".", ",")}cl.</span>}
           </div>
-          <div style={{ display: "flex", alignItems: "center", gap: "5px", flexWrap: "wrap", marginTop: "3px" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: "6px", flexWrap: "wrap", marginTop: "3px" }}>
             <DrinkBadges drink={drink} size={9} />
-            {drink.servingMode && <span style={{ fontSize: "10.5px", color: "#8792A6", fontWeight: 600 }}>{SERVING_MODE_LABELS[drink.servingMode]}</span>}
-          </div>
-          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: "8px", marginTop: "3px" }}>
-            <div style={{ display: "flex", alignItems: "center", gap: "5px", flexWrap: "wrap", fontSize: "10.5px", color: "#8792A6" }}>
-              {drink.abv != null && <span>{drink.abv.toFixed(1)}% ABV</span>}
-              {drink.abv != null && drink.brewery && <span>·</span>}
-              {drink.brewery && <span>{drink.brewery}</span>}
-            </div>
-            <div style={{ display: "flex", alignItems: "center", gap: "12px", flexShrink: 0 }}>
-              <button onClick={() => setExpanded((e) => !e)} style={{ background: "none", border: "none", color: "#39FF66", fontSize: "11px", cursor: "pointer", padding: "2px", fontWeight: 700 }} aria-label="Réglages">
-                {expanded ? "▲" : "▾"}
-              </button>
-              <button onClick={onRemove} style={{ background: "none", border: "none", color: "#FF3B4E", fontSize: "15px", cursor: "pointer", padding: "0 2px", lineHeight: 1 }} aria-label={`Supprimer ${drink.name}`}>
-                ×
-              </button>
-            </div>
+            {drink.servingMode && (
+              <>
+                <span style={{ width: "1px", height: "10px", background: "#28405C", display: "inline-block" }} />
+                <span style={{ fontSize: "10.5px", color: "#8792A6", fontWeight: 600 }}>{SERVING_MODE_LABELS[drink.servingMode]}</span>
+              </>
+            )}
           </div>
         </div>
         <div style={{ display: "flex", alignItems: "stretch", border: "2px solid #28405C", borderRadius: "6px", overflow: "hidden", flexShrink: 0 }}>
@@ -112,6 +102,21 @@ function CompactProductRow({ drink, price, onChangePrice, priceStep = 0.1, onCha
               ▼
             </button>
           </div>
+        </div>
+      </div>
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: "8px", marginTop: "4px" }}>
+        <div style={{ display: "flex", alignItems: "center", gap: "6px", flexWrap: "wrap", fontSize: "10.5px", color: "#8792A6" }}>
+          {drink.abv != null && <span>{drink.abv.toFixed(1)}% ABV</span>}
+          {drink.abv != null && drink.brewery && <span style={{ width: "5px", height: "5px", borderRadius: "50%", background: "#39FF66", display: "inline-block" }} />}
+          {drink.brewery && <span>{drink.brewery}</span>}
+        </div>
+        <div style={{ display: "flex", alignItems: "center", gap: "12px", flexShrink: 0 }}>
+          <button onClick={() => setExpanded((e) => !e)} style={{ background: "none", border: "none", color: "#39FF66", fontSize: "11px", cursor: "pointer", padding: "2px", fontWeight: 700 }} aria-label="Réglages">
+            {expanded ? "▲" : "▾"}
+          </button>
+          <button onClick={onRemove} style={{ background: "none", border: "none", color: "#FF3B4E", fontSize: "15px", cursor: "pointer", padding: "0 2px", lineHeight: 1 }} aria-label={`Supprimer ${drink.name}`}>
+            ×
+          </button>
         </div>
       </div>
       {expanded && (
@@ -276,7 +281,11 @@ export function VenueCategoryMenuScreen({ venue, category, drinksDirectory, onCl
         </div>
         <p style={{ fontSize: "13px", color: "#8792A6", margin: "0 0 16px 0" }}>{venue.name}</p>
 
+        <div style={{ borderBottom: "1px solid #28405C", margin: "0 0 16px 0" }} />
+
         <SaveButton compact />
+
+        <div style={{ borderBottom: "1px solid #28405C", margin: "0 0 20px 0" }} />
 
         <CollapsibleSection title="Produits ajoutés" count={currentItems.length} expanded={currentExpanded} onToggle={() => setCurrentExpanded((e) => !e)}>
           {currentItems.length === 0 && <p style={{ fontSize: "12.5px", color: "#8792A6", fontStyle: "italic", margin: 0 }}>Aucun produit dans cette catégorie pour l'instant.</p>}
@@ -385,6 +394,8 @@ export function VenueCategoryMenuScreen({ venue, category, drinksDirectory, onCl
             );
           })}
         </CollapsibleSection>
+
+        <div style={{ borderBottom: "1px solid #28405C", margin: "0 0 20px 0" }} />
 
         <SaveButton />
 
