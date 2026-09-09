@@ -12,6 +12,7 @@
 // ============================================================
 
 import { supabase } from "../supabaseClient.js";
+import { DRINK_TYPE_CODE_TO_LABEL } from "../constants.js";
 
 /* ---------------- PERMISSIONS CENTRALISÉES ---------------- */
 
@@ -1024,7 +1025,11 @@ export async function loadDrinksDirectory() {
     console.error("loadDrinksDirectory:", error);
     return [];
   }
-  return data.map(rowToDrink);
+  // Le type est stocké en base sous forme de code technique (ex. "bieres_cidres") — cette
+  // fonction alimente des écrans (comme la carte d'un lieu) qui comparent sur le libellé
+  // français des catégories, d'où la traduction ici plutôt que dans rowToDrink lui-même (qui
+  // reste au format code brut pour les autres usages, ex. la page "Produits").
+  return data.map(rowToDrink).map((d) => ({ ...d, type: DRINK_TYPE_CODE_TO_LABEL[d.type] || d.type }));
 }
 
 // Un statut vide en base ("null") équivaut à "à traiter" — traité comme tel dans les comptages.

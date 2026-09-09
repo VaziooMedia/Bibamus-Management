@@ -678,3 +678,18 @@ export const SOFT_DRINK_TAGS = [
 
 export const SPIRIT_TAGS = ["Vodka", "Whisky", "Gin", "Rhum", "Tequila"];
 export const WINE_TAGS = ["Sec", "Demi-sec", "Doux"];
+
+// Bibamus-admin stocke le type de produit sous forme de code technique stable (ex.
+// "bieres_cidres"), tandis que l'app grand public (et donc MENU_CATEGORIES, DRINK_TYPE_MIGRATIONS
+// ci-dessus) travaille sur le libellé français. Cette correspondance traduit à la frontière —
+// même mapping que celui déjà utilisé côté bibamus-web.
+export const DRINK_TYPE_CODE_TO_LABEL = {
+  bieres_cidres: "Bières & Cidres",
+  vins_bulles: "Vins & Bulles",
+  spiritueux: "Spiritueux",
+  cocktails_mocktails: "Cocktails / Mocktails",
+  softs_eaux: "Softs & Eaux",
+  boissons_chaudes: "Boissons chaudes",
+  snacks: "Snacks",
+  generiques: "Génériques",
+};
