@@ -59,11 +59,23 @@ export const COUNTRIES = [
 export const PAYMENT_METHODS = [
   { code: "especes", fr: "Espèces" },
   { code: "carte_bancaire", fr: "Carte bancaire" },
+  { code: "visa", fr: "Visa" },
+  { code: "mastercard", fr: "Mastercard" },
+  { code: "maestro_debit", fr: "Maestro/Debit" },
   { code: "sans_contact", fr: "Sans contact" },
-  { code: "bancontact", fr: "Bancontact" },
+  { code: "apple_pay", fr: "Apple Pay" },
+  { code: "google_pay", fr: "Google Pay" },
+  { code: "samsung_wallet", fr: "Samsung Wallet" },
+  { code: "paiement_mobile_qr", fr: "Paiement mobile/QR" },
   { code: "payconiq", fr: "Payconiq" },
-  { code: "virement", fr: "Virement" },
-  { code: "cheque", fr: "Chèque" },
+  { code: "paiement_en_ligne", fr: "Paiement en ligne" },
+  { code: "cheques_repas", fr: "Chèques-repas" },
+  { code: "facturation", fr: "Facturation" },
+  { code: "prepaye", fr: "Prépayé" },
+  { code: "carte_rechargeable", fr: "Carte rechargeable" },
+  { code: "bracelet_rfid", fr: "Bracelet RFID" },
+  { code: "jetons", fr: "Jetons" },
+  { code: "bon_cadeau", fr: "Bon cadeau" },
 ];
 
 // Système d'appréciation des lieux (5 paliers positifs, échelle d'enthousiasme croissant —

@@ -378,23 +378,46 @@ M 418 169 L 410 176 L 406 186 L 406 194 L 412 211 L 415 216 L 419 229 L 422 234 
 }
 
 export function GoogleIcon({ size = 22 }) {
+  return <img src={googleLogoUrl} alt="Google" width={size} height={size} style={{ display: "block", borderRadius: "50%" }} />;
+}
+
+export function WebsiteIcon({ size = 22 }) {
+  return <img src={internetLogoUrl} alt="Internet" width={size} height={size} style={{ display: "block", borderRadius: "50%" }} />;
+}
+
+export function TripadvisorIcon({ size = 22 }) {
+  return <img src={tripadvisorLogoUrl} alt="Tripadvisor" width={size} height={size} style={{ display: "block", borderRadius: "50%" }} />;
+}
+
+export function RestaurantGuruIcon({ size = 22 }) {
+  return <img src={restaurantGuruLogoUrl} alt="Restaurant Guru" width={size} height={size} style={{ display: "block", borderRadius: "50%" }} />;
+}
+
+export function PlaceCheckIcon({ size = 22 }) {
+  return <img src={placeCheckLogoUrl} alt="" width={size} height={size} style={{ display: "block" }} />;
+}
+
+export function PhoneIcon({ size = 22 }) {
   return (
     <svg width={size} height={size} viewBox="0 0 24 24">
-      <circle cx="12" cy="12" r="11" fill="#fff" stroke="#DADCE0" strokeWidth="1.5" />
-      <text x="12" y="16.5" textAnchor="middle" fontSize="12" fontWeight="700" fill="#4285F4" fontFamily="Arial, sans-serif">
-        G
-      </text>
+      <circle cx="12" cy="12" r="11" fill={COLORS.ink} />
+      <path
+        d="M8.3 7.2c.3-.7.9-1.6 1.6-1.7.5-.1 1 .1 1.3.5l1 1.3c.3.4.3.9 0 1.3l-.8 1c-.2.3-.2.6 0 .9 1 1.6 2.3 2.9 3.9 3.9.3.2.6.2.9 0l1-.8c.4-.3.9-.3 1.3 0l1.3 1c.4.3.6.8.5 1.3-.1.7-1 1.3-1.7 1.6-1.1.4-2.3.3-3.6-.3-2.6-1.2-4.7-3.3-5.9-5.9-.6-1.3-.7-2.5-.3-3.6Z"
+        fill="none"
+        stroke="#fff"
+        strokeWidth="1.4"
+        strokeLinejoin="round"
+      />
     </svg>
   );
 }
 
-export function WebsiteIcon({ size = 22 }) {
+export function EmailIcon({ size = 22 }) {
   return (
     <svg width={size} height={size} viewBox="0 0 24 24">
       <circle cx="12" cy="12" r="11" fill={COLORS.ink} />
-      <circle cx="12" cy="12" r="7.5" fill="none" stroke="#fff" strokeWidth="1.4" />
-      <line x1="4.7" y1="12" x2="19.3" y2="12" stroke="#fff" strokeWidth="1.4" />
-      <path d="M12 4.7c-2.1 2-2.1 12.6 0 14.6M12 4.7c2.1 2 2.1 12.6 0 14.6" fill="none" stroke="#fff" strokeWidth="1.4" />
+      <rect x="5.5" y="7.5" width="13" height="9" rx="1.5" fill="none" stroke="#fff" strokeWidth="1.4" />
+      <path d="M6 8.2l6 4.6 6-4.6" fill="none" stroke="#fff" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" />
     </svg>
   );
 }
@@ -408,6 +431,11 @@ import linkedinLogoUrl from "../assets/brand/linkedin.png";
 import pinterestLogoUrl from "../assets/brand/pinterest.svg";
 import twitchLogoUrl from "../assets/brand/twitch.svg";
 import whatsappLogoUrl from "../assets/brand/whatsapp.svg";
+import googleLogoUrl from "../assets/brand/google.svg";
+import internetLogoUrl from "../assets/brand/internet.svg";
+import tripadvisorLogoUrl from "../assets/brand/tripadvisor.svg";
+import restaurantGuruLogoUrl from "../assets/brand/restaurant-guru.svg";
+import placeCheckLogoUrl from "../assets/brand/place-check.svg";
 
 export function FacebookIcon({ size = 22 }) {
   return <img src={facebookLogoUrl} alt="Facebook" width={size} height={size} style={{ display: "block", borderRadius: "50%" }} />;

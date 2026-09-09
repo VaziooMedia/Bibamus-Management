@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { supabase } from "../supabaseClient.js";
-import { WhatsappIcon, NavIcon, GoogleIcon, WebsiteIcon, FacebookIcon, InstagramIcon, TiktokIcon, SnapchatIcon } from "./icons.jsx";
+import { WhatsappIcon, NavIcon, GoogleIcon, WebsiteIcon, FacebookIcon, InstagramIcon, TiktokIcon, SnapchatIcon, PhoneIcon, EmailIcon, TripadvisorIcon, RestaurantGuruIcon, PlaceCheckIcon } from "./icons.jsx";
 import { updatePublicVenue, deletePublicVenue, createPublicVenue, uploadVenuePhoto, uploadVenueMenuPdf, geocodeAddress, saveGeocodeResult, loadPublicVenues, mergeEntities, loadVenueRatingSummary } from "../data/sharedDirectories.js";
 import { CertificationLevelSelector } from "./CertificationLevelSelector.jsx";
 import { SearchableSelect } from "./SearchableSelect.jsx";
@@ -433,7 +433,7 @@ export function VenueDetailPanel({ venue, onClose, onSaved, onManageMenu }) {
 
         <>
           <label style={labelStyle}>Statut</label>
-          <div style={{ marginBottom: "14px" }}>
+          <div style={{ marginBottom: "14px", maxWidth: "180px" }}>
             <StatusSelector value={status} onChange={setStatus} />
           </div>
 
@@ -624,18 +624,22 @@ export function VenueDetailPanel({ venue, onClose, onSaved, onManageMenu }) {
             onClick={handleGeocode}
             disabled={geocoding || !(form.streetName && form.postalCode && form.city)}
             style={{
+              display: "flex",
+              alignItems: "center",
+              gap: "8px",
               background: "none",
               border: "2px solid #28405C",
               borderRadius: "8px",
               padding: "8px 14px",
-              color: "#39FF66",
+              color: "#F2F2E8",
               fontSize: "12.5px",
               fontWeight: 700,
               cursor: form.streetName && form.postalCode && form.city ? "pointer" : "default",
               opacity: form.streetName && form.postalCode && form.city ? 1 : 0.5,
             }}
           >
-            {geocoding ? "Géocodage..." : "📍 Géocoder automatiquement"}
+            <PlaceCheckIcon size={16} />
+            {geocoding ? "Géocodage..." : "Géocoder automatiquement"}
           </button>
           {geocodeNotFound && <span style={{ fontSize: "12px", color: "#FF3B4E" }}>Adresse introuvable — vérifiez les champs</span>}
           {!geocodeNotFound && geocodeStatus === "verified" && <span style={{ fontSize: "12px", color: "#39FF66" }}>✓ Position vérifiée</span>}
@@ -651,14 +655,14 @@ export function VenueDetailPanel({ venue, onClose, onSaved, onManageMenu }) {
             </CollapsibleSection>
         <div style={separatorStyle} />
         <CollapsibleSection title="Coordonnées" expanded={coordExpanded} onToggle={() => setCoordExpanded((e) => !e)}>
-          <IconField icon={<span style={{ fontSize: "16px" }}>📞</span>} label="Téléphone">
+          <IconField icon={<PhoneIcon size={18} />} label="Téléphone">
             <div style={{ display: "flex", gap: "8px" }}>
               <div style={{ ...fieldStyle, width: "64px", flexShrink: 0, textAlign: "center", color: "#8792A6" }}>{phonePrefix || "—"}</div>
               <input value={form.phone} onChange={(e) => set("phone", e.target.value)} placeholder="000 00 00 00" style={fieldStyle} />
             </div>
           </IconField>
 
-          <IconField icon={<span style={{ fontSize: "16px" }}>✉️</span>} label="Email">
+          <IconField icon={<EmailIcon size={18} />} label="Email">
             <input value={form.email} onChange={(e) => set("email", e.target.value)} style={fieldStyle} />
           </IconField>
 
@@ -676,11 +680,11 @@ export function VenueDetailPanel({ venue, onClose, onSaved, onManageMenu }) {
           <SocialLinkField icon={<TiktokIcon size={18} />} label="TikTok" prefix="https://www.tiktok.com/@" value={form.tiktokUrl} onChange={(v) => set("tiktokUrl", v)} />
           <SocialLinkField icon={<SnapchatIcon size={18} />} label="Snapchat" prefix="https://www.snapchat.com/add/" value={form.snapchatUrl} onChange={(v) => set("snapchatUrl", v)} />
 
-          <IconField icon={<span style={{ fontSize: "16px" }}>🦉</span>} label="Tripadvisor">
+          <IconField icon={<TripadvisorIcon size={18} />} label="Tripadvisor">
             <input value={form.tripadvisorUrl} onChange={(e) => set("tripadvisorUrl", e.target.value)} style={fieldStyle} />
           </IconField>
 
-          <IconField icon={<span style={{ fontSize: "16px" }}>🍽️</span>} label="Restaurant Guru">
+          <IconField icon={<RestaurantGuruIcon size={18} />} label="Restaurant Guru">
             <input value={form.restaurantGuruUrl} onChange={(e) => set("restaurantGuruUrl", e.target.value)} style={fieldStyle} />
           </IconField>
         </CollapsibleSection>
