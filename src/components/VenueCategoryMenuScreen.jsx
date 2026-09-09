@@ -14,6 +14,11 @@ import { resolveMenuItem, nextId, normalizeForSearch, drinkSummaryLine } from ".
 
 const categoryOf = (d) => (MENU_CATEGORIES.includes(d.menuCategory) ? d.menuCategory : MENU_CATEGORIES.includes(d.type) ? d.type : "Non classé");
 const subtypeLabel = (code) => BEER_CIDER_SUBTYPES.find((s) => s.code === code)?.fr || "Autre";
+const LETTER_BUCKETS = ["0-9", ..."ABCDEFGHIJKLMNOPQRSTUVWXYZ".split("")];
+const letterBucketOf = (name) => {
+  const first = (name || "").trim().charAt(0).toUpperCase();
+  return /[A-Z]/.test(first) ? first : "0-9";
+};
 
 function CollapsibleSection({ title, count, expanded, onToggle, children }) {
   return (
@@ -41,7 +46,14 @@ export function VenueCategoryMenuScreen({ venue, category, drinksDirectory, onCl
   const [dirty, setDirty] = useState(false);
   const [currentExpanded, setCurrentExpanded] = useState(true);
   const [directoryExpanded, setDirectoryExpanded] = useState(true);
+  const [expandedLetterKeys, setExpandedLetterKeys] = useState(() => new Set());
   const scrollRef = useRef(null);
+  const toggleLetterKey = (key) =>
+    setExpandedLetterKeys((prev) => {
+      const next = new Set(prev);
+      next.has(key) ? next.delete(key) : next.add(key);
+      return next;
+    });
 
   // Pas de tri alphabétique ici — l'ordre du tableau est l'ordre d'affichage voulu, et peut
   // être réorganisé manuellement (flèches ▲▼).
@@ -53,10 +65,9 @@ export function VenueCategoryMenuScreen({ venue, category, drinksDirectory, onCl
     .filter((d) => !q || normalizeForSearch(d.name).includes(q) || normalizeForSearch(d.brewery).includes(q));
 
   // Sous-catégories (Bière / Cidre / Poiré) — seulement là où ce champ existe vraiment, pour
-  // éviter de créer un groupement artificiel sur les catégories qui n'en ont pas. Chaque groupe,
-  // et chaque produit à l'intérieur, en ordre alphabétique.
+  // éviter de créer un groupement artificiel sur les catégories qui n'en ont pas.
   const hasSubtypes = matchingDirectoryItems.some((d) => d.beverageSubtype);
-  const directoryGroups = hasSubtypes
+  const subtypeGroups = hasSubtypes
     ? Object.entries(
         matchingDirectoryItems.reduce((acc, d) => {
           const key = d.beverageSubtype || "autre";
@@ -65,8 +76,19 @@ export function VenueCategoryMenuScreen({ venue, category, drinksDirectory, onCl
         }, {})
       )
         .sort((a, b) => subtypeLabel(a[0]).localeCompare(subtypeLabel(b[0])))
-        .map(([key, items]) => [subtypeLabel(key), [...items].sort((a, b) => a.name.localeCompare(b.name))])
-    : [[null, [...matchingDirectoryItems].sort((a, b) => a.name.localeCompare(b.name))]];
+        .map(([key, items]) => [subtypeLabel(key), items])
+    : [[null, matchingDirectoryItems]];
+
+  // "Bières & Cidres" peut vite compter des centaines de références — un découpage 0-9/A-Z à
+  // l'intérieur de chaque sous-catégorie garde chaque liste gérable. Les autres catégories, moins
+  // fournies, restent en une seule liste alphabétique.
+  const isBeerCategory = category === "Bières & Cidres";
+  const directoryGroups = subtypeGroups.map(([subLabel, items]) => [
+    subLabel,
+    isBeerCategory
+      ? LETTER_BUCKETS.map((letter) => [letter, items.filter((d) => letterBucketOf(d.name) === letter).sort((a, b) => a.name.localeCompare(b.name))]).filter(([, its]) => its.length > 0)
+      : [[null, [...items].sort((a, b) => a.name.localeCompare(b.name))]],
+  ]);
 
   const countInMenu = (drinkId) => menu.filter((item) => item.fromDirectory && item.sourceDrinkId === drinkId).length;
 
@@ -229,36 +251,57 @@ export function VenueCategoryMenuScreen({ venue, category, drinksDirectory, onCl
             </p>
           )}
 
-          {directoryGroups.map(([groupLabel, items]) =>
-            items.length === 0 ? null : (
-              <div key={groupLabel || "all"} style={{ marginBottom: "16px" }}>
-                {groupLabel && <p style={{ fontSize: "12px", fontWeight: 700, color: "#8792A6", margin: "0 0 8px 0" }}>{groupLabel}</p>}
-                <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
-                  {items.map((d) => {
-                    const count = countInMenu(d.id);
-                    return (
-                      <div key={d.id} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: "10px", background: "#16273D", border: "2px solid #28405C", borderRadius: "8px", padding: "10px 12px" }}>
-                        <div style={{ flex: 1, minWidth: 0 }}>
-                          <div style={{ display: "flex", alignItems: "center", gap: "6px", fontWeight: 700, fontSize: "13.5px", color: "#F2F2E8", flexWrap: "wrap" }}>{d.name}</div>
-                          <div style={{ display: "flex", alignItems: "center", gap: "6px", flexWrap: "wrap", marginTop: "2px" }}>
-                            <DrinkBadges drink={d} />
+          {directoryGroups.map(([subLabel, letterGroups]) =>
+            letterGroups.length === 0 ? null : (
+              <div key={subLabel || "all"} style={{ marginBottom: "16px" }}>
+                {subLabel && <p style={{ fontSize: "12px", fontWeight: 700, color: "#8792A6", margin: "0 0 8px 0" }}>{subLabel}</p>}
+                {letterGroups.map(([letterLabel, items]) => {
+                  const rows = (
+                    <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
+                      {items.map((d) => {
+                        const count = countInMenu(d.id);
+                        return (
+                          <div key={d.id} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: "10px", background: "#16273D", border: "2px solid #28405C", borderRadius: "8px", padding: "10px 12px" }}>
+                            <div style={{ flex: 1, minWidth: 0 }}>
+                              <div style={{ display: "flex", alignItems: "center", gap: "6px", fontWeight: 700, fontSize: "13.5px", color: "#F2F2E8", flexWrap: "wrap" }}>{d.name}</div>
+                              <div style={{ display: "flex", alignItems: "center", gap: "6px", flexWrap: "wrap", marginTop: "2px" }}>
+                                <DrinkBadges drink={d} />
+                              </div>
+                              {drinkSummaryLine(d) && <div style={{ fontSize: "11.5px", color: "#8792A6", marginTop: "1px" }}>{drinkSummaryLine(d)}</div>}
+                            </div>
+                            <div style={{ display: "flex", alignItems: "center", gap: "8px", flexShrink: 0 }}>
+                              {count > 0 && <span style={{ fontSize: "12px", color: "#8792A6" }}>{count} sur la carte</span>}
+                              <button
+                                onClick={() => addProduct(d)}
+                                title={`Ajouter ${d.name}`}
+                                style={{ width: "28px", height: "28px", flexShrink: 0, background: "#39FF66", color: "#0D1B2A", border: "none", borderRadius: "6px", fontSize: "16px", fontWeight: 800, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", padding: 0, lineHeight: 1 }}
+                              >
+                                +
+                              </button>
+                            </div>
                           </div>
-                          {drinkSummaryLine(d) && <div style={{ fontSize: "11.5px", color: "#8792A6", marginTop: "1px" }}>{drinkSummaryLine(d)}</div>}
-                        </div>
-                        <div style={{ display: "flex", alignItems: "center", gap: "8px", flexShrink: 0 }}>
-                          {count > 0 && <span style={{ fontSize: "12px", color: "#8792A6" }}>{count} sur la carte</span>}
-                          <button
-                            onClick={() => addProduct(d)}
-                            title={`Ajouter ${d.name}`}
-                            style={{ width: "28px", height: "28px", flexShrink: 0, background: "#39FF66", color: "#0D1B2A", border: "none", borderRadius: "6px", fontSize: "16px", fontWeight: 800, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", padding: 0, lineHeight: 1 }}
-                          >
-                            +
-                          </button>
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
+                        );
+                      })}
+                    </div>
+                  );
+                  if (letterLabel === null) return <div key="flat">{rows}</div>;
+                  const key = `${subLabel || ""}::${letterLabel}`;
+                  const isOpen = expandedLetterKeys.has(key);
+                  return (
+                    <div key={key} style={{ marginLeft: "8px", marginBottom: "6px" }}>
+                      <button
+                        onClick={() => toggleLetterKey(key)}
+                        style={{ display: "flex", alignItems: "center", justifyContent: "space-between", width: "100%", background: "#16273D", border: "2px solid #28405C", borderRadius: "8px", padding: "8px 12px", cursor: "pointer", marginBottom: isOpen ? "6px" : 0 }}
+                      >
+                        <span style={{ fontSize: "12.5px", fontWeight: 700, color: "#F2F2E8" }}>
+                          {letterLabel} <span style={{ color: "#8792A6", fontWeight: 600 }}>({items.length})</span>
+                        </span>
+                        <span style={{ color: "#8792A6", fontSize: "11px", transform: isOpen ? "rotate(90deg)" : "rotate(0deg)", transition: "transform 0.15s" }}>▶</span>
+                      </button>
+                      {isOpen && rows}
+                    </div>
+                  );
+                })}
               </div>
             )
           )}
