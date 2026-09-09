@@ -151,8 +151,8 @@ export function VenueDetailPanel({ venue, onClose, onSaved, onManageMenu }) {
   const [uploadingProfile, setUploadingProfile] = useState(false);
   const [uploadingCover, setUploadingCover] = useState(false);
   const [uploadingMenu, setUploadingMenu] = useState(false);
-  const [status, setStatus] = useState(venue?.status || "to_process");
-  const [certificationLevel, setCertificationLevel] = useState(venue?.certificationLevel || "utilisateur");
+  const [status, setStatus] = useState(venue?.status || "draft");
+  const [certificationLevel, setCertificationLevel] = useState(venue?.certificationLevel || "bibamus");
   const [duplicateOfId, setDuplicateOfId] = useState(venue?.duplicateOfId || null);
   const [otherVenueOptions, setOtherVenueOptions] = useState([]);
   const [ratingSummary, setRatingSummary] = useState(null);
@@ -387,26 +387,24 @@ export function VenueDetailPanel({ venue, onClose, onSaved, onManageMenu }) {
           </button>
         </div>
 
-        {!isNew && (
-          <>
-            <label style={labelStyle}>Statut</label>
+        <>
+          <label style={labelStyle}>Statut</label>
+          <div style={{ marginBottom: "14px" }}>
+            <StatusSelector value={status} onChange={setStatus} />
+          </div>
+
+          {status === "duplicate" && (
             <div style={{ marginBottom: "14px" }}>
-              <StatusSelector value={status} onChange={setStatus} />
+              <label style={labelStyle}>Doublon de</label>
+              <SearchableSelect options={otherVenueOptions} value={duplicateOfId} onChange={setDuplicateOfId} placeholder="Chercher l'établissement conservé..." />
             </div>
+          )}
 
-            {status === "duplicate" && (
-              <div style={{ marginBottom: "14px" }}>
-                <label style={labelStyle}>Doublon de</label>
-                <SearchableSelect options={otherVenueOptions} value={duplicateOfId} onChange={setDuplicateOfId} placeholder="Chercher l'établissement conservé..." />
-              </div>
-            )}
-
-            <label style={labelStyle}>Niveau de certification</label>
-            <div style={{ marginBottom: "20px" }}>
-              <CertificationLevelSelector value={certificationLevel} onChange={setCertificationLevel} />
-            </div>
-          </>
-        )}
+          <label style={labelStyle}>Niveau de certification</label>
+          <div style={{ marginBottom: "20px" }}>
+            <CertificationLevelSelector value={certificationLevel} onChange={setCertificationLevel} />
+          </div>
+        </>
 
         {!isNew && (
           <div style={{ display: "flex", gap: "6px", marginBottom: "20px", borderBottom: "2px solid #28405C" }}>
@@ -447,7 +445,7 @@ export function VenueDetailPanel({ venue, onClose, onSaved, onManageMenu }) {
 
         {activeTab === "edit" && (
           <>
-            <CollapsibleSection title="Nom, alias & sous-titre" expanded={nameExpanded} onToggle={() => setNameExpanded((e) => !e)}>
+            <CollapsibleSection title="Dénomination" expanded={nameExpanded} onToggle={() => setNameExpanded((e) => !e)}>
               <label style={labelStyle}>Nom *</label>
               <input value={form.name} onChange={(e) => set("name", e.target.value)} onBlur={capitalizeOnBlur("name")} style={{ ...fieldStyle, marginBottom: "14px" }} />
 
@@ -500,15 +498,15 @@ export function VenueDetailPanel({ venue, onClose, onSaved, onManageMenu }) {
           <>
             <div style={separatorStyle} />
             <CollapsibleSection title="Adresse" expanded={addressExpanded} onToggle={() => setAddressExpanded((e) => !e)}>
-        <div style={{ display: "grid", gridTemplateColumns: "2fr 1fr", gap: "12px", marginBottom: "12px" }}>
-          <div>
-            <label style={labelStyle}>Rue / Place / Avenue *</label>
-            <input value={form.streetName} onChange={(e) => set("streetName", e.target.value)} onBlur={capitalizeOnBlur("streetName")} style={fieldStyle} />
-          </div>
-          <div>
-            <label style={labelStyle}>N° *</label>
-            <input value={form.streetNumber} onChange={(e) => set("streetNumber", e.target.value)} style={fieldStyle} />
-          </div>
+        <div style={{ marginBottom: "12px" }}>
+          <label style={labelStyle}>Pays</label>
+          <select value={form.country} onChange={(e) => set("country", e.target.value)} style={fieldStyle}>
+            {COUNTRIES.map((c) => (
+              <option key={c.code} value={c.code}>
+                {c.fr}
+              </option>
+            ))}
+          </select>
         </div>
 
         {GEOAPIFY_CONFIGURED ? (
@@ -528,27 +526,26 @@ export function VenueDetailPanel({ venue, onClose, onSaved, onManageMenu }) {
               <input value={form.postalCode} onChange={(e) => set("postalCode", e.target.value)} style={fieldStyle} />
             </div>
             <div>
-              <label style={labelStyle}>Ville</label>
+              <label style={labelStyle}>Commune</label>
               <input value={form.city} onChange={(e) => set("city", e.target.value)} onBlur={capitalizeOnBlur("city")} style={fieldStyle} />
             </div>
           </div>
         )}
 
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px", marginBottom: "12px" }}>
+        <div style={{ display: "grid", gridTemplateColumns: "2fr 1fr", gap: "12px", marginBottom: "12px" }}>
           <div>
-            <label style={labelStyle}>Village</label>
-            <input value={form.village} onChange={(e) => set("village", e.target.value)} onBlur={capitalizeOnBlur("village")} style={fieldStyle} />
+            <label style={labelStyle}>Rue / Place / Avenue *</label>
+            <input value={form.streetName} onChange={(e) => set("streetName", e.target.value)} onBlur={capitalizeOnBlur("streetName")} style={fieldStyle} />
           </div>
           <div>
-            <label style={labelStyle}>Pays</label>
-            <select value={form.country} onChange={(e) => set("country", e.target.value)} style={fieldStyle}>
-              {COUNTRIES.map((c) => (
-                <option key={c.code} value={c.code}>
-                  {c.fr}
-                </option>
-              ))}
-            </select>
+            <label style={labelStyle}>N° *</label>
+            <input value={form.streetNumber} onChange={(e) => set("streetNumber", e.target.value)} style={fieldStyle} />
           </div>
+        </div>
+
+        <div style={{ marginBottom: "12px" }}>
+          <label style={labelStyle}>Section / Village</label>
+          <input value={form.village} onChange={(e) => set("village", e.target.value)} onBlur={capitalizeOnBlur("village")} style={fieldStyle} />
         </div>
 
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px", marginBottom: "6px" }}>

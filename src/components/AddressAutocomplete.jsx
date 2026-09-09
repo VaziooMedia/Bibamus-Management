@@ -38,7 +38,7 @@ export function AddressAutocomplete({ postalCode, city, countryIsoCode, onPostal
       lang: "fr",
       type: "city",
       skipIcons: true,
-      placeholder: "Ville",
+      placeholder: "Commune",
     });
     cityAutocomplete.on("select", (result) => {
       const props = result?.properties;
@@ -99,7 +99,7 @@ export function AddressAutocomplete({ postalCode, city, countryIsoCode, onPostal
         <div ref={postalRef} style={{ position: "relative" }} onInput={(e) => onPostalCodeChange(e.target.value)} />
       </div>
       <div>
-        <label style={{ display: "block", fontSize: "12px", color: "#8792A6", fontWeight: 600, marginBottom: "4px" }}>Ville</label>
+        <label style={{ display: "block", fontSize: "12px", color: "#8792A6", fontWeight: 600, marginBottom: "4px" }}>Commune</label>
         <div ref={cityRef} style={{ position: "relative" }} onInput={(e) => onCityChange(e.target.value)} />
       </div>
     </>
