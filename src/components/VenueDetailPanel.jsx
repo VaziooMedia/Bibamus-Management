@@ -83,6 +83,24 @@ function SectionTitle({ children }) {
   );
 }
 
+function CollapsibleSection({ title, expanded, onToggle, children }) {
+  return (
+    <div style={{ marginBottom: expanded ? "14px" : "6px" }}>
+      <button
+        onClick={onToggle}
+        style={{ display: "flex", alignItems: "center", justifyContent: "space-between", width: "100%", background: "none", border: "none", padding: 0, cursor: "pointer" }}
+      >
+        <span style={sectionTitleStyle}>
+          <span style={{ width: "4px", height: "14px", background: "#39FF66", borderRadius: "2px", display: "inline-block" }} />
+          {title}
+        </span>
+        <span style={{ color: "#8792A6", fontSize: "12px", transform: expanded ? "rotate(90deg)" : "rotate(0deg)", transition: "transform 0.15s" }}>▶</span>
+      </button>
+      {expanded && children}
+    </div>
+  );
+}
+
 // venue === null → mode création
 export function VenueDetailPanel({ venue, onClose, onSaved, onManageMenu }) {
   const isNew = !venue;
@@ -136,6 +154,8 @@ export function VenueDetailPanel({ venue, onClose, onSaved, onManageMenu }) {
   const [otherVenueOptions, setOtherVenueOptions] = useState([]);
   const [ratingSummary, setRatingSummary] = useState(null);
   const [activeTab, setActiveTab] = useState("edit");
+  const [coordExpanded, setCoordExpanded] = useState(false);
+  const [typeExpanded, setTypeExpanded] = useState(false);
 
   useEffect(() => {
     if (venue?.id) {
@@ -330,6 +350,27 @@ export function VenueDetailPanel({ venue, onClose, onSaved, onManageMenu }) {
         </div>
 
         {!isNew && (
+          <>
+            <label style={labelStyle}>Statut</label>
+            <div style={{ marginBottom: "14px" }}>
+              <StatusSelector value={status} onChange={setStatus} />
+            </div>
+
+            {status === "duplicate" && (
+              <div style={{ marginBottom: "14px" }}>
+                <label style={labelStyle}>Doublon de</label>
+                <SearchableSelect options={otherVenueOptions} value={duplicateOfId} onChange={setDuplicateOfId} placeholder="Chercher l'établissement conservé..." />
+              </div>
+            )}
+
+            <label style={labelStyle}>Niveau de certification</label>
+            <div style={{ marginBottom: "20px" }}>
+              <CertificationLevelSelector value={certificationLevel} onChange={setCertificationLevel} />
+            </div>
+          </>
+        )}
+
+        {!isNew && (
           <div style={{ display: "flex", gap: "6px", marginBottom: "20px", borderBottom: "2px solid #28405C" }}>
             {[
               { key: "edit", label: "Édition" },
@@ -358,28 +399,6 @@ export function VenueDetailPanel({ venue, onClose, onSaved, onManageMenu }) {
           </div>
         )}
 
-        {!isNew && activeTab === "carte" && onManageMenu && (
-          <button
-            onClick={onManageMenu}
-            style={{
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "space-between",
-              width: "100%",
-              background: "#16273D",
-              border: "2px solid #28405C",
-              borderRadius: "8px",
-              padding: "12px 14px",
-              color: "#F2F2E8",
-              cursor: "pointer",
-              fontSize: "13px",
-              marginBottom: "18px",
-            }}
-          >
-            <span>🍺 Gérer la carte boissons</span>
-            <span style={{ color: "#8792A6" }}>{(venue.menu || []).length} produit{(venue.menu || []).length !== 1 ? "s" : ""} →</span>
-          </button>
-        )}
 
         {activeTab === "medias" && (
           <>
@@ -549,42 +568,42 @@ export function VenueDetailPanel({ venue, onClose, onSaved, onManageMenu }) {
           {!geocodeNotFound && geocodeStatus === "pending" && <span style={{ fontSize: "12px", color: "#8792A6" }}>Pas encore géocodée</span>}
         </div>
         <div style={separatorStyle} />
-        <SectionTitle>Coordonnées</SectionTitle>
+        <CollapsibleSection title="Coordonnées" expanded={coordExpanded} onToggle={() => setCoordExpanded((e) => !e)}>
+          <label style={labelStyle}>Téléphone</label>
+          <div style={{ display: "flex", gap: "8px", marginBottom: "12px" }}>
+            <div style={{ ...fieldStyle, width: "64px", flexShrink: 0, textAlign: "center", color: "#8792A6" }}>{phonePrefix || "—"}</div>
+            <input value={form.phone} onChange={(e) => set("phone", e.target.value)} placeholder="000 00 00 00" style={fieldStyle} />
+          </div>
 
-        <label style={labelStyle}>Téléphone</label>
-        <div style={{ display: "flex", gap: "8px", marginBottom: "12px" }}>
-          <div style={{ ...fieldStyle, width: "64px", flexShrink: 0, textAlign: "center", color: "#8792A6" }}>{phonePrefix || "—"}</div>
-          <input value={form.phone} onChange={(e) => set("phone", e.target.value)} placeholder="000 00 00 00" style={fieldStyle} />
-        </div>
+          <label style={{ ...labelStyle, display: "flex", alignItems: "center", gap: "8px" }}>
+            <WhatsappIcon size={18} />
+            WhatsApp
+          </label>
+          <div style={{ display: "flex", gap: "8px", marginBottom: "12px" }}>
+            <div style={{ ...fieldStyle, width: "64px", flexShrink: 0, textAlign: "center", color: "#8792A6" }}>{phonePrefix || "—"}</div>
+            <input value={form.whatsapp} onChange={(e) => set("whatsapp", e.target.value)} placeholder="000 00 00 00" style={fieldStyle} />
+          </div>
 
-        <label style={{ ...labelStyle, display: "flex", alignItems: "center", gap: "8px" }}>
-          <WhatsappIcon size={18} />
-          WhatsApp
-        </label>
-        <div style={{ display: "flex", gap: "8px", marginBottom: "12px" }}>
-          <div style={{ ...fieldStyle, width: "64px", flexShrink: 0, textAlign: "center", color: "#8792A6" }}>{phonePrefix || "—"}</div>
-          <input value={form.whatsapp} onChange={(e) => set("whatsapp", e.target.value)} placeholder="000 00 00 00" style={fieldStyle} />
-        </div>
+          <label style={labelStyle}>Email</label>
+          <input value={form.email} onChange={(e) => set("email", e.target.value)} style={{ ...fieldStyle, marginBottom: "12px" }} />
 
-        <label style={labelStyle}>Email</label>
-        <input value={form.email} onChange={(e) => set("email", e.target.value)} style={{ ...fieldStyle, marginBottom: "12px" }} />
-
-        <label style={labelStyle}>Site internet</label>
-        <input value={form.website} onChange={(e) => set("website", e.target.value)} style={{ ...fieldStyle, marginBottom: "12px" }} />
-        <label style={labelStyle}>Lien Google</label>
-        <input value={form.googleUrl} onChange={(e) => set("googleUrl", e.target.value)} style={{ ...fieldStyle, marginBottom: "12px" }} />
-        <label style={labelStyle}>Lien Facebook</label>
-        <input value={form.facebookUrl} onChange={(e) => set("facebookUrl", e.target.value)} style={{ ...fieldStyle, marginBottom: "12px" }} />
-        <label style={labelStyle}>Lien Instagram</label>
-        <input value={form.instagramUrl} onChange={(e) => set("instagramUrl", e.target.value)} style={{ ...fieldStyle, marginBottom: "12px" }} />
-        <label style={labelStyle}>Lien TikTok</label>
-        <input value={form.tiktokUrl} onChange={(e) => set("tiktokUrl", e.target.value)} style={{ ...fieldStyle, marginBottom: "12px" }} />
-        <label style={labelStyle}>Lien Snapchat</label>
-        <input value={form.snapchatUrl} onChange={(e) => set("snapchatUrl", e.target.value)} style={{ ...fieldStyle, marginBottom: "12px" }} />
-        <label style={labelStyle}>Lien Restaurant Guru</label>
-        <input value={form.restaurantGuruUrl} onChange={(e) => set("restaurantGuruUrl", e.target.value)} style={{ ...fieldStyle, marginBottom: "12px" }} />
-        <label style={labelStyle}>Lien Tripadvisor</label>
-        <input value={form.tripadvisorUrl} onChange={(e) => set("tripadvisorUrl", e.target.value)} style={fieldStyle} />
+          <label style={labelStyle}>Site internet</label>
+          <input value={form.website} onChange={(e) => set("website", e.target.value)} style={{ ...fieldStyle, marginBottom: "12px" }} />
+          <label style={labelStyle}>Lien Google</label>
+          <input value={form.googleUrl} onChange={(e) => set("googleUrl", e.target.value)} style={{ ...fieldStyle, marginBottom: "12px" }} />
+          <label style={labelStyle}>Lien Facebook</label>
+          <input value={form.facebookUrl} onChange={(e) => set("facebookUrl", e.target.value)} style={{ ...fieldStyle, marginBottom: "12px" }} />
+          <label style={labelStyle}>Lien Instagram</label>
+          <input value={form.instagramUrl} onChange={(e) => set("instagramUrl", e.target.value)} style={{ ...fieldStyle, marginBottom: "12px" }} />
+          <label style={labelStyle}>Lien TikTok</label>
+          <input value={form.tiktokUrl} onChange={(e) => set("tiktokUrl", e.target.value)} style={{ ...fieldStyle, marginBottom: "12px" }} />
+          <label style={labelStyle}>Lien Snapchat</label>
+          <input value={form.snapchatUrl} onChange={(e) => set("snapchatUrl", e.target.value)} style={{ ...fieldStyle, marginBottom: "12px" }} />
+          <label style={labelStyle}>Lien Restaurant Guru</label>
+          <input value={form.restaurantGuruUrl} onChange={(e) => set("restaurantGuruUrl", e.target.value)} style={{ ...fieldStyle, marginBottom: "12px" }} />
+          <label style={labelStyle}>Lien Tripadvisor</label>
+          <input value={form.tripadvisorUrl} onChange={(e) => set("tripadvisorUrl", e.target.value)} style={fieldStyle} />
+        </CollapsibleSection>
 
         <div style={separatorStyle} />
         <SectionTitle>Paiement</SectionTitle>
@@ -641,30 +660,32 @@ export function VenueDetailPanel({ venue, onClose, onSaved, onManageMenu }) {
 
         <div style={separatorStyle} />
         <SectionTitle>Établissement</SectionTitle>
-        <label style={labelStyle}>Type d'établissement (plusieurs choix possibles)</label>
-        <div style={{ display: "flex", flexWrap: "wrap", gap: "8px", marginBottom: "14px" }}>
-          {VENUE_TYPES.map((t) => {
-            const checked = form.venueTypes.includes(t.code);
-            return (
-              <button
-                key={t.code}
-                onClick={() => toggleVenueType(t.code)}
-                style={{
-                  background: checked ? "#39FF66" : "none",
-                  border: `2px solid ${checked ? "#39FF66" : "#28405C"}`,
-                  borderRadius: "999px",
-                  padding: "6px 12px",
-                  fontSize: "12px",
-                  fontWeight: 600,
-                  color: checked ? "#0D1B2A" : "#F2F2E8",
-                  cursor: "pointer",
-                }}
-              >
-                {t.fr}
-              </button>
-            );
-          })}
-        </div>
+        <CollapsibleSection title="Type d'établissement" expanded={typeExpanded} onToggle={() => setTypeExpanded((e) => !e)}>
+          <p style={{ fontSize: "11.5px", color: "#8792A6", margin: "0 0 8px 0" }}>Plusieurs choix possibles</p>
+          <div style={{ display: "flex", flexWrap: "wrap", gap: "8px", marginBottom: "14px" }}>
+            {VENUE_TYPES.map((t) => {
+              const checked = form.venueTypes.includes(t.code);
+              return (
+                <button
+                  key={t.code}
+                  onClick={() => toggleVenueType(t.code)}
+                  style={{
+                    background: checked ? "#39FF66" : "none",
+                    border: `2px solid ${checked ? "#39FF66" : "#28405C"}`,
+                    borderRadius: "999px",
+                    padding: "6px 12px",
+                    fontSize: "12px",
+                    fontWeight: 600,
+                    color: checked ? "#0D1B2A" : "#F2F2E8",
+                    cursor: "pointer",
+                  }}
+                >
+                  {t.fr}
+                </button>
+              );
+            })}
+          </div>
+        </CollapsibleSection>
 
         <label style={labelStyle}>Horaires d'ouverture</label>
         <div style={{ marginBottom: "14px" }}>
@@ -728,31 +749,13 @@ export function VenueDetailPanel({ venue, onClose, onSaved, onManageMenu }) {
             Espace fumeurs
           </label>
         </div>
-
-        <div style={separatorStyle} />
-        <label style={labelStyle}>Statut</label>
-        <div style={{ marginBottom: "14px" }}>
-          <StatusSelector value={status} onChange={setStatus} />
-        </div>
-
-        {status === "duplicate" && (
-          <div style={{ marginBottom: "14px" }}>
-            <label style={labelStyle}>Doublon de</label>
-            <SearchableSelect options={otherVenueOptions} value={duplicateOfId} onChange={setDuplicateOfId} placeholder="Chercher l'établissement conservé..." />
-          </div>
-        )}
-
-        <label style={labelStyle}>Niveau de certification</label>
-        <div style={{ marginBottom: "20px" }}>
-          <CertificationLevelSelector value={certificationLevel} onChange={setCertificationLevel} />
-        </div>
           </>
         )}
 
         {activeTab === "carte" && (
           <>
-            <label style={labelStyle}>Menu (PDF)</label>
-            <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "6px" }}>
+            <label style={labelStyle}>Carte (PDF)</label>
+            <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "18px" }}>
               <label
                 style={{
                   background: "#16273D",
@@ -778,6 +781,32 @@ export function VenueDetailPanel({ venue, onClose, onSaved, onManageMenu }) {
                 </>
               )}
             </div>
+
+            {!isNew && onManageMenu && (
+              <button
+                onClick={onManageMenu}
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "space-between",
+                  width: "100%",
+                  background: "#16273D",
+                  border: "2px solid #28405C",
+                  borderRadius: "8px",
+                  padding: "12px 14px",
+                  color: "#F2F2E8",
+                  cursor: "pointer",
+                  fontSize: "13px",
+                  marginBottom: "18px",
+                }}
+              >
+                <span style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                  <span style={{ width: "4px", height: "14px", background: "#39FF66", borderRadius: "2px", display: "inline-block" }} />
+                  Gérer la carte
+                </span>
+                <span style={{ color: "#8792A6" }}>{(venue.menu || []).length} produit{(venue.menu || []).length !== 1 ? "s" : ""} →</span>
+              </button>
+            )}
           </>
         )}
 
