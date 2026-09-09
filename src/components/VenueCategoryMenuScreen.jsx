@@ -7,7 +7,7 @@
 import React, { useState, useRef } from "react";
 import { MENU_CATEGORIES, DRINK_VOLUMES_CL, SERVING_MODE_LABELS, BEER_TYPES } from "../constants.js";
 import { updatePublicVenue } from "../data/sharedDirectories.js";
-import { DrinkBadges, ProductSummaryLines } from "./DrinkDisplay.jsx";
+import { ProductInfoLines, ProductDetailLine, ProductSummaryLines } from "./DrinkDisplay.jsx";
 import { resolveMenuItem, nextId, normalizeForSearch } from "../utils.js";
 
 const categoryOf = (d) => (MENU_CATEGORIES.includes(d.menuCategory) ? d.menuCategory : MENU_CATEGORIES.includes(d.type) ? d.type : "Non classé");
@@ -58,19 +58,7 @@ function CompactProductRow({ drink, price, onChangePrice, priceStep = 0.1, onCha
     <div style={{ background: "#16273D", border: "2px solid #28405C", borderRadius: "8px", padding: "8px 10px" }}>
       <div style={{ display: "flex", alignItems: "flex-start", gap: "8px" }}>
         <div style={{ flex: 1, minWidth: 0 }}>
-          <ProductSummaryLines
-            drink={drink}
-            trailing={
-              <div style={{ display: "flex", alignItems: "center", gap: "12px", flexShrink: 0 }}>
-                <button onClick={() => setExpanded((e) => !e)} style={{ background: "none", border: "none", color: "#39FF66", fontSize: "11px", cursor: "pointer", padding: "2px", fontWeight: 700 }} aria-label="Réglages">
-                  {expanded ? "▲" : "▾"}
-                </button>
-                <button onClick={onRemove} style={{ background: "none", border: "none", color: "#FF3B4E", fontSize: "15px", cursor: "pointer", padding: "0 2px", lineHeight: 1 }} aria-label={`Supprimer ${drink.name}`}>
-                  ×
-                </button>
-              </div>
-            }
-          />
+          <ProductInfoLines drink={drink} />
         </div>
         <div style={{ display: "flex", alignItems: "stretch", border: "2px solid #28405C", borderRadius: "6px", overflow: "hidden", flexShrink: 0 }}>
           <span style={{ fontSize: "11.5px", color: "#8792A6", padding: "0 6px", display: "flex", alignItems: "center", background: "#0D1B2A" }}>€</span>
@@ -104,6 +92,19 @@ function CompactProductRow({ drink, price, onChangePrice, priceStep = 0.1, onCha
           </div>
         </div>
       </div>
+      <ProductDetailLine
+        drink={drink}
+        trailing={
+          <div style={{ display: "flex", alignItems: "center", gap: "12px", flexShrink: 0 }}>
+            <button onClick={() => setExpanded((e) => !e)} style={{ background: "none", border: "none", color: "#39FF66", fontSize: "11px", cursor: "pointer", padding: "2px", fontWeight: 700 }} aria-label="Réglages">
+              {expanded ? "▲" : "▾"}
+            </button>
+            <button onClick={onRemove} style={{ background: "none", border: "none", color: "#FF3B4E", fontSize: "15px", cursor: "pointer", padding: "0 2px", lineHeight: 1 }} aria-label={`Supprimer ${drink.name}`}>
+              ×
+            </button>
+          </div>
+        }
+      />
       {expanded && (
         <div style={{ display: "flex", alignItems: "flex-start", gap: "10px", marginTop: "8px" }}>
           <div style={{ width: "110px", flexShrink: 0 }}>
