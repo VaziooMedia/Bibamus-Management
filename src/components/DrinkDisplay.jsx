@@ -26,7 +26,9 @@ export function GlutenFreeIcon({ size = 14, color = COLORS.amberDark, title = "S
 export function DrinkBadges({ drink, onTagClick, size = 11 }) {
   const items = [];
   const isInherentlyNonAlcoholic = NON_ALCOHOLIC_DRINK_TYPES.includes(drink.type);
-  if (NATIONALITY_ELIGIBLE_TYPES.includes(drink.type) && drink.nationality && COUNTRY_ISO_CODES[drink.nationality]) {
+  if (NATIONALITY_ELIGIBLE_TYPES.includes(drink.type) && drink.nationality === "international") {
+    items.push({ key: "country", label: "🌍", title: "International", filter: { kind: "nationality", value: "international" } });
+  } else if (NATIONALITY_ELIGIBLE_TYPES.includes(drink.type) && drink.nationality && COUNTRY_ISO_CODES[drink.nationality]) {
     items.push({
       key: "country",
       label: <CountryFlagImg isoCode={COUNTRY_ISO_CODES[drink.nationality]} size={size + 4} />,
