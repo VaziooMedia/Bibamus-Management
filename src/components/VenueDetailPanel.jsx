@@ -432,7 +432,7 @@ export function VenueDetailPanel({ venue, onClose, onSaved, onManageMenu }) {
         </div>
 
         <>
-          <label style={labelStyle}>Statut</label>
+          <label style={{ ...labelStyle, marginBottom: "10px" }}>Statut</label>
           <div style={{ marginBottom: "14px", maxWidth: "180px" }}>
             <StatusSelector value={status} onChange={setStatus} />
           </div>
@@ -444,7 +444,7 @@ export function VenueDetailPanel({ venue, onClose, onSaved, onManageMenu }) {
             </div>
           )}
 
-          <label style={labelStyle}>Niveau de certification</label>
+          <label style={{ ...labelStyle, marginBottom: "10px" }}>Niveau de certification</label>
           <div style={{ marginBottom: "20px" }}>
             <CertificationLevelSelector value={certificationLevel} onChange={setCertificationLevel} />
           </div>
@@ -544,7 +544,7 @@ export function VenueDetailPanel({ venue, onClose, onSaved, onManageMenu }) {
             <CollapsibleSection title="Adresse" expanded={addressExpanded} onToggle={() => setAddressExpanded((e) => !e)}>
         <div style={{ marginBottom: "12px" }}>
           <label style={labelStyle}>Pays</label>
-          <select value={form.country} onChange={(e) => set("country", e.target.value)} style={requiredFieldStyle}>
+          <select value={form.country} onChange={(e) => set("country", e.target.value)} style={{ ...requiredFieldStyle, maxWidth: "200px" }}>
             {COUNTRIES.map((c) => (
               <option key={c.code} value={c.code}>
                 {c.fr}
@@ -579,11 +579,11 @@ export function VenueDetailPanel({ venue, onClose, onSaved, onManageMenu }) {
 
         <div style={{ display: "grid", gridTemplateColumns: "1.6fr 60px 1.4fr", gap: "12px", marginBottom: "12px" }}>
           <div>
-            <label style={labelStyle}>Rue / Place / Avenue *</label>
+            <label style={labelStyle}>Rue / Place / Avenue</label>
             <input value={form.streetName} onChange={(e) => set("streetName", e.target.value)} onBlur={capitalizeOnBlur("streetName")} style={requiredFieldStyle} />
           </div>
           <div>
-            <label style={labelStyle}>N° *</label>
+            <label style={labelStyle}>N°</label>
             <input value={form.streetNumber} onChange={(e) => set("streetNumber", e.target.value)} style={requiredFieldStyle} />
           </div>
           <div>
@@ -662,7 +662,7 @@ export function VenueDetailPanel({ venue, onClose, onSaved, onManageMenu }) {
             </div>
           </IconField>
 
-          <IconField icon={<EmailIcon size={18} />} label="Email">
+          <IconField icon={<EmailIcon size={18} />} label="E-mail">
             <input value={form.email} onChange={(e) => set("email", e.target.value)} style={fieldStyle} />
           </IconField>
 
@@ -726,11 +726,10 @@ export function VenueDetailPanel({ venue, onClose, onSaved, onManageMenu }) {
                 key={opt.key}
                 onClick={() => set("defaultCurrency", opt.key)}
                 style={{
-                  flex: 1,
                   background: form.defaultCurrency === opt.key ? "#39FF66" : "none",
                   border: `2px solid ${form.defaultCurrency === opt.key ? "#39FF66" : "#28405C"}`,
                   borderRadius: "8px",
-                  padding: "9px",
+                  padding: "8px 16px",
                   fontWeight: 700,
                   fontSize: "13px",
                   color: form.defaultCurrency === opt.key ? "#0D1B2A" : "#F2F2E8",
@@ -745,7 +744,7 @@ export function VenueDetailPanel({ venue, onClose, onSaved, onManageMenu }) {
 
         <div style={separatorStyle} />
         <CollapsibleSection title="Établissement" expanded={establishmentExpanded} onToggle={() => setEstablishmentExpanded((e) => !e)}>
-        <CollapsibleSection title="Type d'établissement" variant="subtitle" expanded={typeExpanded} onToggle={() => setTypeExpanded((e) => !e)}>
+        <CollapsibleSection title="Type" variant="subtitle" expanded={typeExpanded} onToggle={() => setTypeExpanded((e) => !e)}>
           <p style={{ fontSize: "11.5px", color: "#8792A6", margin: "0 0 8px 0" }}>Plusieurs choix possibles</p>
           <div style={{ display: "flex", flexWrap: "wrap", gap: "8px", marginBottom: "14px" }}>
             {VENUE_TYPES.map((t) => {
@@ -923,7 +922,7 @@ export function VenueDetailPanel({ venue, onClose, onSaved, onManageMenu }) {
           <p style={{ fontSize: "13px", color: "#8792A6", margin: "0 0 16px 0" }}>
             Saisissez votre mot de passe Admin pour supprimer la fiche "{venue?.name}".
             <br />
-            <span style={{ color: "#FF3B4E", fontWeight: 700 }}>Cette action est définitive</span>
+            <span style={{ color: "#FF3B4E", fontWeight: 700, display: "inline-block", marginTop: "10px" }}>Cette action est définitive</span>
           </p>
           <label style={labelStyle}>Mot de passe</label>
           <div style={{ position: "relative", marginBottom: "10px" }}>

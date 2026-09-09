@@ -56,9 +56,6 @@ export function GooglePlaceLinker({ venueId, name, address, googlePlaceId, check
 
   return (
     <div style={{ background: "#16273D", borderRadius: "8px", padding: "14px" }}>
-      <p style={{ fontSize: "12px", color: "#8792A6", marginTop: 0, marginBottom: "12px" }}>
-        Les horaires ne se gèrent plus manuellement — ils proviennent automatiquement de la fiche Google Business de l'établissement. Modifiez-les sur Google, Bibamus les récupère tout seul.
-      </p>
 
       {noFixedHours ? (
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
@@ -81,7 +78,10 @@ export function GooglePlaceLinker({ venueId, name, address, googlePlaceId, check
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
           <div style={{ display: "flex", alignItems: "center", gap: "6px", color: "#8792A6", fontSize: "13px", fontWeight: 700 }}>ℹ Pas de présence Google — horaires non disponibles</div>
           <div style={{ display: "flex", gap: "10px" }}>
-            <button onClick={markNoFixedHours} style={{ background: "none", border: "none", color: "#8792A6", fontSize: "12px", textDecoration: "underline", cursor: "pointer" }}>
+            <button
+              onClick={markNoFixedHours}
+              style={{ background: "none", border: "2px solid #00C8FF", borderRadius: "8px", padding: "6px 12px", color: "#00C8FF", fontSize: "12px", fontWeight: 700, cursor: "pointer" }}
+            >
               Pas d'horaire fixe
             </button>
             <button onClick={undoNoPresence} style={{ background: "none", border: "none", color: "#39FF66", fontSize: "12px", cursor: "pointer" }}>
@@ -101,12 +101,18 @@ export function GooglePlaceLinker({ venueId, name, address, googlePlaceId, check
               {searching ? "Recherche..." : "Associer à une fiche Google"}
             </button>
             {venueId && (
-              <button onClick={markNoPresence} style={{ background: "none", border: "none", color: "#8792A6", fontSize: "12px", textDecoration: "underline", cursor: "pointer" }}>
+              <button
+                onClick={markNoPresence}
+                style={{ background: "none", border: "2px solid #ef007c", borderRadius: "8px", padding: "6px 12px", color: "#ef007c", fontSize: "12px", fontWeight: 700, cursor: "pointer" }}
+              >
                 Cet établissement n'a pas de fiche Google
               </button>
             )}
             {venueId && (
-              <button onClick={markNoFixedHours} style={{ background: "none", border: "none", color: "#8792A6", fontSize: "12px", textDecoration: "underline", cursor: "pointer" }}>
+              <button
+                onClick={markNoFixedHours}
+                style={{ background: "none", border: "2px solid #00C8FF", borderRadius: "8px", padding: "6px 12px", color: "#00C8FF", fontSize: "12px", fontWeight: 700, cursor: "pointer" }}
+              >
                 Pas d'horaire fixe
               </button>
             )}

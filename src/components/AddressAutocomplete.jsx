@@ -24,7 +24,7 @@ export function AddressAutocomplete({ postalCode, city, countryIsoCode, onPostal
       lang: "fr",
       type: "postcode",
       skipIcons: true,
-      placeholder: "Code postal",
+      placeholder: "",
     });
     postalAutocomplete.on("select", (result) => {
       const props = result?.properties;
@@ -38,7 +38,7 @@ export function AddressAutocomplete({ postalCode, city, countryIsoCode, onPostal
       lang: "fr",
       type: "city",
       skipIcons: true,
-      placeholder: "Commune",
+      placeholder: "",
     });
     cityAutocomplete.on("select", (result) => {
       const props = result?.properties;
