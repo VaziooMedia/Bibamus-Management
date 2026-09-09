@@ -591,6 +591,18 @@ export async function loadPublicVenues() {
   return data.map(rowToVenue);
 }
 
+// Répartition des appréciations d'un lieu (système à 5 paliers positifs) — réservé à la
+// plateforme de gestion : les utilisateurs finaux ne voient que le label et le nombre total,
+// jamais cette répartition détaillée par palier.
+export async function loadVenueRatingSummary(venueId) {
+  const { data, error } = await supabase.rpc("get_venue_rating_summary", { p_venue_id: venueId });
+  if (error) {
+    console.error("loadVenueRatingSummary:", error);
+    return null;
+  }
+  return data?.[0] || null;
+}
+
 export async function createPublicVenue(venue) {
   const row = venueToRow(venue);
   const { data, error } = await supabase.from("public_venues").insert(row).select().single();
