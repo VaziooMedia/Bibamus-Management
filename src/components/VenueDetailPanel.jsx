@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { supabase } from "../supabaseClient.js";
-import { WhatsappIcon, NavIcon } from "./icons.jsx";
+import { WhatsappIcon, NavIcon, GoogleIcon, WebsiteIcon, FacebookIcon, InstagramIcon, TiktokIcon, SnapchatIcon } from "./icons.jsx";
 import { updatePublicVenue, deletePublicVenue, createPublicVenue, uploadVenuePhoto, uploadVenueMenuPdf, geocodeAddress, saveGeocodeResult, loadPublicVenues, mergeEntities, loadVenueRatingSummary } from "../data/sharedDirectories.js";
 import { CertificationLevelSelector } from "./CertificationLevelSelector.jsx";
 import { SearchableSelect } from "./SearchableSelect.jsx";
@@ -71,6 +71,7 @@ const parseCoordinate = (raw) => {
 };
 
 const fieldStyle = { padding: "10px 12px", borderRadius: "8px", border: "2px solid #28405C", fontSize: "14px", width: "100%" };
+const requiredFieldStyle = { ...fieldStyle, border: "2px solid #FF3B4E" };
 const labelStyle = { fontSize: "12.5px", color: "#8792A6", marginBottom: "4px", display: "block", fontWeight: 600 };
 const sectionTitleStyle = { fontSize: "13px", fontWeight: 700, color: "#F2F2E8", marginTop: "6px", marginBottom: "12px", display: "flex", alignItems: "center", gap: "8px" };
 const subTitleStyle = { fontSize: "12.5px", fontWeight: 700, color: "#8792A6", marginTop: "4px", marginBottom: "8px", display: "flex", alignItems: "center" };
@@ -100,6 +101,49 @@ function CollapsibleSection({ title, expanded, onToggle, children, variant = "se
         <span style={{ color: "#8792A6", fontSize: "12px", transform: expanded ? "rotate(90deg)" : "rotate(0deg)", transition: "transform 0.15s" }}>▶</span>
       </button>
       {expanded && children}
+    </div>
+  );
+}
+
+function stripPrefix(value, prefix) {
+  if (!value) return "";
+  return value.startsWith(prefix) ? value.slice(prefix.length) : value;
+}
+
+// Même pattern que dans "Utilisateurs" pour les réseaux sociaux : icône + nom en label, préfixe
+// fixe préaffiché sur sa propre ligne (non modifiable), le champ en dessous ne contient que
+// l'identifiant. La valeur stockée (préfixe + identifiant) est reconstituée à chaque frappe.
+function SocialLinkField({ icon, label, prefix, value, onChange }) {
+  const handle = stripPrefix(value, prefix);
+  return (
+    <div style={{ marginBottom: "16px" }}>
+      <label style={{ ...labelStyle, display: "flex", alignItems: "center", gap: "8px" }}>
+        {icon}
+        {label}
+      </label>
+      <div style={{ padding: "8px 12px", borderRadius: "8px 8px 0 0", border: "2px solid #28405C", borderBottom: "none", background: "#16273D", fontSize: "13px", color: "#8792A6", overflowWrap: "anywhere" }}>
+        {prefix}
+      </div>
+      <input
+        value={handle}
+        onChange={(e) => onChange(e.target.value.trim() ? prefix + e.target.value : "")}
+        placeholder="identifiant"
+        style={{ ...fieldStyle, borderRadius: "0 0 8px 8px" }}
+      />
+    </div>
+  );
+}
+
+// Champ sans préfixe fixe fiable (email, téléphone, URL libre) — même en-tête icône + nom que
+// SocialLinkField, mais un champ de saisie libre en dessous, sans bandeau de préremplissage.
+function IconField({ icon, label, children }) {
+  return (
+    <div style={{ marginBottom: "16px" }}>
+      <label style={{ ...labelStyle, display: "flex", alignItems: "center", gap: "8px" }}>
+        {icon}
+        {label}
+      </label>
+      {children}
     </div>
   );
 }
@@ -447,7 +491,7 @@ export function VenueDetailPanel({ venue, onClose, onSaved, onManageMenu }) {
           <>
             <CollapsibleSection title="Dénomination" expanded={nameExpanded} onToggle={() => setNameExpanded((e) => !e)}>
               <label style={labelStyle}>Nom *</label>
-              <input value={form.name} onChange={(e) => set("name", e.target.value)} onBlur={capitalizeOnBlur("name")} style={{ ...fieldStyle, marginBottom: "14px" }} />
+              <input value={form.name} onChange={(e) => set("name", e.target.value)} onBlur={capitalizeOnBlur("name")} style={{ ...requiredFieldStyle, marginBottom: "14px" }} />
 
               <label style={labelStyle}>Alias / traductions (séparés par une virgule)</label>
               <input
@@ -500,7 +544,7 @@ export function VenueDetailPanel({ venue, onClose, onSaved, onManageMenu }) {
             <CollapsibleSection title="Adresse" expanded={addressExpanded} onToggle={() => setAddressExpanded((e) => !e)}>
         <div style={{ marginBottom: "12px" }}>
           <label style={labelStyle}>Pays</label>
-          <select value={form.country} onChange={(e) => set("country", e.target.value)} style={fieldStyle}>
+          <select value={form.country} onChange={(e) => set("country", e.target.value)} style={requiredFieldStyle}>
             {COUNTRIES.map((c) => (
               <option key={c.code} value={c.code}>
                 {c.fr}
@@ -517,35 +561,35 @@ export function VenueDetailPanel({ venue, onClose, onSaved, onManageMenu }) {
               countryIsoCode={COUNTRY_ISO_CODES[form.country]}
               onPostalCodeChange={(v) => set("postalCode", v)}
               onCityChange={(v) => set("city", v)}
+              required
             />
           </div>
         ) : (
           <div style={{ display: "grid", gridTemplateColumns: "1fr 2fr", gap: "12px", marginBottom: "12px" }}>
             <div>
               <label style={labelStyle}>Code postal</label>
-              <input value={form.postalCode} onChange={(e) => set("postalCode", e.target.value)} style={fieldStyle} />
+              <input value={form.postalCode} onChange={(e) => set("postalCode", e.target.value)} style={requiredFieldStyle} />
             </div>
             <div>
               <label style={labelStyle}>Commune</label>
-              <input value={form.city} onChange={(e) => set("city", e.target.value)} onBlur={capitalizeOnBlur("city")} style={fieldStyle} />
+              <input value={form.city} onChange={(e) => set("city", e.target.value)} onBlur={capitalizeOnBlur("city")} style={requiredFieldStyle} />
             </div>
           </div>
         )}
 
-        <div style={{ display: "grid", gridTemplateColumns: "2fr 1fr", gap: "12px", marginBottom: "12px" }}>
+        <div style={{ display: "grid", gridTemplateColumns: "1.6fr 60px 1.4fr", gap: "12px", marginBottom: "12px" }}>
           <div>
             <label style={labelStyle}>Rue / Place / Avenue *</label>
-            <input value={form.streetName} onChange={(e) => set("streetName", e.target.value)} onBlur={capitalizeOnBlur("streetName")} style={fieldStyle} />
+            <input value={form.streetName} onChange={(e) => set("streetName", e.target.value)} onBlur={capitalizeOnBlur("streetName")} style={requiredFieldStyle} />
           </div>
           <div>
             <label style={labelStyle}>N° *</label>
-            <input value={form.streetNumber} onChange={(e) => set("streetNumber", e.target.value)} style={fieldStyle} />
+            <input value={form.streetNumber} onChange={(e) => set("streetNumber", e.target.value)} style={requiredFieldStyle} />
           </div>
-        </div>
-
-        <div style={{ marginBottom: "12px" }}>
-          <label style={labelStyle}>Section / Village</label>
-          <input value={form.village} onChange={(e) => set("village", e.target.value)} onBlur={capitalizeOnBlur("village")} style={fieldStyle} />
+          <div>
+            <label style={labelStyle}>Section / Village</label>
+            <input value={form.village} onChange={(e) => set("village", e.target.value)} onBlur={capitalizeOnBlur("village")} style={fieldStyle} />
+          </div>
         </div>
 
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px", marginBottom: "6px" }}>
@@ -607,40 +651,38 @@ export function VenueDetailPanel({ venue, onClose, onSaved, onManageMenu }) {
             </CollapsibleSection>
         <div style={separatorStyle} />
         <CollapsibleSection title="Coordonnées" expanded={coordExpanded} onToggle={() => setCoordExpanded((e) => !e)}>
-          <label style={labelStyle}>Téléphone</label>
-          <div style={{ display: "flex", gap: "8px", marginBottom: "12px" }}>
-            <div style={{ ...fieldStyle, width: "64px", flexShrink: 0, textAlign: "center", color: "#8792A6" }}>{phonePrefix || "—"}</div>
-            <input value={form.phone} onChange={(e) => set("phone", e.target.value)} placeholder="000 00 00 00" style={fieldStyle} />
-          </div>
+          <IconField icon={<span style={{ fontSize: "16px" }}>📞</span>} label="Téléphone">
+            <div style={{ display: "flex", gap: "8px" }}>
+              <div style={{ ...fieldStyle, width: "64px", flexShrink: 0, textAlign: "center", color: "#8792A6" }}>{phonePrefix || "—"}</div>
+              <input value={form.phone} onChange={(e) => set("phone", e.target.value)} placeholder="000 00 00 00" style={fieldStyle} />
+            </div>
+          </IconField>
 
-          <label style={{ ...labelStyle, display: "flex", alignItems: "center", gap: "8px" }}>
-            <WhatsappIcon size={18} />
-            WhatsApp
-          </label>
-          <div style={{ display: "flex", gap: "8px", marginBottom: "12px" }}>
-            <div style={{ ...fieldStyle, width: "64px", flexShrink: 0, textAlign: "center", color: "#8792A6" }}>{phonePrefix || "—"}</div>
-            <input value={form.whatsapp} onChange={(e) => set("whatsapp", e.target.value)} placeholder="000 00 00 00" style={fieldStyle} />
-          </div>
+          <IconField icon={<span style={{ fontSize: "16px" }}>✉️</span>} label="Email">
+            <input value={form.email} onChange={(e) => set("email", e.target.value)} style={fieldStyle} />
+          </IconField>
 
-          <label style={labelStyle}>Email</label>
-          <input value={form.email} onChange={(e) => set("email", e.target.value)} style={{ ...fieldStyle, marginBottom: "12px" }} />
+          <IconField icon={<WebsiteIcon size={18} />} label="Internet">
+            <input value={form.website} onChange={(e) => set("website", e.target.value)} style={fieldStyle} />
+          </IconField>
 
-          <label style={labelStyle}>Site internet</label>
-          <input value={form.website} onChange={(e) => set("website", e.target.value)} style={{ ...fieldStyle, marginBottom: "12px" }} />
-          <label style={labelStyle}>Lien Google</label>
-          <input value={form.googleUrl} onChange={(e) => set("googleUrl", e.target.value)} style={{ ...fieldStyle, marginBottom: "12px" }} />
-          <label style={labelStyle}>Lien Facebook</label>
-          <input value={form.facebookUrl} onChange={(e) => set("facebookUrl", e.target.value)} style={{ ...fieldStyle, marginBottom: "12px" }} />
-          <label style={labelStyle}>Lien Instagram</label>
-          <input value={form.instagramUrl} onChange={(e) => set("instagramUrl", e.target.value)} style={{ ...fieldStyle, marginBottom: "12px" }} />
-          <label style={labelStyle}>Lien TikTok</label>
-          <input value={form.tiktokUrl} onChange={(e) => set("tiktokUrl", e.target.value)} style={{ ...fieldStyle, marginBottom: "12px" }} />
-          <label style={labelStyle}>Lien Snapchat</label>
-          <input value={form.snapchatUrl} onChange={(e) => set("snapchatUrl", e.target.value)} style={{ ...fieldStyle, marginBottom: "12px" }} />
-          <label style={labelStyle}>Lien Restaurant Guru</label>
-          <input value={form.restaurantGuruUrl} onChange={(e) => set("restaurantGuruUrl", e.target.value)} style={{ ...fieldStyle, marginBottom: "12px" }} />
-          <label style={labelStyle}>Lien Tripadvisor</label>
-          <input value={form.tripadvisorUrl} onChange={(e) => set("tripadvisorUrl", e.target.value)} style={fieldStyle} />
+          <IconField icon={<GoogleIcon size={18} />} label="Google">
+            <input value={form.googleUrl} onChange={(e) => set("googleUrl", e.target.value)} style={fieldStyle} />
+          </IconField>
+
+          <SocialLinkField icon={<WhatsappIcon size={18} />} label="WhatsApp" prefix="https://wa.me/" value={form.whatsapp} onChange={(v) => set("whatsapp", v)} />
+          <SocialLinkField icon={<FacebookIcon size={18} />} label="Facebook" prefix="https://www.facebook.com/" value={form.facebookUrl} onChange={(v) => set("facebookUrl", v)} />
+          <SocialLinkField icon={<InstagramIcon size={18} />} label="Instagram" prefix="https://www.instagram.com/" value={form.instagramUrl} onChange={(v) => set("instagramUrl", v)} />
+          <SocialLinkField icon={<TiktokIcon size={18} />} label="TikTok" prefix="https://www.tiktok.com/@" value={form.tiktokUrl} onChange={(v) => set("tiktokUrl", v)} />
+          <SocialLinkField icon={<SnapchatIcon size={18} />} label="Snapchat" prefix="https://www.snapchat.com/add/" value={form.snapchatUrl} onChange={(v) => set("snapchatUrl", v)} />
+
+          <IconField icon={<span style={{ fontSize: "16px" }}>🦉</span>} label="Tripadvisor">
+            <input value={form.tripadvisorUrl} onChange={(e) => set("tripadvisorUrl", e.target.value)} style={fieldStyle} />
+          </IconField>
+
+          <IconField icon={<span style={{ fontSize: "16px" }}>🍽️</span>} label="Restaurant Guru">
+            <input value={form.restaurantGuruUrl} onChange={(e) => set("restaurantGuruUrl", e.target.value)} style={fieldStyle} />
+          </IconField>
         </CollapsibleSection>
 
         <div style={separatorStyle} />

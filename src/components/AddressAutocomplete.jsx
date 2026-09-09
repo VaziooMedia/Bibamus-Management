@@ -11,7 +11,7 @@ const GEOAPIFY_API_KEY = import.meta.env.VITE_GEOAPIFY_API_KEY || "";
 // Les deux instances Geoapify sont créées UNE SEULE FOIS (pas à chaque changement de pays) —
 // on met à jour leur filtre pays via l'API dédiée (clearFilters/addFilterByCountry) plutôt que
 // de détruire et recréer l'objet, ce qui laissait auparavant l'ancien filtre actif en silence.
-export function AddressAutocomplete({ postalCode, city, countryIsoCode, onPostalCodeChange, onCityChange }) {
+export function AddressAutocomplete({ postalCode, city, countryIsoCode, onPostalCodeChange, onCityChange, required }) {
   const postalRef = useRef(null);
   const cityRef = useRef(null);
   const postalAutocompleteRef = useRef(null);
@@ -94,13 +94,20 @@ export function AddressAutocomplete({ postalCode, city, countryIsoCode, onPostal
 
   return (
     <>
+      {required && (
+        <style>{`
+          .req-geo-postal .geoapify-autocomplete-input, .req-geo-city .geoapify-autocomplete-input {
+            border-color: #FF3B4E !important;
+          }
+        `}</style>
+      )}
       <div>
         <label style={{ display: "block", fontSize: "12px", color: "#8792A6", fontWeight: 600, marginBottom: "4px" }}>Code postal</label>
-        <div ref={postalRef} style={{ position: "relative" }} onInput={(e) => onPostalCodeChange(e.target.value)} />
+        <div ref={postalRef} className={required ? "req-geo-postal" : undefined} style={{ position: "relative" }} onInput={(e) => onPostalCodeChange(e.target.value)} />
       </div>
       <div>
         <label style={{ display: "block", fontSize: "12px", color: "#8792A6", fontWeight: 600, marginBottom: "4px" }}>Commune</label>
-        <div ref={cityRef} style={{ position: "relative" }} onInput={(e) => onCityChange(e.target.value)} />
+        <div ref={cityRef} className={required ? "req-geo-city" : undefined} style={{ position: "relative" }} onInput={(e) => onCityChange(e.target.value)} />
       </div>
     </>
   );
