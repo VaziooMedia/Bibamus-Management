@@ -92,18 +92,49 @@ export function GooglePlaceLinker({ venueId, name, address, googlePlaceId, check
       ) : (
         <div>
           <div style={{ display: "flex", alignItems: "center", gap: "6px", color: "#FF9500", fontSize: "13px", fontWeight: 700, marginBottom: "10px" }}>⚠ Liaison Google à vérifier — horaires indisponibles</div>
-          <div style={{ display: "flex", gap: "10px", alignItems: "center" }}>
+          <div style={{ display: "flex", gap: "10px", alignItems: "stretch" }}>
             <button
               onClick={search}
               disabled={searching || !venueId}
-              style={{ background: "#39FF66", border: "none", borderRadius: "8px", padding: "9px 14px", color: "#0D1B2A", fontWeight: 700, fontSize: "12.5px", cursor: venueId ? "pointer" : "default", opacity: venueId ? 1 : 0.5 }}
+              style={{
+                flex: 1,
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                textAlign: "center",
+                background: "#39FF66",
+                border: "none",
+                borderRadius: "8px",
+                padding: "9px 10px",
+                color: "#0D1B2A",
+                fontWeight: 700,
+                fontSize: "12.5px",
+                lineHeight: 1.3,
+                cursor: venueId ? "pointer" : "default",
+                opacity: venueId ? 1 : 0.5,
+              }}
             >
               {searching ? "Recherche..." : "Associer à une fiche Google"}
             </button>
             {venueId && (
               <button
                 onClick={markNoPresence}
-                style={{ background: "none", border: "2px solid #ef007c", borderRadius: "8px", padding: "6px 12px", color: "#ef007c", fontSize: "12px", fontWeight: 700, cursor: "pointer" }}
+                style={{
+                  flex: 1,
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  textAlign: "center",
+                  background: "#ef007c",
+                  border: "none",
+                  borderRadius: "8px",
+                  padding: "9px 10px",
+                  color: "#0D1B2A",
+                  fontSize: "12.5px",
+                  fontWeight: 700,
+                  lineHeight: 1.3,
+                  cursor: "pointer",
+                }}
               >
                 Cet établissement n'a pas de fiche Google
               </button>
@@ -111,7 +142,22 @@ export function GooglePlaceLinker({ venueId, name, address, googlePlaceId, check
             {venueId && (
               <button
                 onClick={markNoFixedHours}
-                style={{ background: "none", border: "2px solid #00C8FF", borderRadius: "8px", padding: "6px 12px", color: "#00C8FF", fontSize: "12px", fontWeight: 700, cursor: "pointer" }}
+                style={{
+                  flex: 1,
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  textAlign: "center",
+                  background: "#00C8FF",
+                  border: "none",
+                  borderRadius: "8px",
+                  padding: "9px 10px",
+                  color: "#0D1B2A",
+                  fontSize: "12.5px",
+                  fontWeight: 700,
+                  lineHeight: 1.3,
+                  cursor: "pointer",
+                }}
               >
                 Pas d'horaire fixe
               </button>

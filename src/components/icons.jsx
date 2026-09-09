@@ -404,7 +404,7 @@ export function PhoneIcon({ size = 22 }) {
       <path
         d="M8.3 7.2c.3-.7.9-1.6 1.6-1.7.5-.1 1 .1 1.3.5l1 1.3c.3.4.3.9 0 1.3l-.8 1c-.2.3-.2.6 0 .9 1 1.6 2.3 2.9 3.9 3.9.3.2.6.2.9 0l1-.8c.4-.3.9-.3 1.3 0l1.3 1c.4.3.6.8.5 1.3-.1.7-1 1.3-1.7 1.6-1.1.4-2.3.3-3.6-.3-2.6-1.2-4.7-3.3-5.9-5.9-.6-1.3-.7-2.5-.3-3.6Z"
         fill="none"
-        stroke="#fff"
+        stroke="#39FF66"
         strokeWidth="1.4"
         strokeLinejoin="round"
       />
@@ -416,8 +416,8 @@ export function EmailIcon({ size = 22 }) {
   return (
     <svg width={size} height={size} viewBox="0 0 24 24">
       <circle cx="12" cy="12" r="11" fill={COLORS.paperAlt} />
-      <rect x="5.5" y="7.5" width="13" height="9" rx="1.5" fill="none" stroke="#fff" strokeWidth="1.4" />
-      <path d="M6 8.2l6 4.6 6-4.6" fill="none" stroke="#fff" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" />
+      <rect x="5.5" y="7.5" width="13" height="9" rx="1.5" fill="none" stroke="#39FF66" strokeWidth="1.4" />
+      <path d="M6 8.2l6 4.6 6-4.6" fill="none" stroke="#39FF66" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" />
     </svg>
   );
 }

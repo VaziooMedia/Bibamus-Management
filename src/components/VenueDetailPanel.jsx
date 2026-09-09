@@ -655,14 +655,14 @@ export function VenueDetailPanel({ venue, onClose, onSaved, onManageMenu }) {
             </CollapsibleSection>
         <div style={separatorStyle} />
         <CollapsibleSection title="Coordonnées" expanded={coordExpanded} onToggle={() => setCoordExpanded((e) => !e)}>
-          <IconField icon={<PhoneIcon size={18} />} label="Téléphone">
+          <IconField icon={<PhoneIcon size={26} />} label="Téléphone">
             <div style={{ display: "flex", gap: "8px" }}>
               <div style={{ ...fieldStyle, width: "64px", flexShrink: 0, textAlign: "center", color: "#8792A6" }}>{phonePrefix || "—"}</div>
               <input value={form.phone} onChange={(e) => set("phone", e.target.value)} placeholder="000 00 00 00" style={fieldStyle} />
             </div>
           </IconField>
 
-          <IconField icon={<EmailIcon size={18} />} label="E-mail">
+          <IconField icon={<EmailIcon size={26} />} label="E-mail">
             <input value={form.email} onChange={(e) => set("email", e.target.value)} style={fieldStyle} />
           </IconField>
 
