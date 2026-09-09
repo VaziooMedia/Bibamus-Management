@@ -56,13 +56,23 @@ function CompactProductRow({ drink, price, onChangePrice, priceStep = 0.1, onCha
 
   return (
     <div style={{ background: "#16273D", border: "2px solid #28405C", borderRadius: "8px", padding: "8px 10px" }}>
-      <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+      <div style={{ display: "flex", alignItems: "flex-start", gap: "8px" }}>
         <div style={{ flex: 1, minWidth: 0 }}>
-          <div style={{ fontWeight: 700, fontSize: "13px", color: "#F2F2E8" }}>{drink.name}</div>
-          <div style={{ display: "flex", alignItems: "center", gap: "5px", flexWrap: "wrap", marginTop: "1px" }}>
-            {drink.volumeCl && <span style={{ fontSize: "10.5px", color: "#8792A6", fontWeight: 700 }}>{drink.volumeCl}cl.</span>}
-            <DrinkBadges drink={drink} size={9} />
+          <div style={{ display: "flex", alignItems: "baseline", gap: "6px", flexWrap: "wrap" }}>
+            <span style={{ fontWeight: 700, fontSize: "13px", color: "#F2F2E8" }}>{drink.name}</span>
+            {drink.volumeCl && <span style={{ fontSize: "12px", color: "#39FF66", fontWeight: 800 }}>{String(drink.volumeCl).replace(".", ",")}cl.</span>}
           </div>
+          <div style={{ display: "flex", alignItems: "center", gap: "5px", flexWrap: "wrap", marginTop: "3px" }}>
+            <DrinkBadges drink={drink} size={9} />
+            {drink.servingMode && <span style={{ fontSize: "10.5px", color: "#8792A6", fontWeight: 600 }}>{SERVING_MODE_LABELS[drink.servingMode]}</span>}
+          </div>
+          {(drink.abv != null || drink.brewery) && (
+            <div style={{ display: "flex", alignItems: "center", gap: "5px", flexWrap: "wrap", marginTop: "3px", fontSize: "10.5px", color: "#8792A6" }}>
+              {drink.abv != null && <span>{drink.abv.toFixed(1)}% ABV</span>}
+              {drink.abv != null && drink.brewery && <span>·</span>}
+              {drink.brewery && <span>{drink.brewery}</span>}
+            </div>
+          )}
         </div>
         <div style={{ display: "flex", alignItems: "stretch", border: "2px solid #28405C", borderRadius: "6px", overflow: "hidden", flexShrink: 0 }}>
           <span style={{ fontSize: "11.5px", color: "#8792A6", padding: "0 6px", display: "flex", alignItems: "center", background: "#0D1B2A" }}>€</span>
@@ -125,10 +135,10 @@ function CompactProductRow({ drink, price, onChangePrice, priceStep = 0.1, onCha
         </div>
       )}
       <div style={{ display: "flex", justifyContent: "flex-end", alignItems: "center", gap: "12px", marginTop: "6px" }}>
-        <button onClick={() => setExpanded((e) => !e)} style={{ background: "none", border: "none", color: "#8792A6", fontSize: "11px", cursor: "pointer", padding: "2px" }} aria-label="Réglages">
+        <button onClick={() => setExpanded((e) => !e)} style={{ background: "none", border: "none", color: "#39FF66", fontSize: "11px", cursor: "pointer", padding: "2px", fontWeight: 700 }} aria-label="Réglages">
           {expanded ? "▲" : "▾"}
         </button>
-        <button onClick={onRemove} style={{ background: "none", border: "none", color: "#8792A6", fontSize: "15px", cursor: "pointer", padding: "0 2px", lineHeight: 1 }} aria-label={`Supprimer ${drink.name}`}>
+        <button onClick={onRemove} style={{ background: "none", border: "none", color: "#FF3B4E", fontSize: "15px", cursor: "pointer", padding: "0 2px", lineHeight: 1 }} aria-label={`Supprimer ${drink.name}`}>
           ×
         </button>
       </div>
@@ -305,14 +315,17 @@ export function VenueCategoryMenuScreen({ venue, category, drinksDirectory, onCl
 
         <div style={{ borderBottom: "1px solid #28405C", margin: "20px 0" }} />
 
-        <CollapsibleSection title="Ajouter depuis la base produits" count={matchingDirectoryItems.length} expanded={directoryExpanded} onToggle={() => setDirectoryExpanded((e) => !e)}>
-          <input
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-            placeholder="Rechercher un produit ou une brasserie..."
-            style={{ padding: "10px 12px", borderRadius: "8px", border: "2px solid #28405C", fontSize: "14px", width: "100%", marginBottom: "12px", background: "#16273D", color: "#F2F2E8", boxSizing: "border-box" }}
-          />
+        <input
+          value={query}
+          onChange={(e) => {
+            setQuery(e.target.value);
+            if (e.target.value.trim() && !directoryExpanded) setDirectoryExpanded(true);
+          }}
+          placeholder="Rechercher un produit ou une brasserie..."
+          style={{ padding: "10px 12px", borderRadius: "8px", border: "2px solid #28405C", fontSize: "14px", width: "100%", marginBottom: "14px", background: "#16273D", color: "#F2F2E8", boxSizing: "border-box" }}
+        />
 
+        <CollapsibleSection title="Ajouter depuis la base produits" count={matchingDirectoryItems.length} expanded={directoryExpanded} onToggle={() => setDirectoryExpanded((e) => !e)}>
           {matchingDirectoryItems.length === 0 && (
             <p style={{ fontSize: "12.5px", color: "#8792A6", fontStyle: "italic" }}>
               {drinksDirectory && drinksDirectory.length > 0 ? "Aucun résultat." : "La base produits est vide pour l'instant."}
