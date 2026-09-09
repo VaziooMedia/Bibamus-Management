@@ -73,6 +73,7 @@ const parseCoordinate = (raw) => {
 const fieldStyle = { padding: "10px 12px", borderRadius: "8px", border: "2px solid #28405C", fontSize: "14px", width: "100%" };
 const labelStyle = { fontSize: "12.5px", color: "#8792A6", marginBottom: "4px", display: "block", fontWeight: 600 };
 const sectionTitleStyle = { fontSize: "13px", fontWeight: 700, color: "#F2F2E8", marginTop: "6px", marginBottom: "12px", display: "flex", alignItems: "center", gap: "8px" };
+const subTitleStyle = { fontSize: "12.5px", fontWeight: 700, color: "#8792A6", marginTop: "4px", marginBottom: "8px", display: "flex", alignItems: "center" };
 const separatorStyle = { borderBottom: "1px solid #28405C", margin: "20px 0" };
 
 function SectionTitle({ children }) {
@@ -84,15 +85,16 @@ function SectionTitle({ children }) {
   );
 }
 
-function CollapsibleSection({ title, expanded, onToggle, children }) {
+function CollapsibleSection({ title, expanded, onToggle, children, variant = "section" }) {
+  const isSubtitle = variant === "subtitle";
   return (
     <div style={{ marginBottom: expanded ? "14px" : "6px" }}>
       <button
         onClick={onToggle}
         style={{ display: "flex", alignItems: "center", justifyContent: "space-between", width: "100%", background: "none", border: "none", padding: 0, cursor: "pointer" }}
       >
-        <span style={sectionTitleStyle}>
-          <span style={{ width: "4px", height: "14px", background: "#39FF66", borderRadius: "2px", display: "inline-block" }} />
+        <span style={isSubtitle ? subTitleStyle : sectionTitleStyle}>
+          {!isSubtitle && <span style={{ width: "4px", height: "14px", background: "#39FF66", borderRadius: "2px", display: "inline-block" }} />}
           {title}
         </span>
         <span style={{ color: "#8792A6", fontSize: "12px", transform: expanded ? "rotate(90deg)" : "rotate(0deg)", transition: "transform 0.15s" }}>▶</span>
@@ -158,6 +160,10 @@ export function VenueDetailPanel({ venue, onClose, onSaved, onManageMenu }) {
   const [coordExpanded, setCoordExpanded] = useState(false);
   const [typeExpanded, setTypeExpanded] = useState(false);
   const [amenitiesExpanded, setAmenitiesExpanded] = useState(false);
+  const [nameExpanded, setNameExpanded] = useState(false);
+  const [addressExpanded, setAddressExpanded] = useState(false);
+  const [paymentExpanded, setPaymentExpanded] = useState(false);
+  const [establishmentExpanded, setEstablishmentExpanded] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [deletePassword, setDeletePassword] = useState("");
   const [showDeletePassword, setShowDeletePassword] = useState(false);
@@ -441,19 +447,21 @@ export function VenueDetailPanel({ venue, onClose, onSaved, onManageMenu }) {
 
         {activeTab === "edit" && (
           <>
-            <label style={labelStyle}>Nom *</label>
-            <input value={form.name} onChange={(e) => set("name", e.target.value)} onBlur={capitalizeOnBlur("name")} style={{ ...fieldStyle, marginBottom: "14px" }} />
+            <CollapsibleSection title="Nom, alias & sous-titre" expanded={nameExpanded} onToggle={() => setNameExpanded((e) => !e)}>
+              <label style={labelStyle}>Nom *</label>
+              <input value={form.name} onChange={(e) => set("name", e.target.value)} onBlur={capitalizeOnBlur("name")} style={{ ...fieldStyle, marginBottom: "14px" }} />
 
-            <label style={labelStyle}>Alias / traductions (séparés par une virgule)</label>
-            <input
-              value={form.aliasesText}
-              onChange={(e) => set("aliasesText", e.target.value)}
-              placeholder="Ex. anciens noms, traductions dans une autre langue..."
-              style={{ ...fieldStyle, marginBottom: "14px" }}
-            />
+              <label style={labelStyle}>Alias / traductions (séparés par une virgule)</label>
+              <input
+                value={form.aliasesText}
+                onChange={(e) => set("aliasesText", e.target.value)}
+                placeholder="Ex. anciens noms, traductions dans une autre langue..."
+                style={{ ...fieldStyle, marginBottom: "14px" }}
+              />
 
-            <label style={labelStyle}>Sous-titre</label>
-            <input value={form.subtitle} onChange={(e) => set("subtitle", e.target.value)} onBlur={capitalizeOnBlur("subtitle")} style={fieldStyle} />
+              <label style={labelStyle}>Sous-titre</label>
+              <input value={form.subtitle} onChange={(e) => set("subtitle", e.target.value)} onBlur={capitalizeOnBlur("subtitle")} style={fieldStyle} />
+            </CollapsibleSection>
           </>
         )}
 
@@ -491,7 +499,7 @@ export function VenueDetailPanel({ venue, onClose, onSaved, onManageMenu }) {
         {activeTab === "edit" && (
           <>
             <div style={separatorStyle} />
-            <SectionTitle>Adresse</SectionTitle>
+            <CollapsibleSection title="Adresse" expanded={addressExpanded} onToggle={() => setAddressExpanded((e) => !e)}>
         <div style={{ display: "grid", gridTemplateColumns: "2fr 1fr", gap: "12px", marginBottom: "12px" }}>
           <div>
             <label style={labelStyle}>Rue / Place / Avenue *</label>
@@ -599,6 +607,7 @@ export function VenueDetailPanel({ venue, onClose, onSaved, onManageMenu }) {
           {!geocodeNotFound && geocodeStatus === "approximate" && <span style={{ fontSize: "12px", color: "#00C8FF" }}>Position approximative</span>}
           {!geocodeNotFound && geocodeStatus === "pending" && <span style={{ fontSize: "12px", color: "#8792A6" }}>Pas encore géocodée</span>}
         </div>
+            </CollapsibleSection>
         <div style={separatorStyle} />
         <CollapsibleSection title="Coordonnées" expanded={coordExpanded} onToggle={() => setCoordExpanded((e) => !e)}>
           <label style={labelStyle}>Téléphone</label>
@@ -638,61 +647,62 @@ export function VenueDetailPanel({ venue, onClose, onSaved, onManageMenu }) {
         </CollapsibleSection>
 
         <div style={separatorStyle} />
-        <SectionTitle>Paiement</SectionTitle>
-        <label style={labelStyle}>Moyens de paiement acceptés</label>
-        <div style={{ display: "flex", flexWrap: "wrap", gap: "8px", marginBottom: "14px" }}>
-          {PAYMENT_METHODS.map((m) => {
-            const checked = form.acceptedPaymentMethods.includes(m.code);
-            return (
+        <CollapsibleSection title="Paiement" expanded={paymentExpanded} onToggle={() => setPaymentExpanded((e) => !e)}>
+          <label style={{ ...labelStyle, marginBottom: "10px" }}>Moyens de paiement acceptés</label>
+          <div style={{ display: "flex", flexWrap: "wrap", gap: "8px", marginBottom: "14px" }}>
+            {PAYMENT_METHODS.map((m) => {
+              const checked = form.acceptedPaymentMethods.includes(m.code);
+              return (
+                <button
+                  key={m.code}
+                  onClick={() => togglePaymentMethod(m.code)}
+                  style={{
+                    background: checked ? "#39FF66" : "none",
+                    border: `2px solid ${checked ? "#39FF66" : "#28405C"}`,
+                    borderRadius: "999px",
+                    padding: "6px 12px",
+                    fontSize: "12px",
+                    fontWeight: 600,
+                    color: checked ? "#0D1B2A" : "#F2F2E8",
+                    cursor: "pointer",
+                  }}
+                >
+                  {m.fr}
+                </button>
+              );
+            })}
+          </div>
+
+          <label style={{ ...labelStyle, marginBottom: "10px" }}>Moyen de paiement par défaut</label>
+          <div style={{ display: "flex", gap: "8px" }}>
+            {[
+              { key: "euro", label: "€ Euros" },
+              { key: "jeton", label: "Jetons" },
+            ].map((opt) => (
               <button
-                key={m.code}
-                onClick={() => togglePaymentMethod(m.code)}
+                key={opt.key}
+                onClick={() => set("defaultCurrency", opt.key)}
                 style={{
-                  background: checked ? "#39FF66" : "none",
-                  border: `2px solid ${checked ? "#39FF66" : "#28405C"}`,
-                  borderRadius: "999px",
-                  padding: "6px 12px",
-                  fontSize: "12px",
-                  fontWeight: 600,
-                  color: checked ? "#0D1B2A" : "#F2F2E8",
+                  flex: 1,
+                  background: form.defaultCurrency === opt.key ? "#39FF66" : "none",
+                  border: `2px solid ${form.defaultCurrency === opt.key ? "#39FF66" : "#28405C"}`,
+                  borderRadius: "8px",
+                  padding: "9px",
+                  fontWeight: 700,
+                  fontSize: "13px",
+                  color: form.defaultCurrency === opt.key ? "#0D1B2A" : "#F2F2E8",
                   cursor: "pointer",
                 }}
               >
-                {m.fr}
+                {opt.label}
               </button>
-            );
-          })}
-        </div>
-
-        <label style={labelStyle}>Moyen de paiement par défaut</label>
-        <div style={{ display: "flex", gap: "8px" }}>
-          {[
-            { key: "euro", label: "€ Euros" },
-            { key: "jeton", label: "Jetons" },
-          ].map((opt) => (
-            <button
-              key={opt.key}
-              onClick={() => set("defaultCurrency", opt.key)}
-              style={{
-                flex: 1,
-                background: form.defaultCurrency === opt.key ? "#39FF66" : "none",
-                border: `2px solid ${form.defaultCurrency === opt.key ? "#39FF66" : "#28405C"}`,
-                borderRadius: "8px",
-                padding: "9px",
-                fontWeight: 700,
-                fontSize: "13px",
-                color: form.defaultCurrency === opt.key ? "#0D1B2A" : "#F2F2E8",
-                cursor: "pointer",
-              }}
-            >
-              {opt.label}
-            </button>
-          ))}
-        </div>
+            ))}
+          </div>
+        </CollapsibleSection>
 
         <div style={separatorStyle} />
-        <SectionTitle>Établissement</SectionTitle>
-        <CollapsibleSection title="Type d'établissement" expanded={typeExpanded} onToggle={() => setTypeExpanded((e) => !e)}>
+        <CollapsibleSection title="Établissement" expanded={establishmentExpanded} onToggle={() => setEstablishmentExpanded((e) => !e)}>
+        <CollapsibleSection title="Type d'établissement" variant="subtitle" expanded={typeExpanded} onToggle={() => setTypeExpanded((e) => !e)}>
           <p style={{ fontSize: "11.5px", color: "#8792A6", margin: "0 0 8px 0" }}>Plusieurs choix possibles</p>
           <div style={{ display: "flex", flexWrap: "wrap", gap: "8px", marginBottom: "14px" }}>
             {VENUE_TYPES.map((t) => {
@@ -719,7 +729,7 @@ export function VenueDetailPanel({ venue, onClose, onSaved, onManageMenu }) {
           </div>
         </CollapsibleSection>
 
-        <CollapsibleSection title="Aménités" expanded={amenitiesExpanded} onToggle={() => setAmenitiesExpanded((e) => !e)}>
+        <CollapsibleSection title="Aménités" variant="subtitle" expanded={amenitiesExpanded} onToggle={() => setAmenitiesExpanded((e) => !e)}>
           <div style={{ display: "flex", flexDirection: "column", gap: "8px", marginBottom: "6px" }}>
             <label style={{ display: "flex", alignItems: "center", gap: "6px", fontSize: "13px", cursor: "pointer" }}>
               <input type="checkbox" checked={form.hasFood} onChange={(e) => set("hasFood", e.target.checked)} />
@@ -768,7 +778,7 @@ export function VenueDetailPanel({ venue, onClose, onSaved, onManageMenu }) {
           </div>
         </CollapsibleSection>
 
-        <label style={labelStyle}>Horaires d'ouverture</label>
+        <div style={subTitleStyle}>Horaires d'ouverture</div>
         <div style={{ marginBottom: "14px" }}>
           <GooglePlaceLinker
             venueId={venue?.id || null}
@@ -783,6 +793,7 @@ export function VenueDetailPanel({ venue, onClose, onSaved, onManageMenu }) {
             onNoFixedHoursChange={setNoFixedHoursState}
           />
         </div>
+        </CollapsibleSection>
           </>
         )}
 
