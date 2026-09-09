@@ -2,7 +2,6 @@ import React, { useState, useEffect } from "react";
 import { loadPublicVenues, loadDrinksDirectory } from "../data/sharedDirectories.js";
 import { DataTable, StatusBadge, VisibilityDot } from "./DataTable.jsx";
 import { VenueDetailPanel } from "./VenueDetailPanel.jsx";
-import { VenueMenuManagementScreen } from "./VenueMenuManagementScreen.jsx";
 import { StatsCounterBar } from "./StatsCounterBar.jsx";
 import { PageTitle } from "./PageTitle.jsx";
 import { COUNTRIES } from "../constants.js";
@@ -32,7 +31,6 @@ export function VenuesScreen() {
   const [selected, setSelected] = useState(null);
   const [creating, setCreating] = useState(false);
   const [drinksDirectory, setDrinksDirectory] = useState([]);
-  const [managingMenuVenue, setManagingMenuVenue] = useState(null);
 
   const refresh = async () => {
     setLoading(true);
@@ -73,7 +71,7 @@ export function VenuesScreen() {
       {(selected || creating) && (
         <VenueDetailPanel
           venue={selected}
-          onManageMenu={() => setManagingMenuVenue(selected)}
+          drinksDirectory={drinksDirectory}
           onClose={() => {
             setSelected(null);
             setCreating(false);
@@ -84,17 +82,6 @@ export function VenuesScreen() {
             setCreating(false);
             if (updated) setVenues((prev) => (wasCreating ? [...prev, updated] : prev.map((v) => (v.id === updated.id ? updated : v))));
             else setVenues((prev) => prev.filter((v) => v.id !== selected.id));
-          }}
-        />
-      )}
-      {managingMenuVenue && (
-        <VenueMenuManagementScreen
-          venue={managingMenuVenue}
-          drinksDirectory={drinksDirectory}
-          onClose={() => setManagingMenuVenue(null)}
-          onSaved={(updated) => {
-            setVenues((prev) => prev.map((v) => (v.id === updated.id ? updated : v)));
-            setManagingMenuVenue(updated);
           }}
         />
       )}

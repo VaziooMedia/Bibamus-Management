@@ -8,7 +8,9 @@ import { StatusSelector } from "./StatusSelector.jsx";
 import { AdminPhotoField } from "./AdminPhotoField.jsx";
 import { GooglePlaceLinker } from "./GooglePlaceLinker.jsx";
 import { AddressAutocomplete } from "./AddressAutocomplete.jsx";
-import { COUNTRIES, PAYMENT_METHODS, VENUE_TYPES, PHONE_PREFIXES, COUNTRY_ISO_CODES, RATING_LABELS } from "../constants.js";
+import { VenueCategoryMenuScreen } from "./VenueCategoryMenuScreen.jsx";
+import { COUNTRIES, PAYMENT_METHODS, VENUE_TYPES, PHONE_PREFIXES, COUNTRY_ISO_CODES, RATING_LABELS, MENU_CATEGORIES } from "../constants.js";
+import { resolveMenuItem } from "../utils.js";
 
 const GEOAPIFY_CONFIGURED = !!(typeof import.meta !== "undefined" && import.meta.env && import.meta.env.VITE_GEOAPIFY_API_KEY);
 
@@ -149,7 +151,7 @@ function IconField({ icon, label, children }) {
 }
 
 // venue === null → mode création
-export function VenueDetailPanel({ venue, onClose, onSaved, onManageMenu }) {
+export function VenueDetailPanel({ venue, onClose, onSaved, drinksDirectory }) {
   const isNew = !venue;
   const [form, setForm] = useState({
     name: venue?.name || "",
@@ -208,6 +210,8 @@ export function VenueDetailPanel({ venue, onClose, onSaved, onManageMenu }) {
   const [addressExpanded, setAddressExpanded] = useState(false);
   const [paymentExpanded, setPaymentExpanded] = useState(false);
   const [establishmentExpanded, setEstablishmentExpanded] = useState(false);
+  const [openCategoryScreen, setOpenCategoryScreen] = useState(null);
+  const [venueMenu, setVenueMenu] = useState(venue?.menu || []);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [deletePassword, setDeletePassword] = useState("");
   const [showDeletePassword, setShowDeletePassword] = useState(false);
@@ -869,30 +873,43 @@ export function VenueDetailPanel({ venue, onClose, onSaved, onManageMenu }) {
               )}
             </div>
 
-            {!isNew && onManageMenu && (
-              <button
-                onClick={onManageMenu}
-                style={{
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "space-between",
-                  width: "100%",
-                  background: "#16273D",
-                  border: "2px solid #28405C",
-                  borderRadius: "8px",
-                  padding: "12px 14px",
-                  color: "#F2F2E8",
-                  cursor: "pointer",
-                  fontSize: "13px",
-                  marginBottom: "18px",
-                }}
-              >
-                <span style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-                  <span style={{ width: "4px", height: "14px", background: "#39FF66", borderRadius: "2px", display: "inline-block" }} />
-                  Gérer la carte
-                </span>
-                <span style={{ color: "#8792A6" }}>{(venue.menu || []).length} produit{(venue.menu || []).length !== 1 ? "s" : ""} →</span>
-              </button>
+            {!isNew && (
+              <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+                {MENU_CATEGORIES.map((cat) => {
+                  const count = venueMenu.filter((item) => {
+                    const resolved = resolveMenuItem(item, drinksDirectory || []);
+                    const itsCategory = MENU_CATEGORIES.includes(resolved.menuCategory) ? resolved.menuCategory : MENU_CATEGORIES.includes(resolved.type) ? resolved.type : "Non classé";
+                    return itsCategory === cat;
+                  }).length;
+                  return (
+                    <button
+                      key={cat}
+                      onClick={() => setOpenCategoryScreen(cat)}
+                      style={{
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "space-between",
+                        width: "100%",
+                        background: "#16273D",
+                        border: "2px solid #28405C",
+                        borderRadius: "8px",
+                        padding: "12px 14px",
+                        color: "#F2F2E8",
+                        cursor: "pointer",
+                        fontSize: "13px",
+                      }}
+                    >
+                      <span style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                        <span style={{ width: "4px", height: "14px", background: "#39FF66", borderRadius: "2px", display: "inline-block" }} />
+                        {cat}
+                      </span>
+                      <span style={{ color: "#8792A6" }}>
+                        {count} produit{count !== 1 ? "s" : ""} →
+                      </span>
+                    </button>
+                  );
+                })}
+              </div>
             )}
           </>
         )}
@@ -960,6 +977,16 @@ export function VenueDetailPanel({ venue, onClose, onSaved, onManageMenu }) {
           </div>
         </div>
       </div>
+    )}
+
+    {openCategoryScreen && (
+      <VenueCategoryMenuScreen
+        venue={{ ...venue, menu: venueMenu }}
+        category={openCategoryScreen}
+        drinksDirectory={drinksDirectory || []}
+        onClose={() => setOpenCategoryScreen(null)}
+        onMenuUpdated={(newMenu) => setVenueMenu(newMenu)}
+      />
     )}
     </>
   );
