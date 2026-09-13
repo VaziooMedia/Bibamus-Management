@@ -448,7 +448,7 @@ export function DrinkDetailPanel({ drink, onClose, onSaved }) {
         </div>
 
         <label style={labelStyle}>Statut de vérification</label>
-        <div style={{ marginBottom: "14px" }}>
+        <div style={{ marginBottom: "14px", maxWidth: "220px" }}>
           <StatusSelector value={status} onChange={setStatus} />
         </div>
 
@@ -465,7 +465,7 @@ export function DrinkDetailPanel({ drink, onClose, onSaved }) {
         </div>
 
         <label style={labelStyle}>Catégorie</label>
-        <select value={form.type} onChange={(e) => set("type", e.target.value)} style={{ ...fieldStyle, marginBottom: "14px" }}>
+        <select value={form.type} onChange={(e) => set("type", e.target.value)} style={{ ...fieldStyle, width: "220px", marginBottom: "14px" }}>
           {DRINK_TYPES.map((t) => (
             <option key={t.code} value={t.code}>
               {t.fr}
@@ -476,7 +476,7 @@ export function DrinkDetailPanel({ drink, onClose, onSaved }) {
         {(isBeerOrCider || isWine) && (
           <>
             <label style={labelStyle}>Sous-catégorie</label>
-            <select value={form.beverageSubtype} onChange={(e) => set("beverageSubtype", e.target.value)} style={{ ...fieldStyle, marginBottom: "14px" }}>
+            <select value={form.beverageSubtype} onChange={(e) => set("beverageSubtype", e.target.value)} style={{ ...fieldStyle, width: "220px", marginBottom: "14px" }}>
               {(isBeerOrCider ? BEER_CIDER_SUBTYPES : WINE_SUBTYPES).map((t) => (
                 <option key={t.code} value={t.code}>
                   {t.fr}
@@ -488,14 +488,6 @@ export function DrinkDetailPanel({ drink, onClose, onSaved }) {
 
         <label style={labelStyle}>Nom du produit *</label>
         <input value={form.name} onChange={(e) => set("name", e.target.value)} style={{ ...fieldStyle, marginBottom: "14px" }} />
-
-        <label style={labelStyle}>Alias / traductions (séparés par une virgule)</label>
-        <input
-          value={form.aliasesText}
-          onChange={(e) => set("aliasesText", e.target.value)}
-          placeholder="Ex. anciens noms, traductions dans une autre langue..."
-          style={{ ...fieldStyle, marginBottom: "14px" }}
-        />
 
         {isBeerOrCider ? (
           <>
@@ -533,10 +525,7 @@ export function DrinkDetailPanel({ drink, onClose, onSaved }) {
                 <input type="number" step="0.1" value={form.abv} onChange={(e) => set("abv", e.target.value)} placeholder="Ex. 0.0 pour sans alcool" style={{ ...fieldStyle, marginBottom: "14px" }} />
 
                 <label style={labelStyle}>Codes-barres</label>
-                <p style={{ fontSize: "11.5px", color: "#8792A6", marginTop: "-2px", marginBottom: "10px" }}>
-                  Une même bière peut exister en plusieurs bouteilles, canettes ou fûts — chacun avec son propre code-barres si connu.
-                </p>
-                <div style={{ display: "flex", flexDirection: "column", gap: "8px", marginBottom: "10px" }}>
+                <div style={{ display: "flex", flexDirection: "column", gap: "8px", marginBottom: "10px", marginTop: "6px" }}>
                   {form.barcodes.map((b, i) => (
                     <div key={i} style={{ display: "flex", gap: "8px" }}>
                       <input
@@ -563,14 +552,10 @@ export function DrinkDetailPanel({ drink, onClose, onSaved }) {
                 </div>
                 <button
                   onClick={addBarcode}
-                  style={{ background: "none", border: "2px dashed #28405C", borderRadius: "8px", padding: "9px", width: "100%", color: "#39FF66", fontSize: "12.5px", fontWeight: 700, cursor: "pointer", marginBottom: "14px" }}
+                  style={{ background: "none", border: "2px dashed #28405C", borderRadius: "8px", padding: "9px", width: "100%", color: "#39FF66", fontSize: "12.5px", fontWeight: 700, cursor: "pointer" }}
                 >
                   + Ajouter un code-barres
                 </button>
-
-                <p style={{ fontSize: "12.5px", color: "#8792A6" }}>
-                  De quoi créer la fiche en quelques secondes. Le nom et le type suffisent pour enregistrer — vous pourrez enrichir via les onglets Niveau 1, 2 et 3 à tout moment, y compris plus tard.
-                </p>
               </div>
             )}
 
