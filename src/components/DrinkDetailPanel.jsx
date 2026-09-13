@@ -49,6 +49,10 @@ export const BEER_CIDER_SUBTYPES = [
   { code: "cidre", fr: "Cidre" },
   { code: "poire", fr: "Poiré" },
 ];
+export const WINE_SUBTYPES = [
+  { code: "vin", fr: "Vin" },
+  { code: "vin_effervescent", fr: "Vin effervescent" },
+];
 
 const fieldStyle = { padding: "10px 12px", borderRadius: "8px", border: "2px solid #28405C", fontSize: "14px", width: "100%" };
 const labelStyle = { fontSize: "12.5px", color: "#8792A6", marginBottom: "4px", display: "block", fontWeight: 600 };
@@ -147,6 +151,7 @@ export function DrinkDetailPanel({ drink, onClose, onSaved }) {
     productHistory: drink?.productHistory || "",
     officialUrl: drink?.officialUrl || "",
     videoLinks: drink?.videoLinks && drink.videoLinks.length > 0 ? drink.videoLinks : [""],
+    barcodes: drink?.barcodes && drink.barcodes.length > 0 ? drink.barcodes : [{ label: "", code: "" }],
     // Niveau 3 — données techniques bière
     ibu: drink?.ibu ?? "",
     colorEbc: drink?.colorEbc ?? "",
@@ -216,6 +221,7 @@ export function DrinkDetailPanel({ drink, onClose, onSaved }) {
   const [producerOptions, setProducerOptions] = useState([]);
 
   const isBeerOrCider = form.type === "bieres_cidres";
+  const isWine = form.type === "vins_bulles";
   const isBeer = form.beverageSubtype === "biere";
 
   useEffect(() => {
@@ -307,6 +313,7 @@ export function DrinkDetailPanel({ drink, onClose, onSaved }) {
       productHistory: form.productHistory.trim(),
       officialUrl: form.officialUrl.trim(),
       videoLinks: form.videoLinks.map((v) => v.trim()).filter(Boolean),
+      barcodes: form.barcodes.map((b) => ({ label: b.label.trim(), code: b.code.trim() })).filter((b) => b.label || b.code),
       awardBadges,
       ibu: form.ibu === "" ? null : parseFloat(form.ibu),
       colorEbc: form.colorEbc === "" ? null : parseFloat(form.colorEbc),
@@ -423,17 +430,41 @@ export function DrinkDetailPanel({ drink, onClose, onSaved }) {
   const addVideoLink = () => setForm((f) => ({ ...f, videoLinks: [...f.videoLinks, ""] }));
   const removeVideoLink = (index) => setForm((f) => ({ ...f, videoLinks: f.videoLinks.length > 1 ? f.videoLinks.filter((_, i) => i !== index) : [""] }));
 
+  const updateBarcode = (index, field, value) => setForm((f) => ({ ...f, barcodes: f.barcodes.map((b, i) => (i === index ? { ...b, [field]: value } : b)) }));
+  const addBarcode = () => setForm((f) => ({ ...f, barcodes: [...f.barcodes, { label: "", code: "" }] }));
+  const removeBarcode = (index) => setForm((f) => ({ ...f, barcodes: f.barcodes.length > 1 ? f.barcodes.filter((_, i) => i !== index) : [{ label: "", code: "" }] }));
+
   return (
     <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.5)", display: "flex", justifyContent: "flex-end", zIndex: 100 }}>
       <div style={{ width: "520px", background: "#0D1B2A", height: "100%", overflowY: "auto", padding: "28px", borderLeft: "2px solid #28405C" }}>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "20px" }}>
-          <h2 style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "22px", margin: 0 }}>{isNew ? "Ajouter un produit" : "Vérifier le produit"}</h2>
+          <h2 style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "22px", margin: 0, display: "flex", alignItems: "center", gap: "8px" }}>
+            <span style={{ width: "4px", height: "18px", background: "#39FF66", borderRadius: "2px", flexShrink: 0 }} />
+            {isNew ? "Ajouter un produit" : "Vérifier le produit"}
+          </h2>
           <button onClick={onClose} style={{ background: "none", border: "none", color: "#8792A6", fontSize: "20px", cursor: "pointer" }}>
             ✕
           </button>
         </div>
 
-        <label style={labelStyle}>Type</label>
+        <label style={labelStyle}>Statut de vérification</label>
+        <div style={{ marginBottom: "14px" }}>
+          <StatusSelector value={status} onChange={setStatus} />
+        </div>
+
+        {status === "duplicate" && (
+          <div style={{ marginBottom: "14px" }}>
+            <label style={labelStyle}>Doublon de</label>
+            <SearchableSelect options={otherDrinkOptions} value={duplicateOfId} onChange={setDuplicateOfId} placeholder="Chercher le produit conservé..." />
+          </div>
+        )}
+
+        <label style={labelStyle}>Niveau de certification</label>
+        <div style={{ marginBottom: "20px" }}>
+          <CertificationLevelSelector value={certificationLevel} onChange={setCertificationLevel} />
+        </div>
+
+        <label style={labelStyle}>Catégorie</label>
         <select value={form.type} onChange={(e) => set("type", e.target.value)} style={{ ...fieldStyle, marginBottom: "14px" }}>
           {DRINK_TYPES.map((t) => (
             <option key={t.code} value={t.code}>
@@ -442,8 +473,17 @@ export function DrinkDetailPanel({ drink, onClose, onSaved }) {
           ))}
         </select>
 
-        {isBeerOrCider && (
-          <AdminPhotoField label="Photo principale (800×800)" photoUrl={mainPhotoUrl} onUpload={handleUploadPhoto} onDelete={() => setMainPhotoUrl(null)} uploading={uploadingPhoto} />
+        {(isBeerOrCider || isWine) && (
+          <>
+            <label style={labelStyle}>Sous-catégorie</label>
+            <select value={form.beverageSubtype} onChange={(e) => set("beverageSubtype", e.target.value)} style={{ ...fieldStyle, marginBottom: "14px" }}>
+              {(isBeerOrCider ? BEER_CIDER_SUBTYPES : WINE_SUBTYPES).map((t) => (
+                <option key={t.code} value={t.code}>
+                  {t.fr}
+                </option>
+              ))}
+            </select>
+          </>
         )}
 
         <label style={labelStyle}>Nom du produit *</label>
@@ -491,6 +531,43 @@ export function DrinkDetailPanel({ drink, onClose, onSaved }) {
               <div>
                 <label style={labelStyle}>Taux d'alcool (%)</label>
                 <input type="number" step="0.1" value={form.abv} onChange={(e) => set("abv", e.target.value)} placeholder="Ex. 0.0 pour sans alcool" style={{ ...fieldStyle, marginBottom: "14px" }} />
+
+                <label style={labelStyle}>Codes-barres</label>
+                <p style={{ fontSize: "11.5px", color: "#8792A6", marginTop: "-2px", marginBottom: "10px" }}>
+                  Une même bière peut exister en plusieurs bouteilles, canettes ou fûts — chacun avec son propre code-barres si connu.
+                </p>
+                <div style={{ display: "flex", flexDirection: "column", gap: "8px", marginBottom: "10px" }}>
+                  {form.barcodes.map((b, i) => (
+                    <div key={i} style={{ display: "flex", gap: "8px" }}>
+                      <input
+                        value={b.label}
+                        onChange={(e) => updateBarcode(i, "label", e.target.value)}
+                        placeholder="Ex. Bouteille 33cl."
+                        style={{ ...fieldStyle, flex: 1 }}
+                      />
+                      <input
+                        value={b.code}
+                        onChange={(e) => updateBarcode(i, "code", e.target.value)}
+                        placeholder="Code-barres"
+                        style={{ ...fieldStyle, flex: 1 }}
+                      />
+                      <button
+                        onClick={() => removeBarcode(i)}
+                        title="Retirer ce code-barres"
+                        style={{ background: "none", border: "2px solid #28405C", borderRadius: "8px", width: "40px", flexShrink: 0, color: "#FF3B4E", cursor: "pointer", fontSize: "14px" }}
+                      >
+                        ✕
+                      </button>
+                    </div>
+                  ))}
+                </div>
+                <button
+                  onClick={addBarcode}
+                  style={{ background: "none", border: "2px dashed #28405C", borderRadius: "8px", padding: "9px", width: "100%", color: "#39FF66", fontSize: "12.5px", fontWeight: 700, cursor: "pointer", marginBottom: "14px" }}
+                >
+                  + Ajouter un code-barres
+                </button>
+
                 <p style={{ fontSize: "12.5px", color: "#8792A6" }}>
                   De quoi créer la fiche en quelques secondes. Le nom et le type suffisent pour enregistrer — vous pourrez enrichir via les onglets Niveau 1, 2 et 3 à tout moment, y compris plus tard.
                 </p>
@@ -499,15 +576,6 @@ export function DrinkDetailPanel({ drink, onClose, onSaved }) {
 
             {activeTab === "niveau1" && (
               <>
-            <label style={labelStyle}>Bière / Cidre / Poiré</label>
-            <select value={form.beverageSubtype} onChange={(e) => set("beverageSubtype", e.target.value)} style={{ ...fieldStyle, marginBottom: "14px" }}>
-              {BEER_CIDER_SUBTYPES.map((t) => (
-                <option key={t.code} value={t.code}>
-                  {t.fr}
-                </option>
-              ))}
-            </select>
-
             <label style={labelStyle}>Nom alternatif / ancien nom</label>
             <input value={form.alternateName} onChange={(e) => set("alternateName", e.target.value)} style={{ ...fieldStyle, marginBottom: "14px" }} />
 
@@ -1202,6 +1270,10 @@ export function DrinkDetailPanel({ drink, onClose, onSaved }) {
 
             {activeTab === "gallery" && (
               <div>
+                <SectionTitle>Photo principale</SectionTitle>
+                <AdminPhotoField label="Photo principale (800×800)" photoUrl={mainPhotoUrl} onUpload={handleUploadPhoto} onDelete={() => setMainPhotoUrl(null)} uploading={uploadingPhoto} />
+
+                <div style={separatorStyle} />
                 <SectionTitle>Images</SectionTitle>
                 <p style={{ fontSize: "11.5px", color: "#8792A6", marginTop: "-6px", marginBottom: "10px" }}>
                   Formats acceptés : JPEG, PNG, WebP (et la plupart des formats image courants) — recadrées et converties automatiquement en 1000×1000px. Privilégiez des fichiers de quelques Mo maximum pour un chargement rapide.
@@ -1250,22 +1322,6 @@ export function DrinkDetailPanel({ drink, onClose, onSaved }) {
         )}
 
         <div style={separatorStyle} />
-        <label style={labelStyle}>Statut de vérification</label>
-        <div style={{ marginBottom: "14px" }}>
-          <StatusSelector value={status} onChange={setStatus} />
-        </div>
-
-        {status === "duplicate" && (
-          <div style={{ marginBottom: "14px" }}>
-            <label style={labelStyle}>Doublon de</label>
-            <SearchableSelect options={otherDrinkOptions} value={duplicateOfId} onChange={setDuplicateOfId} placeholder="Chercher le produit conservé..." />
-          </div>
-        )}
-
-        <label style={labelStyle}>Niveau de certification</label>
-        <div style={{ marginBottom: "20px" }}>
-          <CertificationLevelSelector value={certificationLevel} onChange={setCertificationLevel} />
-        </div>
 
         <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
           <button

@@ -1237,6 +1237,7 @@ function rowToDrink(row) {
     productHistory: row.product_history,
     officialUrl: row.official_url,
     videoLinks: row.video_links || [],
+    barcodes: row.barcodes || [],
     awardBadges: row.award_badges || [],
     // Niveau 3 — données techniques bière
     ibu: row.ibu,
@@ -1382,6 +1383,7 @@ function drinkToRow(d, partial = false) {
     product_history: d.productHistory,
     official_url: d.officialUrl,
     video_links: d.videoLinks,
+    barcodes: d.barcodes,
     award_badges: d.awardBadges,
     ibu: d.ibu,
     color_ebc: d.colorEbc,
