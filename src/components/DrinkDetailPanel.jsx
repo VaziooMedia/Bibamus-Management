@@ -86,6 +86,8 @@ export function DrinkDetailPanel({ drink, onClose, onSaved }) {
     beverageSubtype: drink?.beverageSubtype || BEER_CIDER_SUBTYPES[0].code,
     defaultVolumeCl: drink?.defaultVolumeCl ?? "",
     defaultServingMode: drink?.defaultServingMode || "",
+    defaultPriceEuro: drink?.defaultPriceEuro ?? "",
+    defaultPriceJeton: drink?.defaultPriceJeton ?? "1",
     brandId: drink?.brandId || null,
     producerIds: drink?.producerIds || [],
     nationality: drink?.nationality || "",
@@ -258,6 +260,8 @@ export function DrinkDetailPanel({ drink, onClose, onSaved }) {
       beverageSubtype: form.beverageSubtype,
       defaultVolumeCl: form.defaultVolumeCl === "" ? null : parseFloat(form.defaultVolumeCl),
       defaultServingMode: form.defaultServingMode || null,
+      defaultPriceEuro: form.defaultPriceEuro === "" ? null : parseFloat(form.defaultPriceEuro),
+      defaultPriceJeton: form.defaultPriceJeton === "" ? null : parseFloat(form.defaultPriceJeton),
       brandId: form.brandId,
       producerIds: form.producerIds,
       nationality: form.nationality || null,
@@ -602,6 +606,14 @@ export function DrinkDetailPanel({ drink, onClose, onSaved }) {
                     </option>
                   ))}
                 </select>
+              </div>
+              <div>
+                <label style={labelStyle}>Valeur € par défaut</label>
+                <input type="number" step="0.01" value={form.defaultPriceEuro} onChange={(e) => set("defaultPriceEuro", e.target.value)} placeholder="Ex. 3.50" style={fieldStyle} />
+              </div>
+              <div>
+                <label style={labelStyle}>Valeur jeton par défaut</label>
+                <input type="number" step="1" value={form.defaultPriceJeton} onChange={(e) => set("defaultPriceJeton", e.target.value)} placeholder="Ex. 1" style={fieldStyle} />
               </div>
             </div>
 
