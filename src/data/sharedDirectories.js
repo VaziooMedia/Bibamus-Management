@@ -34,7 +34,7 @@ const CAPABILITY_MATRIX = {
 const ENTITY_TABLE_BY_TYPE = { venue: "public_venues", drink: "drinks_directory", brand: "brands_directory", producer: "breweries_directory" };
 const ENTITY_SELECT_FIELDS = {
   venue: "id, name, street_name, street_number, city, cover_photo_url, profile_photo_url, status, certification_level",
-  drink: "id, name, type, main_photo_url, status, certification_level",
+  drink: "id, name, type, photo_url, status, certification_level",
   brand: "id, name, logo_url, status, certification_level",
   producer: "id, name, country, profile_photo_url, cover_photo_url, status, certification_level",
 };
@@ -1173,7 +1173,7 @@ function rowToDrink(row) {
     beverageSubtype: row.beverage_subtype,
     originRegion: row.origin_region,
     originCity: row.origin_city,
-    mainPhotoUrl: row.main_photo_url,
+    mainPhotoUrl: row.photo_url,
     galleryPhotos: row.gallery_photos || [],
     styles: row.styles || [],
     productStatus: row.product_status,
@@ -1329,7 +1329,7 @@ function drinkToRow(d, partial = false) {
     beverage_subtype: d.beverageSubtype,
     origin_region: d.originRegion,
     origin_city: d.originCity,
-    main_photo_url: d.mainPhotoUrl,
+    photo_url: d.mainPhotoUrl,
     gallery_photos: d.galleryPhotos,
     styles: d.styles,
     product_status: d.productStatus,
