@@ -589,33 +589,6 @@ export function DrinkDetailPanel({ drink, onClose, onSaved }) {
             <label style={labelStyle}>Nom alternatif / ancien nom</label>
             <input value={form.alternateName} onChange={(e) => set("alternateName", e.target.value)} style={{ ...fieldStyle, marginBottom: "14px" }} />
 
-            <div style={separatorStyle} />
-            <SectionTitle>Valeurs par défaut</SectionTitle>
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px", marginBottom: "14px" }}>
-              <div>
-                <label style={labelStyle}>Volume par défaut (centilitres)</label>
-                <input type="number" step="0.1" value={form.defaultVolumeCl} onChange={(e) => set("defaultVolumeCl", e.target.value)} placeholder="Ex. 33" style={fieldStyle} />
-              </div>
-              <div>
-                <label style={labelStyle}>Type de service par défaut</label>
-                <select value={form.defaultServingMode} onChange={(e) => set("defaultServingMode", e.target.value)} style={fieldStyle}>
-                  <option value="">—</option>
-                  {DEFAULT_SERVING_MODES.map((m) => (
-                    <option key={m.code} value={m.code}>
-                      {m.fr}
-                    </option>
-                  ))}
-                </select>
-              </div>
-              <div>
-                <label style={labelStyle}>Valeur € par défaut</label>
-                <input type="number" step="0.01" value={form.defaultPriceEuro} onChange={(e) => set("defaultPriceEuro", e.target.value)} placeholder="Ex. 3.50" style={fieldStyle} />
-              </div>
-              <div>
-                <label style={labelStyle}>Valeur jeton par défaut</label>
-                <input type="number" step="1" value={form.defaultPriceJeton} onChange={(e) => set("defaultPriceJeton", e.target.value)} placeholder="Ex. 1" style={fieldStyle} />
-              </div>
-            </div>
 
             <div style={separatorStyle} />
             <SectionTitle>Marque & producteur</SectionTitle>
@@ -681,6 +654,33 @@ export function DrinkDetailPanel({ drink, onClose, onSaved }) {
               Le code-barres se gère depuis le scan dans l'app — pas encore intégré à cette fiche.
             </p>
 
+            <div style={separatorStyle} />
+            <SectionTitle>Valeurs par défaut</SectionTitle>
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px", marginBottom: "14px" }}>
+              <div>
+                <label style={labelStyle}>Volume par défaut (centilitres)</label>
+                <input type="number" step="0.1" min="0" value={form.defaultVolumeCl} onChange={(e) => set("defaultVolumeCl", e.target.value)} placeholder="Ex. 33" style={fieldStyle} />
+              </div>
+              <div>
+                <label style={labelStyle}>Type de service par défaut</label>
+                <select value={form.defaultServingMode} onChange={(e) => set("defaultServingMode", e.target.value)} style={fieldStyle}>
+                  <option value="">—</option>
+                  {DEFAULT_SERVING_MODES.map((m) => (
+                    <option key={m.code} value={m.code}>
+                      {m.fr}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <label style={labelStyle}>Valeur € par défaut</label>
+                <input type="number" step="0.01" min="0" value={form.defaultPriceEuro} onChange={(e) => set("defaultPriceEuro", e.target.value)} placeholder="Ex. 3.50" style={fieldStyle} />
+              </div>
+              <div>
+                <label style={labelStyle}>Valeur jeton par défaut</label>
+                <input type="number" step="1" value={form.defaultPriceJeton} onChange={(e) => set("defaultPriceJeton", e.target.value)} placeholder="Ex. 1" style={fieldStyle} />
+              </div>
+            </div>
             <div style={separatorStyle} />
             <button
               onClick={() => setStylesSectionOpen((o) => !o)}
