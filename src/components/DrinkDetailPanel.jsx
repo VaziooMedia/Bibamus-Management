@@ -1289,7 +1289,7 @@ export function DrinkDetailPanel({ drink, onClose, onSaved }) {
             {activeTab === "gallery" && (
               <div>
                 <SectionTitle>Photo principale</SectionTitle>
-                <AdminPhotoField label="Photo principale (800×800)" photoUrl={mainPhotoUrl} onUpload={handleUploadPhoto} onDelete={() => setMainPhotoUrl(null)} uploading={uploadingPhoto} />
+                <AdminPhotoField label="Photo principale (400×400)" photoUrl={mainPhotoUrl} onUpload={handleUploadPhoto} onDelete={() => setMainPhotoUrl(null)} uploading={uploadingPhoto} />
 
                 <div style={separatorStyle} />
                 <SectionTitle>Images</SectionTitle>
