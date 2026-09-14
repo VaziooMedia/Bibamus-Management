@@ -539,9 +539,9 @@ export function DrinkDetailPanel({ drink, onClose, onSaved }) {
                       <select
                         value={b.container || ""}
                         onChange={(e) => updateBarcode(i, "container", e.target.value)}
-                        style={{ ...fieldStyle, flex: 1.3 }}
+                        style={{ ...fieldStyle, width: "120px", flexShrink: 0 }}
                       >
-                        <option value="">Contenant...</option>
+                        <option value="">Contenant</option>
                         {CONTAINER_TYPES.map((t) => (
                           <option key={t.code} value={t.code}>
                             {t.fr}
@@ -551,14 +551,14 @@ export function DrinkDetailPanel({ drink, onClose, onSaved }) {
                       <input
                         value={b.volume || ""}
                         onChange={(e) => updateBarcode(i, "volume", e.target.value)}
-                        placeholder="Volume"
-                        style={{ ...fieldStyle, width: "70px", flexShrink: 0 }}
+                        placeholder="Vol."
+                        style={{ ...fieldStyle, width: "56px", flexShrink: 0 }}
                       />
                       <input
                         value={b.code}
                         onChange={(e) => updateBarcode(i, "code", e.target.value)}
                         placeholder="Code-barres"
-                        style={{ ...fieldStyle, width: "110px", flexShrink: 0 }}
+                        style={{ ...fieldStyle, width: "170px", flexShrink: 0 }}
                       />
                       <button
                         onClick={() => removeBarcode(i)}
@@ -572,9 +572,10 @@ export function DrinkDetailPanel({ drink, onClose, onSaved }) {
                 </div>
                 <button
                   onClick={addBarcode}
-                  style={{ background: "none", border: "2px dashed #28405C", borderRadius: "8px", padding: "9px", width: "100%", color: "#39FF66", fontSize: "12.5px", fontWeight: 700, cursor: "pointer" }}
+                  title="Ajouter un code-barres"
+                  style={{ background: "none", border: "2px dashed #28405C", borderRadius: "8px", width: "40px", height: "36px", color: "#39FF66", fontSize: "16px", fontWeight: 700, cursor: "pointer" }}
                 >
-                  + Ajouter un code-barres
+                  +
                 </button>
               </div>
             )}
