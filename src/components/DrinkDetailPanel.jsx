@@ -53,6 +53,14 @@ export const WINE_SUBTYPES = [
   { code: "vin", fr: "Vin" },
   { code: "vin_effervescent", fr: "Vin effervescent" },
 ];
+export const CONTAINER_TYPES = [
+  { code: "bouteille_verre", fr: "Bouteille verre" },
+  { code: "bouteille_pet", fr: "Bouteille PET" },
+  { code: "canette", fr: "Canette" },
+  { code: "fut", fr: "Fût" },
+  { code: "bag_in_box", fr: "Bag-in-Box" },
+  { code: "brique", fr: "Brique" },
+];
 
 const fieldStyle = { padding: "10px 12px", borderRadius: "8px", border: "2px solid #28405C", fontSize: "14px", width: "100%" };
 const labelStyle = { fontSize: "12.5px", color: "#8792A6", marginBottom: "4px", display: "block", fontWeight: 600 };
@@ -151,7 +159,7 @@ export function DrinkDetailPanel({ drink, onClose, onSaved }) {
     productHistory: drink?.productHistory || "",
     officialUrl: drink?.officialUrl || "",
     videoLinks: drink?.videoLinks && drink.videoLinks.length > 0 ? drink.videoLinks : [""],
-    barcodes: drink?.barcodes && drink.barcodes.length > 0 ? drink.barcodes : [{ label: "", code: "" }],
+    barcodes: drink?.barcodes && drink.barcodes.length > 0 ? drink.barcodes : [{ container: "", volume: "", code: "" }],
     // Niveau 3 — données techniques bière
     ibu: drink?.ibu ?? "",
     colorEbc: drink?.colorEbc ?? "",
@@ -313,7 +321,7 @@ export function DrinkDetailPanel({ drink, onClose, onSaved }) {
       productHistory: form.productHistory.trim(),
       officialUrl: form.officialUrl.trim(),
       videoLinks: form.videoLinks.map((v) => v.trim()).filter(Boolean),
-      barcodes: form.barcodes.map((b) => ({ label: b.label.trim(), code: b.code.trim() })).filter((b) => b.label || b.code),
+      barcodes: form.barcodes.map((b) => ({ container: b.container || "", volume: (b.volume || "").trim(), code: b.code.trim() })).filter((b) => b.container || b.volume || b.code),
       awardBadges,
       ibu: form.ibu === "" ? null : parseFloat(form.ibu),
       colorEbc: form.colorEbc === "" ? null : parseFloat(form.colorEbc),
@@ -431,8 +439,8 @@ export function DrinkDetailPanel({ drink, onClose, onSaved }) {
   const removeVideoLink = (index) => setForm((f) => ({ ...f, videoLinks: f.videoLinks.length > 1 ? f.videoLinks.filter((_, i) => i !== index) : [""] }));
 
   const updateBarcode = (index, field, value) => setForm((f) => ({ ...f, barcodes: f.barcodes.map((b, i) => (i === index ? { ...b, [field]: value } : b)) }));
-  const addBarcode = () => setForm((f) => ({ ...f, barcodes: [...f.barcodes, { label: "", code: "" }] }));
-  const removeBarcode = (index) => setForm((f) => ({ ...f, barcodes: f.barcodes.length > 1 ? f.barcodes.filter((_, i) => i !== index) : [{ label: "", code: "" }] }));
+  const addBarcode = () => setForm((f) => ({ ...f, barcodes: [...f.barcodes, { container: "", volume: "", code: "" }] }));
+  const removeBarcode = (index) => setForm((f) => ({ ...f, barcodes: f.barcodes.length > 1 ? f.barcodes.filter((_, i) => i !== index) : [{ container: "", volume: "", code: "" }] }));
 
   return (
     <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.5)", display: "flex", justifyContent: "flex-end", zIndex: 100 }}>
@@ -528,17 +536,29 @@ export function DrinkDetailPanel({ drink, onClose, onSaved }) {
                 <div style={{ display: "flex", flexDirection: "column", gap: "8px", marginBottom: "10px", marginTop: "6px" }}>
                   {form.barcodes.map((b, i) => (
                     <div key={i} style={{ display: "flex", gap: "8px" }}>
+                      <select
+                        value={b.container || ""}
+                        onChange={(e) => updateBarcode(i, "container", e.target.value)}
+                        style={{ ...fieldStyle, flex: 1.3 }}
+                      >
+                        <option value="">Contenant...</option>
+                        {CONTAINER_TYPES.map((t) => (
+                          <option key={t.code} value={t.code}>
+                            {t.fr}
+                          </option>
+                        ))}
+                      </select>
                       <input
-                        value={b.label}
-                        onChange={(e) => updateBarcode(i, "label", e.target.value)}
-                        placeholder="Ex. Bouteille 33cl."
-                        style={{ ...fieldStyle, flex: 1 }}
+                        value={b.volume || ""}
+                        onChange={(e) => updateBarcode(i, "volume", e.target.value)}
+                        placeholder="Volume"
+                        style={{ ...fieldStyle, width: "70px", flexShrink: 0 }}
                       />
                       <input
                         value={b.code}
                         onChange={(e) => updateBarcode(i, "code", e.target.value)}
                         placeholder="Code-barres"
-                        style={{ ...fieldStyle, flex: 1 }}
+                        style={{ ...fieldStyle, width: "110px", flexShrink: 0 }}
                       />
                       <button
                         onClick={() => removeBarcode(i)}
