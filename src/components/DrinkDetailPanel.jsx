@@ -33,7 +33,7 @@ import {
   APPLE_TYPES,
   VERIFICATION_STATUSES,
 } from "../data/beerCiderStyles.js";
-import { WINE_STYLE_GROUPS } from "../data/wineStyles.js";
+import { WINE_STYLE_GROUPS, WINE_COLORS_BY_SUBTYPE } from "../data/wineStyles.js";
 
 export const DRINK_TYPES = [
   { code: "bieres_cidres", fr: "Bières & Cidres" },
@@ -92,6 +92,7 @@ export function DrinkDetailPanel({ drink, onClose, onSaved }) {
     brandId: drink?.brandId || null,
     producerIds: drink?.producerIds || [],
     nationality: drink?.nationality || "",
+    wineColor: drink?.wineColor || "",
     originRegion: drink?.originRegion || "",
     originCity: drink?.originCity || "",
     styles: drink?.styles || [],
@@ -268,6 +269,7 @@ export function DrinkDetailPanel({ drink, onClose, onSaved }) {
       brandId: form.brandId,
       producerIds: form.producerIds,
       nationality: form.nationality || null,
+      wineColor: form.wineColor || null,
       originRegion: form.originRegion.trim(),
       originCity: form.originCity.trim(),
       styles: form.styles,
@@ -596,6 +598,42 @@ export function DrinkDetailPanel({ drink, onClose, onSaved }) {
                 >
                   +
                 </button>
+
+                {isWine && (
+                  <>
+                    <div style={separatorStyle} />
+
+                    <CollapsibleSection title="Couleur" defaultOpen>
+                      <select value={form.wineColor} onChange={(e) => set("wineColor", e.target.value)} style={fieldStyle}>
+                        <option value="">—</option>
+                        {(WINE_COLORS_BY_SUBTYPE[form.beverageSubtype] || []).map((c) => (
+                          <option key={c.code} value={c.code}>
+                            {c.fr}
+                          </option>
+                        ))}
+                      </select>
+                    </CollapsibleSection>
+
+                    <div style={separatorStyle} />
+
+                    <CollapsibleSection title="Pays">
+                      <select value={form.nationality} onChange={(e) => set("nationality", e.target.value)} style={fieldStyle}>
+                        <option value="">—</option>
+                        {COUNTRIES.map((c) => (
+                          <option key={c.code} value={c.code}>
+                            {c.fr}
+                          </option>
+                        ))}
+                      </select>
+                    </CollapsibleSection>
+
+                    <div style={separatorStyle} />
+
+                    <CollapsibleSection title="Appellation">
+                      <p style={{ fontSize: "13px", color: "#8792A6", fontStyle: "italic" }}>Sera complété prochainement.</p>
+                    </CollapsibleSection>
+                  </>
+                )}
               </div>
             )}
 
