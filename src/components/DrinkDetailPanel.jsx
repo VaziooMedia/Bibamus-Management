@@ -553,6 +553,42 @@ export function DrinkDetailPanel({ drink, onClose, onSaved }) {
                 <label style={labelStyle}>Taux d'alcool (%)</label>
                 <input type="number" step="0.1" value={form.abv} onChange={(e) => set("abv", e.target.value)} placeholder="Ex. 0.0 pour sans alcool" style={{ ...fieldStyle, marginBottom: "14px" }} />
 
+                {isWine && (
+                  <>
+                    <CollapsibleSection title="Couleur" defaultOpen>
+                      <select value={form.wineColor} onChange={(e) => set("wineColor", e.target.value)} style={fieldStyle}>
+                        <option value="">—</option>
+                        {(WINE_COLORS_BY_SUBTYPE[form.beverageSubtype] || []).map((c) => (
+                          <option key={c.code} value={c.code}>
+                            {c.fr}
+                          </option>
+                        ))}
+                      </select>
+                    </CollapsibleSection>
+
+                    <div style={separatorStyle} />
+
+                    <CollapsibleSection title="Pays">
+                      <select value={form.nationality} onChange={(e) => set("nationality", e.target.value)} style={fieldStyle}>
+                        <option value="">—</option>
+                        {COUNTRIES.map((c) => (
+                          <option key={c.code} value={c.code}>
+                            {c.fr}
+                          </option>
+                        ))}
+                      </select>
+                    </CollapsibleSection>
+
+                    <div style={separatorStyle} />
+
+                    <CollapsibleSection title="Appellation">
+                      <p style={{ fontSize: "13px", color: "#8792A6", fontStyle: "italic" }}>Sera complété prochainement.</p>
+                    </CollapsibleSection>
+
+                    <div style={separatorStyle} />
+                  </>
+                )}
+
                 <label style={labelStyle}>Codes-barres</label>
                 <div style={{ display: "flex", flexDirection: "column", gap: "8px", marginBottom: "10px", marginTop: "6px" }}>
                   {form.barcodes.map((b, i) => (
@@ -598,42 +634,6 @@ export function DrinkDetailPanel({ drink, onClose, onSaved }) {
                 >
                   +
                 </button>
-
-                {isWine && (
-                  <>
-                    <div style={separatorStyle} />
-
-                    <CollapsibleSection title="Couleur" defaultOpen>
-                      <select value={form.wineColor} onChange={(e) => set("wineColor", e.target.value)} style={fieldStyle}>
-                        <option value="">—</option>
-                        {(WINE_COLORS_BY_SUBTYPE[form.beverageSubtype] || []).map((c) => (
-                          <option key={c.code} value={c.code}>
-                            {c.fr}
-                          </option>
-                        ))}
-                      </select>
-                    </CollapsibleSection>
-
-                    <div style={separatorStyle} />
-
-                    <CollapsibleSection title="Pays">
-                      <select value={form.nationality} onChange={(e) => set("nationality", e.target.value)} style={fieldStyle}>
-                        <option value="">—</option>
-                        {COUNTRIES.map((c) => (
-                          <option key={c.code} value={c.code}>
-                            {c.fr}
-                          </option>
-                        ))}
-                      </select>
-                    </CollapsibleSection>
-
-                    <div style={separatorStyle} />
-
-                    <CollapsibleSection title="Appellation">
-                      <p style={{ fontSize: "13px", color: "#8792A6", fontStyle: "italic" }}>Sera complété prochainement.</p>
-                    </CollapsibleSection>
-                  </>
-                )}
               </div>
             )}
 
