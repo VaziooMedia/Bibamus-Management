@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { WhatsappIcon } from "./icons.jsx";
+import { WhatsappIcon, FacebookIcon, InstagramIcon, TiktokIcon, SnapchatIcon, LinkedinIcon, YoutubeIcon } from "./icons.jsx";
 import { updateBrewery, deleteBrewery, createBrewery, uploadBreweryPhoto, uploadBreweryGalleryPhoto, loadPublicVenues, loadBreweriesDirectory, mergeEntities } from "../data/sharedDirectories.js";
 import { StatusSelector } from "./StatusSelector.jsx";
 import { AdminPhotoField } from "./AdminPhotoField.jsx";
@@ -68,6 +68,46 @@ const parseCoordinate = (raw) => {
 const fieldStyle = { padding: "10px 12px", borderRadius: "8px", border: "2px solid #28405C", fontSize: "14px", width: "100%" };
 const labelStyle = { fontSize: "12.5px", color: "#8792A6", marginBottom: "4px", display: "block", fontWeight: 600 };
 const separatorStyle = { borderBottom: "1px solid #28405C", margin: "20px 0" };
+
+function stripPrefix(value, prefix) {
+  if (!value) return "";
+  return value.startsWith(prefix) ? value.slice(prefix.length) : value;
+}
+
+function SocialLinkField({ icon, label, prefix, value, onChange }) {
+  const handle = stripPrefix(value, prefix);
+  return (
+    <div style={{ marginBottom: "16px" }}>
+      <label style={{ ...labelStyle, display: "flex", alignItems: "center", gap: "8px" }}>
+        {icon}
+        {label}
+      </label>
+      <div style={{ padding: "8px 12px", borderRadius: "8px 8px 0 0", border: "2px solid #28405C", borderBottom: "none", background: "#16273D", fontSize: "13px", color: "#8792A6", overflowWrap: "anywhere" }}>
+        {prefix}
+      </div>
+      <input
+        value={handle}
+        onChange={(e) => onChange(e.target.value.trim() ? prefix + e.target.value : "")}
+        placeholder="identifiant"
+        style={{ ...fieldStyle, borderRadius: "0 0 8px 8px" }}
+      />
+    </div>
+  );
+}
+
+// Champ sans préfixe fixe fiable (site internet, lien Google) — même en-tête icône + nom que
+// SocialLinkField, mais un champ de saisie libre en dessous, sans bandeau de préremplissage.
+function IconField({ icon, label, children }) {
+  return (
+    <div style={{ marginBottom: "16px" }}>
+      <label style={{ ...labelStyle, display: "flex", alignItems: "center", gap: "8px" }}>
+        {icon}
+        {label}
+      </label>
+      {children}
+    </div>
+  );
+}
 
 function TagPicker({ options, selected, onToggle }) {
   return (
@@ -432,24 +472,15 @@ export function BreweryDetailPanel({ brewery, onClose, onSaved }) {
           <label style={labelStyle}>Site internet</label>
           <input value={form.website} onChange={(e) => set("website", e.target.value)} style={{ ...fieldStyle, marginBottom: "12px" }} />
           <label style={labelStyle}>Lien Google</label>
-          <input value={form.googleUrl} onChange={(e) => set("googleUrl", e.target.value)} style={{ ...fieldStyle, marginBottom: "12px" }} />
-          <label style={{ ...labelStyle, display: "flex", alignItems: "center", gap: "8px" }}>
-            <WhatsappIcon size={18} />
-            Lien WhatsApp
-          </label>
-          <input value={form.whatsappUrl} onChange={(e) => set("whatsappUrl", e.target.value)} placeholder="https://wa.me/..." style={{ ...fieldStyle, marginBottom: "12px" }} />
-          <label style={labelStyle}>Lien Facebook</label>
-          <input value={form.facebookUrl} onChange={(e) => set("facebookUrl", e.target.value)} style={{ ...fieldStyle, marginBottom: "12px" }} />
-          <label style={labelStyle}>Lien Instagram</label>
-          <input value={form.instagramUrl} onChange={(e) => set("instagramUrl", e.target.value)} style={{ ...fieldStyle, marginBottom: "12px" }} />
-          <label style={labelStyle}>Lien TikTok</label>
-          <input value={form.tiktokUrl} onChange={(e) => set("tiktokUrl", e.target.value)} style={{ ...fieldStyle, marginBottom: "12px" }} />
-          <label style={labelStyle}>Lien Snapchat</label>
-          <input value={form.snapchatUrl} onChange={(e) => set("snapchatUrl", e.target.value)} style={{ ...fieldStyle, marginBottom: "12px" }} />
-          <label style={labelStyle}>Lien LinkedIn</label>
-          <input value={form.linkedinUrl} onChange={(e) => set("linkedinUrl", e.target.value)} style={{ ...fieldStyle, marginBottom: "12px" }} />
-          <label style={labelStyle}>Lien YouTube</label>
-          <input value={form.youtubeUrl} onChange={(e) => set("youtubeUrl", e.target.value)} style={fieldStyle} />
+          <input value={form.googleUrl} onChange={(e) => set("googleUrl", e.target.value)} style={{ ...fieldStyle, marginBottom: "16px" }} />
+
+          <SocialLinkField icon={<WhatsappIcon size={18} />} label="WhatsApp" prefix="https://wa.me/" value={form.whatsappUrl} onChange={(v) => set("whatsappUrl", v)} />
+          <SocialLinkField icon={<FacebookIcon size={18} />} label="Facebook" prefix="https://www.facebook.com/" value={form.facebookUrl} onChange={(v) => set("facebookUrl", v)} />
+          <SocialLinkField icon={<InstagramIcon size={18} />} label="Instagram" prefix="https://www.instagram.com/" value={form.instagramUrl} onChange={(v) => set("instagramUrl", v)} />
+          <SocialLinkField icon={<TiktokIcon size={18} />} label="TikTok" prefix="https://www.tiktok.com/@" value={form.tiktokUrl} onChange={(v) => set("tiktokUrl", v)} />
+          <SocialLinkField icon={<SnapchatIcon size={18} />} label="Snapchat" prefix="https://www.snapchat.com/add/" value={form.snapchatUrl} onChange={(v) => set("snapchatUrl", v)} />
+          <SocialLinkField icon={<LinkedinIcon size={18} />} label="LinkedIn" prefix="https://www.linkedin.com/company/" value={form.linkedinUrl} onChange={(v) => set("linkedinUrl", v)} />
+          <SocialLinkField icon={<YoutubeIcon size={18} />} label="YouTube" prefix="https://www.youtube.com/@" value={form.youtubeUrl} onChange={(v) => set("youtubeUrl", v)} />
         </CollapsibleSection>
 
         <CollapsibleSection title="Type de producteur">

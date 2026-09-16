@@ -625,6 +625,20 @@ export function LinkedinIcon({ size = 22 }) {
   );
 }
 
+// YouTube — tracé officiel (simple-icons), posé sur un rond rouge de marque.
+export function YoutubeIcon({ size = 22 }) {
+  return (
+    <span style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", width: size, height: size, borderRadius: "50%", background: "#FF0000", overflow: "hidden" }}>
+      <svg width={Math.round(size * 0.62)} height={Math.round(size * 0.62)} viewBox="0 0 24 24">
+        <path
+          fill="#fff"
+          d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"
+        />
+      </svg>
+    </span>
+  );
+}
+
 // Pinterest — le tracé encode le rond ET le "P" en un seul chemin plein.
 export function PinterestIcon({ size = 22 }) {
   return <img src={pinterestLogoUrl} alt="Pinterest" width={size} height={size} style={{ display: "block", borderRadius: "50%" }} />;
