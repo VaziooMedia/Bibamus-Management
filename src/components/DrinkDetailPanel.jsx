@@ -811,14 +811,16 @@ export function DrinkDetailPanel({ drink, onClose, onSaved }) {
             >
               <span style={{ ...sectionTitleStyle, marginTop: 0, marginBottom: 0 }}>
                 <span style={{ width: "4px", height: "14px", background: "#39FF66", borderRadius: "2px", display: "inline-block" }} />
-                Style(s)
+                {isWine ? "Caractéristiques" : "Style(s)"}
                 {form.styles.length > 0 && <span style={{ color: "#8792A6", fontWeight: 500 }}> ({form.styles.length} sélectionné{form.styles.length > 1 ? "s" : ""})</span>}
               </span>
               <span style={{ color: "#39FF66", fontSize: "12px" }}>{stylesSectionOpen ? "▼" : "▶"}</span>
             </button>
             {stylesSectionOpen && (
               <>
-                <p style={{ fontSize: "11.5px", color: "#8792A6", marginTop: "-6px", marginBottom: "10px" }}>Plusieurs styles peuvent se cumuler (ex. IPA + Hazy + Double IPA).</p>
+                <p style={{ fontSize: "11.5px", color: "#8792A6", marginTop: "-6px", marginBottom: "10px" }}>
+                  {isWine ? "Plusieurs caractéristiques peuvent se cumuler." : "Plusieurs styles peuvent se cumuler (ex. IPA + Hazy + Double IPA)."}
+                </p>
                 <StyleTagAccordion groups={isBeerOrCider ? BEER_CIDER_STYLE_GROUPS : WINE_STYLE_GROUPS} selected={form.styles} onToggle={toggleStyle} />
               </>
             )}

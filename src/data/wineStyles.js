@@ -1,6 +1,24 @@
 // Groupes de styles spécifiques aux vins — vide pour l'instant, à compléter plus tard
 // (même principe que BEER_CIDER_STYLE_GROUPS dans beerCiderStyles.js).
-export const WINE_STYLE_GROUPS = [];
+export const WINE_STYLE_GROUPS = [
+  {
+    title: "Style",
+    tags: [
+      { code: "demi_sec", fr: "Demi-sec" },
+      { code: "doux", fr: "Doux" },
+      { code: "liquoreux", fr: "Liquoreux" },
+      { code: "moelleux", fr: "Moelleux" },
+      { code: "primeur_nouveau", fr: "Primeur / Nouveau" },
+      { code: "sec", fr: "Sec" },
+      { code: "vendanges_tardives", fr: "Vendanges tardives" },
+      { code: "vin_de_glace", fr: "Vin de glace" },
+      { code: "vin_de_paille", fr: "Vin de paille" },
+      { code: "vin_doux_naturel", fr: "Vin doux naturel" },
+      { code: "vin_fortifie", fr: "Vin fortifié" },
+      { code: "vin_oxydatif", fr: "Vin oxydatif" },
+    ],
+  },
+];
 
 // Couleurs disponibles selon la sous-catégorie — même 4 choix, mais un ordre d'affichage
 // différent selon qu'il s'agit d'un vin tranquille ou d'un vin effervescent.
