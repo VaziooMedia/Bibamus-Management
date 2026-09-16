@@ -533,3 +533,9 @@ export const WINE_APPELLATIONS_BY_COUNTRY = {
     { code: "waitaki_valley", fr: "Waitaki Valley" },
   ],
 };
+
+// Appellations disponibles selon le pays, spécifiques au vin effervescent — vide pour
+// l'instant, complété pays par pays. Structure séparée de WINE_APPELLATIONS_BY_COUNTRY
+// car les appellations effervescentes d'un pays diffèrent de ses appellations tranquilles
+// (ex. Champagne n'est pas une appellation de vin tranquille français).
+export const WINE_EFFERVESCENT_APPELLATIONS_BY_COUNTRY = {};

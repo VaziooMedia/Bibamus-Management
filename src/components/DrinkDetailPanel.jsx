@@ -33,7 +33,7 @@ import {
   APPLE_TYPES,
   VERIFICATION_STATUSES,
 } from "../data/beerCiderStyles.js";
-import { WINE_STYLE_GROUPS, WINE_COLORS_BY_SUBTYPE, WINE_APPELLATIONS_BY_COUNTRY } from "../data/wineStyles.js";
+import { WINE_STYLE_GROUPS, WINE_COLORS_BY_SUBTYPE, WINE_APPELLATIONS_BY_COUNTRY, WINE_EFFERVESCENT_APPELLATIONS_BY_COUNTRY } from "../data/wineStyles.js";
 
 export const DRINK_TYPES = [
   { code: "bieres_cidres", fr: "Bières & Cidres" },
@@ -605,30 +605,43 @@ export function DrinkDetailPanel({ drink, onClose, onSaved }) {
                     <div style={separatorStyle} />
 
                     <CollapsibleSection title="Appellation" defaultOpen>
-                      {form.beverageSubtype !== "vin" ? (
-                        <p style={{ fontSize: "13px", color: "#8792A6", fontStyle: "italic" }}>Sera complété prochainement.</p>
-                      ) : !form.nationality ? (
-                        <p style={{ fontSize: "13px", color: "#8792A6", fontStyle: "italic" }}>Choisissez d'abord un pays.</p>
-                      ) : !WINE_APPELLATIONS_BY_COUNTRY[form.nationality] ? (
-                        <>
-                          <p style={{ fontSize: "11.5px", color: "#8792A6", marginTop: "-6px", marginBottom: "10px" }}>
-                            Pas de liste pour ce pays - Texte libre.
-                          </p>
-                          <input
+                      {(() => {
+                        const appellationsSource =
+                          form.beverageSubtype === "vin"
+                            ? WINE_APPELLATIONS_BY_COUNTRY
+                            : form.beverageSubtype === "vin_effervescent"
+                            ? WINE_EFFERVESCENT_APPELLATIONS_BY_COUNTRY
+                            : null;
+                        if (!appellationsSource) {
+                          return <p style={{ fontSize: "13px", color: "#8792A6", fontStyle: "italic" }}>Sera complété prochainement.</p>;
+                        }
+                        if (!form.nationality) {
+                          return <p style={{ fontSize: "13px", color: "#8792A6", fontStyle: "italic" }}>Choisissez d'abord un pays.</p>;
+                        }
+                        if (!appellationsSource[form.nationality]) {
+                          return (
+                            <>
+                              <p style={{ fontSize: "11.5px", color: "#8792A6", marginTop: "-6px", marginBottom: "10px" }}>
+                                Pas de liste pour ce pays - Texte libre.
+                              </p>
+                              <input
+                                value={form.appellation}
+                                onChange={(e) => set("appellation", e.target.value)}
+                                placeholder="Nom de l'appellation"
+                                style={fieldStyle}
+                              />
+                            </>
+                          );
+                        }
+                        return (
+                          <SearchableSelect
+                            options={appellationsSource[form.nationality].map((a) => ({ id: a.code, name: a.fr }))}
                             value={form.appellation}
-                            onChange={(e) => set("appellation", e.target.value)}
-                            placeholder="Nom de l'appellation"
-                            style={fieldStyle}
+                            onChange={(id) => set("appellation", id || "")}
+                            placeholder="Chercher une appellation..."
                           />
-                        </>
-                      ) : (
-                        <SearchableSelect
-                          options={WINE_APPELLATIONS_BY_COUNTRY[form.nationality].map((a) => ({ id: a.code, name: a.fr }))}
-                          value={form.appellation}
-                          onChange={(id) => set("appellation", id || "")}
-                          placeholder="Chercher une appellation..."
-                        />
-                      )}
+                        );
+                      })()}
                     </CollapsibleSection>
 
                     <div style={separatorStyle} />
