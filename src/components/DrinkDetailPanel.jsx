@@ -519,22 +519,24 @@ export function DrinkDetailPanel({ drink, onClose, onSaved }) {
                 { key: "quick", label: "Ajout rapide" },
                 { key: "niveau1", label: "Niveau 1" },
                 { key: "niveau2", label: "Niveau 2 (expert)" },
-                { key: "niveau3", label: "Niveau 3 (expert)" },
                 { key: "gallery", label: "Médias" },
+                { key: "stats", label: "Statistiques", disabled: isNew },
               ].map((tab) => (
                 <button
                   key={tab.key}
-                  onClick={() => setActiveTab(tab.key)}
+                  onClick={() => !tab.disabled && setActiveTab(tab.key)}
+                  disabled={tab.disabled}
+                  title={tab.disabled ? "Disponible une fois le produit créé" : undefined}
                   style={{
                     background: "none",
                     border: "none",
                     borderBottom: activeTab === tab.key ? "2px solid #39FF66" : "2px solid transparent",
                     marginBottom: "-2px",
                     padding: "8px 10px",
-                    color: activeTab === tab.key ? "#39FF66" : "#8792A6",
+                    color: tab.disabled ? "#4A5A70" : activeTab === tab.key ? "#39FF66" : "#8792A6",
                     fontWeight: activeTab === tab.key ? 700 : 500,
                     fontSize: "12.5px",
-                    cursor: "pointer",
+                    cursor: tab.disabled ? "not-allowed" : "pointer",
                   }}
                 >
                   {tab.label}
@@ -1104,11 +1106,7 @@ export function DrinkDetailPanel({ drink, onClose, onSaved }) {
                 </p>
                 <VariantManager drinkId={drink?.id || null} />
                 </CollapsibleSection>
-              </>
-            )}
 
-            {activeTab === "niveau3" && (
-              <>
                 <div style={{ background: "#2A1F0D", border: "2px solid #FF9500", borderRadius: "8px", padding: "12px", marginBottom: "16px", fontSize: "12px", color: "#F2F2E8" }}>
                   🔒 Réservé aux producteurs "Business" (accord B2B) et aux administrateurs. L'accès depuis cette plateforme n'est pas encore restreint techniquement — un vrai verrouillage par compte producteur reste à construire.
                 </div>
@@ -1294,8 +1292,8 @@ export function DrinkDetailPanel({ drink, onClose, onSaved }) {
                       ))}
                     </select>
                     </CollapsibleSection>
-                  </>
-                )}
+              </>
+            )}
 
             {activeTab === "gallery" && (
               <div>
@@ -1344,6 +1342,8 @@ export function DrinkDetailPanel({ drink, onClose, onSaved }) {
                 <GalleryManager photos={awardBadges} onUpload={handleUploadAwardBadge} onRemove={removeAwardBadge} uploading={uploadingAward} />
               </div>
             )}
+
+            {activeTab === "stats" && !isNew && <p style={{ fontSize: "13px", color: "#8792A6", fontStyle: "italic" }}>Statistiques à venir.</p>}
           </>
         ) : (
           <p style={{ background: "#16273D", borderRadius: "8px", padding: "12px", fontSize: "12.5px", color: "#8792A6", marginBottom: "14px" }}>
