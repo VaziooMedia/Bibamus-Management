@@ -434,7 +434,7 @@ export function UserDetailPanel({ user, onClose, onSaved }) {
             >
               <option value="">—</option>
               {COUNTRIES.map((c) => (
-                <option key={c.code} value={c.code}>
+                <option key={c.code} value={c.fr}>
                   {c.fr}
                 </option>
               ))}
