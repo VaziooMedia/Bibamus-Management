@@ -33,6 +33,7 @@ import {
   APPLE_TYPES,
   VERIFICATION_STATUSES,
 } from "../data/beerCiderStyles.js";
+import { WINE_STYLE_GROUPS } from "../data/wineStyles.js";
 
 export const DRINK_TYPES = [
   { code: "bieres_cidres", fr: "Bières & Cidres" },
@@ -512,7 +513,7 @@ export function DrinkDetailPanel({ drink, onClose, onSaved }) {
         <label style={labelStyle}>Nom du produit *</label>
         <input value={form.name} onChange={(e) => set("name", e.target.value)} style={{ ...fieldStyle, marginBottom: "14px" }} />
 
-        {isBeerOrCider ? (
+        {isBeerOrCider || isWine ? (
           <>
             <div style={{ display: "flex", gap: "4px", marginBottom: "18px", borderBottom: "2px solid #28405C", overflowX: "auto" }}>
               {[
@@ -720,7 +721,7 @@ export function DrinkDetailPanel({ drink, onClose, onSaved }) {
             {stylesSectionOpen && (
               <>
                 <p style={{ fontSize: "11.5px", color: "#8792A6", marginTop: "-6px", marginBottom: "10px" }}>Plusieurs styles peuvent se cumuler (ex. IPA + Hazy + Double IPA).</p>
-                <StyleTagAccordion groups={BEER_CIDER_STYLE_GROUPS} selected={form.styles} onToggle={toggleStyle} />
+                <StyleTagAccordion groups={isBeerOrCider ? BEER_CIDER_STYLE_GROUPS : WINE_STYLE_GROUPS} selected={form.styles} onToggle={toggleStyle} />
               </>
             )}
               </>
@@ -728,6 +729,8 @@ export function DrinkDetailPanel({ drink, onClose, onSaved }) {
 
             {activeTab === "niveau2" && (
               <>
+                {isBeerOrCider ? (
+                  <>
                 {isBeer ? (
                   <>
                     <CollapsibleSection title="Composition">
@@ -1313,6 +1316,10 @@ export function DrinkDetailPanel({ drink, onClose, onSaved }) {
                       ))}
                     </select>
                     </CollapsibleSection>
+                  </>
+                ) : (
+                  <p style={{ fontSize: "13px", color: "#8792A6", fontStyle: "italic" }}>Cette section sera complétée prochainement.</p>
+                )}
               </>
             )}
 
