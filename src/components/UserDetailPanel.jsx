@@ -9,6 +9,15 @@ const labelStyle = { fontSize: "12.5px", color: "#8792A6", marginBottom: "4px", 
 const separatorStyle = { borderBottom: "1px solid #28405C", margin: "16px 0" };
 const errorBorder = { borderColor: "#FF3B4E" };
 
+const GENDER_OPTIONS = [
+  { value: "undisclosed", label: "Je préfère ne pas préciser" },
+  { value: "male", label: "Homme" },
+  { value: "female", label: "Femme" },
+  { value: "non_binary", label: "Non-binaire" },
+  { value: "gender_fluid", label: "Gender fluid" },
+  { value: "custom", label: "Je préfère me définir autrement" },
+];
+
 function stripPrefix(value, prefix) {
   if (!value) return "";
   return value.startsWith(prefix) ? value.slice(prefix.length) : value;
@@ -145,6 +154,9 @@ export function UserDetailPanel({ user, onClose, onSaved }) {
   const [firstName, setFirstName] = useState(user?.name || "");
   const [lastName, setLastName] = useState(user?.last_name || "");
   const [nickname, setNickname] = useState(user?.nickname || "");
+  const [gender, setGender] = useState(user?.gender || "undisclosed");
+  const [genderCustom, setGenderCustom] = useState(user?.gender_custom || "");
+  const [phone, setPhone] = useState(user?.phone || "");
   const [birthDate, setBirthDate] = useState(user?.birth_date || "");
   const [country, setCountry] = useState(user?.country || "");
   const [city, setCity] = useState(user?.city || "");
@@ -241,10 +253,13 @@ export function UserDetailPanel({ user, onClose, onSaved }) {
       firstName,
       lastName,
       nickname,
+      gender,
+      genderCustom: gender === "custom" ? genderCustom : "",
       birthDate,
       country,
       city,
       locality,
+      phone,
       whatsappUrl,
       facebookUrl,
       instagramUrl,
@@ -335,6 +350,24 @@ export function UserDetailPanel({ user, onClose, onSaved }) {
             <label style={labelStyle}>Surnom</label>
             <input value={nickname} onChange={(e) => setNickname(e.target.value)} style={{ ...fieldStyle, marginBottom: "12px" }} />
 
+            <label style={labelStyle}>Genre</label>
+            <select value={gender} onChange={(e) => setGender(e.target.value)} style={{ ...fieldStyle, marginBottom: "8px" }}>
+              {GENDER_OPTIONS.map((o) => (
+                <option key={o.value} value={o.value}>
+                  {o.label}
+                </option>
+              ))}
+            </select>
+            {gender === "custom" && (
+              <input
+                value={genderCustom}
+                onChange={(e) => setGenderCustom(e.target.value)}
+                placeholder="Comment la personne se définit..."
+                style={{ ...fieldStyle, marginBottom: "12px" }}
+              />
+            )}
+            {gender !== "custom" && <div style={{ marginBottom: "4px" }} />}
+
             <RequiredLabel required={isNew}>Email</RequiredLabel>
             {isNew ? (
               <input
@@ -346,6 +379,9 @@ export function UserDetailPanel({ user, onClose, onSaved }) {
             ) : (
               <p style={{ ...fieldStyle, marginBottom: "12px", color: "#8792A6" }}>{email}</p>
             )}
+
+            <label style={labelStyle}>Téléphone</label>
+            <input value={phone} onChange={(e) => setPhone(e.target.value)} style={{ ...fieldStyle, marginBottom: "12px" }} />
 
             {isNew && (
               <>
