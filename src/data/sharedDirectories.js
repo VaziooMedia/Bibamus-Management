@@ -1716,6 +1716,8 @@ function rowToBrand(row) {
     alternateName: row.alternate_name,
     slogan: row.slogan,
     logoUrl: row.logo_url,
+    galleryPhotos: row.gallery_photos || [],
+    videoLinks: row.video_links || [],
     foundedYear: row.founded_year,
     originCountry: row.origin_country,
     originCity: row.origin_city,
@@ -1747,6 +1749,8 @@ function brandToRow(b, partial = false) {
     alternate_name: b.alternateName,
     slogan: b.slogan,
     logo_url: b.logoUrl,
+    gallery_photos: b.galleryPhotos,
+    video_links: b.videoLinks,
     founded_year: b.foundedYear,
     origin_country: b.originCountry,
     origin_city: b.originCity,
@@ -1787,6 +1791,24 @@ export async function uploadBrandLogo(brandId, file) {
   }
   if (data?.error) {
     console.error("uploadBrandLogo:", data.error);
+    return null;
+  }
+  return data.url;
+}
+
+export async function uploadBrandGalleryPhoto(brandId, file) {
+  const blob = await resizeImageTo(file, 1000, 1000);
+  const imageBase64 = await blobToBase64(blob);
+  const path = `${brandId}-gallery-${Date.now()}-${Math.floor(Math.random() * 10000)}.jpg`;
+  const { data, error } = await supabase.functions.invoke("moderate-and-upload-photo", {
+    body: { bucket: "brand-logos", path, imageBase64, contentType: "image/jpeg", entityType: "brand", entityId: brandId, kind: "gallery" },
+  });
+  if (error) {
+    console.error("uploadBrandGalleryPhoto:", error);
+    return null;
+  }
+  if (data?.error) {
+    console.error("uploadBrandGalleryPhoto:", data.error);
     return null;
   }
   return data.url;

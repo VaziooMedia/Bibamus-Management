@@ -1,9 +1,12 @@
 import React, { useState, useEffect } from "react";
-import { updateBrand, deleteBrand, createBrand, uploadBrandLogo, loadBreweriesDirectory, loadBrandsDirectory, mergeEntities } from "../data/sharedDirectories.js";
+import { updateBrand, deleteBrand, createBrand, uploadBrandLogo, uploadBrandGalleryPhoto, loadBreweriesDirectory, loadBrandsDirectory, mergeEntities } from "../data/sharedDirectories.js";
 import { StatusSelector } from "./StatusSelector.jsx";
 import { AdminPhotoField } from "./AdminPhotoField.jsx";
+import { GalleryManager } from "./GalleryManager.jsx";
 import { SearchableSelect } from "./SearchableSelect.jsx";
 import { CertificationLevelSelector } from "./CertificationLevelSelector.jsx";
+import { CollapsibleSection } from "./CollapsibleSection.jsx";
+import { FacebookIcon, InstagramIcon, TiktokIcon, SnapchatIcon, YoutubeIcon } from "./icons.jsx";
 import { COUNTRIES, BRAND_CLASSIFICATIONS, BRAND_TYPES } from "../constants.js";
 
 const SMALL_WORDS = new Set(["de", "du", "des", "la", "le", "les", "à", "et", "the", "a", "au", "aux"]);
@@ -49,14 +52,30 @@ const capitalizeWords = (s) => {
 
 const fieldStyle = { padding: "10px 12px", borderRadius: "8px", border: "2px solid #28405C", fontSize: "14px", width: "100%" };
 const labelStyle = { fontSize: "12.5px", color: "#8792A6", marginBottom: "4px", display: "block", fontWeight: 600 };
-const sectionTitleStyle = { fontSize: "13px", fontWeight: 700, color: "#F2F2E8", marginTop: "6px", marginBottom: "12px", display: "flex", alignItems: "center", gap: "8px" };
 const separatorStyle = { borderBottom: "1px solid #28405C", margin: "20px 0" };
 
-function SectionTitle({ children }) {
+function stripPrefix(value, prefix) {
+  if (!value) return "";
+  return value.startsWith(prefix) ? value.slice(prefix.length) : value;
+}
+
+function SocialLinkField({ icon, label, prefix, value, onChange }) {
+  const handle = stripPrefix(value, prefix);
   return (
-    <div style={sectionTitleStyle}>
-      <span style={{ width: "4px", height: "14px", background: "#39FF66", borderRadius: "2px", display: "inline-block" }} />
-      {children}
+    <div style={{ marginBottom: "16px" }}>
+      <label style={{ ...labelStyle, display: "flex", alignItems: "center", gap: "8px" }}>
+        {icon}
+        {label}
+      </label>
+      <div style={{ padding: "8px 12px", borderRadius: "8px 8px 0 0", border: "2px solid #28405C", borderBottom: "none", background: "#16273D", fontSize: "13px", color: "#8792A6", overflowWrap: "anywhere" }}>
+        {prefix}
+      </div>
+      <input
+        value={handle}
+        onChange={(e) => onChange(e.target.value.trim() ? prefix + e.target.value : "")}
+        placeholder="identifiant"
+        style={{ ...fieldStyle, borderRadius: "0 0 8px 8px" }}
+      />
     </div>
   );
 }
@@ -110,9 +129,13 @@ export function BrandDetailPanel({ brand, onClose, onSaved }) {
     youtubeUrl: brand?.youtubeUrl || "",
     producerId: brand?.producerId || null,
     brandOwner: brand?.brandOwner || "",
+    videoLinks: brand?.videoLinks && brand.videoLinks.length > 0 ? brand.videoLinks : [""],
   });
   const [logoUrl, setLogoUrl] = useState(brand?.logoUrl || null);
+  const [galleryPhotos, setGalleryPhotos] = useState(brand?.galleryPhotos || []);
   const [uploadingLogo, setUploadingLogo] = useState(false);
+  const [uploadingGallery, setUploadingGallery] = useState(false);
+  const [activeTab, setActiveTab] = useState("informations");
   const [status, setStatus] = useState(brand?.status || "to_process");
   const [certificationLevel, setCertificationLevel] = useState(brand?.certificationLevel || "utilisateur");
   const [duplicateOfId, setDuplicateOfId] = useState(brand?.duplicateOfId || null);
@@ -154,7 +177,9 @@ export function BrandDetailPanel({ brand, onClose, onSaved }) {
     youtubeUrl: form.youtubeUrl.trim(),
     producerId: form.producerId,
     brandOwner: form.brandOwner.trim(),
+    videoLinks: form.videoLinks.map((v) => v.trim()).filter(Boolean),
     logoUrl,
+    galleryPhotos,
     status,
     certificationLevel,
     duplicateOfId: status === "duplicate" ? duplicateOfId : null,
@@ -206,91 +231,34 @@ export function BrandDetailPanel({ brand, onClose, onSaved }) {
     setUploadingLogo(false);
   };
 
+  const handleUploadGalleryPhoto = async (file) => {
+    setUploadingGallery(true);
+    const tempId = brand?.id || `pending-${Date.now()}`;
+    const url = await uploadBrandGalleryPhoto(tempId, file);
+    if (url) setGalleryPhotos((prev) => [...prev, url]);
+    setUploadingGallery(false);
+  };
+  const removeGalleryPhoto = (index) => setGalleryPhotos((prev) => prev.filter((_, i) => i !== index));
+
+  const updateVideoLink = (index, value) => setForm((f) => ({ ...f, videoLinks: f.videoLinks.map((v, i) => (i === index ? value : v)) }));
+  const addVideoLink = () => setForm((f) => ({ ...f, videoLinks: [...f.videoLinks, ""] }));
+  const removeVideoLink = (index) => setForm((f) => ({ ...f, videoLinks: f.videoLinks.length > 1 ? f.videoLinks.filter((_, i) => i !== index) : [""] }));
+
   return (
     <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.5)", display: "flex", justifyContent: "flex-end", zIndex: 100 }}>
       <div style={{ width: "500px", background: "#0D1B2A", height: "100%", overflowY: "auto", padding: "28px", borderLeft: "2px solid #28405C" }}>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "20px" }}>
-          <h2 style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "22px", margin: 0 }}>{isNew ? "Ajouter une marque" : "Vérifier la marque"}</h2>
+          <h2 style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "22px", margin: 0, display: "flex", alignItems: "center", gap: "8px" }}>
+            <span style={{ width: "4px", height: "18px", background: "#39FF66", borderRadius: "2px", flexShrink: 0 }} />
+            {isNew ? "Ajouter une marque" : "Vérifier la marque"}
+          </h2>
           <button onClick={onClose} style={{ background: "none", border: "none", color: "#8792A6", fontSize: "20px", cursor: "pointer" }}>
             ✕
           </button>
         </div>
 
-        <AdminPhotoField label="Logo (400×400)" photoUrl={logoUrl} onUpload={handleUploadLogo} onDelete={() => setLogoUrl(null)} uploading={uploadingLogo} />
-
-        <label style={labelStyle}>Nom *</label>
-        <input value={form.name} onChange={(e) => set("name", e.target.value)} onBlur={capitalizeOnBlur("name")} style={{ ...fieldStyle, marginBottom: "14px" }} />
-
-        <label style={labelStyle}>Alias / traductions (séparés par une virgule)</label>
-        <input
-          value={form.aliasesText}
-          onChange={(e) => set("aliasesText", e.target.value)}
-          placeholder="Ex. anciens noms, traductions dans une autre langue..."
-          style={{ ...fieldStyle, marginBottom: "14px" }}
-        />
-
-        <label style={labelStyle}>Nom alternatif / Ancien nom</label>
-        <input value={form.alternateName} onChange={(e) => set("alternateName", e.target.value)} style={{ ...fieldStyle, marginBottom: "14px" }} />
-
-        <label style={labelStyle}>Slogan</label>
-        <input value={form.slogan} onChange={(e) => set("slogan", e.target.value)} onBlur={capitalizeOnBlur("slogan")} style={fieldStyle} />
-
-        <div style={separatorStyle} />
-        <SectionTitle>Identité</SectionTitle>
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px", marginBottom: "12px" }}>
-          <div>
-            <label style={labelStyle}>Année de création</label>
-            <input type="number" value={form.foundedYear} onChange={(e) => set("foundedYear", e.target.value)} placeholder="Ex. 1985" style={fieldStyle} />
-          </div>
-          <div>
-            <label style={labelStyle}>Pays d'origine</label>
-            <select value={form.originCountry} onChange={(e) => set("originCountry", e.target.value)} style={fieldStyle}>
-              {COUNTRIES.map((c) => (
-                <option key={c.code} value={c.code}>
-                  {c.fr}
-                </option>
-              ))}
-            </select>
-          </div>
-        </div>
-        <label style={labelStyle}>Ville / Région d'origine</label>
-        <input value={form.originCity} onChange={(e) => set("originCity", e.target.value)} onBlur={capitalizeOnBlur("originCity")} style={fieldStyle} />
-
-        <div style={separatorStyle} />
-        <SectionTitle>Classification (plusieurs choix possibles)</SectionTitle>
-        <TagPicker options={BRAND_CLASSIFICATIONS} selected={form.classifications} onToggle={toggleClassification} />
-
-        <div style={separatorStyle} />
-        <SectionTitle>Type de marque</SectionTitle>
-        <TagPicker options={BRAND_TYPES} selected={form.brandTypes} onToggle={toggleType} />
-
-        <div style={separatorStyle} />
-        <SectionTitle>Coordonnées</SectionTitle>
-        <label style={labelStyle}>Site internet</label>
-        <input value={form.website} onChange={(e) => set("website", e.target.value)} style={{ ...fieldStyle, marginBottom: "12px" }} />
-        <label style={labelStyle}>Lien Facebook</label>
-        <input value={form.facebookUrl} onChange={(e) => set("facebookUrl", e.target.value)} style={{ ...fieldStyle, marginBottom: "12px" }} />
-        <label style={labelStyle}>Lien Instagram</label>
-        <input value={form.instagramUrl} onChange={(e) => set("instagramUrl", e.target.value)} style={{ ...fieldStyle, marginBottom: "12px" }} />
-        <label style={labelStyle}>Lien TikTok</label>
-        <input value={form.tiktokUrl} onChange={(e) => set("tiktokUrl", e.target.value)} style={{ ...fieldStyle, marginBottom: "12px" }} />
-        <label style={labelStyle}>Lien Snapchat</label>
-        <input value={form.snapchatUrl} onChange={(e) => set("snapchatUrl", e.target.value)} style={{ ...fieldStyle, marginBottom: "12px" }} />
-        <label style={labelStyle}>Lien YouTube</label>
-        <input value={form.youtubeUrl} onChange={(e) => set("youtubeUrl", e.target.value)} style={fieldStyle} />
-
-        <div style={separatorStyle} />
-        <SectionTitle>Producteur / Propriétaire</SectionTitle>
-        <label style={labelStyle}>Producteur actuel</label>
-        <div style={{ marginBottom: "12px" }}>
-          <SearchableSelect options={producerOptions} value={form.producerId} onChange={(id) => set("producerId", id)} placeholder="Chercher un producteur..." />
-        </div>
-        <label style={labelStyle}>Propriétaire de la marque</label>
-        <input value={form.brandOwner} onChange={(e) => set("brandOwner", e.target.value)} onBlur={capitalizeOnBlur("brandOwner")} style={fieldStyle} />
-
-        <div style={separatorStyle} />
-        <label style={labelStyle}>Statut</label>
-        <div style={{ marginBottom: "14px" }}>
+        <label style={labelStyle}>Statut de vérification</label>
+        <div style={{ marginBottom: "14px", maxWidth: "220px" }}>
           <StatusSelector value={status} onChange={setStatus} />
         </div>
 
@@ -305,6 +273,150 @@ export function BrandDetailPanel({ brand, onClose, onSaved }) {
         <div style={{ marginBottom: "20px" }}>
           <CertificationLevelSelector value={certificationLevel} onChange={setCertificationLevel} />
         </div>
+
+        <div style={separatorStyle} />
+
+        <div style={{ display: "flex", gap: "6px", marginBottom: "20px", borderBottom: "2px solid #28405C" }}>
+          {[
+            { key: "informations", label: "Informations" },
+            { key: "medias", label: "Médias" },
+            { key: "stats", label: "Statistiques", disabled: isNew },
+          ].map((tab) => (
+            <button
+              key={tab.key}
+              onClick={() => !tab.disabled && setActiveTab(tab.key)}
+              disabled={tab.disabled}
+              title={tab.disabled ? "Disponible une fois la marque créée" : undefined}
+              style={{
+                background: "none",
+                border: "none",
+                borderBottom: `2px solid ${activeTab === tab.key ? "#39FF66" : "transparent"}`,
+                marginBottom: "-2px",
+                padding: "8px 12px",
+                fontSize: "13px",
+                fontWeight: 700,
+                color: tab.disabled ? "#4A5A70" : activeTab === tab.key ? "#39FF66" : "#8792A6",
+                cursor: tab.disabled ? "not-allowed" : "pointer",
+              }}
+            >
+              {tab.label}
+            </button>
+          ))}
+        </div>
+
+        {activeTab === "informations" && (
+          <>
+            <CollapsibleSection title="Dénomination" defaultOpen>
+              <label style={labelStyle}>Nom *</label>
+              <input value={form.name} onChange={(e) => set("name", e.target.value)} onBlur={capitalizeOnBlur("name")} style={{ ...fieldStyle, marginBottom: "14px" }} />
+
+              <label style={labelStyle}>Alias / traductions (séparés par une virgule)</label>
+              <input
+                value={form.aliasesText}
+                onChange={(e) => set("aliasesText", e.target.value)}
+                placeholder="Ex. anciens noms, traductions dans une autre langue..."
+                style={{ ...fieldStyle, marginBottom: "14px" }}
+              />
+
+              <label style={labelStyle}>Nom alternatif / Ancien nom</label>
+              <input value={form.alternateName} onChange={(e) => set("alternateName", e.target.value)} style={{ ...fieldStyle, marginBottom: "14px" }} />
+
+              <label style={labelStyle}>Slogan</label>
+              <input value={form.slogan} onChange={(e) => set("slogan", e.target.value)} onBlur={capitalizeOnBlur("slogan")} style={fieldStyle} />
+            </CollapsibleSection>
+
+            <CollapsibleSection title="Identité">
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px", marginBottom: "12px" }}>
+                <div>
+                  <label style={labelStyle}>Année de création</label>
+                  <input type="number" value={form.foundedYear} onChange={(e) => set("foundedYear", e.target.value)} placeholder="Ex. 1985" style={fieldStyle} />
+                </div>
+                <div>
+                  <label style={labelStyle}>Pays d'origine</label>
+                  <select value={form.originCountry} onChange={(e) => set("originCountry", e.target.value)} style={fieldStyle}>
+                    {COUNTRIES.map((c) => (
+                      <option key={c.code} value={c.code}>
+                        {c.fr}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+              <label style={labelStyle}>Ville / Région d'origine</label>
+              <input value={form.originCity} onChange={(e) => set("originCity", e.target.value)} onBlur={capitalizeOnBlur("originCity")} style={fieldStyle} />
+            </CollapsibleSection>
+
+            <CollapsibleSection title="Classification">
+              <p style={{ fontSize: "11.5px", color: "#8792A6", marginTop: "-6px", marginBottom: "10px" }}>Plusieurs choix possibles.</p>
+              <TagPicker options={BRAND_CLASSIFICATIONS} selected={form.classifications} onToggle={toggleClassification} />
+            </CollapsibleSection>
+
+            <CollapsibleSection title="Type de marque">
+              <TagPicker options={BRAND_TYPES} selected={form.brandTypes} onToggle={toggleType} />
+            </CollapsibleSection>
+
+            <CollapsibleSection title="Coordonnées">
+              <label style={labelStyle}>Site internet</label>
+              <input value={form.website} onChange={(e) => set("website", e.target.value)} style={{ ...fieldStyle, marginBottom: "16px" }} />
+
+              <SocialLinkField icon={<FacebookIcon size={18} />} label="Facebook" prefix="https://www.facebook.com/" value={form.facebookUrl} onChange={(v) => set("facebookUrl", v)} />
+              <SocialLinkField icon={<InstagramIcon size={18} />} label="Instagram" prefix="https://www.instagram.com/" value={form.instagramUrl} onChange={(v) => set("instagramUrl", v)} />
+              <SocialLinkField icon={<TiktokIcon size={18} />} label="TikTok" prefix="https://www.tiktok.com/@" value={form.tiktokUrl} onChange={(v) => set("tiktokUrl", v)} />
+              <SocialLinkField icon={<SnapchatIcon size={18} />} label="Snapchat" prefix="https://www.snapchat.com/add/" value={form.snapchatUrl} onChange={(v) => set("snapchatUrl", v)} />
+              <SocialLinkField icon={<YoutubeIcon size={18} />} label="YouTube" prefix="https://www.youtube.com/@" value={form.youtubeUrl} onChange={(v) => set("youtubeUrl", v)} />
+            </CollapsibleSection>
+
+            <CollapsibleSection title="Producteur / Propriétaire">
+              <label style={labelStyle}>Producteur actuel</label>
+              <div style={{ marginBottom: "12px" }}>
+                <SearchableSelect options={producerOptions} value={form.producerId} onChange={(id) => set("producerId", id)} placeholder="Chercher un producteur..." />
+              </div>
+              <label style={labelStyle}>Propriétaire de la marque</label>
+              <input value={form.brandOwner} onChange={(e) => set("brandOwner", e.target.value)} onBlur={capitalizeOnBlur("brandOwner")} style={fieldStyle} />
+            </CollapsibleSection>
+          </>
+        )}
+
+        {activeTab === "medias" && (
+          <>
+            <AdminPhotoField label="Logo (400×400)" photoUrl={logoUrl} onUpload={handleUploadLogo} onDelete={() => setLogoUrl(null)} uploading={uploadingLogo} />
+
+            <div style={separatorStyle} />
+            <CollapsibleSection title="Photos supplémentaires" defaultOpen>
+              <p style={{ fontSize: "11.5px", color: "#8792A6", marginTop: "-6px", marginBottom: "10px" }}>
+                Formats acceptés : JPEG, PNG, WebP (et la plupart des formats image courants) — recadrées et converties automatiquement en 1000×1000px.
+              </p>
+              <GalleryManager photos={galleryPhotos} onUpload={handleUploadGalleryPhoto} onRemove={removeGalleryPhoto} uploading={uploadingGallery} />
+            </CollapsibleSection>
+
+            <div style={separatorStyle} />
+            <CollapsibleSection title="Vidéos" defaultOpen>
+              <p style={{ fontSize: "11.5px", color: "#8792A6", marginTop: "-6px", marginBottom: "10px" }}>Un ou plusieurs liens YouTube (publicité, présentation...).</p>
+              <div style={{ display: "flex", flexDirection: "column", gap: "8px", marginBottom: "10px" }}>
+                {form.videoLinks.map((link, i) => (
+                  <div key={i} style={{ display: "flex", gap: "8px" }}>
+                    <input value={link} onChange={(e) => updateVideoLink(i, e.target.value)} placeholder="https://www.youtube.com/watch?v=..." style={{ ...fieldStyle, flex: 1 }} />
+                    <button
+                      onClick={() => removeVideoLink(i)}
+                      title="Retirer ce lien"
+                      style={{ background: "none", border: "2px solid #28405C", borderRadius: "8px", width: "40px", color: "#FF3B4E", cursor: "pointer", fontSize: "14px" }}
+                    >
+                      ✕
+                    </button>
+                  </div>
+                ))}
+              </div>
+              <button
+                onClick={addVideoLink}
+                style={{ background: "none", border: "2px dashed #28405C", borderRadius: "8px", padding: "9px", width: "100%", color: "#39FF66", fontSize: "12.5px", fontWeight: 700, cursor: "pointer" }}
+              >
+                + Ajouter un lien vidéo
+              </button>
+            </CollapsibleSection>
+          </>
+        )}
+
+        {activeTab === "stats" && !isNew && <p style={{ fontSize: "13px", color: "#8792A6", fontStyle: "italic" }}>Statistiques à venir.</p>}
 
         <div style={{ display: "flex", flexDirection: "column", gap: "10px", marginTop: "10px" }}>
           <button
