@@ -327,6 +327,8 @@ export function BrandDetailPanel({ brand, onClose, onSaved }) {
               <input value={form.slogan} onChange={(e) => set("slogan", e.target.value)} onBlur={capitalizeOnBlur("slogan")} style={fieldStyle} />
             </CollapsibleSection>
 
+            <div style={separatorStyle} />
+
             <CollapsibleSection title="Identité">
               <label style={labelStyle}>Pays d'origine</label>
               <select value={form.originCountry} onChange={(e) => set("originCountry", e.target.value)} style={{ ...fieldStyle, marginBottom: "12px" }}>
@@ -352,14 +354,20 @@ export function BrandDetailPanel({ brand, onClose, onSaved }) {
               <input type="number" value={form.foundedYear} onChange={(e) => set("foundedYear", e.target.value)} placeholder="Ex. 1985" style={fieldStyle} />
             </CollapsibleSection>
 
+            <div style={separatorStyle} />
+
             <CollapsibleSection title="Classification">
               <p style={{ fontSize: "11.5px", color: "#8792A6", marginTop: "-6px", marginBottom: "10px" }}>Plusieurs choix possibles.</p>
               <TagPicker options={BRAND_CLASSIFICATIONS} selected={form.classifications} onToggle={toggleClassification} />
             </CollapsibleSection>
 
+            <div style={separatorStyle} />
+
             <CollapsibleSection title="Type de marque">
               <TagPicker options={BRAND_TYPES} selected={form.brandTypes} onToggle={toggleType} />
             </CollapsibleSection>
+
+            <div style={separatorStyle} />
 
             <CollapsibleSection title="Coordonnées">
               <label style={labelStyle}>Site internet</label>
@@ -371,6 +379,8 @@ export function BrandDetailPanel({ brand, onClose, onSaved }) {
               <SocialLinkField icon={<SnapchatIcon size={18} />} label="Snapchat" prefix="https://www.snapchat.com/add/" value={form.snapchatUrl} onChange={(v) => set("snapchatUrl", v)} />
               <SocialLinkField icon={<YoutubeIcon size={18} />} label="YouTube" prefix="https://www.youtube.com/@" value={form.youtubeUrl} onChange={(v) => set("youtubeUrl", v)} />
             </CollapsibleSection>
+
+            <div style={separatorStyle} />
 
             <CollapsibleSection title="Producteur / Propriétaire">
               <label style={labelStyle}>Producteur actuel</label>

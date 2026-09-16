@@ -425,6 +425,8 @@ export function BreweryDetailPanel({ brewery, onClose, onSaved }) {
           <input value={form.subtitle} onChange={(e) => set("subtitle", e.target.value)} onBlur={capitalizeOnBlur("subtitle")} style={fieldStyle} />
         </CollapsibleSection>
 
+        <div style={separatorStyle} />
+
         <CollapsibleSection title="Adresse">
           <div style={{ display: "grid", gridTemplateColumns: "2fr 1fr", gap: "12px", marginBottom: "12px" }}>
             <div>
@@ -538,6 +540,8 @@ export function BreweryDetailPanel({ brewery, onClose, onSaved }) {
           </div>
         </CollapsibleSection>
 
+        <div style={separatorStyle} />
+
         <CollapsibleSection title="Coordonnées">
           <label style={labelStyle}>Téléphone</label>
           <div style={{ display: "flex", gap: "8px", marginBottom: "12px" }}>
@@ -561,9 +565,13 @@ export function BreweryDetailPanel({ brewery, onClose, onSaved }) {
           <SocialLinkField icon={<YoutubeIcon size={18} />} label="YouTube" prefix="https://www.youtube.com/@" value={form.youtubeUrl} onChange={(v) => set("youtubeUrl", v)} />
         </CollapsibleSection>
 
+        <div style={separatorStyle} />
+
         <CollapsibleSection title="Type de producteur">
           <TagPicker options={PRODUCER_TYPES} selected={form.producerTypes} onToggle={(t) => toggleTag("producerTypes", t)} />
         </CollapsibleSection>
+
+        <div style={separatorStyle} />
 
         <CollapsibleSection title="Profil du producteur">
           <TagPicker options={PRODUCER_PROFILES} selected={form.producerProfiles} onToggle={(t) => toggleTag("producerProfiles", t)} />
