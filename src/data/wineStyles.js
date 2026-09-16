@@ -520,4 +520,16 @@ export const WINE_APPELLATIONS_BY_COUNTRY = {
     { code: "tasmania", fr: "Tasmania" },
     { code: "yarra_valley", fr: "Yarra Valley" },
   ],
+  nouvelle_zelande: [
+    { code: "auckland", fr: "Auckland" },
+    { code: "central_otago", fr: "Central Otago" },
+    { code: "gisborne", fr: "Gisborne" },
+    { code: "hawke_s_bay", fr: "Hawke\'s Bay" },
+    { code: "marlborough", fr: "Marlborough" },
+    { code: "nelson", fr: "Nelson" },
+    { code: "north_canterbury", fr: "North Canterbury" },
+    { code: "northland", fr: "Northland" },
+    { code: "wairarapa", fr: "Wairarapa" },
+    { code: "waitaki_valley", fr: "Waitaki Valley" },
+  ],
 };
