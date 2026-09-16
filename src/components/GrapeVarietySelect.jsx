@@ -26,10 +26,12 @@ export function GrapeVarietySelect({ selected, onChange, options, onCreateOption
   const selectedIds = selected.map((s) => s.id);
   const isSpecialSelected = selected.some((s) => s.id.startsWith("special:"));
 
-  const allOptions = [...options, ...SPECIAL_VALUES];
+  const allOptions = [...SPECIAL_VALUES, ...options];
   const q = query.trim().toLowerCase();
   const filtered = q ? allOptions.filter((o) => o.name.toLowerCase().includes(q)) : allOptions;
   const exactMatch = allOptions.some((o) => o.name.toLowerCase() === q);
+  const filteredSpecials = filtered.filter((o) => o.id.startsWith("special:") && !selectedIds.includes(o.id));
+  const filteredVarieties = filtered.filter((o) => !o.id.startsWith("special:") && !selectedIds.includes(o.id));
 
   const addVariety = (option) => {
     if (option.id.startsWith("special:")) {
@@ -138,17 +140,25 @@ export function GrapeVarietySelect({ selected, onChange, options, onCreateOption
                 overflowY: "auto",
               }}
             >
-              {filtered
-                .filter((o) => !selectedIds.includes(o.id))
-                .map((o) => (
-                  <button
-                    key={o.id}
-                    onClick={() => addVariety(o)}
-                    style={{ display: "block", width: "100%", textAlign: "left", padding: "9px 12px", background: "none", border: "none", color: "#F2F2E8", fontSize: "13px", cursor: "pointer" }}
-                  >
-                    {o.name}
-                  </button>
-                ))}
+              {filteredSpecials.map((o) => (
+                <button
+                  key={o.id}
+                  onClick={() => addVariety(o)}
+                  style={{ display: "block", width: "100%", textAlign: "left", padding: "9px 12px", background: "none", border: "none", color: "#F2F2E8", fontSize: "13px", cursor: "pointer" }}
+                >
+                  {o.name}
+                </button>
+              ))}
+              {filteredSpecials.length > 0 && filteredVarieties.length > 0 && <div style={{ borderTop: "2px solid #28405C" }} />}
+              {filteredVarieties.map((o) => (
+                <button
+                  key={o.id}
+                  onClick={() => addVariety(o)}
+                  style={{ display: "block", width: "100%", textAlign: "left", padding: "9px 12px", background: "none", border: "none", color: "#F2F2E8", fontSize: "13px", cursor: "pointer" }}
+                >
+                  {o.name}
+                </button>
+              ))}
               {query.trim() && !exactMatch && (
                 <button
                   onClick={handleCreate}
