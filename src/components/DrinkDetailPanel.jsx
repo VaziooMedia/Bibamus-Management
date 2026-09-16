@@ -612,12 +612,12 @@ export function DrinkDetailPanel({ drink, onClose, onSaved }) {
                       ) : !WINE_APPELLATIONS_BY_COUNTRY[form.nationality] ? (
                         <>
                           <p style={{ fontSize: "11.5px", color: "#8792A6", marginTop: "-6px", marginBottom: "10px" }}>
-                            Pas encore de liste pour ce pays — texte libre en attendant.
+                            Pas de liste pour ce pays - Texte libre.
                           </p>
                           <input
                             value={form.appellation}
                             onChange={(e) => set("appellation", e.target.value)}
-                            placeholder="Ex. nom de l'appellation..."
+                            placeholder="Nom de l'appellation"
                             style={fieldStyle}
                           />
                         </>
