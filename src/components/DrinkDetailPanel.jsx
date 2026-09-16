@@ -610,7 +610,17 @@ export function DrinkDetailPanel({ drink, onClose, onSaved }) {
                       ) : !form.nationality ? (
                         <p style={{ fontSize: "13px", color: "#8792A6", fontStyle: "italic" }}>Choisissez d'abord un pays.</p>
                       ) : !WINE_APPELLATIONS_BY_COUNTRY[form.nationality] ? (
-                        <p style={{ fontSize: "13px", color: "#8792A6", fontStyle: "italic" }}>Aucune appellation disponible pour ce pays pour l'instant.</p>
+                        <>
+                          <p style={{ fontSize: "11.5px", color: "#8792A6", marginTop: "-6px", marginBottom: "10px" }}>
+                            Pas encore de liste pour ce pays — texte libre en attendant.
+                          </p>
+                          <input
+                            value={form.appellation}
+                            onChange={(e) => set("appellation", e.target.value)}
+                            placeholder="Ex. nom de l'appellation..."
+                            style={fieldStyle}
+                          />
+                        </>
                       ) : (
                         <SearchableSelect
                           options={WINE_APPELLATIONS_BY_COUNTRY[form.nationality].map((a) => ({ id: a.code, name: a.fr }))}
