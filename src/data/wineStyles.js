@@ -20,6 +20,40 @@ export const WINE_STYLE_GROUPS = [
   },
 ];
 
+// Caractéristiques spécifiques au vin effervescent — groupe séparé de WINE_STYLE_GROUPS,
+// utilisé uniquement quand beverageSubtype === "vin_effervescent".
+export const WINE_EFFERVESCENT_STYLE_GROUPS = [
+  {
+    title: "Style / Dosage",
+    tags: [
+      { code: "brut", fr: "Brut" },
+      { code: "brut_nature", fr: "Brut nature" },
+      { code: "demi_sec", fr: "Demi-sec" },
+      { code: "doux", fr: "Doux" },
+      { code: "extra_brut", fr: "Extra brut" },
+      { code: "extra_dry", fr: "Extra dry" },
+      { code: "sec", fr: "Sec" },
+    ],
+  },
+  {
+    title: "Style de cuvée",
+    tags: [
+      { code: "blanc_de_blancs", fr: "Blanc de Blancs" },
+      { code: "blanc_de_noirs", fr: "Blanc de Noirs" },
+      { code: "rose", fr: "Rosé" },
+    ],
+  },
+  {
+    title: "Méthode",
+    tags: [
+      { code: "gazeifie", fr: "Gazéifié" },
+      { code: "methode_ancestrale", fr: "Méthode ancestrale" },
+      { code: "methode_charmat_cuve_close", fr: "Méthode Charmat / Cuve close" },
+      { code: "methode_traditionnelle", fr: "Méthode traditionnelle" },
+    ],
+  },
+];
+
 // Couleurs disponibles selon la sous-catégorie — même 4 choix, mais un ordre d'affichage
 // différent selon qu'il s'agit d'un vin tranquille ou d'un vin effervescent.
 export const WINE_COLORS_BY_SUBTYPE = {

@@ -34,7 +34,7 @@ import {
   APPLE_TYPES,
   VERIFICATION_STATUSES,
 } from "../data/beerCiderStyles.js";
-import { WINE_STYLE_GROUPS, WINE_COLORS_BY_SUBTYPE, WINE_APPELLATIONS_BY_COUNTRY, WINE_EFFERVESCENT_APPELLATIONS_BY_COUNTRY } from "../data/wineStyles.js";
+import { WINE_STYLE_GROUPS, WINE_EFFERVESCENT_STYLE_GROUPS, WINE_COLORS_BY_SUBTYPE, WINE_APPELLATIONS_BY_COUNTRY, WINE_EFFERVESCENT_APPELLATIONS_BY_COUNTRY } from "../data/wineStyles.js";
 
 export const DRINK_TYPES = [
   { code: "bieres_cidres", fr: "Bières & Cidres" },
@@ -844,7 +844,12 @@ export function DrinkDetailPanel({ drink, onClose, onSaved }) {
                 <p style={{ fontSize: "11.5px", color: "#8792A6", marginTop: "-6px", marginBottom: "10px" }}>
                   {isWine ? "Plusieurs caractéristiques peuvent se cumuler." : "Plusieurs styles peuvent se cumuler (ex. IPA + Hazy + Double IPA)."}
                 </p>
-                <StyleTagAccordion groups={isBeerOrCider ? BEER_CIDER_STYLE_GROUPS : WINE_STYLE_GROUPS} selected={form.styles} onToggle={toggleStyle} hideControls={isWine} />
+                <StyleTagAccordion
+                  groups={isBeerOrCider ? BEER_CIDER_STYLE_GROUPS : form.beverageSubtype === "vin_effervescent" ? WINE_EFFERVESCENT_STYLE_GROUPS : WINE_STYLE_GROUPS}
+                  selected={form.styles}
+                  onToggle={toggleStyle}
+                  hideControls={isWine}
+                />
               </>
             )}
 
