@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
-import { updateDrink, deleteDrink, createDrink, uploadDrinkMainPhoto, uploadDrinkCoverPhoto, uploadDrinkGalleryPhoto, uploadDrinkAwardBadge, loadBrandsDirectory, loadBreweriesDirectory, loadDrinksDirectory, mergeEntities } from "../data/sharedDirectories.js";
+import { updateDrink, deleteDrink, createDrink, uploadDrinkMainPhoto, uploadDrinkCoverPhoto, uploadDrinkGalleryPhoto, uploadDrinkAwardBadge, loadBrandsDirectory, loadBreweriesDirectory, loadDrinksDirectory, loadGrapeVarieties, createGrapeVariety, mergeEntities } from "../data/sharedDirectories.js";
+import { GrapeVarietySelect } from "./GrapeVarietySelect.jsx";
 import { StatusSelector } from "./StatusSelector.jsx";
 import { AdminPhotoField } from "./AdminPhotoField.jsx";
 import { GalleryManager } from "./GalleryManager.jsx";
@@ -94,6 +95,7 @@ export function DrinkDetailPanel({ drink, onClose, onSaved }) {
     nationality: drink?.nationality || "",
     wineColor: drink?.wineColor || "",
     appellation: drink?.appellation || "",
+    grapeVarieties: drink?.grapeVarieties || [],
     originRegion: drink?.originRegion || "",
     originCity: drink?.originCity || "",
     styles: drink?.styles || [],
@@ -234,6 +236,7 @@ export function DrinkDetailPanel({ drink, onClose, onSaved }) {
   const [saving, setSaving] = useState(false);
   const [brandOptions, setBrandOptions] = useState([]);
   const [producerOptions, setProducerOptions] = useState([]);
+  const [grapeVarietyOptions, setGrapeVarietyOptions] = useState([]);
 
   const isBeerOrCider = form.type === "bieres_cidres";
   const isWine = form.type === "vins_bulles";
@@ -250,11 +253,18 @@ export function DrinkDetailPanel({ drink, onClose, onSaved }) {
   useEffect(() => {
     loadBrandsDirectory().then((list) => setBrandOptions(list.map((b) => ({ id: b.id, name: b.name }))));
     loadBreweriesDirectory().then((list) => setProducerOptions(list.map((b) => ({ id: b.id, name: b.name }))));
+    loadGrapeVarieties().then(setGrapeVarietyOptions);
   }, []);
 
   const set = (field, value) => setForm((f) => ({ ...f, [field]: value }));
   const toggleStyle = (tag) => setForm((f) => ({ ...f, styles: f.styles.includes(tag) ? f.styles.filter((t) => t !== tag) : [...f.styles, tag] }));
   const toggleArrayField = (field, value) => setForm((f) => ({ ...f, [field]: f[field].includes(value) ? f[field].filter((v) => v !== value) : [...f[field], value] }));
+
+  const handleCreateGrapeVariety = async (name) => {
+    const created = await createGrapeVariety(name);
+    if (created) setGrapeVarietyOptions((prev) => [...prev, created].sort((a, b) => a.name.localeCompare(b.name)));
+    return created;
+  };
 
   const buildPatch = () => {
     const base = {
@@ -280,6 +290,7 @@ export function DrinkDetailPanel({ drink, onClose, onSaved }) {
       nationality: form.nationality || null,
       wineColor: form.wineColor || null,
       appellation: form.appellation || null,
+      grapeVarieties: form.grapeVarieties,
       originRegion: form.originRegion.trim(),
       originCity: form.originCity.trim(),
       styles: form.styles,
@@ -645,6 +656,17 @@ export function DrinkDetailPanel({ drink, onClose, onSaved }) {
                     </CollapsibleSection>
 
                     <div style={separatorStyle} />
+
+                    <CollapsibleSection title="Cépage(s)" defaultOpen>
+                      <GrapeVarietySelect
+                        selected={form.grapeVarieties}
+                        onChange={(v) => set("grapeVarieties", v)}
+                        options={grapeVarietyOptions}
+                        onCreateOption={handleCreateGrapeVariety}
+                      />
+                    </CollapsibleSection>
+
+                    <div style={separatorStyle} />
                   </>
                 )}
 
@@ -822,6 +844,21 @@ export function DrinkDetailPanel({ drink, onClose, onSaved }) {
                   {isWine ? "Plusieurs caractéristiques peuvent se cumuler." : "Plusieurs styles peuvent se cumuler (ex. IPA + Hazy + Double IPA)."}
                 </p>
                 <StyleTagAccordion groups={isBeerOrCider ? BEER_CIDER_STYLE_GROUPS : WINE_STYLE_GROUPS} selected={form.styles} onToggle={toggleStyle} />
+              </>
+            )}
+
+            {isWine && (
+              <>
+                <div style={separatorStyle} />
+                <SectionTitle>Cépage(s)</SectionTitle>
+                <p style={{ fontSize: "11.5px", color: "#8792A6", marginTop: "-6px", marginBottom: "10px" }}>Pourcentage facultatif pour chaque cépage.</p>
+                <GrapeVarietySelect
+                  selected={form.grapeVarieties}
+                  onChange={(v) => set("grapeVarieties", v)}
+                  options={grapeVarietyOptions}
+                  onCreateOption={handleCreateGrapeVariety}
+                  showPercentage
+                />
               </>
             )}
               </>

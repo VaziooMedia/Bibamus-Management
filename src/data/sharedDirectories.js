@@ -1186,6 +1186,7 @@ function rowToDrink(row) {
     nationality: row.nationality,
     wineColor: row.wine_color,
     appellation: row.appellation,
+    grapeVarieties: row.grape_varieties || [],
     abv: row.abv,
     kcalPer100ml: row.kcal_per_100ml,
     volumeCl: row.volume_cl,
@@ -1346,6 +1347,7 @@ function drinkToRow(d, partial = false) {
     nationality: d.nationality,
     wine_color: d.wineColor,
     appellation: d.appellation,
+    grape_varieties: d.grapeVarieties,
     abv: d.abv,
     kcal_per_100ml: d.kcalPer100ml,
     volume_cl: d.volumeCl,
@@ -1543,6 +1545,24 @@ export async function deleteDrinkVariant(id) {
 }
 
 /* ---------------- BRASSERIES & PRODUCTEURS ---------------- */
+
+export async function loadGrapeVarieties() {
+  const { data, error } = await supabase.from("grape_varieties").select("id, name").order("name");
+  if (error) {
+    console.error("loadGrapeVarieties:", error);
+    return [];
+  }
+  return data;
+}
+
+export async function createGrapeVariety(name) {
+  const { data, error } = await supabase.from("grape_varieties").insert({ name: name.trim() }).select("id, name").single();
+  if (error) {
+    console.error("createGrapeVariety:", error);
+    return null;
+  }
+  return data;
+}
 
 export async function loadBreweriesDirectory() {
   const { data, error } = await supabase.from("breweries_directory").select("*").order("name");
