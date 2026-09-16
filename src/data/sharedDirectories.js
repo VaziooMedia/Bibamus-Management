@@ -1552,6 +1552,8 @@ function rowToBrewery(row) {
     country: row.country,
     profilePhotoUrl: row.profile_photo_url,
     coverPhotoUrl: row.cover_photo_url,
+    galleryPhotos: row.gallery_photos || [],
+    videoLinks: row.video_links || [],
     streetName: row.street_name,
     streetNumber: row.street_number,
     postalCode: row.postal_code,
@@ -1592,6 +1594,8 @@ function breweryToRow(b, partial = false) {
     country: b.country,
     profile_photo_url: b.profilePhotoUrl,
     cover_photo_url: b.coverPhotoUrl,
+    gallery_photos: b.galleryPhotos,
+    video_links: b.videoLinks,
     street_name: b.streetName,
     street_number: b.streetNumber,
     postal_code: b.postalCode,
@@ -1641,6 +1645,24 @@ export async function uploadBreweryPhoto(breweryId, file, kind) {
   }
   if (data?.error) {
     console.error("uploadBreweryPhoto:", data.error);
+    return null;
+  }
+  return data.url;
+}
+
+export async function uploadBreweryGalleryPhoto(breweryId, file) {
+  const blob = await resizeImageTo(file, 1000, 1000);
+  const imageBase64 = await blobToBase64(blob);
+  const path = `${breweryId}-gallery-${Date.now()}-${Math.floor(Math.random() * 10000)}.jpg`;
+  const { data, error } = await supabase.functions.invoke("moderate-and-upload-photo", {
+    body: { bucket: "brewery-photos", path, imageBase64, contentType: "image/jpeg", entityType: "producer", entityId: breweryId, kind: "gallery" },
+  });
+  if (error) {
+    console.error("uploadBreweryGalleryPhoto:", error);
+    return null;
+  }
+  if (data?.error) {
+    console.error("uploadBreweryGalleryPhoto:", data.error);
     return null;
   }
   return data.url;
