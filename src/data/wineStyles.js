@@ -21,4 +21,14 @@ export const WINE_COLORS_BY_SUBTYPE = {
 
 // Appellations disponibles selon le pays — vide pour l'instant, complété pays par pays.
 // Clé = code pays (même code que COUNTRIES/COUNTRY_ISO_CODES), valeur = liste {code, fr}.
-export const WINE_APPELLATIONS_BY_COUNTRY = {};
+export const WINE_APPELLATIONS_BY_COUNTRY = {
+  belgique: [
+    { code: "cotes_de_sambre_et_meuse", fr: "Côtes de Sambre et Meuse" },
+    { code: "hagelandse_wijn", fr: "Hagelandse wijn" },
+    { code: "haspengouwse_wijn", fr: "Haspengouwse wijn" },
+    { code: "heuvellandse_wijn", fr: "Heuvellandse wijn" },
+    { code: "maasvallei_limburg", fr: "Maasvallei Limburg" },
+    { code: "vin_de_pays_des_jardins_de_wallonie", fr: "Vin de Pays des Jardins de Wallonie" },
+    { code: "vlaamse_landwijn", fr: "Vlaamse landwijn" },
+  ],
+};
