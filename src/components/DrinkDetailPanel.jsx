@@ -847,19 +847,20 @@ export function DrinkDetailPanel({ drink, onClose, onSaved }) {
                 <p style={{ fontSize: "11.5px", color: "#8792A6", marginTop: "-6px", marginBottom: "10px" }}>
                   {isWine ? "Plusieurs caractéristiques peuvent se cumuler." : "Plusieurs styles peuvent se cumuler (ex. IPA + Hazy + Double IPA)."}
                 </p>
-                <StyleTagAccordion
-                  groups={isBeerOrCider ? BEER_CIDER_STYLE_GROUPS : form.beverageSubtype === "vin_effervescent" ? WINE_EFFERVESCENT_STYLE_GROUPS : WINE_STYLE_GROUPS}
-                  selected={form.styles}
-                  onToggle={toggleStyle}
-                  hideControls={isWine}
-                />
+                <div style={{ border: "2px solid #28405C", borderRadius: "8px", padding: "12px" }}>
+                  <StyleTagAccordion
+                    groups={isBeerOrCider ? BEER_CIDER_STYLE_GROUPS : form.beverageSubtype === "vin_effervescent" ? WINE_EFFERVESCENT_STYLE_GROUPS : WINE_STYLE_GROUPS}
+                    selected={form.styles}
+                    onToggle={toggleStyle}
+                    hideControls={isWine}
+                  />
 
-                {isWine && (
-                  <>
-                    <div style={separatorStyle} />
-                    <SectionTitle>Cépage(s)</SectionTitle>
-                    <p style={{ fontSize: "11.5px", color: "#8792A6", marginTop: "-6px", marginBottom: "10px" }}>Pourcentage facultatif pour chaque cépage.</p>
-                    <GrapeVarietySelect
+                  {isWine && (
+                    <>
+                      <div style={separatorStyle} />
+                      <SectionTitle>Cépage(s)</SectionTitle>
+                      <p style={{ fontSize: "11.5px", color: "#8792A6", marginTop: "-6px", marginBottom: "10px" }}>Pourcentage facultatif pour chaque cépage.</p>
+                      <GrapeVarietySelect
                       selected={form.grapeVarieties}
                       onChange={(v) => set("grapeVarieties", v)}
                       options={visibleGrapeVarietyOptions}
@@ -920,6 +921,7 @@ export function DrinkDetailPanel({ drink, onClose, onSaved }) {
                     )}
                   </>
                 )}
+                </div>
               </>
             )}
               </>
