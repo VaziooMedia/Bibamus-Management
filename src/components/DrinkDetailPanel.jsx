@@ -84,7 +84,7 @@ export function DrinkDetailPanel({ drink, onClose, onSaved }) {
     name: drink?.name || "",
     aliasesText: (drink?.aliases || []).join(", "),
     type: drink?.type || DRINK_TYPES[0].code,
-    beverageSubtype: drink?.beverageSubtype || BEER_CIDER_SUBTYPES[0].code,
+    beverageSubtype: drink?.beverageSubtype || (drink?.type === "vins_bulles" ? WINE_SUBTYPES[0].code : BEER_CIDER_SUBTYPES[0].code),
     defaultVolumeCl: drink?.defaultVolumeCl ?? "",
     defaultServingMode: drink?.defaultServingMode || "",
     defaultPriceEuro: drink?.defaultPriceEuro ?? "",
@@ -237,6 +237,14 @@ export function DrinkDetailPanel({ drink, onClose, onSaved }) {
   const isBeerOrCider = form.type === "bieres_cidres";
   const isWine = form.type === "vins_bulles";
   const isBeer = form.beverageSubtype === "biere";
+
+  useEffect(() => {
+    const validSubtypes = isBeerOrCider ? BEER_CIDER_SUBTYPES : isWine ? WINE_SUBTYPES : null;
+    if (validSubtypes && !validSubtypes.some((s) => s.code === form.beverageSubtype)) {
+      set("beverageSubtype", validSubtypes[0].code);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [form.type]);
 
   useEffect(() => {
     loadBrandsDirectory().then((list) => setBrandOptions(list.map((b) => ({ id: b.id, name: b.name }))));
@@ -550,8 +558,8 @@ export function DrinkDetailPanel({ drink, onClose, onSaved }) {
 
             {activeTab === "quick" && (
               <div>
-                <label style={labelStyle}>Taux d'alcool (%)</label>
-                <input type="number" step="0.1" value={form.abv} onChange={(e) => set("abv", e.target.value)} placeholder="Ex. 0.0 pour sans alcool" style={{ ...fieldStyle, marginBottom: "14px" }} />
+                <SectionTitle>Taux d'alcool</SectionTitle>
+                <input type="number" step="0.1" value={form.abv} onChange={(e) => set("abv", e.target.value)} placeholder="Ex. 0.0 pour sans alcool" style={{ ...fieldStyle, width: "150px", marginBottom: "14px" }} />
 
                 {isWine && (
                   <>
@@ -568,7 +576,7 @@ export function DrinkDetailPanel({ drink, onClose, onSaved }) {
 
                     <div style={separatorStyle} />
 
-                    <CollapsibleSection title="Pays">
+                    <CollapsibleSection title="Pays" defaultOpen>
                       <select value={form.nationality} onChange={(e) => set("nationality", e.target.value)} style={fieldStyle}>
                         <option value="">—</option>
                         {COUNTRIES.map((c) => (
@@ -581,7 +589,7 @@ export function DrinkDetailPanel({ drink, onClose, onSaved }) {
 
                     <div style={separatorStyle} />
 
-                    <CollapsibleSection title="Appellation">
+                    <CollapsibleSection title="Appellation" defaultOpen>
                       <p style={{ fontSize: "13px", color: "#8792A6", fontStyle: "italic" }}>Sera complété prochainement.</p>
                     </CollapsibleSection>
 
@@ -589,51 +597,52 @@ export function DrinkDetailPanel({ drink, onClose, onSaved }) {
                   </>
                 )}
 
-                <label style={labelStyle}>Codes-barres</label>
-                <div style={{ display: "flex", flexDirection: "column", gap: "8px", marginBottom: "10px", marginTop: "6px" }}>
-                  {form.barcodes.map((b, i) => (
-                    <div key={i} style={{ display: "flex", gap: "8px" }}>
-                      <select
-                        value={b.container || ""}
-                        onChange={(e) => updateBarcode(i, "container", e.target.value)}
-                        style={{ ...fieldStyle, width: "120px", flexShrink: 0 }}
-                      >
-                        <option value="">Contenant</option>
-                        {CONTAINER_TYPES.map((t) => (
-                          <option key={t.code} value={t.code}>
-                            {t.fr}
-                          </option>
-                        ))}
-                      </select>
-                      <input
-                        value={b.volume || ""}
-                        onChange={(e) => updateBarcode(i, "volume", e.target.value)}
-                        placeholder="Vol."
-                        style={{ ...fieldStyle, width: "56px", flexShrink: 0 }}
-                      />
-                      <input
-                        value={b.code}
-                        onChange={(e) => updateBarcode(i, "code", e.target.value)}
-                        placeholder="Code-barres"
-                        style={{ ...fieldStyle, width: "170px", flexShrink: 0 }}
-                      />
-                      <button
-                        onClick={() => removeBarcode(i)}
-                        title="Retirer ce code-barres"
-                        style={{ background: "none", border: "2px solid #28405C", borderRadius: "8px", width: "40px", flexShrink: 0, color: "#FF3B4E", cursor: "pointer", fontSize: "14px" }}
-                      >
-                        ✕
-                      </button>
-                    </div>
-                  ))}
-                </div>
-                <button
-                  onClick={addBarcode}
-                  title="Ajouter un code-barres"
-                  style={{ background: "none", border: "2px dashed #28405C", borderRadius: "8px", width: "40px", height: "36px", color: "#39FF66", fontSize: "16px", fontWeight: 700, cursor: "pointer" }}
-                >
-                  +
-                </button>
+                <CollapsibleSection title="Codes-barres" defaultOpen>
+                  <div style={{ display: "flex", flexDirection: "column", gap: "8px", marginBottom: "10px" }}>
+                    {form.barcodes.map((b, i) => (
+                      <div key={i} style={{ display: "flex", gap: "8px" }}>
+                        <select
+                          value={b.container || ""}
+                          onChange={(e) => updateBarcode(i, "container", e.target.value)}
+                          style={{ ...fieldStyle, width: "120px", flexShrink: 0 }}
+                        >
+                          <option value="">Contenant</option>
+                          {CONTAINER_TYPES.map((t) => (
+                            <option key={t.code} value={t.code}>
+                              {t.fr}
+                            </option>
+                          ))}
+                        </select>
+                        <input
+                          value={b.volume || ""}
+                          onChange={(e) => updateBarcode(i, "volume", e.target.value)}
+                          placeholder="Vol."
+                          style={{ ...fieldStyle, width: "56px", flexShrink: 0 }}
+                        />
+                        <input
+                          value={b.code}
+                          onChange={(e) => updateBarcode(i, "code", e.target.value)}
+                          placeholder="Code-barres"
+                          style={{ ...fieldStyle, width: "170px", flexShrink: 0 }}
+                        />
+                        <button
+                          onClick={() => removeBarcode(i)}
+                          title="Retirer ce code-barres"
+                          style={{ background: "none", border: "2px solid #28405C", borderRadius: "8px", width: "40px", flexShrink: 0, color: "#FF3B4E", cursor: "pointer", fontSize: "14px" }}
+                        >
+                          ✕
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                  <button
+                    onClick={addBarcode}
+                    title="Ajouter un code-barres"
+                    style={{ background: "none", border: "2px dashed #28405C", borderRadius: "8px", width: "40px", height: "36px", color: "#39FF66", fontSize: "16px", fontWeight: 700, cursor: "pointer" }}
+                  >
+                    +
+                  </button>
+                </CollapsibleSection>
               </div>
             )}
 
