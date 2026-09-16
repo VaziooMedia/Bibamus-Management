@@ -1547,12 +1547,12 @@ export async function deleteDrinkVariant(id) {
 /* ---------------- BRASSERIES & PRODUCTEURS ---------------- */
 
 export async function loadGrapeVarieties() {
-  const { data, error } = await supabase.from("grape_varieties").select("id, name").order("name");
+  const { data, error } = await supabase.from("grape_varieties").select("id, name, sparkling_only").order("name");
   if (error) {
     console.error("loadGrapeVarieties:", error);
     return [];
   }
-  return data;
+  return data.map((row) => ({ id: row.id, name: row.name, sparklingOnly: !!row.sparkling_only }));
 }
 
 export async function createGrapeVariety(name) {

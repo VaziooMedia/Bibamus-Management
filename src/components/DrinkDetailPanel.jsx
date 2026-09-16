@@ -241,6 +241,7 @@ export function DrinkDetailPanel({ drink, onClose, onSaved }) {
   const isBeerOrCider = form.type === "bieres_cidres";
   const isWine = form.type === "vins_bulles";
   const isBeer = form.beverageSubtype === "biere";
+  const visibleGrapeVarietyOptions = grapeVarietyOptions.filter((v) => !v.sparklingOnly || form.beverageSubtype === "vin_effervescent");
 
   useEffect(() => {
     const validSubtypes = isBeerOrCider ? BEER_CIDER_SUBTYPES : isWine ? WINE_SUBTYPES : null;
@@ -661,7 +662,7 @@ export function DrinkDetailPanel({ drink, onClose, onSaved }) {
                       <GrapeVarietySelect
                         selected={form.grapeVarieties}
                         onChange={(v) => set("grapeVarieties", v)}
-                        options={grapeVarietyOptions}
+                        options={visibleGrapeVarietyOptions}
                         onCreateOption={handleCreateGrapeVariety}
                       />
                     </CollapsibleSection>
@@ -855,7 +856,7 @@ export function DrinkDetailPanel({ drink, onClose, onSaved }) {
                 <GrapeVarietySelect
                   selected={form.grapeVarieties}
                   onChange={(v) => set("grapeVarieties", v)}
-                  options={grapeVarietyOptions}
+                  options={visibleGrapeVarietyOptions}
                   onCreateOption={handleCreateGrapeVariety}
                   showPercentage
                 />
