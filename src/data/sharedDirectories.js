@@ -1001,6 +1001,24 @@ export async function uploadDrinkMainPhoto(drinkId, file) {
   return data.url;
 }
 
+export async function uploadDrinkCoverPhoto(drinkId, file) {
+  const blob = await resizeImageTo(file, 1200, 400);
+  const imageBase64 = await blobToBase64(blob);
+  const path = `${drinkId}-cover-${Date.now()}.jpg`;
+  const { data, error } = await supabase.functions.invoke("moderate-and-upload-photo", {
+    body: { bucket: "drink-photos", path, imageBase64, contentType: "image/jpeg", entityType: "drink", entityId: drinkId, kind: "cover" },
+  });
+  if (error) {
+    console.error("uploadDrinkCoverPhoto:", error);
+    return null;
+  }
+  if (data?.error) {
+    console.error("uploadDrinkCoverPhoto:", data.error);
+    return null;
+  }
+  return data.url;
+}
+
 export async function uploadDrinkGalleryPhoto(drinkId, file) {
   const blob = await resizeImageTo(file, 1000, 1000);
   const imageBase64 = await blobToBase64(blob);
@@ -1192,6 +1210,7 @@ function rowToDrink(row) {
     originRegion: row.origin_region,
     originCity: row.origin_city,
     mainPhotoUrl: row.photo_url,
+    coverPhotoUrl: row.cover_photo_url,
     galleryPhotos: row.gallery_photos || [],
     styles: row.styles || [],
     productStatus: row.product_status,
@@ -1348,6 +1367,7 @@ function drinkToRow(d, partial = false) {
     origin_region: d.originRegion,
     origin_city: d.originCity,
     photo_url: d.mainPhotoUrl,
+    cover_photo_url: d.coverPhotoUrl,
     gallery_photos: d.galleryPhotos,
     styles: d.styles,
     product_status: d.productStatus,
@@ -1737,6 +1757,7 @@ function rowToBrand(row) {
     alternateName: row.alternate_name,
     slogan: row.slogan,
     logoUrl: row.logo_url,
+    coverPhotoUrl: row.cover_photo_url,
     galleryPhotos: row.gallery_photos || [],
     videoLinks: row.video_links || [],
     foundedYear: row.founded_year,
@@ -1771,6 +1792,7 @@ function brandToRow(b, partial = false) {
     alternate_name: b.alternateName,
     slogan: b.slogan,
     logo_url: b.logoUrl,
+    cover_photo_url: b.coverPhotoUrl,
     gallery_photos: b.galleryPhotos,
     video_links: b.videoLinks,
     founded_year: b.foundedYear,
@@ -1814,6 +1836,24 @@ export async function uploadBrandLogo(brandId, file) {
   }
   if (data?.error) {
     console.error("uploadBrandLogo:", data.error);
+    return null;
+  }
+  return data.url;
+}
+
+export async function uploadBrandCoverPhoto(brandId, file) {
+  const blob = await resizeImageTo(file, 1200, 400);
+  const imageBase64 = await blobToBase64(blob);
+  const path = `${brandId}-cover-${Date.now()}.jpg`;
+  const { data, error } = await supabase.functions.invoke("moderate-and-upload-photo", {
+    body: { bucket: "brand-logos", path, imageBase64, contentType: "image/jpeg", entityType: "brand", entityId: brandId, kind: "cover" },
+  });
+  if (error) {
+    console.error("uploadBrandCoverPhoto:", error);
+    return null;
+  }
+  if (data?.error) {
+    console.error("uploadBrandCoverPhoto:", data.error);
     return null;
   }
   return data.url;

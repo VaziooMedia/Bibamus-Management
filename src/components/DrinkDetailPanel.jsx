@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { updateDrink, deleteDrink, createDrink, uploadDrinkMainPhoto, uploadDrinkGalleryPhoto, uploadDrinkAwardBadge, loadBrandsDirectory, loadBreweriesDirectory, loadDrinksDirectory, mergeEntities } from "../data/sharedDirectories.js";
+import { updateDrink, deleteDrink, createDrink, uploadDrinkMainPhoto, uploadDrinkCoverPhoto, uploadDrinkGalleryPhoto, uploadDrinkAwardBadge, loadBrandsDirectory, loadBreweriesDirectory, loadDrinksDirectory, mergeEntities } from "../data/sharedDirectories.js";
 import { StatusSelector } from "./StatusSelector.jsx";
 import { AdminPhotoField } from "./AdminPhotoField.jsx";
 import { GalleryManager } from "./GalleryManager.jsx";
@@ -208,11 +208,13 @@ export function DrinkDetailPanel({ drink, onClose, onSaved }) {
     verificationStatus: drink?.verificationStatus || VERIFICATION_STATUSES[0].code,
   });
   const [mainPhotoUrl, setMainPhotoUrl] = useState(drink?.mainPhotoUrl || null);
+  const [coverPhotoUrl, setCoverPhotoUrl] = useState(drink?.coverPhotoUrl || null);
   const [galleryPhotos, setGalleryPhotos] = useState(drink?.galleryPhotos || []);
   const [uploadingGallery, setUploadingGallery] = useState(false);
   const [awardBadges, setAwardBadges] = useState(drink?.awardBadges || []);
   const [uploadingAward, setUploadingAward] = useState(false);
   const [uploadingPhoto, setUploadingPhoto] = useState(false);
+  const [uploadingCover, setUploadingCover] = useState(false);
   const [status, setStatus] = useState(drink?.status || "to_process");
   const [certificationLevel, setCertificationLevel] = useState(drink?.certificationLevel || "utilisateur");
   const [duplicateOfId, setDuplicateOfId] = useState(drink?.duplicateOfId || null);
@@ -368,6 +370,7 @@ export function DrinkDetailPanel({ drink, onClose, onSaved }) {
       contributor: form.contributor.trim(),
       verificationStatus: form.verificationStatus,
       mainPhotoUrl,
+      coverPhotoUrl,
       galleryPhotos,
     };
   };
@@ -416,6 +419,14 @@ export function DrinkDetailPanel({ drink, onClose, onSaved }) {
     const url = await uploadDrinkMainPhoto(tempId, file);
     if (url) setMainPhotoUrl(url);
     setUploadingPhoto(false);
+  };
+
+  const handleUploadCover = async (file) => {
+    setUploadingCover(true);
+    const tempId = drink?.id || `pending-${Date.now()}`;
+    const url = await uploadDrinkCoverPhoto(tempId, file);
+    if (url) setCoverPhotoUrl(url);
+    setUploadingCover(false);
   };
 
   const handleUploadGalleryPhoto = async (file) => {
@@ -1288,8 +1299,9 @@ export function DrinkDetailPanel({ drink, onClose, onSaved }) {
 
             {activeTab === "gallery" && (
               <div>
-                <SectionTitle>Photo principale</SectionTitle>
-                <AdminPhotoField label="Photo principale (400×400)" photoUrl={mainPhotoUrl} onUpload={handleUploadPhoto} onDelete={() => setMainPhotoUrl(null)} uploading={uploadingPhoto} />
+                <SectionTitle>Images</SectionTitle>
+                <AdminPhotoField label="Image de profil (800×800)" photoUrl={mainPhotoUrl} onUpload={handleUploadPhoto} onDelete={() => setMainPhotoUrl(null)} uploading={uploadingPhoto} />
+                <AdminPhotoField label="Image de couverture (1200×400)" photoUrl={coverPhotoUrl} aspect="banner" onUpload={handleUploadCover} onDelete={() => setCoverPhotoUrl(null)} uploading={uploadingCover} />
 
                 <div style={separatorStyle} />
                 <SectionTitle>Images</SectionTitle>

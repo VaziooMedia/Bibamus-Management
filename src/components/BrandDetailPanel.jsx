@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { updateBrand, deleteBrand, createBrand, uploadBrandLogo, uploadBrandGalleryPhoto, loadBreweriesDirectory, loadBrandsDirectory, mergeEntities } from "../data/sharedDirectories.js";
+import { updateBrand, deleteBrand, createBrand, uploadBrandLogo, uploadBrandCoverPhoto, uploadBrandGalleryPhoto, loadBreweriesDirectory, loadBrandsDirectory, mergeEntities } from "../data/sharedDirectories.js";
 import { StatusSelector } from "./StatusSelector.jsx";
 import { AdminPhotoField } from "./AdminPhotoField.jsx";
 import { GalleryManager } from "./GalleryManager.jsx";
@@ -133,8 +133,10 @@ export function BrandDetailPanel({ brand, onClose, onSaved }) {
     videoLinks: brand?.videoLinks && brand.videoLinks.length > 0 ? brand.videoLinks : [""],
   });
   const [logoUrl, setLogoUrl] = useState(brand?.logoUrl || null);
+  const [coverPhotoUrl, setCoverPhotoUrl] = useState(brand?.coverPhotoUrl || null);
   const [galleryPhotos, setGalleryPhotos] = useState(brand?.galleryPhotos || []);
   const [uploadingLogo, setUploadingLogo] = useState(false);
+  const [uploadingCover, setUploadingCover] = useState(false);
   const [uploadingGallery, setUploadingGallery] = useState(false);
   const [activeTab, setActiveTab] = useState("informations");
   const [status, setStatus] = useState(brand?.status || "to_process");
@@ -181,6 +183,7 @@ export function BrandDetailPanel({ brand, onClose, onSaved }) {
     brandOwner: form.brandOwner.trim(),
     videoLinks: form.videoLinks.map((v) => v.trim()).filter(Boolean),
     logoUrl,
+    coverPhotoUrl,
     galleryPhotos,
     status,
     certificationLevel,
@@ -231,6 +234,14 @@ export function BrandDetailPanel({ brand, onClose, onSaved }) {
     const url = await uploadBrandLogo(tempId, file);
     if (url) setLogoUrl(url);
     setUploadingLogo(false);
+  };
+
+  const handleUploadCover = async (file) => {
+    setUploadingCover(true);
+    const tempId = brand?.id || `pending-${Date.now()}`;
+    const url = await uploadBrandCoverPhoto(tempId, file);
+    if (url) setCoverPhotoUrl(url);
+    setUploadingCover(false);
   };
 
   const handleUploadGalleryPhoto = async (file) => {
@@ -395,7 +406,8 @@ export function BrandDetailPanel({ brand, onClose, onSaved }) {
 
         {activeTab === "medias" && (
           <>
-            <AdminPhotoField label="Logo (400×400)" photoUrl={logoUrl} onUpload={handleUploadLogo} onDelete={() => setLogoUrl(null)} uploading={uploadingLogo} />
+            <AdminPhotoField label="Image de profil (400×400)" photoUrl={logoUrl} onUpload={handleUploadLogo} onDelete={() => setLogoUrl(null)} uploading={uploadingLogo} />
+            <AdminPhotoField label="Image de couverture (1200×400)" photoUrl={coverPhotoUrl} aspect="banner" onUpload={handleUploadCover} onDelete={() => setCoverPhotoUrl(null)} uploading={uploadingCover} />
 
             <div style={separatorStyle} />
             <CollapsibleSection title="Photos supplémentaires" defaultOpen>
