@@ -119,6 +119,7 @@ export function BrandDetailPanel({ brand, onClose, onSaved }) {
     foundedYear: brand?.foundedYear ?? "",
     originCountry: brand?.originCountry || "belgique",
     originCity: brand?.originCity || "",
+    originRegion: brand?.originRegion || "",
     classifications: brand?.classifications || [],
     brandTypes: brand?.brandTypes || [],
     website: brand?.website || "",
@@ -167,6 +168,7 @@ export function BrandDetailPanel({ brand, onClose, onSaved }) {
     foundedYear: form.foundedYear === "" ? null : parseInt(form.foundedYear, 10),
     originCountry: form.originCountry,
     originCity: form.originCity.trim(),
+    originRegion: form.originRegion.trim(),
     classifications: form.classifications,
     brandTypes: form.brandTypes,
     website: form.website.trim(),
@@ -326,24 +328,28 @@ export function BrandDetailPanel({ brand, onClose, onSaved }) {
             </CollapsibleSection>
 
             <CollapsibleSection title="Identité">
+              <label style={labelStyle}>Pays d'origine</label>
+              <select value={form.originCountry} onChange={(e) => set("originCountry", e.target.value)} style={{ ...fieldStyle, marginBottom: "12px" }}>
+                {COUNTRIES.map((c) => (
+                  <option key={c.code} value={c.code}>
+                    {c.fr}
+                  </option>
+                ))}
+              </select>
+
               <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px", marginBottom: "12px" }}>
                 <div>
-                  <label style={labelStyle}>Année de création</label>
-                  <input type="number" value={form.foundedYear} onChange={(e) => set("foundedYear", e.target.value)} placeholder="Ex. 1985" style={fieldStyle} />
+                  <label style={labelStyle}>Région d'origine</label>
+                  <input value={form.originRegion} onChange={(e) => set("originRegion", e.target.value)} onBlur={capitalizeOnBlur("originRegion")} style={fieldStyle} />
                 </div>
                 <div>
-                  <label style={labelStyle}>Pays d'origine</label>
-                  <select value={form.originCountry} onChange={(e) => set("originCountry", e.target.value)} style={fieldStyle}>
-                    {COUNTRIES.map((c) => (
-                      <option key={c.code} value={c.code}>
-                        {c.fr}
-                      </option>
-                    ))}
-                  </select>
+                  <label style={labelStyle}>Ville d'origine</label>
+                  <input value={form.originCity} onChange={(e) => set("originCity", e.target.value)} onBlur={capitalizeOnBlur("originCity")} style={fieldStyle} />
                 </div>
               </div>
-              <label style={labelStyle}>Ville / Région d'origine</label>
-              <input value={form.originCity} onChange={(e) => set("originCity", e.target.value)} onBlur={capitalizeOnBlur("originCity")} style={fieldStyle} />
+
+              <label style={labelStyle}>Année de création</label>
+              <input type="number" value={form.foundedYear} onChange={(e) => set("foundedYear", e.target.value)} placeholder="Ex. 1985" style={fieldStyle} />
             </CollapsibleSection>
 
             <CollapsibleSection title="Classification">
