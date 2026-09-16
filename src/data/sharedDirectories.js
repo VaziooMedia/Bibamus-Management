@@ -837,6 +837,21 @@ export async function saveGeocodeResult(venueId, { lat, lng, source, confidence,
   if (error) console.error("saveGeocodeResult:", error);
 }
 
+export async function saveBreweryGeocodeResult(breweryId, { lat, lng, source, confidence, status }) {
+  const { error } = await supabase
+    .from("breweries_directory")
+    .update({
+      lat,
+      lng,
+      geocode_source: source,
+      geocode_confidence: confidence,
+      geocode_status: status,
+      geocoded_at: new Date().toISOString(),
+    })
+    .eq("id", breweryId);
+  if (error) console.error("saveBreweryGeocodeResult:", error);
+}
+
 export async function unlinkGooglePlace(venueId) {
   const { error } = await supabase
     .from("public_venues")
@@ -1561,6 +1576,9 @@ function rowToBrewery(row) {
     village: row.village,
     lat: row.lat,
     lng: row.lng,
+    geocodeStatus: row.geocode_status,
+    geocodeSource: row.geocode_source,
+    geocodeConfidence: row.geocode_confidence ?? null,
     phone: row.phone,
     email: row.email,
     website: row.website,
@@ -1603,6 +1621,9 @@ function breweryToRow(b, partial = false) {
     village: b.village,
     lat: b.lat,
     lng: b.lng,
+    geocode_status: b.geocodeStatus,
+    geocode_source: b.geocodeSource,
+    geocode_confidence: b.geocodeConfidence,
     phone: b.phone,
     email: b.email,
     website: b.website,

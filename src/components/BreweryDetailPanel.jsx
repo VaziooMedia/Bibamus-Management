@@ -1,6 +1,17 @@
 import React, { useState, useEffect } from "react";
-import { WhatsappIcon, FacebookIcon, InstagramIcon, TiktokIcon, SnapchatIcon, LinkedinIcon, YoutubeIcon } from "./icons.jsx";
-import { updateBrewery, deleteBrewery, createBrewery, uploadBreweryPhoto, uploadBreweryGalleryPhoto, loadPublicVenues, loadBreweriesDirectory, mergeEntities } from "../data/sharedDirectories.js";
+import { WhatsappIcon, FacebookIcon, InstagramIcon, TiktokIcon, SnapchatIcon, LinkedinIcon, YoutubeIcon, PlaceCheckIcon } from "./icons.jsx";
+import {
+  updateBrewery,
+  deleteBrewery,
+  createBrewery,
+  uploadBreweryPhoto,
+  uploadBreweryGalleryPhoto,
+  loadPublicVenues,
+  loadBreweriesDirectory,
+  mergeEntities,
+  geocodeAddress,
+  saveBreweryGeocodeResult,
+} from "../data/sharedDirectories.js";
 import { StatusSelector } from "./StatusSelector.jsx";
 import { AdminPhotoField } from "./AdminPhotoField.jsx";
 import { GalleryManager } from "./GalleryManager.jsx";
@@ -175,6 +186,11 @@ export function BreweryDetailPanel({ brewery, onClose, onSaved }) {
   const [uploadingCover, setUploadingCover] = useState(false);
   const [uploadingGallery, setUploadingGallery] = useState(false);
   const [activeTab, setActiveTab] = useState("informations");
+  const [geocoding, setGeocoding] = useState(false);
+  const [geocodeNotFound, setGeocodeNotFound] = useState(false);
+  const [geocodeStatus, setGeocodeStatus] = useState(brewery?.geocodeStatus || null);
+  const [geocodeSource, setGeocodeSource] = useState(brewery?.geocodeSource || null);
+  const [geocodeConfidence, setGeocodeConfidence] = useState(brewery?.geocodeConfidence ?? null);
   const [status, setStatus] = useState(brewery?.status || "to_process");
   const [certificationLevel, setCertificationLevel] = useState(brewery?.certificationLevel || "utilisateur");
   const [duplicateOfId, setDuplicateOfId] = useState(brewery?.duplicateOfId || null);
@@ -197,6 +213,31 @@ export function BreweryDetailPanel({ brewery, onClose, onSaved }) {
   const capitalizeOnBlur = (field) => () => set(field, capitalizeWords(form[field]));
   const toggleTag = (field, tag) => setForm((f) => ({ ...f, [field]: f[field].includes(tag) ? f[field].filter((x) => x !== tag) : [...f[field], tag] }));
 
+  const handleGeocode = async () => {
+    setGeocoding(true);
+    setGeocodeNotFound(false);
+    const result = await geocodeAddress({
+      streetName: form.streetName,
+      streetNumber: form.streetNumber,
+      postalCode: form.postalCode,
+      city: form.city,
+      countryIsoCode: COUNTRY_ISO_CODES[form.country],
+    });
+    setGeocoding(false);
+    if (!result || result.notFound || !result.lat) {
+      setGeocodeNotFound(true);
+      return;
+    }
+    set("lat", String(result.lat));
+    set("lng", String(result.lng));
+    setGeocodeStatus(result.status);
+    setGeocodeSource(result.source);
+    setGeocodeConfidence(result.confidence);
+    if (brewery?.id) {
+      await saveBreweryGeocodeResult(brewery.id, { lat: result.lat, lng: result.lng, source: result.source, confidence: result.confidence, status: result.status });
+    }
+  };
+
   const phonePrefix = PHONE_PREFIXES[form.country] || "";
 
   const buildPatch = () => ({
@@ -211,6 +252,9 @@ export function BreweryDetailPanel({ brewery, onClose, onSaved }) {
     country: form.country,
     lat: form.lat === "" ? null : parseFloat(form.lat),
     lng: form.lng === "" ? null : parseFloat(form.lng),
+    geocodeStatus,
+    geocodeSource,
+    geocodeConfidence,
     phone: form.phone.trim() ? `${phonePrefix} ${form.phone.trim()}` : "",
     email: form.email.trim(),
     website: form.website.trim(),
@@ -457,7 +501,41 @@ export function BreweryDetailPanel({ brewery, onClose, onSaved }) {
               />
             </div>
           </div>
-          <p style={{ fontSize: "11px", color: "#8792A6", marginTop: "-2px", marginBottom: "0" }}>Formats "50.4261" ou "50.4261° N" tous les deux acceptés.</p>
+          <p style={{ fontSize: "11px", color: "#8792A6", marginTop: "-2px", marginBottom: "10px" }}>Formats "50.4261" ou "50.4261° N" tous les deux acceptés.</p>
+
+          <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+            <button
+              onClick={handleGeocode}
+              disabled={geocoding || !(form.streetName && form.postalCode && form.city)}
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: "8px",
+                background: "none",
+                border: "2px solid #28405C",
+                borderRadius: "8px",
+                padding: "8px 14px",
+                color: "#F2F2E8",
+                fontSize: "12.5px",
+                fontWeight: 700,
+                cursor: form.streetName && form.postalCode && form.city ? "pointer" : "default",
+                opacity: form.streetName && form.postalCode && form.city ? 1 : 0.5,
+              }}
+            >
+              <PlaceCheckIcon size={16} />
+              {geocoding ? "Géocodage..." : "Géocoder automatiquement"}
+            </button>
+            {geocodeNotFound && <span style={{ fontSize: "12px", color: "#FF3B4E" }}>Adresse introuvable — vérifiez les champs</span>}
+            {!geocodeNotFound && geocodeStatus === "verified" && <span style={{ fontSize: "12px", color: "#39FF66" }}>✓ Position vérifiée</span>}
+            {!geocodeNotFound && geocodeStatus === "exact" && <span style={{ fontSize: "12px", color: "#39FF66" }}>✓ Position exacte</span>}
+            {!geocodeNotFound && geocodeStatus === "manual" && <span style={{ fontSize: "12px", color: "#39FF66" }}>✓ Position corrigée manuellement</span>}
+            {!geocodeNotFound && geocodeStatus === "building" && <span style={{ fontSize: "12px", color: "#00C8FF" }}>Précision : bâtiment</span>}
+            {!geocodeNotFound && geocodeStatus === "street" && <span style={{ fontSize: "12px", color: "#00C8FF" }}>Précision : rue</span>}
+            {!geocodeNotFound && geocodeStatus === "postcode" && <span style={{ fontSize: "12px", color: "#00C8FF" }}>Précision : code postal seulement</span>}
+            {!geocodeNotFound && geocodeStatus === "city" && <span style={{ fontSize: "12px", color: "#00C8FF" }}>Précision : ville seulement</span>}
+            {!geocodeNotFound && geocodeStatus === "approximate" && <span style={{ fontSize: "12px", color: "#00C8FF" }}>Position approximative</span>}
+            {!geocodeNotFound && geocodeStatus === "pending" && <span style={{ fontSize: "12px", color: "#8792A6" }}>Pas encore géocodée</span>}
+          </div>
         </CollapsibleSection>
 
         <CollapsibleSection title="Coordonnées">
