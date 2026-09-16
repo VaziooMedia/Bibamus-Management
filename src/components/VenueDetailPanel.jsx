@@ -423,7 +423,10 @@ export function VenueDetailPanel({ venue, onClose, onSaved, drinksDirectory }) {
       <div style={{ width: "540px", background: "#0D1B2A", height: "100%", overflowY: "auto", padding: "28px", borderLeft: "2px solid #28405C" }}>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "20px" }}>
           {isNew ? (
-            <h2 style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "22px", margin: 0 }}>Ajouter un établissement</h2>
+            <h2 style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "22px", margin: 0, display: "flex", alignItems: "center", gap: "10px" }}>
+              <span style={{ width: "4px", height: "20px", background: "#39FF66", borderRadius: "2px", display: "inline-block" }} />
+              Ajouter un lieu
+            </h2>
           ) : (
             <h2 style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "22px", margin: 0, display: "flex", alignItems: "center", gap: "10px" }}>
               <span style={{ width: "4px", height: "20px", background: "#39FF66", borderRadius: "2px", display: "inline-block" }} />
