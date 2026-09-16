@@ -514,7 +514,7 @@ export function DrinkDetailPanel({ drink, onClose, onSaved }) {
 
         {isBeerOrCider ? (
           <>
-            <div style={{ display: "flex", gap: "4px", marginBottom: "18px", borderBottom: "2px solid #28405C" }}>
+            <div style={{ display: "flex", gap: "4px", marginBottom: "18px", borderBottom: "2px solid #28405C", overflowX: "auto" }}>
               {[
                 { key: "quick", label: "Ajout rapide" },
                 { key: "niveau1", label: "Niveau 1" },
@@ -536,6 +536,7 @@ export function DrinkDetailPanel({ drink, onClose, onSaved }) {
                     color: tab.disabled ? "#4A5A70" : activeTab === tab.key ? "#39FF66" : "#8792A6",
                     fontWeight: activeTab === tab.key ? 700 : 500,
                     fontSize: "12.5px",
+                    whiteSpace: "nowrap",
                     cursor: tab.disabled ? "not-allowed" : "pointer",
                   }}
                 >
