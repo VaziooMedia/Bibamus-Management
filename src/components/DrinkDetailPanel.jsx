@@ -774,6 +774,8 @@ export function DrinkDetailPanel({ drink, onClose, onSaved }) {
                     </div>
                     </CollapsibleSection>
 
+                    <div style={separatorStyle} />
+
                     <CollapsibleSection title="Fabrication">
                     <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px", marginBottom: "12px" }}>
                       <div>
@@ -986,6 +988,8 @@ export function DrinkDetailPanel({ drink, onClose, onSaved }) {
                   </>
                 )}
 
+                <div style={separatorStyle} />
+
                 <CollapsibleSection title="Profil gustatif">
                 <TasteScale label="Amertume" value={form.tasteBitterness} onChange={(v) => set("tasteBitterness", v)} lowLabel="Très faible" highLabel="Très forte" />
                 <TasteScale label="Douceur" value={form.tasteSweetness} onChange={(v) => set("tasteSweetness", v)} lowLabel="Très sèche" highLabel="Très douce" />
@@ -998,9 +1002,13 @@ export function DrinkDetailPanel({ drink, onClose, onSaved }) {
                 <TasteScale label="Effervescence" value={form.tasteCarbonation} onChange={(v) => set("tasteCarbonation", v)} lowLabel="Plate" highLabel="Très effervescente" />
                 </CollapsibleSection>
 
+                <div style={separatorStyle} />
+
                 <CollapsibleSection title="Arômes & saveurs">
                 <StyleTagAccordion groups={FLAVOR_NOTE_GROUPS} selected={form.flavorNotes} onToggle={(t) => toggleArrayField("flavorNotes", t)} />
                 </CollapsibleSection>
+
+                <div style={separatorStyle} />
 
                 <CollapsibleSection title="Service & consommation">
                 <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px", marginBottom: "12px" }}>
@@ -1044,6 +1052,8 @@ export function DrinkDetailPanel({ drink, onClose, onSaved }) {
                   ))}
                 </select>
                 </CollapsibleSection>
+
+                <div style={separatorStyle} />
 
                 <CollapsibleSection title="Caractéristiques & labels">
                 <div style={{ display: "flex", flexDirection: "column", gap: "8px", marginBottom: "12px" }}>
@@ -1090,6 +1100,8 @@ export function DrinkDetailPanel({ drink, onClose, onSaved }) {
                 </div>
                 </CollapsibleSection>
 
+                <div style={separatorStyle} />
+
                 <CollapsibleSection title="Présentation">
                 <label style={labelStyle}>Description courte</label>
                 <textarea value={form.shortDescription} onChange={(e) => set("shortDescription", e.target.value)} rows={2} style={{ ...fieldStyle, marginBottom: "12px", resize: "vertical" }} />
@@ -1101,12 +1113,16 @@ export function DrinkDetailPanel({ drink, onClose, onSaved }) {
                 <input value={form.officialUrl} onChange={(e) => set("officialUrl", e.target.value)} style={fieldStyle} />
                 </CollapsibleSection>
 
+                <div style={separatorStyle} />
+
                 <CollapsibleSection title="Conditionnements & variantes">
                 <p style={{ fontSize: "11.5px", color: "#8792A6", marginTop: "-6px", marginBottom: "10px" }}>
                   Une même bière peut exister en plusieurs bouteilles, canettes ou fûts — chacun avec son propre code-barres si connu.
                 </p>
                 <VariantManager drinkId={drink?.id || null} />
                 </CollapsibleSection>
+
+                <div style={separatorStyle} />
 
                 <div style={{ background: "#2A1F0D", border: "2px solid #FF9500", borderRadius: "8px", padding: "12px", marginBottom: "16px", fontSize: "12px", color: "#F2F2E8" }}>
                   🔒 Réservé aux producteurs "Business" (accord B2B) et aux administrateurs. L'accès depuis cette plateforme n'est pas encore restreint techniquement — un vrai verrouillage par compte producteur reste à construire.
@@ -1165,6 +1181,8 @@ export function DrinkDetailPanel({ drink, onClose, onSaved }) {
                           </div>
                         </div>
                         </CollapsibleSection>
+
+                        <div style={separatorStyle} />
 
                         <CollapsibleSection title="Procédé brassicole avancé">
                         <label style={labelStyle}>Empâtage</label>
@@ -1268,6 +1286,8 @@ export function DrinkDetailPanel({ drink, onClose, onSaved }) {
                       <input value={form.ciderAgingDetails} onChange={(e) => set("ciderAgingDetails", e.target.value)} placeholder="Durée, récipient, type de bois" style={fieldStyle} />
                       </CollapsibleSection>
                     )}
+
+                    <div style={separatorStyle} />
 
                     <CollapsibleSection title="Traçabilité & sources">
                     <label style={labelStyle}>Source de l'information</label>
