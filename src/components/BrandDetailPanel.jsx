@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { capitalizeFirst } from "../utils.js";
 import { updateBrand, deleteBrand, createBrand, uploadBrandLogo, uploadBrandCoverPhoto, uploadBrandGalleryPhoto, loadBreweriesDirectory, loadBrandsDirectory, mergeEntities } from "../data/sharedDirectories.js";
 import { StatusSelector } from "./StatusSelector.jsx";
 import { AdminPhotoField } from "./AdminPhotoField.jsx";
@@ -166,7 +167,7 @@ export function BrandDetailPanel({ brand, onClose, onSaved }) {
     name: capitalizeWords(form.name.trim()),
     aliases: form.aliasesText.split(",").map((a) => a.trim()).filter(Boolean),
     alternateName: capitalizeWords(form.alternateName.trim()),
-    slogan: capitalizeWords(form.slogan.trim()),
+    slogan: capitalizeFirst(form.slogan.trim()),
     foundedYear: form.foundedYear === "" ? null : parseInt(form.foundedYear, 10),
     originCountry: form.originCountry,
     originCity: form.originCity.trim(),
@@ -335,7 +336,7 @@ export function BrandDetailPanel({ brand, onClose, onSaved }) {
               <input value={form.alternateName} onChange={(e) => set("alternateName", e.target.value)} style={{ ...fieldStyle, marginBottom: "14px" }} />
 
               <label style={labelStyle}>Slogan</label>
-              <input value={form.slogan} onChange={(e) => set("slogan", e.target.value)} onBlur={capitalizeOnBlur("slogan")} style={fieldStyle} />
+              <input value={form.slogan} onChange={(e) => set("slogan", e.target.value)} onBlur={() => set("slogan", capitalizeFirst(form.slogan))} style={fieldStyle} />
             </CollapsibleSection>
 
             <div style={separatorStyle} />
