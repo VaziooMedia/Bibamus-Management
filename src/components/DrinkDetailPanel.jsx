@@ -853,82 +853,73 @@ export function DrinkDetailPanel({ drink, onClose, onSaved }) {
                   onToggle={toggleStyle}
                   hideControls={isWine}
                 />
-              </>
-            )}
 
-            {isWine && (
-              <>
-                <div style={separatorStyle} />
-                <SectionTitle>Cépage(s)</SectionTitle>
-                <p style={{ fontSize: "11.5px", color: "#8792A6", marginTop: "-6px", marginBottom: "10px" }}>Pourcentage facultatif pour chaque cépage.</p>
-                <GrapeVarietySelect
-                  selected={form.grapeVarieties}
-                  onChange={(v) => set("grapeVarieties", v)}
-                  options={visibleGrapeVarietyOptions}
-                  onCreateOption={handleCreateGrapeVariety}
-                  showPercentage
-                />
+                {isWine && (
+                  <>
+                    <div style={separatorStyle} />
+                    <SectionTitle>Cépage(s)</SectionTitle>
+                    <p style={{ fontSize: "11.5px", color: "#8792A6", marginTop: "-6px", marginBottom: "10px" }}>Pourcentage facultatif pour chaque cépage.</p>
+                    <GrapeVarietySelect
+                      selected={form.grapeVarieties}
+                      onChange={(v) => set("grapeVarieties", v)}
+                      options={visibleGrapeVarietyOptions}
+                      onCreateOption={handleCreateGrapeVariety}
+                      showPercentage
+                    />
 
-                <div style={separatorStyle} />
-                <SectionTitle>Millésime</SectionTitle>
-                <div style={{ display: "flex", gap: "8px", marginBottom: vintageMode === "annee" ? "10px" : 0 }}>
-                  <button
-                    onClick={() => {
-                      setVintageMode("annee");
-                      if (form.vintage === "non_millesime") set("vintage", "");
-                    }}
-                    style={{
-                      background: vintageMode === "annee" ? "#39FF66" : "none",
-                      border: `2px solid ${vintageMode === "annee" ? "#39FF66" : "#28405C"}`,
-                      borderRadius: "999px",
-                      padding: "5px 11px",
-                      fontSize: "11.5px",
-                      fontWeight: 600,
-                      color: vintageMode === "annee" ? "#0D1B2A" : "#F2F2E8",
-                      cursor: "pointer",
-                    }}
-                  >
-                    Année (à encoder)
-                  </button>
-                  <button
-                    onClick={() => {
-                      setVintageMode("non_millesime");
-                      set("vintage", "non_millesime");
-                    }}
-                    style={{
-                      background: vintageMode === "non_millesime" ? "#39FF66" : "none",
-                      border: `2px solid ${vintageMode === "non_millesime" ? "#39FF66" : "#28405C"}`,
-                      borderRadius: "999px",
-                      padding: "5px 11px",
-                      fontSize: "11.5px",
-                      fontWeight: 600,
-                      color: vintageMode === "non_millesime" ? "#0D1B2A" : "#F2F2E8",
-                      cursor: "pointer",
-                    }}
-                  >
-                    Non millésimé
-                  </button>
-                </div>
-                {vintageMode === "annee" && (
-                  <input
-                    type="number"
-                    min="1900"
-                    max="2100"
-                    value={form.vintage === "non_millesime" ? "" : form.vintage}
-                    onChange={(e) => set("vintage", e.target.value)}
-                    placeholder="Ex. 2022"
-                    style={{ ...fieldStyle, width: "120px" }}
-                  />
+                    <div style={separatorStyle} />
+                    <SectionTitle>Millésime</SectionTitle>
+                    <div style={{ display: "flex", gap: "8px", marginBottom: vintageMode === "annee" ? "10px" : 0 }}>
+                      <button
+                        onClick={() => {
+                          setVintageMode("annee");
+                          if (form.vintage === "non_millesime") set("vintage", "");
+                        }}
+                        style={{
+                          background: vintageMode === "annee" ? "#39FF66" : "none",
+                          border: `2px solid ${vintageMode === "annee" ? "#39FF66" : "#28405C"}`,
+                          borderRadius: "999px",
+                          padding: "5px 11px",
+                          fontSize: "11.5px",
+                          fontWeight: 600,
+                          color: vintageMode === "annee" ? "#0D1B2A" : "#F2F2E8",
+                          cursor: "pointer",
+                        }}
+                      >
+                        Année (à encoder)
+                      </button>
+                      <button
+                        onClick={() => {
+                          setVintageMode("non_millesime");
+                          set("vintage", "non_millesime");
+                        }}
+                        style={{
+                          background: vintageMode === "non_millesime" ? "#39FF66" : "none",
+                          border: `2px solid ${vintageMode === "non_millesime" ? "#39FF66" : "#28405C"}`,
+                          borderRadius: "999px",
+                          padding: "5px 11px",
+                          fontSize: "11.5px",
+                          fontWeight: 600,
+                          color: vintageMode === "non_millesime" ? "#0D1B2A" : "#F2F2E8",
+                          cursor: "pointer",
+                        }}
+                      >
+                        Non millésimé
+                      </button>
+                    </div>
+                    {vintageMode === "annee" && (
+                      <input
+                        type="number"
+                        min="1900"
+                        max="2100"
+                        value={form.vintage === "non_millesime" ? "" : form.vintage}
+                        onChange={(e) => set("vintage", e.target.value)}
+                        placeholder="Ex. 2022"
+                        style={{ ...fieldStyle, width: "120px" }}
+                      />
+                    )}
+                  </>
                 )}
-
-                <div style={separatorStyle} />
-                <SectionTitle>Labels</SectionTitle>
-                <StyleTagAccordion
-                  groups={[(form.beverageSubtype === "vin_effervescent" ? WINE_EFFERVESCENT_STYLE_GROUPS : WINE_STYLE_GROUPS).find((g) => g.title === "Labels")]}
-                  selected={form.styles}
-                  onToggle={toggleStyle}
-                  hideControls
-                />
               </>
             )}
               </>
