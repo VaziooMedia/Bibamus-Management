@@ -454,34 +454,34 @@ export function VenueDetailPanel({ venue, onClose, onSaved, drinksDirectory }) {
           </div>
         </>
 
-        {!isNew && (
-          <div style={{ display: "flex", gap: "6px", marginBottom: "20px", borderBottom: "2px solid #28405C" }}>
-            {[
-              { key: "edit", label: "Édition" },
-              { key: "carte", label: "Carte" },
-              { key: "medias", label: "Médias" },
-              { key: "stats", label: "Statistiques" },
-            ].map((tab) => (
-              <button
-                key={tab.key}
-                onClick={() => setActiveTab(tab.key)}
-                style={{
-                  background: "none",
-                  border: "none",
-                  borderBottom: `2px solid ${activeTab === tab.key ? "#39FF66" : "transparent"}`,
-                  marginBottom: "-2px",
-                  padding: "8px 12px",
-                  fontSize: "13px",
-                  fontWeight: 700,
-                  color: activeTab === tab.key ? "#39FF66" : "#8792A6",
-                  cursor: "pointer",
-                }}
-              >
-                {tab.label}
-              </button>
-            ))}
-          </div>
-        )}
+        <div style={{ display: "flex", gap: "6px", marginBottom: "20px", borderBottom: "2px solid #28405C" }}>
+          {[
+            { key: "edit", label: "Informations" },
+            { key: "carte", label: "Carte" },
+            { key: "medias", label: "Médias" },
+            { key: "stats", label: "Statistiques", disabled: isNew },
+          ].map((tab) => (
+            <button
+              key={tab.key}
+              onClick={() => !tab.disabled && setActiveTab(tab.key)}
+              disabled={tab.disabled}
+              title={tab.disabled ? "Disponible une fois l'établissement créé" : undefined}
+              style={{
+                background: "none",
+                border: "none",
+                borderBottom: `2px solid ${activeTab === tab.key ? "#39FF66" : "transparent"}`,
+                marginBottom: "-2px",
+                padding: "8px 12px",
+                fontSize: "13px",
+                fontWeight: 700,
+                color: tab.disabled ? "#4A5A70" : activeTab === tab.key ? "#39FF66" : "#8792A6",
+                cursor: tab.disabled ? "not-allowed" : "pointer",
+              }}
+            >
+              {tab.label}
+            </button>
+          ))}
+        </div>
 
 
         {activeTab === "medias" && (
