@@ -33,7 +33,7 @@ import {
   APPLE_TYPES,
   VERIFICATION_STATUSES,
 } from "../data/beerCiderStyles.js";
-import { WINE_STYLE_GROUPS, WINE_COLORS_BY_SUBTYPE } from "../data/wineStyles.js";
+import { WINE_STYLE_GROUPS, WINE_COLORS_BY_SUBTYPE, WINE_APPELLATIONS_BY_COUNTRY } from "../data/wineStyles.js";
 
 export const DRINK_TYPES = [
   { code: "bieres_cidres", fr: "Bières & Cidres" },
@@ -93,6 +93,7 @@ export function DrinkDetailPanel({ drink, onClose, onSaved }) {
     producerIds: drink?.producerIds || [],
     nationality: drink?.nationality || "",
     wineColor: drink?.wineColor || "",
+    appellation: drink?.appellation || "",
     originRegion: drink?.originRegion || "",
     originCity: drink?.originCity || "",
     styles: drink?.styles || [],
@@ -278,6 +279,7 @@ export function DrinkDetailPanel({ drink, onClose, onSaved }) {
       producerIds: form.producerIds,
       nationality: form.nationality || null,
       wineColor: form.wineColor || null,
+      appellation: form.appellation || null,
       originRegion: form.originRegion.trim(),
       originCity: form.originCity.trim(),
       styles: form.styles,
@@ -603,7 +605,20 @@ export function DrinkDetailPanel({ drink, onClose, onSaved }) {
                     <div style={separatorStyle} />
 
                     <CollapsibleSection title="Appellation" defaultOpen>
-                      <p style={{ fontSize: "13px", color: "#8792A6", fontStyle: "italic" }}>Sera complété prochainement.</p>
+                      {form.beverageSubtype !== "vin" ? (
+                        <p style={{ fontSize: "13px", color: "#8792A6", fontStyle: "italic" }}>Sera complété prochainement.</p>
+                      ) : !form.nationality ? (
+                        <p style={{ fontSize: "13px", color: "#8792A6", fontStyle: "italic" }}>Choisissez d'abord un pays.</p>
+                      ) : !WINE_APPELLATIONS_BY_COUNTRY[form.nationality] ? (
+                        <p style={{ fontSize: "13px", color: "#8792A6", fontStyle: "italic" }}>Aucune appellation disponible pour ce pays pour l'instant.</p>
+                      ) : (
+                        <SearchableSelect
+                          options={WINE_APPELLATIONS_BY_COUNTRY[form.nationality].map((a) => ({ id: a.code, name: a.fr }))}
+                          value={form.appellation}
+                          onChange={(id) => set("appellation", id || "")}
+                          placeholder="Chercher une appellation..."
+                        />
+                      )}
                     </CollapsibleSection>
 
                     <div style={separatorStyle} />

@@ -18,3 +18,7 @@ export const WINE_COLORS_BY_SUBTYPE = {
     { code: "orange", fr: "Orange" },
   ],
 };
+
+// Appellations disponibles selon le pays — vide pour l'instant, complété pays par pays.
+// Clé = code pays (même code que COUNTRIES/COUNTRY_ISO_CODES), valeur = liste {code, fr}.
+export const WINE_APPELLATIONS_BY_COUNTRY = {};
