@@ -18,6 +18,14 @@ export const WINE_STYLE_GROUPS = [
       { code: "vin_oxydatif", fr: "Vin oxydatif" },
     ],
   },
+  {
+    title: "Labels",
+    tags: [
+      { code: "biodynamique", fr: "Biodynamique" },
+      { code: "bio", fr: "Bio" },
+      { code: "nature", fr: "Nature" },
+    ],
+  },
 ];
 
 // Caractéristiques spécifiques au vin effervescent — groupe séparé de WINE_STYLE_GROUPS,
@@ -50,6 +58,14 @@ export const WINE_EFFERVESCENT_STYLE_GROUPS = [
       { code: "methode_ancestrale", fr: "Méthode ancestrale" },
       { code: "methode_charmat_cuve_close", fr: "Méthode Charmat / Cuve close" },
       { code: "methode_traditionnelle", fr: "Méthode traditionnelle" },
+    ],
+  },
+  {
+    title: "Labels",
+    tags: [
+      { code: "biodynamique", fr: "Biodynamique" },
+      { code: "bio", fr: "Bio" },
+      { code: "nature", fr: "Nature" },
     ],
   },
 ];

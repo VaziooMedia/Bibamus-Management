@@ -96,6 +96,7 @@ export function DrinkDetailPanel({ drink, onClose, onSaved }) {
     wineColor: drink?.wineColor || "",
     appellation: drink?.appellation || "",
     grapeVarieties: drink?.grapeVarieties || [],
+    vintage: drink?.vintage || "",
     originRegion: drink?.originRegion || "",
     originCity: drink?.originCity || "",
     styles: drink?.styles || [],
@@ -237,6 +238,7 @@ export function DrinkDetailPanel({ drink, onClose, onSaved }) {
   const [brandOptions, setBrandOptions] = useState([]);
   const [producerOptions, setProducerOptions] = useState([]);
   const [grapeVarietyOptions, setGrapeVarietyOptions] = useState([]);
+  const [vintageMode, setVintageMode] = useState(form.vintage === "non_millesime" ? "non_millesime" : form.vintage ? "annee" : null);
 
   const isBeerOrCider = form.type === "bieres_cidres";
   const isWine = form.type === "vins_bulles";
@@ -292,6 +294,7 @@ export function DrinkDetailPanel({ drink, onClose, onSaved }) {
       wineColor: form.wineColor || null,
       appellation: form.appellation || null,
       grapeVarieties: form.grapeVarieties,
+      vintage: form.vintage || null,
       originRegion: form.originRegion.trim(),
       originCity: form.originCity.trim(),
       styles: form.styles,
@@ -864,6 +867,67 @@ export function DrinkDetailPanel({ drink, onClose, onSaved }) {
                   options={visibleGrapeVarietyOptions}
                   onCreateOption={handleCreateGrapeVariety}
                   showPercentage
+                />
+
+                <div style={separatorStyle} />
+                <SectionTitle>Millésime</SectionTitle>
+                <div style={{ display: "flex", gap: "8px", marginBottom: vintageMode === "annee" ? "10px" : 0 }}>
+                  <button
+                    onClick={() => {
+                      setVintageMode("annee");
+                      if (form.vintage === "non_millesime") set("vintage", "");
+                    }}
+                    style={{
+                      background: vintageMode === "annee" ? "#39FF66" : "none",
+                      border: `2px solid ${vintageMode === "annee" ? "#39FF66" : "#28405C"}`,
+                      borderRadius: "999px",
+                      padding: "5px 11px",
+                      fontSize: "11.5px",
+                      fontWeight: 600,
+                      color: vintageMode === "annee" ? "#0D1B2A" : "#F2F2E8",
+                      cursor: "pointer",
+                    }}
+                  >
+                    Année (à encoder)
+                  </button>
+                  <button
+                    onClick={() => {
+                      setVintageMode("non_millesime");
+                      set("vintage", "non_millesime");
+                    }}
+                    style={{
+                      background: vintageMode === "non_millesime" ? "#39FF66" : "none",
+                      border: `2px solid ${vintageMode === "non_millesime" ? "#39FF66" : "#28405C"}`,
+                      borderRadius: "999px",
+                      padding: "5px 11px",
+                      fontSize: "11.5px",
+                      fontWeight: 600,
+                      color: vintageMode === "non_millesime" ? "#0D1B2A" : "#F2F2E8",
+                      cursor: "pointer",
+                    }}
+                  >
+                    Non millésimé
+                  </button>
+                </div>
+                {vintageMode === "annee" && (
+                  <input
+                    type="number"
+                    min="1900"
+                    max="2100"
+                    value={form.vintage === "non_millesime" ? "" : form.vintage}
+                    onChange={(e) => set("vintage", e.target.value)}
+                    placeholder="Ex. 2022"
+                    style={{ ...fieldStyle, width: "120px" }}
+                  />
+                )}
+
+                <div style={separatorStyle} />
+                <SectionTitle>Labels</SectionTitle>
+                <StyleTagAccordion
+                  groups={[(form.beverageSubtype === "vin_effervescent" ? WINE_EFFERVESCENT_STYLE_GROUPS : WINE_STYLE_GROUPS).find((g) => g.title === "Labels")]}
+                  selected={form.styles}
+                  onToggle={toggleStyle}
+                  hideControls
                 />
               </>
             )}
