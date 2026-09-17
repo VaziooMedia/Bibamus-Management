@@ -221,8 +221,8 @@ export function DrinkDetailPanel({ drink, onClose, onSaved }) {
   const [uploadingAward, setUploadingAward] = useState(false);
   const [uploadingPhoto, setUploadingPhoto] = useState(false);
   const [uploadingCover, setUploadingCover] = useState(false);
-  const [status, setStatus] = useState(drink?.status || "to_process");
-  const [certificationLevel, setCertificationLevel] = useState(drink?.certificationLevel || "utilisateur");
+  const [status, setStatus] = useState(drink?.status || "draft");
+  const [certificationLevel, setCertificationLevel] = useState(drink?.certificationLevel || "bibamus");
   const [duplicateOfId, setDuplicateOfId] = useState(drink?.duplicateOfId || null);
   const [otherDrinkOptions, setOtherDrinkOptions] = useState([]);
 

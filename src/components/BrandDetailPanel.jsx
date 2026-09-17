@@ -140,8 +140,8 @@ export function BrandDetailPanel({ brand, onClose, onSaved }) {
   const [uploadingCover, setUploadingCover] = useState(false);
   const [uploadingGallery, setUploadingGallery] = useState(false);
   const [activeTab, setActiveTab] = useState("informations");
-  const [status, setStatus] = useState(brand?.status || "to_process");
-  const [certificationLevel, setCertificationLevel] = useState(brand?.certificationLevel || "utilisateur");
+  const [status, setStatus] = useState(brand?.status || "draft");
+  const [certificationLevel, setCertificationLevel] = useState(brand?.certificationLevel || "bibamus");
   const [duplicateOfId, setDuplicateOfId] = useState(brand?.duplicateOfId || null);
   const [otherBrandOptions, setOtherBrandOptions] = useState([]);
 

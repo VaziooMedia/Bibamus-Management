@@ -191,8 +191,8 @@ export function BreweryDetailPanel({ brewery, onClose, onSaved }) {
   const [geocodeStatus, setGeocodeStatus] = useState(brewery?.geocodeStatus || null);
   const [geocodeSource, setGeocodeSource] = useState(brewery?.geocodeSource || null);
   const [geocodeConfidence, setGeocodeConfidence] = useState(brewery?.geocodeConfidence ?? null);
-  const [status, setStatus] = useState(brewery?.status || "to_process");
-  const [certificationLevel, setCertificationLevel] = useState(brewery?.certificationLevel || "utilisateur");
+  const [status, setStatus] = useState(brewery?.status || "draft");
+  const [certificationLevel, setCertificationLevel] = useState(brewery?.certificationLevel || "bibamus");
   const [duplicateOfId, setDuplicateOfId] = useState(brewery?.duplicateOfId || null);
   const [otherBreweryOptions, setOtherBreweryOptions] = useState([]);
 
