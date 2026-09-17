@@ -232,6 +232,8 @@ export const BRAND_CLASSIFICATIONS = [
 
 export const BRAND_TYPES = [
   { code: "artisanale", fr: "Artisanale" },
+  { code: "trappiste", fr: "Trappiste" },
+  { code: "abbaye", fr: "Abbaye" },
   { code: "locale", fr: "Locale" },
   { code: "regionale", fr: "Régionale" },
   { code: "nationale", fr: "Nationale" },
