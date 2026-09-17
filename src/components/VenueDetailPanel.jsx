@@ -190,6 +190,13 @@ export function VenueDetailPanel({ venue, onClose, onSaved, drinksDirectory }) {
     privatizationPossible: !!venue?.privatizationPossible,
     hasPrivateRoom: !!venue?.hasPrivateRoom,
     smokingArea: !!venue?.smokingArea,
+    hasSnacks: !!venue?.hasSnacks,
+    hasOccasionalKaraoke: !!venue?.hasOccasionalKaraoke,
+    hasOccasionalConcerts: !!venue?.hasOccasionalConcerts,
+    hasBilliards: !!venue?.hasBilliards,
+    hasFoosball: !!venue?.hasFoosball,
+    hasDarts: !!venue?.hasDarts,
+    hasBingo: !!venue?.hasBingo,
   });
   const [profilePhotoUrl, setProfilePhotoUrl] = useState(venue?.profilePhotoUrl || null);
   const [coverPhotoUrl, setCoverPhotoUrl] = useState(venue?.coverPhotoUrl || null);
@@ -317,6 +324,13 @@ export function VenueDetailPanel({ venue, onClose, onSaved, drinksDirectory }) {
     privatizationPossible: form.privatizationPossible,
     hasPrivateRoom: form.hasPrivateRoom,
     smokingArea: form.smokingArea,
+    hasSnacks: form.hasSnacks,
+    hasOccasionalKaraoke: form.hasOccasionalKaraoke,
+    hasOccasionalConcerts: form.hasOccasionalConcerts,
+    hasBilliards: form.hasBilliards,
+    hasFoosball: form.hasFoosball,
+    hasDarts: form.hasDarts,
+    hasBingo: form.hasBingo,
     menuPdfUrl,
     profilePhotoUrl,
     coverPhotoUrl,
@@ -781,8 +795,36 @@ export function VenueDetailPanel({ venue, onClose, onSaved, drinksDirectory }) {
         <CollapsibleSection title="Aménités" variant="subtitle" expanded={amenitiesExpanded} onToggle={() => setAmenitiesExpanded((e) => !e)}>
           <div style={{ display: "flex", flexDirection: "column", gap: "8px", marginBottom: "6px" }}>
             <label style={{ display: "flex", alignItems: "center", gap: "6px", fontSize: "13px", cursor: "pointer" }}>
+              <input type="checkbox" checked={form.hasOccasionalKaraoke} onChange={(e) => set("hasOccasionalKaraoke", e.target.checked)} />
+              Karaokés occasionnels
+            </label>
+            <label style={{ display: "flex", alignItems: "center", gap: "6px", fontSize: "13px", cursor: "pointer" }}>
+              <input type="checkbox" checked={form.hasOccasionalConcerts} onChange={(e) => set("hasOccasionalConcerts", e.target.checked)} />
+              Concerts occasionnels
+            </label>
+            <label style={{ display: "flex", alignItems: "center", gap: "6px", fontSize: "13px", cursor: "pointer" }}>
+              <input type="checkbox" checked={form.hasBilliards} onChange={(e) => set("hasBilliards", e.target.checked)} />
+              Billard
+            </label>
+            <label style={{ display: "flex", alignItems: "center", gap: "6px", fontSize: "13px", cursor: "pointer" }}>
+              <input type="checkbox" checked={form.hasFoosball} onChange={(e) => set("hasFoosball", e.target.checked)} />
+              Babyfoot - Kicker
+            </label>
+            <label style={{ display: "flex", alignItems: "center", gap: "6px", fontSize: "13px", cursor: "pointer" }}>
+              <input type="checkbox" checked={form.hasDarts} onChange={(e) => set("hasDarts", e.target.checked)} />
+              Jeu de fléchettes
+            </label>
+            <label style={{ display: "flex", alignItems: "center", gap: "6px", fontSize: "13px", cursor: "pointer" }}>
+              <input type="checkbox" checked={form.hasBingo} onChange={(e) => set("hasBingo", e.target.checked)} />
+              Bingo
+            </label>
+            <label style={{ display: "flex", alignItems: "center", gap: "6px", fontSize: "13px", cursor: "pointer" }}>
               <input type="checkbox" checked={form.hasFood} onChange={(e) => set("hasFood", e.target.checked)} />
-              Restauration possible (en plus des boissons)
+              Restauration
+            </label>
+            <label style={{ display: "flex", alignItems: "center", gap: "6px", fontSize: "13px", cursor: "pointer" }}>
+              <input type="checkbox" checked={form.hasSnacks} onChange={(e) => set("hasSnacks", e.target.checked)} />
+              Petite restauration
             </label>
             <label style={{ display: "flex", alignItems: "center", gap: "6px", fontSize: "13px", cursor: "pointer" }}>
               <input type="checkbox" checked={form.hasTerrace} onChange={(e) => set("hasTerrace", e.target.checked)} />
