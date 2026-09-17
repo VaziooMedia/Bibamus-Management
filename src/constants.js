@@ -206,6 +206,8 @@ export const PRODUCER_PROFILES = [
   { code: "micro_producteur", fr: "Micro-producteur" },
   { code: "artisanal", fr: "Artisanal" },
   { code: "local", fr: "Local" },
+  { code: "trappiste", fr: "Trappiste" },
+  { code: "abbaye", fr: "Abbaye" },
   { code: "independant", fr: "Indépendant" },
   { code: "industriel", fr: "Industriel" },
   { code: "groupe", fr: "Groupe" },
