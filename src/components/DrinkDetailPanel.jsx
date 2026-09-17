@@ -582,11 +582,11 @@ export function DrinkDetailPanel({ drink, onClose, onSaved }) {
                     step="0.1"
                     value={form.abv}
                     onChange={(e) => set("abv", e.target.value)}
-                    disabled={form.abv === "0"}
-                    style={{ ...fieldStyle, width: "80px", opacity: form.abv === "0" ? 0.5 : 1 }}
+                    disabled={form.abv !== "" && Number(form.abv) === 0}
+                    style={{ ...fieldStyle, width: "80px", opacity: form.abv !== "" && Number(form.abv) === 0 ? 0.5 : 1 }}
                   />
                   <label style={{ display: "flex", alignItems: "center", gap: "6px", fontSize: "12.5px", color: "#F2F2E8", cursor: "pointer" }}>
-                    <input type="checkbox" checked={form.abv === "0"} onChange={(e) => set("abv", e.target.checked ? "0" : "")} />
+                    <input type="checkbox" checked={form.abv !== "" && Number(form.abv) === 0} onChange={(e) => set("abv", e.target.checked ? "0" : "")} />
                     Sans alcool (0.0%)
                   </label>
                 </div>
