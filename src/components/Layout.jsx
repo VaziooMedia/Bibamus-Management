@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { TopBar } from "./TopBar.jsx";
 import { usePendingReportsCount } from "../data/usePendingReportsCount.js";
+import { useUnreadChatCounts } from "../data/useUnreadChatCounts.js";
 
 const COMMUNICATION_ITEMS = [
   { key: "chatTeam", label: "Chat Team" },
@@ -136,13 +137,14 @@ function LogoutIcon() {
   );
 }
 
-export function Layout({ current, onNavigate, onLogout, myRole, myCanModerate, children }) {
+export function Layout({ current, onNavigate, onLogout, myRole, myCanModerate, myUserId, children }) {
   const isDatabaseScreen = DATABASE_ITEMS.some((i) => i.key === current) || current === "database";
   const [databaseOpen, setDatabaseOpen] = useState(isDatabaseScreen);
   const isModerator = myRole === "moderator";
   const isEditorTier = myRole === "editor" || myRole === "super_editor";
   const isBusiness = myRole === "business";
   const pendingReportsCount = usePendingReportsCount();
+  const unreadChatCounts = useUnreadChatCounts(myUserId, myRole);
 
   const [communicationOpen, setCommunicationOpen] = useState(true);
   const [databaseSectionOpen, setDatabaseSectionOpen] = useState(true);
@@ -226,9 +228,19 @@ export function Layout({ current, onNavigate, onLogout, myRole, myCanModerate, c
 
             <SectionHeader title="Communication" expanded={communicationOpen} onToggle={() => setCommunicationOpen((o) => !o)} />
             {communicationOpen &&
-              COMMUNICATION_ITEMS.map((item) => (
-                <NavButton key={item.key} item={item} current={current} onNavigate={onNavigate} badge={item.key === "notifications" ? pendingReportsCount : undefined} />
-              ))}
+              COMMUNICATION_ITEMS.map((item) => {
+                const badge =
+                  item.key === "notifications"
+                    ? pendingReportsCount
+                    : item.key === "chatTeam"
+                    ? unreadChatCounts.chatTeam
+                    : item.key === "chatClients"
+                    ? unreadChatCounts.chatClients
+                    : item.key === "chatBusiness"
+                    ? unreadChatCounts.chatBusiness
+                    : undefined;
+                return <NavButton key={item.key} item={item} current={current} onNavigate={onNavigate} badge={badge} />;
+              })}
 
             <SectionHeader title="DataBase" expanded={databaseSectionOpen} onToggle={() => setDatabaseSectionOpen((o) => !o)} />
             {databaseSectionOpen &&
@@ -259,7 +271,12 @@ export function Layout({ current, onNavigate, onLogout, myRole, myCanModerate, c
         <div style={{ padding: "0 20px 16px", fontSize: "10px", color: "#8792A6" }}>VaziooMedia - 2026</div>
       </div>
       <div style={{ flex: 1, display: "flex", flexDirection: "column", minWidth: 0 }}>
-        <TopBar pendingReportsCount={pendingReportsCount} onOpenReports={() => onNavigate("notifications")} />
+        <TopBar
+          pendingReportsCount={pendingReportsCount}
+          onOpenReports={() => onNavigate("notifications")}
+          unreadMessagesCount={unreadChatCounts.chatTeam + unreadChatCounts.chatClients + unreadChatCounts.chatBusiness}
+          onOpenMessages={() => onNavigate("chatTeam")}
+        />
         <div style={{ flex: 1, padding: "32px 40px", overflowY: "auto" }}>{children}</div>
       </div>
     </div>

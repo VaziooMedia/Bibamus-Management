@@ -532,6 +532,24 @@ export async function updateCountryRule(countryCode, minimumAge) {
 // Chat interne — un vrai canal unique partagé par toute l'équipe. Les 100 derniers messages,
 // avec le vrai nom/avatar de l'expéditeur (jointure sur profiles, la même table que les
 // collaborateurs) — le temps réel se branche séparément côté écran (Supabase Realtime).
+// Vrai suivi de lecture générique, partagé par les 3 badges de chat — voir
+// bibamus-schema-admin-read-markers.sql pour la vraie structure.
+export async function loadReadMarkers(userId) {
+  const { data, error } = await supabase.from("admin_read_markers").select("marker_key, last_read_at").eq("user_id", userId);
+  if (error) {
+    console.error("loadReadMarkers:", error);
+    return {};
+  }
+  const map = {};
+  data.forEach((row) => (map[row.marker_key] = row.last_read_at));
+  return map;
+}
+
+export async function markAsRead(userId, markerKey) {
+  const { error } = await supabase.from("admin_read_markers").upsert({ user_id: userId, marker_key: markerKey, last_read_at: new Date().toISOString() });
+  if (error) console.error("markAsRead:", error);
+}
+
 export async function loadAdminChatMessages() {
   const { data, error } = await supabase
     .from("admin_chat_messages")

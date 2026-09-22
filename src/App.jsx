@@ -91,7 +91,7 @@ export default function App() {
   }
 
   return (
-    <Layout current={screen} onNavigate={setScreen} onLogout={handleLogout} myRole={myRole} myCanModerate={myCanModerate}>
+    <Layout current={screen} onNavigate={setScreen} onLogout={handleLogout} myRole={myRole} myCanModerate={myCanModerate} myUserId={myUserId}>
       {screen === "dashboard" && <Dashboard />}
       {screen === "database" && <DataBaseOverviewScreen onNavigate={setScreen} supabaseUrl={SUPABASE_PROJECT_URL} />}
       {screen === "venues" && <VenuesScreen />}
@@ -100,7 +100,7 @@ export default function App() {
       {screen === "officialStories" && <OfficialStoriesScreen myUserId={myUserId} />}
       {screen === "brands" && <BrandsScreen />}
       {screen === "chatTeam" && <ChatTeamScreen myUserId={myUserId} myRole={myRole} />}
-      {screen === "chatClients" && <ChatClientsScreen />}
+      {screen === "chatClients" && <ChatClientsScreen myUserId={myUserId} />}
       {screen === "chatBusiness" && <ChatBusinessScreen />}
       {screen === "stats" && <AnalyticsScreen />}
       {screen === "finances" && <ComingSoon title="Finances" />}

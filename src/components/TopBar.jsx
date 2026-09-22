@@ -26,7 +26,7 @@ function useUserCount() {
   return count;
 }
 
-export function TopBar({ adminName = "Mehdi Alorchi", adminRole = "Super Admin", onSearch, pendingReportsCount, onOpenReports }) {
+export function TopBar({ adminName = "Mehdi Alorchi", adminRole = "Super Admin", onSearch, pendingReportsCount, onOpenReports, unreadMessagesCount, onOpenMessages }) {
   const userCount = useUserCount();
   const [query, setQuery] = useState("");
 
@@ -97,10 +97,33 @@ export function TopBar({ adminName = "Mehdi Alorchi", adminRole = "Super Admin",
           </span>
         )}
       </button>
-      <button title="Chat" style={{ background: "none", border: "none", cursor: "pointer", padding: "6px", display: "flex" }}>
+      <button onClick={onOpenMessages} title="Chat" style={{ background: "none", border: "none", cursor: "pointer", padding: "6px", display: "flex", position: "relative" }}>
         <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="#39FF66" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
           <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z" />
         </svg>
+        {!!unreadMessagesCount && (
+          <span
+            style={{
+              position: "absolute",
+              top: "2px",
+              right: "2px",
+              minWidth: "15px",
+              height: "15px",
+              padding: "0 3px",
+              borderRadius: "999px",
+              background: "#ef007c",
+              color: "#F2F2E8",
+              fontSize: "10px",
+              fontWeight: 800,
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              lineHeight: 1,
+            }}
+          >
+            {unreadMessagesCount > 99 ? "99+" : unreadMessagesCount}
+          </span>
+        )}
       </button>
 
       <div

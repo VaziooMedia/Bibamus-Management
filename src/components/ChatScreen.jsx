@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef, useCallback } from "react";
-import { loadAdminChatMessages, sendAdminChatMessage, loadSupportMessages, loadCollaborators } from "../data/sharedDirectories.js";
+import { loadAdminChatMessages, sendAdminChatMessage, loadSupportMessages, loadCollaborators, markAsRead } from "../data/sharedDirectories.js";
+import { conversationKey, isVisibleToMe } from "../data/chatHelpers.js";
 import { supabase } from "../supabaseClient.js";
 import { PageTitle } from "./PageTitle.jsx";
 
@@ -14,22 +15,6 @@ const ADMIN_ROLES = [
   { key: "super_admin", label: "Super admin" },
 ];
 const roleLabel = (key) => ADMIN_ROLES.find((r) => r.key === key)?.label || key;
-
-// Clé stable identifiant une vraie conversation : soit un vrai rôle ciblé (tout le monde ayant
-// ce rôle la voit), soit un vrai groupe de personnes précises (identifiants triés pour que le
-// même groupe, choisi dans n'importe quel ordre, retombe toujours sur la même vraie clé).
-function conversationKey(m) {
-  if (m.recipientRole) return `role:${m.recipientRole}`;
-  return `people:${[...(m.recipientIds || [])].sort().join(",")}`;
-}
-
-// Un vrai message m'est visible si je suis l'auteur, si mon rôle correspond au rôle ciblé, ou
-// si je fais partie des vraies personnes ciblées.
-function isVisibleToMe(m, myUserId, myRole) {
-  if (m.senderId === myUserId) return true;
-  if (m.recipientRole) return m.recipientRole === myRole;
-  return (m.recipientIds || []).includes(myUserId);
-}
 
 // Vrai sélecteur de destinataire(s) — soit une ou plusieurs vraies personnes précises, soit un
 // vrai type d'administration entier.
@@ -163,6 +148,12 @@ export function ChatTeamScreen({ myUserId, myRole }) {
 
   const activeConversation = conversations.find((c) => c.key === activeKey);
 
+  // Marque la vraie conversation ouverte comme lue — au moment où on l'ouvre, et à nouveau si
+  // un vrai nouveau message y arrive pendant qu'elle reste affichée.
+  useEffect(() => {
+    if (activeKey) markAsRead(myUserId, `chat_team:${activeKey}`);
+  }, [activeKey, myUserId, activeConversation?.messages.length]);
+
   const [pendingRecipient, setPendingRecipient] = useState(null);
 
   const handleStartConversation = (recipient) => {
@@ -287,12 +278,13 @@ export function ChatTeamScreen({ myUserId, myRole }) {
 // Vrais balbutiements pour l'instant — juste une vraie lecture des messages déjà envoyés
 // depuis l'app ("Nous écrire" / "Signaler un problème"), pas encore de vraie réponse depuis la
 // plateforme de gestion.
-export function ChatClientsScreen() {
+export function ChatClientsScreen({ myUserId }) {
   const [messages, setMessages] = useState(null);
 
   useEffect(() => {
     loadSupportMessages().then(setMessages);
-  }, []);
+    markAsRead(myUserId, "chat_clients");
+  }, [myUserId]);
 
   return (
     <div>
