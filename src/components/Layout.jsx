@@ -5,7 +5,7 @@ import { useUnreadChatCounts } from "../data/useUnreadChatCounts.js";
 
 const COMMUNICATION_ITEMS = [
   { key: "chatTeam", label: "Chat Team" },
-  { key: "chatClients", label: "Chat clients" },
+  { key: "chatUsers", label: "Chats Users" },
   { key: "chatBusiness", label: "Chat Business" },
   { key: "notifications", label: "Notifications" },
 ];
@@ -234,8 +234,8 @@ export function Layout({ current, onNavigate, onLogout, myRole, myCanModerate, m
                     ? pendingReportsCount
                     : item.key === "chatTeam"
                     ? unreadChatCounts.chatTeam
-                    : item.key === "chatClients"
-                    ? unreadChatCounts.chatClients
+                    : item.key === "chatUsers"
+                    ? unreadChatCounts.chatUsers
                     : item.key === "chatBusiness"
                     ? unreadChatCounts.chatBusiness
                     : undefined;
@@ -274,7 +274,7 @@ export function Layout({ current, onNavigate, onLogout, myRole, myCanModerate, m
         <TopBar
           pendingReportsCount={pendingReportsCount}
           onOpenReports={() => onNavigate("notifications")}
-          unreadMessagesCount={unreadChatCounts.chatTeam + unreadChatCounts.chatClients + unreadChatCounts.chatBusiness}
+          unreadMessagesCount={unreadChatCounts.chatTeam + unreadChatCounts.chatUsers + unreadChatCounts.chatBusiness}
           onOpenMessages={() => onNavigate("chatTeam")}
         />
         <div style={{ flex: 1, padding: "32px 40px", overflowY: "auto" }}>{children}</div>

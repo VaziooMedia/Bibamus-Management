@@ -607,10 +607,11 @@ export async function toggleReaction(messageId, userId, emoji, alreadyReacted) {
   }
 }
 
-export async function loadAdminChatMessages() {
+export async function loadAdminChatMessages(scope = "team") {
   const { data, error } = await supabase
     .from("admin_chat_messages")
     .select("id, message, created_at, sender_id, recipient_role, recipient_ids, profiles(name, last_name, avatar_url, role)")
+    .eq("scope", scope)
     .order("created_at", { ascending: true })
     .limit(500);
   if (error) {
@@ -632,12 +633,13 @@ export async function loadAdminChatMessages() {
 
 // recipient: { role: "moderator" } pour cibler tout un vrai type d'administration, ou
 // { ids: [uuid, ...] } pour une ou plusieurs vraies personnes précises — jamais les deux.
-export async function sendAdminChatMessage(senderId, message, recipient) {
+export async function sendAdminChatMessage(senderId, message, recipient, scope = "team") {
   const { error } = await supabase.from("admin_chat_messages").insert({
     sender_id: senderId,
     message,
     recipient_role: recipient.role || null,
     recipient_ids: recipient.ids || null,
+    scope,
   });
   if (error) {
     console.error("sendAdminChatMessage:", error);

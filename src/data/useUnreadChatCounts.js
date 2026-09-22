@@ -7,29 +7,39 @@ import { conversationKey, isVisibleToMe } from "./chatHelpers.js";
 // principes que usePendingReportsCount), avec un vrai rafraîchissement de secours toutes les 15
 // secondes au cas où la réplication temps réel ne serait pas activée sur ces tables.
 //
-// Chat Team : un vrai message compte comme non lu s'il n'est pas de moi, et que sa vraie
-// conversation n'a jamais été marquée comme lue depuis son propre envoi.
-// Chat clients : compte les vrais messages support envoyés après le dernier vrai marquage
-// "chat_clients" comme lu.
-// Chat Business : toujours 0 pour l'instant — aucune vraie source de données n'existe encore.
+// Chaque canal (team/users/business) compte les vrais messages qui ne sont pas de moi, dont la
+// vraie conversation n'a jamais été marquée comme lue depuis son propre envoi. Chats Users
+// ajoute en plus les vrais messages support ("Nous écrire" / "Signaler un problème") non lus.
+function countUnreadForScope(messages, markerPrefix, myUserId, myRole, markers) {
+  return messages
+    .filter((m) => m.senderId !== myUserId && isVisibleToMe(m, myUserId, myRole))
+    .filter((m) => {
+      const lastRead = markers[`${markerPrefix}:${conversationKey(m)}`];
+      return !lastRead || new Date(m.createdAt) > new Date(lastRead);
+    }).length;
+}
+
 export function useUnreadChatCounts(myUserId, myRole) {
-  const [counts, setCounts] = useState({ chatTeam: 0, chatClients: 0, chatBusiness: 0 });
+  const [counts, setCounts] = useState({ chatTeam: 0, chatUsers: 0, chatBusiness: 0 });
 
   const refresh = useCallback(async () => {
     if (!myUserId) return;
-    const [messages, supportMessages, markers] = await Promise.all([loadAdminChatMessages(), loadSupportMessages(), loadReadMarkers(myUserId)]);
+    const [teamMessages, usersMessages, businessMessages, supportMessages, markers] = await Promise.all([
+      loadAdminChatMessages("team"),
+      loadAdminChatMessages("users"),
+      loadAdminChatMessages("business"),
+      loadSupportMessages(),
+      loadReadMarkers(myUserId),
+    ]);
 
-    const chatTeam = messages
-      .filter((m) => m.senderId !== myUserId && isVisibleToMe(m, myUserId, myRole))
-      .filter((m) => {
-        const lastRead = markers[`chat_team:${conversationKey(m)}`];
-        return !lastRead || new Date(m.createdAt) > new Date(lastRead);
-      }).length;
+    const chatTeam = countUnreadForScope(teamMessages, "chat_team", myUserId, myRole, markers);
+    const chatBusiness = countUnreadForScope(businessMessages, "chat_business", myUserId, myRole, markers);
 
+    const usersConversationsUnread = countUnreadForScope(usersMessages, "chat_users", myUserId, myRole, markers);
     const clientsLastRead = markers["chat_clients"];
-    const chatClients = supportMessages.filter((m) => !clientsLastRead || new Date(m.created_at) > new Date(clientsLastRead)).length;
+    const supportUnread = supportMessages.filter((m) => !clientsLastRead || new Date(m.created_at) > new Date(clientsLastRead)).length;
 
-    setCounts({ chatTeam, chatClients, chatBusiness: 0 });
+    setCounts({ chatTeam, chatUsers: usersConversationsUnread + supportUnread, chatBusiness });
   }, [myUserId, myRole]);
 
   useEffect(() => {
