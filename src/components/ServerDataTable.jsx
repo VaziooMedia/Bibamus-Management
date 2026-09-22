@@ -1,5 +1,11 @@
 import React, { useState, useEffect, useRef } from "react";
 
+// Ces 3 colonnes affichent toujours un contenu de taille fixe (badge, pastille, icône) — on les
+// réduit au strict minimum (largeur 1% + pas de retour à la ligne, un classique HTML pour
+// forcer une colonne à ne prendre que la place de son propre contenu) pour reporter l'espace
+// gagné sur les colonnes à contenu variable — même logique que DataTable.jsx.
+const COMPACT_COLUMN_KEYS = ["status", "visible", "certificationLevel"];
+
 // allColumns: [{ key, label, render? }]
 // fetchPage({ search, sortKey, sortDir, page, pageSize }) → Promise<{ items, total }>
 // refreshKey: changez cette valeur pour forcer un rechargement (ex. après une catégorie changée ailleurs)
@@ -102,12 +108,36 @@ export function ServerDataTable({ allColumns, forcedKeys = [], defaultVisibleKey
     <div>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "16px", gap: "10px" }}>
         <div style={{ display: "flex", alignItems: "center", gap: "10px", flex: 1 }}>
-          <input
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-            placeholder={searchPlaceholder}
-            style={{ padding: "10px 14px", borderRadius: "8px", border: "2px solid #28405C", fontSize: "14px", width: "320px" }}
-          />
+          <div style={{ position: "relative" }}>
+            <input
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              placeholder={searchPlaceholder}
+              style={{ padding: "10px 34px 10px 14px", borderRadius: "8px", border: "2px solid #28405C", fontSize: "14px", width: "320px", boxSizing: "border-box" }}
+            />
+            {query && (
+              <button
+                onClick={() => setQuery("")}
+                title="Effacer"
+                aria-label="Effacer"
+                style={{
+                  position: "absolute",
+                  right: "8px",
+                  top: "50%",
+                  transform: "translateY(-50%)",
+                  background: "none",
+                  border: "none",
+                  color: "#8792A6",
+                  cursor: "pointer",
+                  fontSize: "16px",
+                  lineHeight: 1,
+                  padding: "4px",
+                }}
+              >
+                ×
+              </button>
+            )}
+          </div>
           <div ref={pickerRef} style={{ position: "relative" }}>
             <button
               onClick={() => setPickerOpen((o) => !o)}
@@ -163,12 +193,22 @@ export function ServerDataTable({ allColumns, forcedKeys = [], defaultVisibleKey
 
       <table>
         <thead>
-          <tr style={{ borderBottom: "2px solid #28405C" }}>
-            {columns.map((col) => (
+          <tr style={{ borderTop: "2px solid #28405C", borderBottom: "2px solid #28405C" }}>
+            {columns.map((col, i) => (
               <th
                 key={col.key}
                 onClick={() => toggleSort(col.key)}
-                style={{ textAlign: "left", padding: "10px 12px", fontSize: "12.5px", color: "#8792A6", cursor: "pointer", userSelect: "none", whiteSpace: "nowrap" }}
+                style={{
+                  textAlign: "center",
+                  padding: "10px 12px",
+                  fontSize: "12.5px",
+                  color: "#8792A6",
+                  cursor: "pointer",
+                  userSelect: "none",
+                  whiteSpace: "nowrap",
+                  borderRight: i < columns.length - 1 ? "1px solid #28405C" : "none",
+                  width: COMPACT_COLUMN_KEYS.includes(col.key) ? "1%" : undefined,
+                }}
               >
                 {col.label} {sortKey === col.key ? (sortDir === 1 ? "▲" : "▼") : ""}
               </th>
@@ -197,8 +237,18 @@ export function ServerDataTable({ allColumns, forcedKeys = [], defaultVisibleKey
                 onMouseEnter={(e) => (e.currentTarget.style.background = "#16273D")}
                 onMouseLeave={(e) => (e.currentTarget.style.background = "transparent")}
               >
-                {columns.map((col) => (
-                  <td key={col.key} style={{ padding: "10px 12px", fontSize: "14px" }}>
+                {columns.map((col, i) => (
+                  <td
+                    key={col.key}
+                    style={{
+                      padding: "10px 12px",
+                      fontSize: "14px",
+                      borderRight: i < columns.length - 1 ? "1px solid #16273D" : "none",
+                      textAlign: COMPACT_COLUMN_KEYS.includes(col.key) ? "center" : "left",
+                      width: COMPACT_COLUMN_KEYS.includes(col.key) ? "1%" : undefined,
+                      whiteSpace: COMPACT_COLUMN_KEYS.includes(col.key) ? "nowrap" : undefined,
+                    }}
+                  >
                     {col.render ? col.render(item) : item[col.key]}
                   </td>
                 ))}

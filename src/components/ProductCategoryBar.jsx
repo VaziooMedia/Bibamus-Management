@@ -20,7 +20,7 @@ export function ProductCategoryBar({ counts, selectedType, onSelect }) {
     background: isActive ? "#39FF66" : "#16273D",
     border: `2px solid ${isActive ? "#39FF66" : "transparent"}`,
     borderRadius: "10px",
-    padding: "12px 14px",
+    padding: "8px 14px",
     textAlign: "center",
     cursor: "pointer",
   });
@@ -29,10 +29,10 @@ export function ProductCategoryBar({ counts, selectedType, onSelect }) {
     <div style={{ marginBottom: "24px" }}>
       <button
         onClick={() => setOpen((o) => !o)}
-        style={{ background: "none", border: "none", cursor: "pointer", display: "flex", alignItems: "center", gap: "8px", padding: 0, marginBottom: "12px" }}
+        style={{ background: "none", border: "none", cursor: "pointer", display: "flex", alignItems: "center", gap: "8px", padding: 0, marginBottom: "10px" }}
       >
-        <span style={{ color: "#39FF66", fontSize: "12px" }}>{open ? "▼" : "▶"}</span>
-        <span style={{ fontSize: "13px", color: "#8792A6", fontWeight: 600 }}>Par catégorie {selectedType ? "— cliquez pour désélectionner" : "— cliquez pour filtrer"}</span>
+        <span style={{ fontSize: "10px", color: "#8792A6", transform: open ? "rotate(90deg)" : "none", transition: "transform 0.15s" }}>▸</span>
+        <span style={{ fontSize: "12px", fontWeight: 700, color: "#8792A6" }}>Catégories</span>
       </button>
       {open && (
         <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: "10px" }}>
@@ -41,7 +41,7 @@ export function ProductCategoryBar({ counts, selectedType, onSelect }) {
             return (
               <button key={c.type} onClick={() => onSelect(isActive ? null : c.type)} style={blockStyle(isActive)}>
                 <div style={{ fontSize: "11px", color: isActive ? "#0D1B2A" : "#8792A6", marginBottom: "4px" }}>{c.label}</div>
-                <div style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "22px", color: isActive ? "#0D1B2A" : "#39FF66" }}>
+                <div style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "20px", color: isActive ? "#0D1B2A" : "#39FF66" }}>
                   {counts ? counts[c.type] ?? "…" : "…"}
                 </div>
               </button>
@@ -49,7 +49,7 @@ export function ProductCategoryBar({ counts, selectedType, onSelect }) {
           })}
           <button onClick={() => onSelect(selectedType === "__other__" ? null : "__other__")} style={blockStyle(selectedType === "__other__")}>
             <div style={{ fontSize: "11px", color: selectedType === "__other__" ? "#0D1B2A" : "#8792A6", marginBottom: "4px" }}>Autres - Divers</div>
-            <div style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "22px", color: selectedType === "__other__" ? "#0D1B2A" : "#39FF66" }}>
+            <div style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "20px", color: selectedType === "__other__" ? "#0D1B2A" : "#39FF66" }}>
               {counts ? counts.autres ?? "…" : "…"}
             </div>
           </button>
