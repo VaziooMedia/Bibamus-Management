@@ -1087,7 +1087,7 @@ export async function loadDrinksDirectory() {
 
 // Un statut vide en base ("null") équivaut à "à traiter" — traité comme tel dans les comptages.
 function applyStatusFilter(query, status) {
-  if (status === "to_process") return query.or("status.is.null,status.eq.to_process,status.eq.draft");
+  if (status === "draft") return query.or("status.is.null,status.eq.draft");
   return query.eq("status", status);
 }
 
@@ -1102,12 +1102,16 @@ function applyTypeFilter(query, type) {
 // Charge une SEULE page de produits, filtrée et triée côté serveur — jamais l'ensemble du
 // répertoire d'un coup, pour rester rapide même avec des dizaines ou centaines de milliers de
 // produits.
-export async function loadDrinksPage({ type, search, sortKey = "name", sortDir = 1, page = 0, pageSize = 50 } = {}) {
+export async function loadDrinksPage({ type, status, certificationLevel, hasPendingContributions, hasPendingEdit, search, sortKey = "name", sortDir = 1, page = 0, pageSize = 50 } = {}) {
   // Jointure sur une seule profondeur seulement — une double jointure imbriquée (produit → marque
   // → producteur) s'est révélée trop fragile : si Supabase n'arrive pas à résoudre sans ambiguïté
   // l'une des deux relations, la requête ENTIÈRE échoue et plus aucun produit ne s'affiche.
   let query = supabase.from("drinks_directory").select("*, brands_directory(name, producer_id)", { count: "exact" });
   query = applyTypeFilter(query, type);
+  if (status) query = applyStatusFilter(query, status);
+  if (certificationLevel) query = query.eq("certification_level", certificationLevel);
+  if (hasPendingContributions) query = query.gt("pending_contributions_count", 0);
+  if (hasPendingEdit) query = query.not("pending_edit", "is", null);
   if (search && search.trim()) query = query.ilike("name", `%${search.trim()}%`);
   // "brandName"/"producerName" résultent d'une jointure, pas d'une vraie colonne — on trie par brand_id à la place.
   const realSortKey = sortKey === "brandName" || sortKey === "producerName" ? "brand_id" : sortKey;
@@ -1138,10 +1142,13 @@ export async function loadDrinksPage({ type, search, sortKey = "name", sortDir =
 // Un seul décompte rapide (via count exact, sans jamais rapatrier les lignes elles-mêmes) —
 // utilisé pour les blocs de statistiques, avec un filtre de catégorie optionnel pour qu'ils
 // restent justes une fois qu'une catégorie est sélectionnée.
-export async function countDrinks({ type, status } = {}) {
+export async function countDrinks({ type, status, certificationLevel, hasPendingContributions, hasPendingEdit } = {}) {
   let query = supabase.from("drinks_directory").select("id", { count: "exact", head: true });
   query = applyTypeFilter(query, type);
   if (status) query = applyStatusFilter(query, status);
+  if (certificationLevel) query = query.eq("certification_level", certificationLevel);
+  if (hasPendingContributions) query = query.gt("pending_contributions_count", 0);
+  if (hasPendingEdit) query = query.not("pending_edit", "is", null);
   const { count, error } = await query;
   if (error) {
     console.error("countDrinks:", error);
@@ -1213,6 +1220,8 @@ function rowToDrink(row) {
     status: row.status,
     aliases: row.aliases || [],
     certificationLevel: row.certification_level,
+    pendingContributionsCount: row.pending_contributions_count || 0,
+    pendingEdit: row.pending_edit || null,
     duplicateOfId: row.duplicate_of_id,
     openReportsCount: row.open_reports_count || 0,
     isGeneric: row.is_generic,

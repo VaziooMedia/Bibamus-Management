@@ -43,7 +43,9 @@ const separatorStyle = { borderBottom: "1px solid #28405C", margin: "16px 0" };
 
 // Filtre partagé — chaque bloc a sa propre clé unique, réutilisable par les futurs écrans
 // (produits, producteurs, marques) migrés vers ce même composant. "total" (ou une clé absente)
-// signifie "aucun filtre".
+// signifie "aucun filtre". Utilisé côté client (items déjà en mémoire) — pour les répertoires
+// trop volumineux pour être chargés entièrement (produits), le filtrage se fait côté serveur à
+// la place, via les mêmes clés passées directement à la fonction de chargement de page.
 export function applyStatFilter(items, filterKey) {
   if (!filterKey || filterKey === "total") return items;
   if (filterKey === "newContributions") return items.filter((i) => (i.pendingContributionsCount || 0) > 0);
@@ -54,26 +56,35 @@ export function applyStatFilter(items, filterKey) {
 }
 
 // Remplace StatsCounterBar (5 blocs, ancien système de statut) pour les répertoires migrés vers
-// le nouveau modèle à 7 statuts — lieux en premier, puis produits/producteurs/marques à terme.
-// Ligne 1 : Total + Nouvelles contributions + Modifications suggérées. Ligne 2 (Statut) : les 7
-// statuts du cycle de vie, chacun dans sa propre couleur déjà définie par STATUSES, avec le
-// point visible/non visible en haut à droite. Ligne 3 (Niveau de certification) : les 3
-// niveaux, chacun dans sa propre couleur déjà définie par CERTIFICATION_LEVELS, avec son propre
-// badge en haut à droite.
+// le nouveau modèle à 7 statuts. Ligne 1 : Total + Nouvelles contributions + Modifications
+// suggérées. Ligne 2 (Statut) : les 7 statuts du cycle de vie, chacun dans sa propre couleur
+// déjà définie par STATUSES, avec le point visible/non visible en haut à droite. Ligne 3
+// (Niveau de certification) : les 3 niveaux, chacun dans sa propre couleur déjà définie par
+// CERTIFICATION_LEVELS, avec son propre badge en haut à droite.
 //
 // Tous les blocs sont cliquables — activeFilter/onFilterChange (contrôlés par l'écran parent)
-// permettent de n'afficher que les éléments correspondants dans le tableau ; cliquer sur le
-// bloc déjà actif revient à "Total" (aucun filtre).
+// permettent de n'afficher que les éléments correspondants ; cliquer sur le bloc déjà actif
+// revient à "Total" (aucun filtre).
 //
 // Les 3 lignes se replient/déplient indépendamment (tout déplié par défaut).
-export function DetailedStatsCounterBar({ items, activeFilter, onFilterChange }) {
+//
+// Deux modes de données, comme l'ancien StatsCounterBar :
+// - items : la liste complète est déjà en mémoire (lieux, producteurs, marques) — les comptages
+//   se calculent ici même avec applyStatFilter.
+// - counts : le répertoire est trop volumineux pour être chargé entièrement (produits) — les
+//   comptages arrivent déjà calculés côté serveur, sous la forme
+//   { total, newContributions, suggestedEdits, byStatus: {draft, to_process, ...},
+//   byCertification: {utilisateur, bibamus, producteur} }.
+export function DetailedStatsCounterBar({ items, counts, activeFilter, onFilterChange }) {
   const [expandedRow1, setExpandedRow1] = useState(true);
   const [expandedRow2, setExpandedRow2] = useState(true);
   const [expandedRow3, setExpandedRow3] = useState(true);
 
-  const total = items.length;
-  const newContributions = items.filter((i) => (i.pendingContributionsCount || 0) > 0).length;
-  const suggestedEdits = items.filter((i) => i.pendingEdit != null).length;
+  const total = counts ? counts.total : items.length;
+  const newContributions = counts ? counts.newContributions : items.filter((i) => (i.pendingContributionsCount || 0) > 0).length;
+  const suggestedEdits = counts ? counts.suggestedEdits : items.filter((i) => i.pendingEdit != null).length;
+  const statusCount = (key) => (counts ? counts.byStatus?.[key] || 0 : items.filter((i) => i.status === key).length);
+  const certCount = (key) => (counts ? counts.byCertification?.[key] || 0 : items.filter((i) => i.certificationLevel === key).length);
 
   const handleClick = (key) => onFilterChange(activeFilter === key ? "total" : key);
 
@@ -108,7 +119,7 @@ export function DetailedStatsCounterBar({ items, activeFilter, onFilterChange })
             <Stat
               key={s.key}
               label={s.label}
-              value={items.filter((i) => i.status === s.key).length}
+              value={statusCount(s.key)}
               color={s.color}
               indicator={<VisibilityDot status={s.key} />}
               active={activeFilter === `status:${s.key}`}
@@ -124,7 +135,7 @@ export function DetailedStatsCounterBar({ items, activeFilter, onFilterChange })
         <div style={rowStyle}>
           <Stat
             label="Utilisateurs"
-            value={items.filter((i) => i.certificationLevel === "utilisateur").length}
+            value={certCount("utilisateur")}
             color={CERTIFICATION_LEVELS[0].color}
             indicator={<CertificationIcon level="utilisateur" size={16} />}
             active={activeFilter === "cert:utilisateur"}
@@ -132,7 +143,7 @@ export function DetailedStatsCounterBar({ items, activeFilter, onFilterChange })
           />
           <Stat
             label="Bibamus"
-            value={items.filter((i) => i.certificationLevel === "bibamus").length}
+            value={certCount("bibamus")}
             color={CERTIFICATION_LEVELS[1].color}
             indicator={<CertificationIcon level="bibamus" size={16} />}
             active={activeFilter === "cert:bibamus"}
@@ -140,7 +151,7 @@ export function DetailedStatsCounterBar({ items, activeFilter, onFilterChange })
           />
           <Stat
             label="Producteur"
-            value={items.filter((i) => i.certificationLevel === "producteur").length}
+            value={certCount("producteur")}
             color={CERTIFICATION_LEVELS[2].color}
             indicator={<CertificationIcon level="producteur" size={16} />}
             active={activeFilter === "cert:producteur"}
