@@ -550,10 +550,43 @@ export async function markAsRead(userId, markerKey) {
   if (error) console.error("markAsRead:", error);
 }
 
+// Vrai archivage propre à chaque utilisateur — voir bibamus-schema-admin-chat-archive.sql.
+export async function loadArchivedConversationKeys(userId) {
+  const { data, error } = await supabase.from("admin_chat_archived_conversations").select("conversation_key").eq("user_id", userId);
+  if (error) {
+    console.error("loadArchivedConversationKeys:", error);
+    return new Set();
+  }
+  return new Set(data.map((r) => r.conversation_key));
+}
+
+export async function archiveConversation(userId, conversationKey) {
+  const { error } = await supabase.from("admin_chat_archived_conversations").upsert({ user_id: userId, conversation_key: conversationKey });
+  if (error) console.error("archiveConversation:", error);
+}
+
+export async function unarchiveConversation(userId, conversationKey) {
+  const { error } = await supabase.from("admin_chat_archived_conversations").delete().eq("user_id", userId).eq("conversation_key", conversationKey);
+  if (error) console.error("unarchiveConversation:", error);
+}
+
+// Vraie suppression — efface réellement les vrais messages (visible à tous les participants,
+// contrairement à l'archivage qui reste propre à chacun). messageIds : tous les vrais messages
+// de cette conversation, déjà connus côté client au moment de l'appel.
+export async function deleteConversationMessages(messageIds) {
+  if (messageIds.length === 0) return { ok: true };
+  const { error } = await supabase.from("admin_chat_messages").delete().in("id", messageIds);
+  if (error) {
+    console.error("deleteConversationMessages:", error);
+    return { error: error.message };
+  }
+  return { ok: true };
+}
+
 export async function loadAdminChatMessages() {
   const { data, error } = await supabase
     .from("admin_chat_messages")
-    .select("id, message, created_at, sender_id, recipient_role, recipient_ids, profiles(name, last_name, avatar_url)")
+    .select("id, message, created_at, sender_id, recipient_role, recipient_ids, profiles(name, last_name, avatar_url, role)")
     .order("created_at", { ascending: true })
     .limit(500);
   if (error) {
@@ -566,6 +599,7 @@ export async function loadAdminChatMessages() {
     createdAt: row.created_at,
     senderId: row.sender_id,
     senderName: [row.profiles?.name, row.profiles?.last_name].filter(Boolean).join(" ") || "Collaborateur",
+    senderRole: row.profiles?.role || null,
     senderAvatarUrl: row.profiles?.avatar_url || null,
     recipientRole: row.recipient_role,
     recipientIds: row.recipient_ids || null,

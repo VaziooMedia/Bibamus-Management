@@ -1,20 +1,35 @@
 import React, { useState, useEffect, useRef, useCallback } from "react";
-import { loadAdminChatMessages, sendAdminChatMessage, loadSupportMessages, loadCollaborators, markAsRead } from "../data/sharedDirectories.js";
+import {
+  loadAdminChatMessages,
+  sendAdminChatMessage,
+  loadSupportMessages,
+  loadCollaborators,
+  markAsRead,
+  loadArchivedConversationKeys,
+  archiveConversation,
+  unarchiveConversation,
+  deleteConversationMessages,
+} from "../data/sharedDirectories.js";
 import { conversationKey, isVisibleToMe } from "../data/chatHelpers.js";
 import { supabase } from "../supabaseClient.js";
 import { PageTitle } from "./PageTitle.jsx";
 
 const SUPPORT_TYPE_LABELS = { contact: "Nous écrire", report: "Signaler un problème" };
 
+// Vrais types d'administration internes à l'équipe Bibamus — "business" en est volontairement
+// exclu : les comptes Business ont leur propre vrai canal (Chat Business), pas celui-ci.
 const ADMIN_ROLES = [
   { key: "editor", label: "Éditeur" },
   { key: "super_editor", label: "Super éditeur" },
   { key: "moderator", label: "Modérateur" },
-  { key: "business", label: "Business" },
   { key: "admin", label: "Admin" },
   { key: "super_admin", label: "Super admin" },
 ];
 const roleLabel = (key) => ADMIN_ROLES.find((r) => r.key === key)?.label || key;
+
+// Un vrai membre de la Team Bibamus a un vrai rôle d'administration — ni un vrai simple
+// utilisateur de l'app (rôle vide), ni un vrai compte Business (son propre vrai canal séparé).
+const isTeamMember = (c) => !!c.role && c.role !== "business";
 
 // Vrai sélecteur de destinataire(s) — soit une ou plusieurs vraies personnes précises, soit un
 // vrai type d'administration entier.
@@ -49,7 +64,7 @@ function RecipientPicker({ collaborators, myUserId, onConfirm, onCancel }) {
         {mode === "people" ? (
           <div style={{ display: "flex", flexDirection: "column", gap: "6px", marginBottom: "20px" }}>
             {collaborators
-              .filter((c) => c.id !== myUserId)
+              .filter((c) => c.id !== myUserId && isTeamMember(c))
               .map((c) => {
                 const checked = selectedIds.includes(c.id);
                 return (
@@ -93,6 +108,8 @@ function RecipientPicker({ collaborators, myUserId, onConfirm, onCancel }) {
 export function ChatTeamScreen({ myUserId, myRole }) {
   const [allMessages, setAllMessages] = useState(null);
   const [collaborators, setCollaborators] = useState([]);
+  const [archivedKeys, setArchivedKeys] = useState(new Set());
+  const [showArchived, setShowArchived] = useState(false);
   const [activeKey, setActiveKey] = useState(null);
   const [pickerOpen, setPickerOpen] = useState(false);
   const [draft, setDraft] = useState("");
@@ -103,17 +120,22 @@ export function ChatTeamScreen({ myUserId, myRole }) {
     setAllMessages(await loadAdminChatMessages());
   }, []);
 
+  const refreshArchived = useCallback(async () => {
+    setArchivedKeys(await loadArchivedConversationKeys(myUserId));
+  }, [myUserId]);
+
   useEffect(() => {
     refresh();
+    refreshArchived();
     loadCollaborators().then(setCollaborators);
     const channel = supabase
       .channel("admin-chat")
-      .on("postgres_changes", { event: "INSERT", schema: "public", table: "admin_chat_messages" }, refresh)
+      .on("postgres_changes", { event: "*", schema: "public", table: "admin_chat_messages" }, refresh)
       .subscribe();
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [refresh]);
+  }, [refresh, refreshArchived]);
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ block: "end" });
@@ -129,21 +151,23 @@ export function ChatTeamScreen({ myUserId, myRole }) {
     if (!conversationsByKey[key]) conversationsByKey[key] = { key, recipientRole: m.recipientRole, recipientIds: m.recipientIds, messages: [] };
     conversationsByKey[key].messages.push(m);
   });
-  const conversations = Object.values(conversationsByKey).sort((a, b) => {
+  const allConversations = Object.values(conversationsByKey).sort((a, b) => {
     const aLast = a.messages[a.messages.length - 1]?.createdAt || "";
     const bLast = b.messages[b.messages.length - 1]?.createdAt || "";
     return bLast.localeCompare(aLast);
   });
+  const conversations = allConversations.filter((c) => (showArchived ? archivedKeys.has(c.key) : !archivedKeys.has(c.key)));
 
-  const conversationLabel = (c) => {
-    if (c.recipientRole) return roleLabel(c.recipientRole);
-    const names = (c.recipientIds || [])
+  // Vrai nom principal + vrai sous-titre (rôle), affichés sur 2 vraies lignes dans la liste.
+  const conversationInfo = (c) => {
+    if (c.recipientRole) return { name: roleLabel(c.recipientRole), subtitle: null };
+    const people = (c.recipientIds || [])
       .filter((id) => id !== myUserId)
-      .map((id) => {
-        const p = collaborators.find((col) => col.id === id);
-        return p ? [p.name, p.last_name].filter(Boolean).join(" ") : "?";
-      });
-    return names.length > 0 ? names.join(", ") : "Moi-même";
+      .map((id) => collaborators.find((col) => col.id === id))
+      .filter(Boolean);
+    const name = people.length > 0 ? people.map((p) => [p.name, p.last_name].filter(Boolean).join(" ")).join(", ") : "Moi-même";
+    const subtitle = people.length === 1 ? roleLabel(people[0].role) : people.length > 1 ? `Groupe (${people.length} personnes)` : null;
+    return { name, subtitle };
   };
 
   const activeConversation = conversations.find((c) => c.key === activeKey);
@@ -180,54 +204,114 @@ export function ChatTeamScreen({ myUserId, myRole }) {
     setSending(false);
   };
 
+  const handleArchive = async (e, key) => {
+    e.stopPropagation();
+    await archiveConversation(myUserId, key);
+    refreshArchived();
+    if (activeKey === key) setActiveKey(null);
+  };
+
+  const handleUnarchive = async (e, key) => {
+    e.stopPropagation();
+    await unarchiveConversation(myUserId, key);
+    refreshArchived();
+  };
+
+  const handleDelete = async (e, conversation) => {
+    e.stopPropagation();
+    if (!window.confirm("Supprimer définitivement cette conversation ? Tous les messages seront effacés pour tout le monde — cette action est irréversible.")) return;
+    await deleteConversationMessages(conversation.messages.map((m) => m.id));
+    await unarchiveConversation(myUserId, conversation.key);
+    if (activeKey === conversation.key) setActiveKey(null);
+    refresh();
+    refreshArchived();
+  };
+
   return (
     <div>
       <PageTitle>Chat Team</PageTitle>
-      <div style={{ display: "flex", gap: "20px", height: "calc(100vh - 180px)", marginTop: "16px" }}>
-        <div style={{ width: "260px", flexShrink: 0, display: "flex", flexDirection: "column", gap: "8px" }}>
-          <button
-            onClick={() => setPickerOpen(true)}
-            style={{ background: "#39FF66", border: "none", borderRadius: "8px", padding: "10px", color: "#0D1B2A", fontWeight: 800, cursor: "pointer", fontSize: "13px" }}
-          >
-            + Nouvelle conversation
-          </button>
-          <div style={{ display: "flex", flexDirection: "column", gap: "4px", overflowY: "auto" }}>
-            {conversations.map((c) => (
+      <div style={{ display: "flex", gap: "0px", height: "calc(100vh - 180px)", marginTop: "16px", border: "2px solid #28405C", borderRadius: "12px", overflow: "hidden" }}>
+        <div style={{ width: "280px", flexShrink: 0, display: "flex", flexDirection: "column", borderRight: "2px solid #28405C", padding: "14px" }}>
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "12px" }}>
+            <div style={{ display: "flex", gap: "6px" }}>
               <button
-                key={c.key}
-                onClick={() => {
-                  setActiveKey(c.key);
-                  setPendingRecipient(null);
-                }}
-                style={{
-                  textAlign: "left",
-                  padding: "10px 12px",
-                  borderRadius: "8px",
-                  border: "none",
-                  background: activeKey === c.key ? "#28405C" : "none",
-                  color: "#F2F2E8",
-                  cursor: "pointer",
-                  fontSize: "13px",
-                  fontWeight: activeKey === c.key ? 700 : 500,
-                }}
+                onClick={() => setShowArchived(false)}
+                style={{ fontSize: "11.5px", fontWeight: 700, padding: "5px 10px", borderRadius: "999px", border: "none", cursor: "pointer", background: !showArchived ? "#28405C" : "none", color: !showArchived ? "#39FF66" : "#8792A6" }}
               >
-                {conversationLabel(c)}
+                Actives
               </button>
-            ))}
+              <button
+                onClick={() => setShowArchived(true)}
+                style={{ fontSize: "11.5px", fontWeight: 700, padding: "5px 10px", borderRadius: "999px", border: "none", cursor: "pointer", background: showArchived ? "#28405C" : "none", color: showArchived ? "#39FF66" : "#8792A6" }}
+              >
+                Archivées
+              </button>
+            </div>
+            <button
+              onClick={() => setPickerOpen(true)}
+              title="Nouvelle conversation"
+              aria-label="Nouvelle conversation"
+              style={{ width: "28px", height: "28px", borderRadius: "50%", background: "#39FF66", border: "none", color: "#0D1B2A", fontWeight: 800, fontSize: "16px", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, lineHeight: 1 }}
+            >
+              +
+            </button>
+          </div>
+          <div style={{ display: "flex", flexDirection: "column", gap: "4px", overflowY: "auto" }}>
+            {conversations.map((c) => {
+              const info = conversationInfo(c);
+              return (
+                <div
+                  key={c.key}
+                  onClick={() => {
+                    setActiveKey(c.key);
+                    setPendingRecipient(null);
+                  }}
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "6px",
+                    padding: "9px 10px",
+                    borderRadius: "8px",
+                    background: activeKey === c.key ? "#28405C" : "none",
+                    cursor: "pointer",
+                  }}
+                >
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ fontSize: "13px", fontWeight: activeKey === c.key ? 700 : 500, color: "#F2F2E8", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{info.name}</div>
+                    {info.subtitle && <div style={{ fontSize: "11px", color: "#8792A6", marginTop: "1px" }}>{info.subtitle}</div>}
+                  </div>
+                  {showArchived ? (
+                    <button onClick={(e) => handleUnarchive(e, c.key)} title="Désarchiver" style={{ background: "none", border: "none", color: "#39FF66", cursor: "pointer", fontSize: "11px", padding: "4px", flexShrink: 0 }}>
+                      ↩
+                    </button>
+                  ) : (
+                    <button onClick={(e) => handleArchive(e, c.key)} title="Archiver" style={{ background: "none", border: "none", color: "#8792A6", cursor: "pointer", fontSize: "13px", padding: "4px", flexShrink: 0 }}>
+                      🗄
+                    </button>
+                  )}
+                  <button onClick={(e) => handleDelete(e, c)} title="Supprimer" style={{ background: "none", border: "none", color: "#ef007c", cursor: "pointer", fontSize: "13px", padding: "4px", flexShrink: 0 }}>
+                    🗑
+                  </button>
+                </div>
+              );
+            })}
           </div>
         </div>
 
-        <div style={{ flex: 1, display: "flex", flexDirection: "column", minWidth: 0 }}>
-          {!activeConversation && !pendingRecipient ? (
-            <p style={{ color: "#8792A6", fontSize: "13px" }}>Choisissez une conversation à gauche, ou démarrez-en une nouvelle.</p>
-          ) : (
+        <div style={{ flex: 1, display: "flex", flexDirection: "column", minWidth: 0, padding: "14px" }}>
+          {activeConversation || pendingRecipient ? (
             <>
               <div style={{ flex: 1, overflowY: "auto", display: "flex", flexDirection: "column", gap: "10px", padding: "4px" }}>
                 {(activeConversation?.messages || []).map((m) => {
                   const isMe = m.senderId === myUserId;
                   return (
                     <div key={m.id} style={{ display: "flex", flexDirection: "column", alignItems: isMe ? "flex-end" : "flex-start" }}>
-                      {!isMe && <span style={{ fontSize: "11px", color: "#8792A6", marginBottom: "2px", marginLeft: "4px" }}>{m.senderName}</span>}
+                      {!isMe && (
+                        <span style={{ fontSize: "11px", color: "#8792A6", marginBottom: "2px", marginLeft: "4px" }}>
+                          {m.senderName}
+                          {m.senderRole && <span style={{ marginLeft: "6px", fontSize: "10px", color: "#8792A6" }}>{roleLabel(m.senderRole)}</span>}
+                        </span>
+                      )}
                       <div
                         style={{
                           maxWidth: "60%",
@@ -266,7 +350,7 @@ export function ChatTeamScreen({ myUserId, myRole }) {
                 </button>
               </div>
             </>
-          )}
+          ) : null}
         </div>
       </div>
 
@@ -274,7 +358,6 @@ export function ChatTeamScreen({ myUserId, myRole }) {
     </div>
   );
 }
-
 // Vrais balbutiements pour l'instant — juste une vraie lecture des messages déjà envoyés
 // depuis l'app ("Nous écrire" / "Signaler un problème"), pas encore de vraie réponse depuis la
 // plateforme de gestion.
