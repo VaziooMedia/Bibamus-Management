@@ -704,6 +704,7 @@ function rowToVenue(row) {
     status: row.status,
     aliases: row.aliases || [],
     certificationLevel: row.certification_level,
+    pendingContributionsCount: row.pending_contributions_count || 0,
     duplicateOfId: row.duplicate_of_id,
     openReportsCount: row.open_reports_count || 0,
     likes: row.likes || [],

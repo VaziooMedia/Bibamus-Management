@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { loadPublicVenues, loadDrinksDirectory } from "../data/sharedDirectories.js";
 import { DataTable, StatusBadge, VisibilityDot } from "./DataTable.jsx";
 import { VenueDetailPanel } from "./VenueDetailPanel.jsx";
-import { StatsCounterBar } from "./StatsCounterBar.jsx";
+import { DetailedStatsCounterBar } from "./DetailedStatsCounterBar.jsx";
 import { PageTitle } from "./PageTitle.jsx";
 import { COUNTRIES } from "../constants.js";
 import { CertificationIcon } from "./CertificationIcon.jsx";
@@ -55,7 +55,7 @@ export function VenuesScreen() {
         <p style={{ color: "#8792A6" }}>Chargement...</p>
       ) : (
         <>
-          <StatsCounterBar items={venues} showOwnerManaged />
+          <DetailedStatsCounterBar items={venues} />
           <DataTable
             items={venues}
             allColumns={allColumns}
