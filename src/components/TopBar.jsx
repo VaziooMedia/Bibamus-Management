@@ -26,7 +26,7 @@ function useUserCount() {
   return count;
 }
 
-export function TopBar({ adminName = "Mehdi Alorchi", adminRole = "Super Admin", onSearch }) {
+export function TopBar({ adminName = "Mehdi Alorchi", adminRole = "Super Admin", onSearch, pendingReportsCount, onOpenReports }) {
   const userCount = useUserCount();
   const [query, setQuery] = useState("");
 
@@ -68,11 +68,34 @@ export function TopBar({ adminName = "Mehdi Alorchi", adminRole = "Super Admin",
 
       <div style={{ flex: 1 }} />
 
-      <button title="Notifications" style={{ background: "none", border: "none", cursor: "pointer", padding: "6px", display: "flex" }}>
+      <button onClick={onOpenReports} title="Notifications" style={{ background: "none", border: "none", cursor: "pointer", padding: "6px", display: "flex", position: "relative" }}>
         <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="#39FF66" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
           <path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9" />
           <path d="M13.73 21a2 2 0 0 1-3.46 0" />
         </svg>
+        {!!pendingReportsCount && (
+          <span
+            style={{
+              position: "absolute",
+              top: "2px",
+              right: "2px",
+              minWidth: "15px",
+              height: "15px",
+              padding: "0 3px",
+              borderRadius: "999px",
+              background: "#ef007c",
+              color: "#F2F2E8",
+              fontSize: "10px",
+              fontWeight: 800,
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              lineHeight: 1,
+            }}
+          >
+            {pendingReportsCount > 99 ? "99+" : pendingReportsCount}
+          </span>
+        )}
       </button>
       <button title="Chat" style={{ background: "none", border: "none", cursor: "pointer", padding: "6px", display: "flex" }}>
         <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="#39FF66" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">

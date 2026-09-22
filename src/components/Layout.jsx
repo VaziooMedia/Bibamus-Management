@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { TopBar } from "./TopBar.jsx";
+import { usePendingReportsCount } from "../data/usePendingReportsCount.js";
 
 const TOP_ITEMS = [
   { key: "chat", label: "Chat" },
@@ -33,7 +34,7 @@ const BOTTOM_ITEMS_AFTER_BUSINESS = [
   { key: "settings", label: "Paramètres" },
 ];
 
-function NavButton({ item, current, onNavigate, indent }) {
+function NavButton({ item, current, onNavigate, indent, badge }) {
   const active = current === item.key;
   return (
     <button
@@ -65,6 +66,26 @@ function NavButton({ item, current, onNavigate, indent }) {
         {indent ? "–" : ""}
       </span>
       {item.label}
+      {!!badge && (
+        <span
+          style={{
+            minWidth: "18px",
+            height: "18px",
+            padding: "0 5px",
+            borderRadius: "999px",
+            background: "#ef007c",
+            color: "#F2F2E8",
+            fontSize: "11px",
+            fontWeight: 800,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            lineHeight: 1,
+          }}
+        >
+          {badge > 99 ? "99+" : badge}
+        </span>
+      )}
     </button>
   );
 }
@@ -77,6 +98,7 @@ export function Layout({ current, onNavigate, onLogout, myRole, myCanModerate, c
   const isModerator = myRole === "moderator";
   const isEditorTier = myRole === "editor" || myRole === "super_editor";
   const isBusiness = myRole === "business";
+  const pendingReportsCount = usePendingReportsCount();
 
   return (
     <div style={{ display: "flex", minHeight: "100vh" }}>
@@ -94,7 +116,7 @@ export function Layout({ current, onNavigate, onLogout, myRole, myCanModerate, c
         {isModerator ? (
           // Accès volontairement restreint — un modérateur ne voit que les signalements, pas
           // la Database ni les autres utilisateurs.
-          <NavButton item={{ key: "reports", label: "Signalements" }} current={current} onNavigate={onNavigate} />
+          <NavButton item={{ key: "reports", label: "Signalements" }} current={current} onNavigate={onNavigate} badge={pendingReportsCount} />
         ) : isBusiness ? (
           // Un compte Business ne voit que ses propres fiches liées, rien d'autre.
           <NavButton item={{ key: "myEntities", label: "Mes fiches" }} current={current} onNavigate={onNavigate} />
@@ -145,7 +167,7 @@ export function Layout({ current, onNavigate, onLogout, myRole, myCanModerate, c
                 ))}
               </div>
             )}
-            {myCanModerate && <NavButton item={{ key: "reports", label: "Signalements" }} current={current} onNavigate={onNavigate} />}
+            {myCanModerate && <NavButton item={{ key: "reports", label: "Signalements" }} current={current} onNavigate={onNavigate} badge={pendingReportsCount} />}
             <NavButton item={{ key: "myActivity", label: "Mon activité" }} current={current} onNavigate={onNavigate} />
           </>
         ) : (
@@ -200,7 +222,7 @@ export function Layout({ current, onNavigate, onLogout, myRole, myCanModerate, c
             )}
 
             <NavButton item={{ key: "users", label: "Utilisateurs" }} current={current} onNavigate={onNavigate} />
-            <NavButton item={{ key: "reports", label: "Signalements" }} current={current} onNavigate={onNavigate} />
+            <NavButton item={{ key: "reports", label: "Signalements" }} current={current} onNavigate={onNavigate} badge={pendingReportsCount} />
 
             {BOTTOM_ITEMS_BEFORE_BUSINESS.map((item) => (
               <NavButton key={item.key} item={item} current={current} onNavigate={onNavigate} />
@@ -266,7 +288,7 @@ export function Layout({ current, onNavigate, onLogout, myRole, myCanModerate, c
         <div style={{ padding: "0 20px 16px", fontSize: "11px", color: "#8792A6" }}>VaziooMedia - 2026</div>
       </div>
       <div style={{ flex: 1, display: "flex", flexDirection: "column", minWidth: 0 }}>
-        <TopBar />
+        <TopBar pendingReportsCount={pendingReportsCount} onOpenReports={() => onNavigate("reports")} />
         <div style={{ flex: 1, padding: "32px 40px", overflowY: "auto" }}>{children}</div>
       </div>
     </div>
