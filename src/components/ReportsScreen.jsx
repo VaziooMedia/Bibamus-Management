@@ -164,7 +164,7 @@ export function ReportsScreen() {
     <div>
       <PageTitle>Signalements</PageTitle>
 
-      <div style={{ display: "flex", gap: "8px", marginBottom: "20px" }}>
+      <div style={{ display: "flex", gap: "8px", marginTop: "16px", marginBottom: "20px" }}>
         {TABS.map((t) => (
           <button
             key={t.key}
@@ -194,22 +194,21 @@ export function ReportsScreen() {
           {reports.map((r) => {
             const expanded = expandedId === r.id;
             return (
-              <div key={r.id} style={{ background: "#16273D", borderRadius: "10px", padding: "16px" }}>
-                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "8px" }}>
-                  <div>
-                    <span style={{ fontSize: "11px", color: "#8792A6", textTransform: "uppercase", fontWeight: 700 }}>{ENTITY_TYPE_LABELS[r.entity_type] || r.entity_type}</span>
-                    <p style={{ fontSize: "15px", color: "#F2F2E8", fontWeight: 700, margin: "2px 0 0" }}>{r.entityName}</p>
-                  </div>
-                  <span style={{ fontSize: "11px", color: "#8792A6" }}>{r.created_at ? r.created_at.slice(0, 10) : ""}</span>
+              <div key={r.id} style={{ background: "#16273D", borderRadius: "8px", padding: "10px 12px" }}>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: "8px" }}>
+                  <span style={{ fontSize: "13px", fontWeight: 700, color: "#F2F2E8", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{r.entityName}</span>
+                  <span style={{ fontSize: "10px", color: "#8792A6", flexShrink: 0 }}>{r.created_at ? r.created_at.slice(0, 10) : ""}</span>
                 </div>
-
-                <p style={{ fontSize: "13.5px", color: "#39FF66", fontWeight: 700, margin: "0 0 6px" }}>{REASON_LABELS[r.reason] || r.reason}</p>
-                {r.comment && <p style={{ fontSize: "13px", color: "#F2F2E8", margin: "0 0 10px", fontStyle: "italic" }}>"{r.comment}"</p>}
-                <p style={{ fontSize: "11px", color: "#8792A6", marginBottom: "10px" }}>Signalé par : {r.reported_by || "(anonymisé)"}</p>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: "8px", marginTop: "14px" }}>
+                  <span style={{ fontSize: "11px", color: "#39FF66", fontWeight: 700 }}>{REASON_LABELS[r.reason] || r.reason}</span>
+                  <span style={{ fontSize: "10px", color: "#8792A6", textTransform: "uppercase", fontWeight: 700, flexShrink: 0 }}>{ENTITY_TYPE_LABELS[r.entity_type] || r.entity_type}</span>
+                </div>
+                {r.comment && <p style={{ fontSize: "11.5px", color: "#F2F2E8", margin: "4px 0 0", fontStyle: "italic" }}>"{r.comment}"</p>}
+                <p style={{ fontSize: "10px", color: "#8792A6", margin: "4px 0 0" }}>Signalé par : {r.reported_by || "(anonymisé)"}</p>
 
                 <button
                   onClick={() => setExpandedId(expanded ? null : r.id)}
-                  style={{ background: "none", border: "none", color: "#39FF66", fontSize: "12.5px", fontWeight: 700, cursor: "pointer", padding: 0, marginBottom: "12px" }}
+                  style={{ background: "none", border: "none", color: "#39FF66", fontSize: "11.5px", fontWeight: 700, cursor: "pointer", padding: 0, marginTop: "8px", marginBottom: "8px" }}
                 >
                   {expanded ? "▼ Masquer la fiche" : "▶ Voir la fiche"}
                 </button>
@@ -249,7 +248,7 @@ export function ReportsScreen() {
                     {r.reason === "duplicate" && r.duplicate_of_id && !keeperChoice[r.id] && (
                       <p style={{ fontSize: "11.5px", color: "#8792A6", margin: 0 }}>▶ Dépliez la fiche ci-dessus et choisissez laquelle conserver avant de confirmer le doublon.</p>
                     )}
-                    <div style={{ display: "flex", gap: "8px" }}>
+                    <div style={{ display: "flex", gap: "6px" }}>
                       {r.reason === "duplicate" && r.duplicate_of_id && (
                         <button
                           onClick={() => handleConfirmDuplicate(r)}
@@ -258,13 +257,13 @@ export function ReportsScreen() {
                             flex: 1,
                             background: "#00C8FF",
                             border: "none",
-                            borderRadius: "8px",
-                            padding: "9px",
+                            borderRadius: "6px",
+                            padding: "6px",
                             fontWeight: 700,
                             color: "#0D1B2A",
                             cursor: "pointer",
                             opacity: busyId === r.id || !keeperChoice[r.id] ? 0.4 : 1,
-                            fontSize: "12.5px",
+                            fontSize: "11px",
                           }}
                         >
                           Confirmer le doublon
@@ -273,21 +272,21 @@ export function ReportsScreen() {
                     <button
                       onClick={() => handleArchive(r)}
                       disabled={busyId === r.id}
-                      style={{ flex: 1, background: "#FF3B4E", border: "none", borderRadius: "8px", padding: "9px", fontWeight: 700, color: "#fff", cursor: "pointer", opacity: busyId === r.id ? 0.6 : 1, fontSize: "12.5px" }}
+                      style={{ flex: 1, background: "#800020", border: "none", borderRadius: "6px", padding: "6px", fontWeight: 700, color: "#fff", cursor: "pointer", opacity: busyId === r.id ? 0.6 : 1, fontSize: "11px" }}
                     >
-                      Archiver la fiche
+                      Archiver
                     </button>
                     <button
                       onClick={() => handleResolve(r.id)}
                       disabled={busyId === r.id}
-                      style={{ flex: 1, background: "#39FF66", border: "none", borderRadius: "8px", padding: "9px", fontWeight: 700, color: "#0D1B2A", cursor: "pointer", opacity: busyId === r.id ? 0.6 : 1 }}
+                      style={{ flex: 1, background: "#39FF66", border: "none", borderRadius: "6px", padding: "6px", fontWeight: 700, color: "#0D1B2A", cursor: "pointer", opacity: busyId === r.id ? 0.6 : 1, fontSize: "11px" }}
                     >
                       Traité
                     </button>
                     <button
                       onClick={() => handleDismiss(r.id)}
                       disabled={busyId === r.id}
-                      style={{ flex: 1, background: "none", border: "2px solid #28405C", borderRadius: "8px", padding: "9px", fontWeight: 700, color: "#F2F2E8", cursor: "pointer", opacity: busyId === r.id ? 0.6 : 1 }}
+                      style={{ flex: 1, background: "none", border: "2px solid #28405C", borderRadius: "6px", padding: "6px", fontWeight: 700, color: "#F2F2E8", cursor: "pointer", opacity: busyId === r.id ? 0.6 : 1, fontSize: "11px" }}
                     >
                       Ignorer
                     </button>
