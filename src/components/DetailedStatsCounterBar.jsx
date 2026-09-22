@@ -4,9 +4,9 @@ import { CERTIFICATION_LEVELS } from "./CertificationLevelSelector.jsx";
 import { VisibilityDot } from "./DataTable.jsx";
 import { CertificationIcon } from "./CertificationIcon.jsx";
 
-function Stat({ label, value, color = "#39FF66", indicator }) {
+function Stat({ label, value, color = "#39FF66", indicator, border }) {
   return (
-    <div style={{ position: "relative", background: "#16273D", borderRadius: "10px", padding: "14px 16px", flex: 1, minWidth: "110px", textAlign: "center" }}>
+    <div style={{ position: "relative", background: "#16273D", borderRadius: "10px", padding: "14px 16px", flex: 1, minWidth: "110px", textAlign: "center", border: border ? `2px solid ${border}` : "none" }}>
       {indicator && <div style={{ position: "absolute", top: "8px", right: "8px" }}>{indicator}</div>}
       <div style={{ fontSize: "11.5px", color: "#8792A6", marginBottom: "4px" }}>{label}</div>
       <div style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "26px", color }}>{value}</div>
@@ -33,7 +33,7 @@ export function DetailedStatsCounterBar({ items }) {
     <div style={{ marginBottom: "24px" }}>
       <div style={rowStyle}>
         <Stat label="Total" value={total} />
-        <Stat label="Nouvelles contributions" value={newContributions} />
+        <Stat label="Nouvelles contributions" value={newContributions} border={newContributions > 0 ? "#ef007c" : undefined} />
       </div>
 
       <div style={separatorStyle} />
