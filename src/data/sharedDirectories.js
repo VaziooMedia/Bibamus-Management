@@ -535,9 +535,9 @@ export async function updateCountryRule(countryCode, minimumAge) {
 export async function loadAdminChatMessages() {
   const { data, error } = await supabase
     .from("admin_chat_messages")
-    .select("id, message, created_at, sender_id, profiles(name, last_name, avatar_url)")
+    .select("id, message, created_at, sender_id, recipient_role, recipient_ids, profiles(name, last_name, avatar_url)")
     .order("created_at", { ascending: true })
-    .limit(100);
+    .limit(500);
   if (error) {
     console.error("loadAdminChatMessages:", error);
     return [];
@@ -549,11 +549,20 @@ export async function loadAdminChatMessages() {
     senderId: row.sender_id,
     senderName: [row.profiles?.name, row.profiles?.last_name].filter(Boolean).join(" ") || "Collaborateur",
     senderAvatarUrl: row.profiles?.avatar_url || null,
+    recipientRole: row.recipient_role,
+    recipientIds: row.recipient_ids || null,
   }));
 }
 
-export async function sendAdminChatMessage(senderId, message) {
-  const { error } = await supabase.from("admin_chat_messages").insert({ sender_id: senderId, message });
+// recipient: { role: "moderator" } pour cibler tout un vrai type d'administration, ou
+// { ids: [uuid, ...] } pour une ou plusieurs vraies personnes précises — jamais les deux.
+export async function sendAdminChatMessage(senderId, message, recipient) {
+  const { error } = await supabase.from("admin_chat_messages").insert({
+    sender_id: senderId,
+    message,
+    recipient_role: recipient.role || null,
+    recipient_ids: recipient.ids || null,
+  });
   if (error) {
     console.error("sendAdminChatMessage:", error);
     return { error: error.message };

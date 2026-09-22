@@ -3,7 +3,9 @@ import { TopBar } from "./TopBar.jsx";
 import { usePendingReportsCount } from "../data/usePendingReportsCount.js";
 
 const COMMUNICATION_ITEMS = [
-  { key: "chat", label: "Chat" },
+  { key: "chatTeam", label: "Chat Team" },
+  { key: "chatClients", label: "Chat clients" },
+  { key: "chatBusiness", label: "Chat Business" },
   { key: "notifications", label: "Notifications" },
 ];
 

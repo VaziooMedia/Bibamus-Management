@@ -12,7 +12,7 @@ import { CollaboratorsScreen } from "./components/CollaboratorsScreen.jsx";
 import { UsersScreen } from "./components/UsersScreen.jsx";
 import { ReportsScreen } from "./components/ReportsScreen.jsx";
 import { NotificationsScreen } from "./components/NotificationsScreen.jsx";
-import { ChatScreen } from "./components/ChatScreen.jsx";
+import { ChatTeamScreen, ChatClientsScreen, ChatBusinessScreen } from "./components/ChatScreen.jsx";
 import { AuditLogScreen } from "./components/AuditLogScreen.jsx";
 import { ClaimsScreen } from "./components/ClaimsScreen.jsx";
 import { BusinessAccountsScreen } from "./components/BusinessAccountsScreen.jsx";
@@ -99,7 +99,9 @@ export default function App() {
       {screen === "breweries" && <BreweriesScreen />}
       {screen === "officialStories" && <OfficialStoriesScreen myUserId={myUserId} />}
       {screen === "brands" && <BrandsScreen />}
-      {screen === "chat" && <ChatScreen myUserId={myUserId} />}
+      {screen === "chatTeam" && <ChatTeamScreen myUserId={myUserId} myRole={myRole} />}
+      {screen === "chatClients" && <ChatClientsScreen />}
+      {screen === "chatBusiness" && <ChatBusinessScreen />}
       {screen === "stats" && <AnalyticsScreen />}
       {screen === "finances" && <ComingSoon title="Finances" />}
       {screen === "claims" && <ClaimsScreen />}
