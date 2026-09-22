@@ -109,11 +109,18 @@ export function ServerDataTable({ allColumns, forcedKeys = [], defaultVisibleKey
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "16px", gap: "10px" }}>
         <div style={{ display: "flex", alignItems: "center", gap: "10px", flex: 1 }}>
           <div style={{ position: "relative" }}>
+            <div style={{ position: "absolute", left: "12px", top: "50%", transform: "translateY(-50%)", display: "flex", alignItems: "center", gap: "10px", pointerEvents: "none" }}>
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#8792A6" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <circle cx="11" cy="11" r="7" />
+                <line x1="21" y1="21" x2="16.65" y2="16.65" />
+              </svg>
+              <span style={{ width: "1px", height: "16px", background: "#28405C" }} />
+            </div>
             <input
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               placeholder={searchPlaceholder}
-              style={{ padding: "10px 34px 10px 14px", borderRadius: "8px", border: "2px solid #28405C", fontSize: "14px", width: "320px", boxSizing: "border-box" }}
+              style={{ padding: "10px 34px 10px 40px", borderRadius: "8px", border: "2px solid #28405C", fontSize: "14px", width: "320px", boxSizing: "border-box" }}
             />
             {query && (
               <button

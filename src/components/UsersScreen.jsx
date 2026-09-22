@@ -66,12 +66,22 @@ function FilterBlock({ label, active, onClick }) {
   );
 }
 
-function SortHeader({ label, sortKey, currentSort, onSort, borderRight }) {
+function SortHeader({ label, sortKey, currentSort, onSort, borderRight, compact }) {
   const active = currentSort.key === sortKey;
   return (
     <th
       onClick={() => onSort(sortKey)}
-      style={{ textAlign: "left", padding: "10px", color: active ? "#39FF66" : "#8792A6", fontSize: "12px", cursor: "pointer", userSelect: "none", borderRight: borderRight ? "1px solid #28405C" : "none" }}
+      style={{
+        textAlign: "center",
+        padding: "10px",
+        color: active ? "#39FF66" : "#8792A6",
+        fontSize: "12px",
+        cursor: "pointer",
+        userSelect: "none",
+        borderRight: borderRight ? "1px solid #28405C" : "none",
+        width: compact ? "1%" : undefined,
+        whiteSpace: compact ? "nowrap" : undefined,
+      }}
     >
       {label} {active ? (currentSort.dir === 1 ? "▲" : "▼") : ""}
     </th>
@@ -149,22 +159,6 @@ export function UsersScreen() {
         </button>
       </div>
 
-      <div style={{ position: "relative", width: "320px", marginBottom: "20px" }}>
-        <div style={{ position: "absolute", left: "12px", top: "50%", transform: "translateY(-50%)", display: "flex", alignItems: "center", gap: "10px", pointerEvents: "none" }}>
-          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#8792A6" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-            <circle cx="11" cy="11" r="7" />
-            <line x1="21" y1="21" x2="16.65" y2="16.65" />
-          </svg>
-          <span style={{ width: "1px", height: "16px", background: "#28405C" }} />
-        </div>
-        <input
-          value={query}
-          onChange={(e) => setQuery(e.target.value)}
-          placeholder="Rechercher..."
-          style={{ padding: "10px 14px 10px 40px", borderRadius: "8px", border: "2px solid #28405C", fontSize: "13.5px", color: "#F2F2E8", background: "#0D1B2A", width: "100%", boxSizing: "border-box" }}
-        />
-      </div>
-
       <div style={{ display: "grid", gridTemplateColumns: "repeat(6, 1fr)", gap: "8px", marginBottom: "8px" }}>
         {COUNTRY_BLOCKS.map((c) => (
           <FilterBlock
@@ -192,6 +186,22 @@ export function UsersScreen() {
         ))}
       </div>
 
+      <div style={{ position: "relative", width: "320px", marginBottom: "20px" }}>
+        <div style={{ position: "absolute", left: "12px", top: "50%", transform: "translateY(-50%)", display: "flex", alignItems: "center", gap: "10px", pointerEvents: "none" }}>
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#8792A6" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <circle cx="11" cy="11" r="7" />
+            <line x1="21" y1="21" x2="16.65" y2="16.65" />
+          </svg>
+          <span style={{ width: "1px", height: "16px", background: "#28405C" }} />
+        </div>
+        <input
+          value={query}
+          onChange={(e) => setQuery(e.target.value)}
+          placeholder="Rechercher..."
+          style={{ padding: "10px 14px 10px 40px", borderRadius: "8px", border: "2px solid #28405C", fontSize: "13.5px", color: "#F2F2E8", background: "#0D1B2A", width: "100%", boxSizing: "border-box" }}
+        />
+      </div>
+
       {!sorted ? (
         <p style={{ color: "#8792A6" }}>Chargement...</p>
       ) : sorted.length === 0 ? (
@@ -202,10 +212,11 @@ export function UsersScreen() {
             <tr style={{ borderTop: "2px solid #28405C", borderBottom: "2px solid #28405C" }}>
               <SortHeader label="Nom" sortKey="last_name" currentSort={sort} onSort={handleSort} borderRight />
               <SortHeader label="Prénom" sortKey="name" currentSort={sort} onSort={handleSort} borderRight />
-              <th style={{ textAlign: "left", padding: "10px", color: "#8792A6", fontSize: "12px", borderRight: "1px solid #28405C" }}>Email</th>
-              <th style={{ textAlign: "left", padding: "10px", color: "#8792A6", fontSize: "12px", borderRight: "1px solid #28405C" }}>Code Bibax</th>
-              <SortHeader label="Inscrit le" sortKey="created_at" currentSort={sort} onSort={handleSort} borderRight />
-              <SortHeader label="Statut" sortKey="active" currentSort={sort} onSort={handleSort} />
+              <th style={{ textAlign: "center", padding: "10px", color: "#8792A6", fontSize: "12px", borderRight: "1px solid #28405C" }}>Email</th>
+              <SortHeader label="Pays" sortKey="country" currentSort={sort} onSort={handleSort} borderRight />
+              <SortHeader label="Code Bibax" sortKey="bibro_code" currentSort={sort} onSort={handleSort} borderRight compact />
+              <SortHeader label="Inscrit le" sortKey="created_at" currentSort={sort} onSort={handleSort} borderRight compact />
+              <SortHeader label="Statut" sortKey="active" currentSort={sort} onSort={handleSort} compact />
             </tr>
           </thead>
           <tbody>
@@ -214,9 +225,10 @@ export function UsersScreen() {
                 <td style={{ padding: "10px", color: "#F2F2E8", fontSize: "13.5px", borderRight: "1px solid #16273D" }}>{u.last_name || "—"}</td>
                 <td style={{ padding: "10px", color: "#F2F2E8", fontSize: "13.5px", borderRight: "1px solid #16273D" }}>{u.name || "—"}</td>
                 <td style={{ padding: "10px", color: "#F2F2E8", fontSize: "13.5px", borderRight: "1px solid #16273D" }}>{u.email}</td>
-                <td style={{ padding: "10px", color: "#8792A6", fontSize: "13px", borderRight: "1px solid #16273D" }}>{u.bibro_code}</td>
-                <td style={{ padding: "10px", color: "#8792A6", fontSize: "13px", borderRight: "1px solid #16273D" }}>{u.created_at ? u.created_at.slice(0, 10) : "—"}</td>
-                <td style={{ padding: "10px" }}>
+                <td style={{ padding: "10px", color: "#8792A6", fontSize: "13px", borderRight: "1px solid #16273D" }}>{u.country || "—"}</td>
+                <td style={{ padding: "10px", color: "#8792A6", fontSize: "13px", borderRight: "1px solid #16273D", textAlign: "center", width: "1%", whiteSpace: "nowrap" }}>{u.bibro_code}</td>
+                <td style={{ padding: "10px", color: "#8792A6", fontSize: "13px", borderRight: "1px solid #16273D", textAlign: "center", width: "1%", whiteSpace: "nowrap" }}>{u.created_at ? u.created_at.slice(0, 10) : "—"}</td>
+                <td style={{ padding: "10px", textAlign: "center", width: "1%", whiteSpace: "nowrap" }}>
                   <span
                     title={isEffectivelyActive(u) ? "Actif" : `Bloqué${u.blocked_reason ? " — " + u.blocked_reason : ""}${u.blocked_until ? " (jusqu'au " + u.blocked_until.slice(0, 10) + ")" : ""}`}
                     style={{ display: "inline-block", width: "10px", height: "10px", borderRadius: "50%", background: isEffectivelyActive(u) ? "#39FF66" : "#FF3B4E" }}
