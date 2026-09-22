@@ -35,9 +35,27 @@ const SYSTEM_ITEMS = [
   { key: "admins", label: "Administrateurs" },
 ];
 
-function SectionHeader({ title }) {
+// En-tête de section cliquable — replie/déplie ses propres items indépendamment des autres
+// sections, tout déplié par défaut (même principe que les lignes de blocs de comptage).
+function SectionHeader({ title, expanded, onToggle }) {
   return (
-    <div style={{ padding: "18px 20px 6px 20px", fontSize: "11px", fontWeight: 800, color: "#8792A6", letterSpacing: "1px", textTransform: "uppercase" }}>{title}</div>
+    <button
+      onClick={onToggle}
+      style={{
+        width: "100%",
+        display: "flex",
+        alignItems: "center",
+        gap: "6px",
+        background: "none",
+        border: "none",
+        cursor: "pointer",
+        padding: "16px 20px 6px 20px",
+        textAlign: "left",
+      }}
+    >
+      <span style={{ fontSize: "9px", color: "#8792A6", transform: expanded ? "rotate(90deg)" : "none", transition: "transform 0.15s" }}>▸</span>
+      <span style={{ fontSize: "10px", fontWeight: 800, color: "#8792A6", letterSpacing: "1px", textTransform: "uppercase" }}>{title}</span>
+    </button>
   );
 }
 
@@ -53,7 +71,7 @@ function NavButton({ item, current, onNavigate, indent, badge }) {
         border: "none",
         borderLeft: active ? "3px solid #39FF66" : "3px solid transparent",
         padding: indent ? "10px 20px 10px 20px" : "12px 20px",
-        fontSize: indent ? "13px" : "14px",
+        fontSize: indent ? "11px" : "12px",
         fontWeight: active ? 700 : 500,
         color: active ? "#39FF66" : "#F2F2E8",
         cursor: "pointer",
@@ -124,6 +142,12 @@ export function Layout({ current, onNavigate, onLogout, myRole, myCanModerate, c
   const isBusiness = myRole === "business";
   const pendingReportsCount = usePendingReportsCount();
 
+  const [communicationOpen, setCommunicationOpen] = useState(true);
+  const [databaseSectionOpen, setDatabaseSectionOpen] = useState(true);
+  const [businessSectionOpen, setBusinessSectionOpen] = useState(true);
+  const [analyticsOpen, setAnalyticsOpen] = useState(true);
+  const [systemOpen, setSystemOpen] = useState(true);
+
   return (
     <div style={{ display: "flex", minHeight: "100vh" }}>
       <div style={{ width: "220px", flexShrink: 0, background: "#16273D", padding: "24px 0", display: "flex", flexDirection: "column" }}>
@@ -132,7 +156,7 @@ export function Layout({ current, onNavigate, onLogout, myRole, myCanModerate, c
           style={{ background: "none", border: "none", cursor: "pointer", padding: "0 20px 28px 20px", textAlign: "left" }}
         >
           <img src="/bibamus-logo.svg" alt="Bibamus" style={{ height: "26px", display: "block" }} />
-          <div style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "13px", color: "#39FF66", letterSpacing: "1px", marginTop: "4px" }}>
+          <div style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "12px", color: "#39FF66", letterSpacing: "1px", marginTop: "4px" }}>
             Management
           </div>
         </button>
@@ -159,7 +183,7 @@ export function Layout({ current, onNavigate, onLogout, myRole, myCanModerate, c
                 border: "none",
                 borderLeft: isDatabaseScreen ? "3px solid #39FF66" : "3px solid transparent",
                 padding: "12px 20px",
-                fontSize: "14px",
+                fontSize: "12px",
                 fontWeight: isDatabaseScreen ? 700 : 500,
                 color: isDatabaseScreen ? "#39FF66" : "#F2F2E8",
                 cursor: "pointer",
@@ -198,30 +222,26 @@ export function Layout({ current, onNavigate, onLogout, myRole, myCanModerate, c
           <>
             <NavButton item={{ key: "dashboard", label: "Tableau de bord" }} current={current} onNavigate={onNavigate} />
 
-            <SectionHeader title="Communication" />
-            {COMMUNICATION_ITEMS.map((item) => (
-              <NavButton key={item.key} item={item} current={current} onNavigate={onNavigate} badge={item.key === "notifications" ? pendingReportsCount : undefined} />
-            ))}
+            <SectionHeader title="Communication" expanded={communicationOpen} onToggle={() => setCommunicationOpen((o) => !o)} />
+            {communicationOpen &&
+              COMMUNICATION_ITEMS.map((item) => (
+                <NavButton key={item.key} item={item} current={current} onNavigate={onNavigate} badge={item.key === "notifications" ? pendingReportsCount : undefined} />
+              ))}
 
-            <SectionHeader title="DataBase" />
-            {DATABASE_ITEMS.map((item) => (
-              <NavButton key={item.key} item={item} current={current} onNavigate={onNavigate} badge={item.key === "reports" ? pendingReportsCount : undefined} />
-            ))}
+            <SectionHeader title="DataBase" expanded={databaseSectionOpen} onToggle={() => setDatabaseSectionOpen((o) => !o)} />
+            {databaseSectionOpen &&
+              DATABASE_ITEMS.map((item) => (
+                <NavButton key={item.key} item={item} current={current} onNavigate={onNavigate} badge={item.key === "reports" ? pendingReportsCount : undefined} />
+              ))}
 
-            <SectionHeader title="Business" />
-            {BUSINESS_ITEMS.map((item) => (
-              <NavButton key={item.key} item={item} current={current} onNavigate={onNavigate} />
-            ))}
+            <SectionHeader title="Business" expanded={businessSectionOpen} onToggle={() => setBusinessSectionOpen((o) => !o)} />
+            {businessSectionOpen && BUSINESS_ITEMS.map((item) => <NavButton key={item.key} item={item} current={current} onNavigate={onNavigate} />)}
 
-            <SectionHeader title="Analytics" />
-            {ANALYTICS_ITEMS.map((item) => (
-              <NavButton key={item.key} item={item} current={current} onNavigate={onNavigate} />
-            ))}
+            <SectionHeader title="Analytics" expanded={analyticsOpen} onToggle={() => setAnalyticsOpen((o) => !o)} />
+            {analyticsOpen && ANALYTICS_ITEMS.map((item) => <NavButton key={item.key} item={item} current={current} onNavigate={onNavigate} />)}
 
-            <SectionHeader title="Système" />
-            {SYSTEM_ITEMS.map((item) => (
-              <NavButton key={item.key} item={item} current={current} onNavigate={onNavigate} />
-            ))}
+            <SectionHeader title="Système" expanded={systemOpen} onToggle={() => setSystemOpen((o) => !o)} />
+            {systemOpen && SYSTEM_ITEMS.map((item) => <NavButton key={item.key} item={item} current={current} onNavigate={onNavigate} />)}
           </>
         )}
 
@@ -234,7 +254,7 @@ export function Layout({ current, onNavigate, onLogout, myRole, myCanModerate, c
             <LogoutIcon />
           </button>
         </div>
-        <div style={{ padding: "0 20px 16px", fontSize: "11px", color: "#8792A6" }}>VaziooMedia - 2026</div>
+        <div style={{ padding: "0 20px 16px", fontSize: "10px", color: "#8792A6" }}>VaziooMedia - 2026</div>
       </div>
       <div style={{ flex: 1, display: "flex", flexDirection: "column", minWidth: 0 }}>
         <TopBar pendingReportsCount={pendingReportsCount} onOpenReports={() => onNavigate("notifications")} />
