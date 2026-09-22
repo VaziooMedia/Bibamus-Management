@@ -153,11 +153,20 @@ export function DataTable({ items, allColumns, forcedKeys = [], defaultVisibleKe
       <table>
         <thead>
           <tr style={{ borderBottom: "2px solid #28405C" }}>
-            {columns.map((col) => (
+            {columns.map((col, i) => (
               <th
                 key={col.key}
                 onClick={() => toggleSort(col.key)}
-                style={{ textAlign: "left", padding: "10px 12px", fontSize: "12.5px", color: "#8792A6", cursor: "pointer", userSelect: "none", whiteSpace: "nowrap" }}
+                style={{
+                  textAlign: "left",
+                  padding: "10px 12px",
+                  fontSize: "12.5px",
+                  color: "#8792A6",
+                  cursor: "pointer",
+                  userSelect: "none",
+                  whiteSpace: "nowrap",
+                  borderRight: i < columns.length - 1 ? "1px solid #28405C" : "none",
+                }}
               >
                 {col.label} {sortKey === col.key ? (sortDir === 1 ? "▲" : "▼") : ""}
               </th>
@@ -173,8 +182,8 @@ export function DataTable({ items, allColumns, forcedKeys = [], defaultVisibleKe
               onMouseEnter={(e) => (e.currentTarget.style.background = "#16273D")}
               onMouseLeave={(e) => (e.currentTarget.style.background = "transparent")}
             >
-              {columns.map((col) => (
-                <td key={col.key} style={{ padding: "10px 12px", fontSize: "14px" }}>
+              {columns.map((col, i) => (
+                <td key={col.key} style={{ padding: "10px 12px", fontSize: "14px", borderRight: i < columns.length - 1 ? "1px solid #16273D" : "none" }}>
                   {col.render ? col.render(item) : item[col.key]}
                 </td>
               ))}

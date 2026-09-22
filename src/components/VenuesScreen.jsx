@@ -16,7 +16,7 @@ const countryLabel = (code) => countryMap[code] || code || "—";
 const allColumns = [
   { key: "name", label: "Nom" },
   { key: "country", label: "Pays", render: (v) => countryLabel(v.country) },
-  { key: "city", label: "Ville" },
+  { key: "city", label: "Commune" },
   { key: "phone", label: "Téléphone" },
   { key: "email", label: "Email" },
   { key: "website", label: "Site web" },
@@ -47,8 +47,8 @@ export function VenuesScreen() {
     <div>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "20px" }}>
         <PageTitle>Lieux</PageTitle>
-        <button onClick={refresh} style={{ background: "none", border: "2px solid #28405C", borderRadius: "8px", padding: "8px 14px", color: "#F2F2E8", cursor: "pointer", fontSize: "13px" }}>
-          ⟳ Rafraîchir
+        <button onClick={refresh} title="Rafraîchir" aria-label="Rafraîchir" style={{ background: "none", border: "2px solid #28405C", borderRadius: "8px", padding: "8px 14px", color: "#F2F2E8", cursor: "pointer", fontSize: "16px" }}>
+          ⟳
         </button>
       </div>
       {loading ? (
@@ -64,7 +64,7 @@ export function VenuesScreen() {
             storageKey="etablissements"
             onRowClick={setSelected}
             onAdd={() => setCreating(true)}
-            searchPlaceholder="Rechercher un établissement, une ville..."
+            searchPlaceholder="Rechercher Lieux"
           />
         </>
       )}
