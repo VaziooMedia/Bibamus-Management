@@ -6,7 +6,7 @@ import { BrandDetailPanel } from "./BrandDetailPanel.jsx";
 import { StatsCounterBar } from "./StatsCounterBar.jsx";
 import { DetailedStatsCounterBar, applyStatFilter } from "./DetailedStatsCounterBar.jsx";
 import { PageTitle } from "./PageTitle.jsx";
-import { COUNTRIES, PRODUCER_TYPES, BRAND_CLASSIFICATIONS } from "../constants.js";
+import { COUNTRIES, PRODUCER_TYPES, BRAND_CLASSIFICATIONS, BRAND_TYPES } from "../constants.js";
 import { CertificationIcon } from "./CertificationIcon.jsx";
 
 // Les données stockent désormais des codes techniques — les tableaux doivent résoudre le
@@ -19,6 +19,7 @@ const labelFromList = (list) => {
 const countryLabel = labelFromList(COUNTRIES);
 const producerTypeLabel = labelFromList(PRODUCER_TYPES);
 const classificationLabel = labelFromList(BRAND_CLASSIFICATIONS);
+const brandTypeLabel = labelFromList(BRAND_TYPES);
 
 const breweryColumns = [
   { key: "name", label: "Nom" },
@@ -31,15 +32,19 @@ const breweryColumns = [
   { key: "certificationLevel", label: "Certification", render: (b) => <CertificationIcon level={b.certificationLevel} /> },
 ];
 
-const brandColumns = [
-  { key: "name", label: "Nom" },
-  { key: "originCountry", label: "Origine", render: (b) => countryLabel(b.originCountry) },
-  { key: "classifications", label: "Classification", render: (b) => (b.classifications || []).map(classificationLabel).join(", ") },
-  { key: "foundedYear", label: "Créée en" },
-  { key: "status", label: "Statut", render: (b) => <StatusBadge status={b.status} /> },
-  { key: "visible", label: "Visible", render: (b) => <VisibilityDot status={b.status} /> },
-  { key: "certificationLevel", label: "Certification", render: (b) => <CertificationIcon level={b.certificationLevel} /> },
-];
+const getBrandColumns = (breweriesDirectory) => {
+  const producerName = (id) => breweriesDirectory.find((b) => b.id === id)?.name || "—";
+  return [
+    { key: "name", label: "Nom" },
+    { key: "originCountry", label: "Origine", render: (b) => countryLabel(b.originCountry) },
+    { key: "classifications", label: "Classification", render: (b) => (b.classifications || []).map(classificationLabel).join(", ") },
+    { key: "brandTypes", label: "Type de marque", render: (b) => (b.brandTypes || []).map(brandTypeLabel).join(", ") },
+    { key: "producerId", label: "Producteur actuel", render: (b) => (b.producerId ? producerName(b.producerId) : "—") },
+    { key: "status", label: "Statut", render: (b) => <StatusBadge status={b.status} /> },
+    { key: "visible", label: "Visible", render: (b) => <VisibilityDot status={b.status} /> },
+    { key: "certificationLevel", label: "Certification", render: (b) => <CertificationIcon level={b.certificationLevel} /> },
+  ];
+};
 
 export function BreweriesScreen() {
   const [items, setItems] = useState([]);
@@ -104,6 +109,7 @@ export function BreweriesScreen() {
 
 export function BrandsScreen() {
   const [items, setItems] = useState([]);
+  const [breweriesDirectory, setBreweriesDirectory] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selected, setSelected] = useState(null);
   const [creating, setCreating] = useState(false);
@@ -117,6 +123,7 @@ export function BrandsScreen() {
 
   useEffect(() => {
     refresh();
+    loadBreweriesDirectory().then(setBreweriesDirectory);
   }, []);
 
   return (
@@ -134,9 +141,9 @@ export function BrandsScreen() {
           <DetailedStatsCounterBar items={items} activeFilter={activeFilter} onFilterChange={setActiveFilter} />
           <DataTable
             items={applyStatFilter(items, activeFilter)}
-            allColumns={brandColumns}
+            allColumns={getBrandColumns(breweriesDirectory)}
             forcedKeys={["name", "status"]}
-            defaultVisibleKeys={["name", "originCountry", "status", "visible", "certificationLevel"]}
+            defaultVisibleKeys={["name", "originCountry", "brandTypes", "producerId", "status", "visible", "certificationLevel"]}
             storageKey="marques"
             onRowClick={setSelected}
             onAdd={() => setCreating(true)}

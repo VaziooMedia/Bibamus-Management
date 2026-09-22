@@ -207,7 +207,7 @@ export function DataTable({ items, allColumns, forcedKeys = [], defaultVisibleKe
       </div>
       <table>
         <thead>
-          <tr style={{ borderBottom: "2px solid #28405C" }}>
+          <tr style={{ borderTop: "2px solid #28405C", borderBottom: "2px solid #28405C" }}>
             {columns.map((col, i) => (
               <th
                 key={col.key}

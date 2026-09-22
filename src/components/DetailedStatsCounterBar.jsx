@@ -148,6 +148,7 @@ export function DetailedStatsCounterBar({ items, activeFilter, onFilterChange })
           />
         </div>
       )}
+      <div style={separatorStyle} />
     </div>
   );
 }
