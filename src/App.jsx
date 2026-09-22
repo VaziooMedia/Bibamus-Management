@@ -11,6 +11,7 @@ import { DataBaseOverviewScreen } from "./components/DataBaseOverviewScreen.jsx"
 import { CollaboratorsScreen } from "./components/CollaboratorsScreen.jsx";
 import { UsersScreen } from "./components/UsersScreen.jsx";
 import { ReportsScreen } from "./components/ReportsScreen.jsx";
+import { NotificationsScreen } from "./components/NotificationsScreen.jsx";
 import { AuditLogScreen } from "./components/AuditLogScreen.jsx";
 import { ClaimsScreen } from "./components/ClaimsScreen.jsx";
 import { BusinessAccountsScreen } from "./components/BusinessAccountsScreen.jsx";
@@ -112,7 +113,7 @@ export default function App() {
       {screen === "businessAccountDetail" && (
         <BusinessAccountDetailScreen accountId={viewedBusinessAccountId} onBack={() => setScreen("businessAccounts")} />
       )}
-      {screen === "notifications" && <ComingSoon title="Notifications" />}
+      {screen === "notifications" && <NotificationsScreen onOpenReports={() => setScreen("reports")} />}
       {screen === "admins" && <CollaboratorsScreen />}
       {screen === "users" && <UsersScreen />}
       {screen === "reports" && <ReportsScreen />}

@@ -273,7 +273,7 @@ export function Layout({ current, onNavigate, onLogout, myRole, myCanModerate, c
             )}
 
             {BOTTOM_ITEMS_AFTER_BUSINESS.map((item) => (
-              <NavButton key={item.key} item={item} current={current} onNavigate={onNavigate} />
+              <NavButton key={item.key} item={item} current={current} onNavigate={onNavigate} badge={item.key === "notifications" ? pendingReportsCount : undefined} />
             ))}
           </>
         )}
@@ -288,7 +288,7 @@ export function Layout({ current, onNavigate, onLogout, myRole, myCanModerate, c
         <div style={{ padding: "0 20px 16px", fontSize: "11px", color: "#8792A6" }}>VaziooMedia - 2026</div>
       </div>
       <div style={{ flex: 1, display: "flex", flexDirection: "column", minWidth: 0 }}>
-        <TopBar pendingReportsCount={pendingReportsCount} onOpenReports={() => onNavigate("reports")} />
+        <TopBar pendingReportsCount={pendingReportsCount} onOpenReports={() => onNavigate("notifications")} />
         <div style={{ flex: 1, padding: "32px 40px", overflowY: "auto" }}>{children}</div>
       </div>
     </div>
