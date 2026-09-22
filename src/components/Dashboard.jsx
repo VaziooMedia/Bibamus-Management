@@ -1,15 +1,12 @@
 import React, { useState, useEffect } from "react";
 import { loadPublicVenues, loadDrinksDirectory, loadBreweriesDirectory, loadBrandsDirectory } from "../data/sharedDirectories.js";
 import { PageTitle } from "./PageTitle.jsx";
+import { STATUSES } from "./StatusSelector.jsx";
 
 function breakdown(items) {
-  return {
-    total: items.length,
-    complete: items.filter((i) => i.status === "complete").length,
-    toFix: items.filter((i) => i.status === "to_fix").length,
-    toProcess: items.filter((i) => !i.status || i.status === "to_process" || i.status === "draft").length,
-    ownerManaged: items.filter((i) => i.ownerManaged).length,
-  };
+  const byStatus = {};
+  STATUSES.forEach((s) => (byStatus[s.key] = items.filter((i) => i.status === s.key).length));
+  return { total: items.length, byStatus };
 }
 
 function StatCard({ label, data }) {
@@ -19,18 +16,11 @@ function StatCard({ label, data }) {
       <div style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "36px", color: "#39FF66" }}>{data.total}</div>
       <div style={{ borderBottom: "1px solid #F2F2E8", opacity: 0.25, margin: "12px 0" }} />
       <div style={{ display: "flex", flexDirection: "column", gap: "4px", fontSize: "12px", textAlign: "left" }}>
-        <div>
-          Complète : <span style={{ color: "#39FF66", fontWeight: 700 }}>{data.complete}</span>
-        </div>
-        <div>
-          À compléter : <span style={{ color: "#FFC145", fontWeight: 700 }}>{data.toFix}</span>
-        </div>
-        <div>
-          À traiter : <span style={{ color: "#00C8FF", fontWeight: 700 }}>{data.toProcess}</span>
-        </div>
-        <div>
-          Business : <span style={{ color: "#F2F2E8", fontWeight: 700 }}>{data.ownerManaged}</span>
-        </div>
+        {STATUSES.map((s) => (
+          <div key={s.key}>
+            {s.label} : <span style={{ color: s.color, fontWeight: 700 }}>{data.byStatus[s.key]}</span>
+          </div>
+        ))}
       </div>
     </div>
   );
@@ -65,13 +55,13 @@ export function Dashboard() {
       <div style={{ border: "2px solid #39FF66", borderRadius: "16px", padding: "24px" }}>
         <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "18px" }}>
           <span style={{ width: "4px", height: "18px", background: "#39FF66", borderRadius: "2px", display: "inline-block" }} />
-          <h2 style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "18px", margin: 0 }}>Data base</h2>
+          <h2 style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "18px", margin: 0 }}>DataBase</h2>
         </div>
         <div style={{ display: "flex", gap: "16px" }}>
-          <StatCard label="Établissements" data={stats.venues} />
+          <StatCard label="Lieux" data={stats.venues} />
           <StatCard label="Produits" data={stats.drinks} />
-          <StatCard label="Producteurs" data={stats.breweries} />
           <StatCard label="Marques" data={stats.brands} />
+          <StatCard label="Producteurs" data={stats.breweries} />
         </div>
       </div>
     </div>
