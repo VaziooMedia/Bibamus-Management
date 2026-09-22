@@ -36,8 +36,29 @@ export function DataTable({ items, allColumns, forcedKeys = [], defaultVisibleKe
   const pickerRef = useRef(null);
 
   const columns = allColumns.filter((c) => forcedKeys.includes(c.key) || visibleKeys.includes(c.key));
-  const [sortKey, setSortKey] = useState(columns[0]?.key);
-  const [sortDir, setSortDir] = useState(1);
+
+  const readSavedSort = () => {
+    if (!storageKey) return null;
+    try {
+      const saved = localStorage.getItem(`bibamus-admin-sort:${storageKey}`);
+      if (saved) return JSON.parse(saved);
+    } catch (e) {
+      // localStorage indisponible ou valeur corrompue — on retombe sur le défaut.
+    }
+    return null;
+  };
+  const savedSort = readSavedSort();
+  const [sortKey, setSortKeyState] = useState(() => (savedSort && columns.some((c) => c.key === savedSort.key) ? savedSort.key : columns[0]?.key));
+  const [sortDir, setSortDirState] = useState(() => (savedSort && columns.some((c) => c.key === savedSort.key) ? savedSort.dir : 1));
+
+  const persistSort = (key, dir) => {
+    if (!storageKey) return;
+    try {
+      localStorage.setItem(`bibamus-admin-sort:${storageKey}`, JSON.stringify({ key, dir }));
+    } catch (e) {
+      // stockage plein ou indisponible — le tri fonctionne quand même, juste sans mémorisation.
+    }
+  };
 
   useEffect(() => {
     const onClickOutside = (e) => {
@@ -74,10 +95,14 @@ export function DataTable({ items, allColumns, forcedKeys = [], defaultVisibleKe
   }, [items, query, sortKey, sortDir, columns]);
 
   const toggleSort = (key) => {
-    if (sortKey === key) setSortDir((d) => -d);
-    else {
-      setSortKey(key);
-      setSortDir(1);
+    if (sortKey === key) {
+      const nextDir = -sortDir;
+      setSortDirState(nextDir);
+      persistSort(key, nextDir);
+    } else {
+      setSortKeyState(key);
+      setSortDirState(1);
+      persistSort(key, 1);
     }
   };
 
@@ -85,12 +110,36 @@ export function DataTable({ items, allColumns, forcedKeys = [], defaultVisibleKe
     <div>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "16px", gap: "10px" }}>
         <div style={{ display: "flex", alignItems: "center", gap: "10px", flex: 1 }}>
-          <input
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-            placeholder={searchPlaceholder}
-            style={{ padding: "10px 14px", borderRadius: "8px", border: "2px solid #28405C", fontSize: "14px", width: "320px" }}
-          />
+          <div style={{ position: "relative" }}>
+            <input
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              placeholder={searchPlaceholder}
+              style={{ padding: "10px 34px 10px 14px", borderRadius: "8px", border: "2px solid #28405C", fontSize: "14px", width: "320px", boxSizing: "border-box" }}
+            />
+            {query && (
+              <button
+                onClick={() => setQuery("")}
+                title="Effacer"
+                aria-label="Effacer"
+                style={{
+                  position: "absolute",
+                  right: "8px",
+                  top: "50%",
+                  transform: "translateY(-50%)",
+                  background: "none",
+                  border: "none",
+                  color: "#8792A6",
+                  cursor: "pointer",
+                  fontSize: "16px",
+                  lineHeight: 1,
+                  padding: "4px",
+                }}
+              >
+                ×
+              </button>
+            )}
+          </div>
           <div ref={pickerRef} style={{ position: "relative" }}>
             <button
               onClick={() => setPickerOpen((o) => !o)}
@@ -158,7 +207,7 @@ export function DataTable({ items, allColumns, forcedKeys = [], defaultVisibleKe
                 key={col.key}
                 onClick={() => toggleSort(col.key)}
                 style={{
-                  textAlign: "left",
+                  textAlign: "center",
                   padding: "10px 12px",
                   fontSize: "12.5px",
                   color: "#8792A6",
@@ -183,7 +232,15 @@ export function DataTable({ items, allColumns, forcedKeys = [], defaultVisibleKe
               onMouseLeave={(e) => (e.currentTarget.style.background = "transparent")}
             >
               {columns.map((col, i) => (
-                <td key={col.key} style={{ padding: "10px 12px", fontSize: "14px", borderRight: i < columns.length - 1 ? "1px solid #16273D" : "none" }}>
+                <td
+                  key={col.key}
+                  style={{
+                    padding: "10px 12px",
+                    fontSize: "14px",
+                    borderRight: i < columns.length - 1 ? "1px solid #16273D" : "none",
+                    textAlign: ["status", "visible", "certificationLevel"].includes(col.key) ? "center" : "left",
+                  }}
+                >
                   {col.render ? col.render(item) : item[col.key]}
                 </td>
               ))}
