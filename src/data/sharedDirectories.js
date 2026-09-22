@@ -583,6 +583,30 @@ export async function deleteConversationMessages(messageIds) {
   return { ok: true };
 }
 
+// Vraies réactions emoji — toutes celles des messages déjà chargés, en un vrai seul appel
+// plutôt qu'une requête par message.
+export async function loadReactionsForMessages(messageIds) {
+  if (messageIds.length === 0) return [];
+  const { data, error } = await supabase.from("admin_chat_reactions").select("id, message_id, user_id, emoji").in("message_id", messageIds);
+  if (error) {
+    console.error("loadReactionsForMessages:", error);
+    return [];
+  }
+  return data;
+}
+
+// Bascule une vraie réaction : l'ajoute si l'utilisateur ne l'avait pas encore mise sur ce
+// message, la retire sinon.
+export async function toggleReaction(messageId, userId, emoji, alreadyReacted) {
+  if (alreadyReacted) {
+    const { error } = await supabase.from("admin_chat_reactions").delete().eq("message_id", messageId).eq("user_id", userId).eq("emoji", emoji);
+    if (error) console.error("toggleReaction (remove):", error);
+  } else {
+    const { error } = await supabase.from("admin_chat_reactions").insert({ message_id: messageId, user_id: userId, emoji });
+    if (error) console.error("toggleReaction (add):", error);
+  }
+}
+
 export async function loadAdminChatMessages() {
   const { data, error } = await supabase
     .from("admin_chat_messages")

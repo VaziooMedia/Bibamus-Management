@@ -9,6 +9,8 @@ import {
   archiveConversation,
   unarchiveConversation,
   deleteConversationMessages,
+  loadReactionsForMessages,
+  toggleReaction,
 } from "../data/sharedDirectories.js";
 import { conversationKey, isVisibleToMe } from "../data/chatHelpers.js";
 import { supabase } from "../supabaseClient.js";
@@ -30,6 +32,162 @@ const roleLabel = (key) => ADMIN_ROLES.find((r) => r.key === key)?.label || key;
 // Un vrai membre de la Team Bibamus a un vrai rôle d'administration — ni un vrai simple
 // utilisateur de l'app (rôle vide), ni un vrai compte Business (son propre vrai canal séparé).
 const isTeamMember = (c) => !!c.role && c.role !== "business";
+
+const REACTION_EMOJIS = ["👍", "❤️", "😂", "😮", "😢", "🙏"];
+
+// Vrai rond profil de base, en attendant un vrai système d'avatars — initiales sur fond de
+// couleur stable (dérivée du nom, pas aléatoire, pour rester la même à chaque affichage).
+const AVATAR_COLORS = ["#39FF66", "#00C8FF", "#FFC145", "#ef007c", "#8792A6", "#c74b4b"];
+function avatarColor(seed) {
+  let hash = 0;
+  for (const ch of seed) hash = (hash * 31 + ch.charCodeAt(0)) % AVATAR_COLORS.length;
+  return AVATAR_COLORS[hash];
+}
+function ProfileCircle({ name, size = 30 }) {
+  const initials = (name || "?")
+    .split(" ")
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((s) => s[0].toUpperCase())
+    .join("");
+  return (
+    <div
+      style={{
+        width: `${size}px`,
+        height: `${size}px`,
+        borderRadius: "50%",
+        background: avatarColor(name || "?"),
+        color: "#0D1B2A",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        fontWeight: 800,
+        fontSize: `${Math.round(size * 0.4)}px`,
+        flexShrink: 0,
+      }}
+    >
+      {initials || "?"}
+    </div>
+  );
+}
+
+// Vrai menu contextuel "•••" — remplace les vraies icônes emoji, propose Archiver/Supprimer
+// (vue Actives) ou Restaurer/Supprimer (vue Archivées).
+function ConversationMenu({ showArchived, onArchive, onUnarchive, onDelete }) {
+  const [open, setOpen] = useState(false);
+  const ref = useRef(null);
+
+  useEffect(() => {
+    const onClickOutside = (e) => {
+      if (ref.current && !ref.current.contains(e.target)) setOpen(false);
+    };
+    document.addEventListener("mousedown", onClickOutside);
+    return () => document.removeEventListener("mousedown", onClickOutside);
+  }, []);
+
+  return (
+    <div ref={ref} style={{ position: "relative", flexShrink: 0 }}>
+      <button
+        onClick={(e) => {
+          e.stopPropagation();
+          setOpen((o) => !o);
+        }}
+        title="Options"
+        style={{ background: "none", border: "none", color: "#8792A6", cursor: "pointer", padding: "4px 6px", fontSize: "15px", fontWeight: 800, lineHeight: 1 }}
+      >
+        •••
+      </button>
+      {open && (
+        <div
+          style={{
+            position: "absolute",
+            top: "100%",
+            right: 0,
+            marginTop: "4px",
+            background: "#0D1B2A",
+            border: "2px solid #28405C",
+            borderRadius: "8px",
+            zIndex: 20,
+            minWidth: "140px",
+            overflow: "hidden",
+          }}
+        >
+          {showArchived ? (
+            <button
+              onClick={(e) => {
+                setOpen(false);
+                onUnarchive(e);
+              }}
+              style={{ width: "100%", textAlign: "left", padding: "9px 12px", background: "none", border: "none", color: "#39FF66", fontSize: "12.5px", fontWeight: 600, cursor: "pointer" }}
+            >
+              Restaurer
+            </button>
+          ) : (
+            <button
+              onClick={(e) => {
+                setOpen(false);
+                onArchive(e);
+              }}
+              style={{ width: "100%", textAlign: "left", padding: "9px 12px", background: "none", border: "none", color: "#F2F2E8", fontSize: "12.5px", fontWeight: 600, cursor: "pointer" }}
+            >
+              Archiver
+            </button>
+          )}
+          <button
+            onClick={(e) => {
+              setOpen(false);
+              onDelete(e);
+            }}
+            style={{ width: "100%", textAlign: "left", padding: "9px 12px", background: "none", border: "none", color: "#ef007c", fontSize: "12.5px", fontWeight: 600, cursor: "pointer" }}
+          >
+            Supprimer
+          </button>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// Vrai picker de réactions — s'ouvre après un vrai appui long sur une bulle.
+function ReactionPicker({ onPick, onClose }) {
+  const ref = useRef(null);
+  useEffect(() => {
+    const onClickOutside = (e) => {
+      if (ref.current && !ref.current.contains(e.target)) onClose();
+    };
+    document.addEventListener("mousedown", onClickOutside);
+    return () => document.removeEventListener("mousedown", onClickOutside);
+  }, [onClose]);
+
+  return (
+    <div
+      ref={ref}
+      style={{
+        position: "absolute",
+        bottom: "100%",
+        marginBottom: "6px",
+        background: "#0D1B2A",
+        border: "2px solid #28405C",
+        borderRadius: "999px",
+        padding: "6px 8px",
+        display: "flex",
+        gap: "4px",
+        zIndex: 30,
+        boxShadow: "0 4px 12px rgba(0,0,0,0.4)",
+      }}
+    >
+      {REACTION_EMOJIS.map((emoji) => (
+        <button
+          key={emoji}
+          onClick={() => onPick(emoji)}
+          style={{ background: "none", border: "none", cursor: "pointer", fontSize: "18px", padding: "2px 4px", lineHeight: 1 }}
+        >
+          {emoji}
+        </button>
+      ))}
+    </div>
+  );
+}
 
 // Vrai sélecteur de destinataire(s) — soit une ou plusieurs vraies personnes précises, soit un
 // vrai type d'administration entier.
@@ -67,11 +225,13 @@ function RecipientPicker({ collaborators, myUserId, onConfirm, onCancel }) {
               .filter((c) => c.id !== myUserId && isTeamMember(c))
               .map((c) => {
                 const checked = selectedIds.includes(c.id);
+                const fullName = [c.name, c.last_name].filter(Boolean).join(" ");
                 return (
                   <label key={c.id} style={{ display: "flex", alignItems: "center", gap: "10px", padding: "8px 10px", borderRadius: "8px", background: checked ? "#0D1B2A" : "none", cursor: "pointer" }}>
                     <input type="checkbox" checked={checked} onChange={() => togglePerson(c.id)} />
+                    <ProfileCircle name={fullName} size={26} />
                     <span style={{ fontSize: "13.5px", color: "#F2F2E8" }}>
-                      {[c.name, c.last_name].filter(Boolean).join(" ")} <span style={{ color: "#8792A6", fontSize: "11.5px" }}>({roleLabel(c.role)})</span>
+                      {fullName} <span style={{ color: "#8792A6", fontSize: "11.5px" }}>({roleLabel(c.role)})</span>
                     </span>
                   </label>
                 );
@@ -105,8 +265,101 @@ function RecipientPicker({ collaborators, myUserId, onConfirm, onCancel }) {
   );
 }
 
+// Vraie bulle de message, avec vraies réactions (appui long pour ouvrir le vrai picker).
+function MessageBubble({ m, isMe, myUserId, reactionsByMessage, onToggleReaction }) {
+  const [pickerOpen, setPickerOpen] = useState(false);
+  const pressTimer = useRef(null);
+
+  const startPress = () => {
+    pressTimer.current = setTimeout(() => setPickerOpen(true), 500);
+  };
+  const cancelPress = () => {
+    if (pressTimer.current) clearTimeout(pressTimer.current);
+  };
+
+  const reactions = reactionsByMessage[m.id] || [];
+  const grouped = {};
+  reactions.forEach((r) => {
+    grouped[r.emoji] = grouped[r.emoji] || [];
+    grouped[r.emoji].push(r.user_id);
+  });
+
+  return (
+    <div style={{ display: "flex", flexDirection: "column", alignItems: isMe ? "flex-end" : "flex-start" }}>
+      {!isMe && (
+        <div style={{ display: "flex", alignItems: "center", gap: "6px", marginBottom: "3px", marginLeft: "4px" }}>
+          <ProfileCircle name={m.senderName} size={20} />
+          <span style={{ fontSize: "11px", color: "#8792A6" }}>
+            {m.senderName}
+            {m.senderRole && <span style={{ marginLeft: "6px", fontSize: "10px", color: "#8792A6" }}>{roleLabel(m.senderRole)}</span>}
+          </span>
+        </div>
+      )}
+      <div style={{ position: "relative" }}>
+        {pickerOpen && (
+          <ReactionPicker
+            onPick={(emoji) => {
+              setPickerOpen(false);
+              onToggleReaction(m.id, emoji, (grouped[emoji] || []).includes(myUserId));
+            }}
+            onClose={() => setPickerOpen(false)}
+          />
+        )}
+        <div
+          onMouseDown={startPress}
+          onMouseUp={cancelPress}
+          onMouseLeave={cancelPress}
+          onTouchStart={startPress}
+          onTouchEnd={cancelPress}
+          style={{
+            maxWidth: "420px",
+            background: isMe ? "#39FF66" : "#16273D",
+            color: isMe ? "#0D1B2A" : "#F2F2E8",
+            borderRadius: "14px",
+            padding: "10px 14px",
+            fontSize: "14px",
+            wordBreak: "break-word",
+            cursor: "pointer",
+            userSelect: "none",
+          }}
+        >
+          {m.message}
+        </div>
+      </div>
+      {Object.keys(grouped).length > 0 && (
+        <div style={{ display: "flex", gap: "4px", marginTop: "3px", flexWrap: "wrap" }}>
+          {Object.entries(grouped).map(([emoji, userIds]) => (
+            <button
+              key={emoji}
+              onClick={() => onToggleReaction(m.id, emoji, userIds.includes(myUserId))}
+              style={{
+                background: userIds.includes(myUserId) ? "#28405C" : "#16273D",
+                border: `1px solid ${userIds.includes(myUserId) ? "#39FF66" : "#28405C"}`,
+                borderRadius: "999px",
+                padding: "1px 7px",
+                fontSize: "12px",
+                cursor: "pointer",
+                display: "flex",
+                alignItems: "center",
+                gap: "3px",
+              }}
+            >
+              <span>{emoji}</span>
+              <span style={{ fontSize: "10.5px", color: "#8792A6" }}>{userIds.length}</span>
+            </button>
+          ))}
+        </div>
+      )}
+      <span style={{ fontSize: "10px", color: "#8792A6", marginTop: "2px" }}>
+        {m.createdAt ? new Date(m.createdAt).toLocaleTimeString("fr-BE", { hour: "2-digit", minute: "2-digit" }) : ""}
+      </span>
+    </div>
+  );
+}
+
 export function ChatTeamScreen({ myUserId, myRole }) {
   const [allMessages, setAllMessages] = useState(null);
+  const [reactions, setReactions] = useState([]);
   const [collaborators, setCollaborators] = useState([]);
   const [archivedKeys, setArchivedKeys] = useState(new Set());
   const [showArchived, setShowArchived] = useState(false);
@@ -117,7 +370,9 @@ export function ChatTeamScreen({ myUserId, myRole }) {
   const bottomRef = useRef(null);
 
   const refresh = useCallback(async () => {
-    setAllMessages(await loadAdminChatMessages());
+    const messages = await loadAdminChatMessages();
+    setAllMessages(messages);
+    setReactions(await loadReactionsForMessages(messages.map((m) => m.id)));
   }, []);
 
   const refreshArchived = useCallback(async () => {
@@ -131,6 +386,7 @@ export function ChatTeamScreen({ myUserId, myRole }) {
     const channel = supabase
       .channel("admin-chat")
       .on("postgres_changes", { event: "*", schema: "public", table: "admin_chat_messages" }, refresh)
+      .on("postgres_changes", { event: "*", schema: "public", table: "admin_chat_reactions" }, refresh)
       .subscribe();
     return () => {
       supabase.removeChannel(channel);
@@ -140,6 +396,17 @@ export function ChatTeamScreen({ myUserId, myRole }) {
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ block: "end" });
   }, [activeKey, allMessages]);
+
+  const reactionsByMessage = {};
+  reactions.forEach((r) => {
+    reactionsByMessage[r.message_id] = reactionsByMessage[r.message_id] || [];
+    reactionsByMessage[r.message_id].push(r);
+  });
+
+  const handleToggleReaction = async (messageId, emoji, alreadyReacted) => {
+    await toggleReaction(messageId, myUserId, emoji, alreadyReacted);
+    refresh();
+  };
 
   const visibleMessages = (allMessages || []).filter((m) => isVisibleToMe(m, myUserId, myRole));
 
@@ -160,14 +427,14 @@ export function ChatTeamScreen({ myUserId, myRole }) {
 
   // Vrai nom principal + vrai sous-titre (rôle), affichés sur 2 vraies lignes dans la liste.
   const conversationInfo = (c) => {
-    if (c.recipientRole) return { name: roleLabel(c.recipientRole), subtitle: null };
+    if (c.recipientRole) return { name: roleLabel(c.recipientRole), subtitle: null, avatarSeed: c.recipientRole };
     const people = (c.recipientIds || [])
       .filter((id) => id !== myUserId)
       .map((id) => collaborators.find((col) => col.id === id))
       .filter(Boolean);
     const name = people.length > 0 ? people.map((p) => [p.name, p.last_name].filter(Boolean).join(" ")).join(", ") : "Moi-même";
     const subtitle = people.length === 1 ? roleLabel(people[0].role) : people.length > 1 ? `Groupe (${people.length} personnes)` : null;
-    return { name, subtitle };
+    return { name, subtitle, avatarSeed: name };
   };
 
   const activeConversation = conversations.find((c) => c.key === activeKey);
@@ -269,29 +536,24 @@ export function ChatTeamScreen({ myUserId, myRole }) {
                   style={{
                     display: "flex",
                     alignItems: "center",
-                    gap: "6px",
+                    gap: "8px",
                     padding: "9px 10px",
                     borderRadius: "8px",
                     background: activeKey === c.key ? "#28405C" : "none",
                     cursor: "pointer",
                   }}
                 >
+                  <ProfileCircle name={info.avatarSeed} size={30} />
                   <div style={{ flex: 1, minWidth: 0 }}>
                     <div style={{ fontSize: "13px", fontWeight: activeKey === c.key ? 700 : 500, color: "#F2F2E8", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{info.name}</div>
                     {info.subtitle && <div style={{ fontSize: "11px", color: "#8792A6", marginTop: "1px" }}>{info.subtitle}</div>}
                   </div>
-                  {showArchived ? (
-                    <button onClick={(e) => handleUnarchive(e, c.key)} title="Désarchiver" style={{ background: "none", border: "none", color: "#39FF66", cursor: "pointer", fontSize: "11px", padding: "4px", flexShrink: 0 }}>
-                      ↩
-                    </button>
-                  ) : (
-                    <button onClick={(e) => handleArchive(e, c.key)} title="Archiver" style={{ background: "none", border: "none", color: "#8792A6", cursor: "pointer", fontSize: "13px", padding: "4px", flexShrink: 0 }}>
-                      🗄
-                    </button>
-                  )}
-                  <button onClick={(e) => handleDelete(e, c)} title="Supprimer" style={{ background: "none", border: "none", color: "#ef007c", cursor: "pointer", fontSize: "13px", padding: "4px", flexShrink: 0 }}>
-                    🗑
-                  </button>
+                  <ConversationMenu
+                    showArchived={showArchived}
+                    onArchive={(e) => handleArchive(e, c.key)}
+                    onUnarchive={(e) => handleUnarchive(e, c.key)}
+                    onDelete={(e) => handleDelete(e, c)}
+                  />
                 </div>
               );
             })}
@@ -301,36 +563,10 @@ export function ChatTeamScreen({ myUserId, myRole }) {
         <div style={{ flex: 1, display: "flex", flexDirection: "column", minWidth: 0, padding: "14px" }}>
           {activeConversation || pendingRecipient ? (
             <>
-              <div style={{ flex: 1, overflowY: "auto", display: "flex", flexDirection: "column", gap: "10px", padding: "4px" }}>
-                {(activeConversation?.messages || []).map((m) => {
-                  const isMe = m.senderId === myUserId;
-                  return (
-                    <div key={m.id} style={{ display: "flex", flexDirection: "column", alignItems: isMe ? "flex-end" : "flex-start" }}>
-                      {!isMe && (
-                        <span style={{ fontSize: "11px", color: "#8792A6", marginBottom: "2px", marginLeft: "4px" }}>
-                          {m.senderName}
-                          {m.senderRole && <span style={{ marginLeft: "6px", fontSize: "10px", color: "#8792A6" }}>{roleLabel(m.senderRole)}</span>}
-                        </span>
-                      )}
-                      <div
-                        style={{
-                          maxWidth: "60%",
-                          background: isMe ? "#39FF66" : "#16273D",
-                          color: isMe ? "#0D1B2A" : "#F2F2E8",
-                          borderRadius: "14px",
-                          padding: "10px 14px",
-                          fontSize: "14px",
-                          wordBreak: "break-word",
-                        }}
-                      >
-                        {m.message}
-                      </div>
-                      <span style={{ fontSize: "10px", color: "#8792A6", marginTop: "2px" }}>
-                        {m.createdAt ? new Date(m.createdAt).toLocaleTimeString("fr-BE", { hour: "2-digit", minute: "2-digit" }) : ""}
-                      </span>
-                    </div>
-                  );
-                })}
+              <div style={{ flex: 1, overflowY: "auto", display: "flex", flexDirection: "column", gap: "14px", padding: "4px" }}>
+                {(activeConversation?.messages || []).map((m) => (
+                  <MessageBubble key={m.id} m={m} isMe={m.senderId === myUserId} myUserId={myUserId} reactionsByMessage={reactionsByMessage} onToggleReaction={handleToggleReaction} />
+                ))}
                 <div ref={bottomRef} />
               </div>
               <div style={{ display: "flex", gap: "10px", marginTop: "12px" }}>
@@ -358,6 +594,7 @@ export function ChatTeamScreen({ myUserId, myRole }) {
     </div>
   );
 }
+
 // Vrais balbutiements pour l'instant — juste une vraie lecture des messages déjà envoyés
 // depuis l'app ("Nous écrire" / "Signaler un problème"), pas encore de vraie réponse depuis la
 // plateforme de gestion.
