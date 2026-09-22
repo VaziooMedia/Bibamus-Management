@@ -3,7 +3,6 @@ import { loadBreweriesDirectory, loadBrandsDirectory } from "../data/sharedDirec
 import { DataTable, StatusBadge, VisibilityDot } from "./DataTable.jsx";
 import { BreweryDetailPanel } from "./BreweryDetailPanel.jsx";
 import { BrandDetailPanel } from "./BrandDetailPanel.jsx";
-import { StatsCounterBar } from "./StatsCounterBar.jsx";
 import { DetailedStatsCounterBar, applyStatFilter } from "./DetailedStatsCounterBar.jsx";
 import { PageTitle } from "./PageTitle.jsx";
 import { COUNTRIES, PRODUCER_TYPES, BRAND_CLASSIFICATIONS, BRAND_TYPES } from "../constants.js";
@@ -51,6 +50,7 @@ export function BreweriesScreen() {
   const [loading, setLoading] = useState(true);
   const [selected, setSelected] = useState(null);
   const [creating, setCreating] = useState(false);
+  const [activeFilter, setActiveFilter] = useState("total");
 
   const refresh = async () => {
     setLoading(true);
@@ -66,24 +66,24 @@ export function BreweriesScreen() {
     <div>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "20px" }}>
         <PageTitle>Producteurs</PageTitle>
-        <button onClick={refresh} style={{ background: "none", border: "2px solid #28405C", borderRadius: "8px", padding: "8px 14px", color: "#F2F2E8", cursor: "pointer", fontSize: "13px" }}>
-          ⟳ Rafraîchir
+        <button onClick={refresh} title="Rafraîchir" aria-label="Rafraîchir" style={{ background: "none", border: "2px solid #28405C", borderRadius: "8px", padding: "8px 14px", color: "#F2F2E8", cursor: "pointer", fontSize: "26px", lineHeight: 1, display: "flex", alignItems: "center" }}>
+          ⟳
         </button>
       </div>
       {loading ? (
         <p style={{ color: "#8792A6" }}>Chargement...</p>
       ) : (
         <>
-          <StatsCounterBar items={items} showOwnerManaged />
+          <DetailedStatsCounterBar items={items} activeFilter={activeFilter} onFilterChange={setActiveFilter} />
           <DataTable
-            items={items}
+            items={applyStatFilter(items, activeFilter)}
             allColumns={breweryColumns}
             forcedKeys={["name", "status"]}
             defaultVisibleKeys={["name", "country", "city", "status", "visible", "certificationLevel"]}
             storageKey="producteurs"
             onRowClick={setSelected}
             onAdd={() => setCreating(true)}
-            searchPlaceholder="Rechercher un producteur..."
+            searchPlaceholder="Rechercher Producteurs"
           />
         </>
       )}

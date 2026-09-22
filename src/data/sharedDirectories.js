@@ -1662,6 +1662,7 @@ function rowToBrewery(row) {
     ownerManaged: !!row.owner_managed,
     submittedBy: row.submitted_by,
     submittedAt: row.submitted_at ? new Date(row.submitted_at).getTime() : null,
+    pendingContributionsCount: row.pending_contributions_count || 0,
     pendingEdit: row.pending_edit || null,
   };
 }
