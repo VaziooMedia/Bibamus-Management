@@ -5,7 +5,7 @@ import { BreweryDetailPanel } from "./BreweryDetailPanel.jsx";
 import { BrandDetailPanel } from "./BrandDetailPanel.jsx";
 import { DetailedStatsCounterBar, applyStatFilter } from "./DetailedStatsCounterBar.jsx";
 import { PageTitle } from "./PageTitle.jsx";
-import { COUNTRIES, PRODUCER_TYPES, BRAND_CLASSIFICATIONS, BRAND_TYPES } from "../constants.js";
+import { COUNTRIES, PRODUCER_TYPES, PRODUCER_PROFILES, BRAND_CLASSIFICATIONS, BRAND_TYPES } from "../constants.js";
 import { CertificationIcon } from "./CertificationIcon.jsx";
 
 // Les données stockent désormais des codes techniques — les tableaux doivent résoudre le
@@ -17,6 +17,7 @@ const labelFromList = (list) => {
 };
 const countryLabel = labelFromList(COUNTRIES);
 const producerTypeLabel = labelFromList(PRODUCER_TYPES);
+const producerProfileLabel = labelFromList(PRODUCER_PROFILES);
 const classificationLabel = labelFromList(BRAND_CLASSIFICATIONS);
 const brandTypeLabel = labelFromList(BRAND_TYPES);
 
@@ -24,8 +25,8 @@ const breweryColumns = [
   { key: "name", label: "Nom" },
   { key: "country", label: "Pays", render: (b) => countryLabel(b.country) },
   { key: "city", label: "Ville" },
-  { key: "phone", label: "Téléphone" },
   { key: "producerTypes", label: "Type", render: (b) => (b.producerTypes || []).map(producerTypeLabel).join(", ") },
+  { key: "producerProfiles", label: "Profil du Producteur", render: (b) => (b.producerProfiles || []).map(producerProfileLabel).join(", ") },
   { key: "status", label: "Statut", render: (b) => <StatusBadge status={b.status} /> },
   { key: "visible", label: "Visible", render: (b) => <VisibilityDot status={b.status} /> },
   { key: "certificationLevel", label: "Certification", render: (b) => <CertificationIcon level={b.certificationLevel} /> },
@@ -79,7 +80,7 @@ export function BreweriesScreen() {
             items={applyStatFilter(items, activeFilter)}
             allColumns={breweryColumns}
             forcedKeys={["name", "status"]}
-            defaultVisibleKeys={["name", "country", "city", "status", "visible", "certificationLevel"]}
+            defaultVisibleKeys={["name", "country", "city", "producerTypes", "producerProfiles", "status", "visible", "certificationLevel"]}
             storageKey="producteurs"
             onRowClick={setSelected}
             onAdd={() => setCreating(true)}
