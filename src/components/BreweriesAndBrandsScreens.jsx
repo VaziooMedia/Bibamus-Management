@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { loadBreweriesDirectory, loadBrandsDirectory } from "../data/sharedDirectories.js";
+import { loadBreweriesDirectory, loadBrandsDirectory, loadPendingReportEntityIds } from "../data/sharedDirectories.js";
 import { DataTable, StatusBadge, VisibilityDot } from "./DataTable.jsx";
 import { BreweryDetailPanel } from "./BreweryDetailPanel.jsx";
 import { BrandDetailPanel } from "./BrandDetailPanel.jsx";
@@ -52,16 +52,21 @@ export function BreweriesScreen() {
   const [selected, setSelected] = useState(null);
   const [creating, setCreating] = useState(false);
   const [activeFilter, setActiveFilter] = useState("total");
+  const [pendingReportIds, setPendingReportIds] = useState(new Set());
 
   const refresh = async () => {
     setLoading(true);
-    setItems(await loadBreweriesDirectory());
+    const [loadedItems, reportIds] = await Promise.all([loadBreweriesDirectory(), loadPendingReportEntityIds("producer")]);
+    setItems(loadedItems);
+    setPendingReportIds(reportIds);
     setLoading(false);
   };
 
   useEffect(() => {
     refresh();
   }, []);
+
+  const itemsWithReports = items.map((i) => ({ ...i, hasPendingReport: pendingReportIds.has(i.id) }));
 
   return (
     <div>
@@ -75,9 +80,9 @@ export function BreweriesScreen() {
         <p style={{ color: "#8792A6" }}>Chargement...</p>
       ) : (
         <>
-          <DetailedStatsCounterBar items={items} activeFilter={activeFilter} onFilterChange={setActiveFilter} />
+          <DetailedStatsCounterBar items={itemsWithReports} activeFilter={activeFilter} onFilterChange={setActiveFilter} />
           <DataTable
-            items={applyStatFilter(items, activeFilter)}
+            items={applyStatFilter(itemsWithReports, activeFilter)}
             allColumns={breweryColumns}
             forcedKeys={["name", "status"]}
             defaultVisibleKeys={["name", "country", "city", "producerTypes", "producerProfiles", "status", "visible", "certificationLevel"]}
@@ -115,10 +120,13 @@ export function BrandsScreen() {
   const [selected, setSelected] = useState(null);
   const [creating, setCreating] = useState(false);
   const [activeFilter, setActiveFilter] = useState("total");
+  const [pendingReportIds, setPendingReportIds] = useState(new Set());
 
   const refresh = async () => {
     setLoading(true);
-    setItems(await loadBrandsDirectory());
+    const [loadedItems, reportIds] = await Promise.all([loadBrandsDirectory(), loadPendingReportEntityIds("brand")]);
+    setItems(loadedItems);
+    setPendingReportIds(reportIds);
     setLoading(false);
   };
 
@@ -126,6 +134,8 @@ export function BrandsScreen() {
     refresh();
     loadBreweriesDirectory().then(setBreweriesDirectory);
   }, []);
+
+  const itemsWithReports = items.map((i) => ({ ...i, hasPendingReport: pendingReportIds.has(i.id) }));
 
   return (
     <div>
@@ -139,9 +149,9 @@ export function BrandsScreen() {
         <p style={{ color: "#8792A6" }}>Chargement...</p>
       ) : (
         <>
-          <DetailedStatsCounterBar items={items} activeFilter={activeFilter} onFilterChange={setActiveFilter} />
+          <DetailedStatsCounterBar items={itemsWithReports} activeFilter={activeFilter} onFilterChange={setActiveFilter} />
           <DataTable
-            items={applyStatFilter(items, activeFilter)}
+            items={applyStatFilter(itemsWithReports, activeFilter)}
             allColumns={getBrandColumns(breweriesDirectory)}
             forcedKeys={["name", "status"]}
             defaultVisibleKeys={["name", "originCountry", "brandTypes", "producerId", "status", "visible", "certificationLevel"]}

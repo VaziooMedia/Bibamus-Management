@@ -49,7 +49,7 @@ const separatorStyle = { borderBottom: "1px solid #28405C", margin: "16px 0" };
 export function applyStatFilter(items, filterKey) {
   if (!filterKey || filterKey === "total") return items;
   if (filterKey === "newContributions") return items.filter((i) => (i.pendingContributionsCount || 0) > 0);
-  if (filterKey === "suggestedEdits") return items.filter((i) => i.pendingEdit != null);
+  if (filterKey === "suggestedEdits") return items.filter((i) => i.hasPendingReport);
   if (filterKey.startsWith("status:")) return items.filter((i) => i.status === filterKey.slice("status:".length));
   if (filterKey.startsWith("cert:")) return items.filter((i) => i.certificationLevel === filterKey.slice("cert:".length));
   return items;
@@ -82,7 +82,7 @@ export function DetailedStatsCounterBar({ items, counts, activeFilter, onFilterC
 
   const total = counts ? counts.total : items.length;
   const newContributions = counts ? counts.newContributions : items.filter((i) => (i.pendingContributionsCount || 0) > 0).length;
-  const suggestedEdits = counts ? counts.suggestedEdits : items.filter((i) => i.pendingEdit != null).length;
+  const suggestedEdits = counts ? counts.suggestedEdits : items.filter((i) => i.hasPendingReport).length;
   const statusCount = (key) => (counts ? counts.byStatus?.[key] || 0 : items.filter((i) => i.status === key).length);
   const certCount = (key) => (counts ? counts.byCertification?.[key] || 0 : items.filter((i) => i.certificationLevel === key).length);
 

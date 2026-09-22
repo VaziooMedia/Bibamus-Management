@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from "react";
-import { loadDrinksPage, countDrinks, countDrinksByType } from "../data/sharedDirectories.js";
+import { loadDrinksPage, countDrinks, countDrinksByType, loadPendingReportEntityIds } from "../data/sharedDirectories.js";
 import { ServerDataTable } from "./ServerDataTable.jsx";
 import { StatusBadge, VisibilityDot } from "./DataTable.jsx";
 import { DrinkDetailPanel, DRINK_TYPES, BEER_CIDER_SUBTYPES } from "./DrinkDetailPanel.jsx";
@@ -41,10 +41,10 @@ const allColumns = [
 // Traduit la clé de filtre générique (partagée avec les répertoires chargés entièrement) vers
 // les paramètres attendus par countDrinks/loadDrinksPage, qui filtrent côté serveur — le
 // répertoire produits est trop volumineux pour être chargé entièrement puis filtré en mémoire.
-function filterKeyToParams(filterKey) {
+function filterKeyToParams(filterKey, reportedIds) {
   if (!filterKey || filterKey === "total") return {};
   if (filterKey === "newContributions") return { hasPendingContributions: true };
-  if (filterKey === "suggestedEdits") return { hasPendingEdit: true };
+  if (filterKey === "suggestedEdits") return { reportedIds };
   if (filterKey.startsWith("status:")) return { status: filterKey.slice("status:".length) };
   if (filterKey.startsWith("cert:")) return { certificationLevel: filterKey.slice("cert:".length) };
   return {};
@@ -57,6 +57,7 @@ export function DrinksScreen() {
   const [activeFilter, setActiveFilter] = useState("total");
   const [statCounts, setStatCounts] = useState(null);
   const [categoryCounts, setCategoryCounts] = useState(null);
+  const [pendingReportIds, setPendingReportIds] = useState(new Set());
   const [refreshKey, setRefreshKey] = useState(0);
 
   // Les statistiques (7 statuts + certification + contributions/suggestions) et la répartition
@@ -64,17 +65,19 @@ export function DrinksScreen() {
   // répertoire, qui pourrait représenter des dizaines ou centaines de milliers de lignes.
   const refreshCounts = useCallback(async () => {
     const type = selectedType === "__other__" ? "__other__" : selectedType;
-    const [total, newContributions, suggestedEdits, statusResults, certResults, byType] = await Promise.all([
+    const [total, newContributions, reportIds, statusResults, certResults, byType] = await Promise.all([
       countDrinks({ type }),
       countDrinks({ type, hasPendingContributions: true }),
-      countDrinks({ type, hasPendingEdit: true }),
+      loadPendingReportEntityIds("drink"),
       Promise.all(STATUSES.map((s) => countDrinks({ type, status: s.key }))),
       Promise.all(["utilisateur", "bibamus", "producteur"].map((c) => countDrinks({ type, certificationLevel: c }))),
       countDrinksByType(),
     ]);
+    const suggestedEdits = await countDrinks({ type, reportedIds: reportIds });
     const byStatus = {};
     STATUSES.forEach((s, i) => (byStatus[s.key] = statusResults[i]));
     const byCertification = { utilisateur: certResults[0], bibamus: certResults[1], producteur: certResults[2] };
+    setPendingReportIds(reportIds);
     setStatCounts({ total, newContributions, suggestedEdits, byStatus, byCertification });
     setCategoryCounts(byType);
   }, [selectedType]);
@@ -84,8 +87,8 @@ export function DrinksScreen() {
   }, [refreshCounts, refreshKey]);
 
   const fetchPage = useCallback(
-    (params) => loadDrinksPage({ ...params, type: selectedType === "__other__" ? "__other__" : selectedType, ...filterKeyToParams(activeFilter) }),
-    [selectedType, activeFilter]
+    (params) => loadDrinksPage({ ...params, type: selectedType === "__other__" ? "__other__" : selectedType, ...filterKeyToParams(activeFilter, pendingReportIds) }),
+    [selectedType, activeFilter, pendingReportIds]
   );
 
   const triggerRefresh = () => setRefreshKey((k) => k + 1);

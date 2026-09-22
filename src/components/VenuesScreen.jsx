@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { loadPublicVenues, loadDrinksDirectory } from "../data/sharedDirectories.js";
+import { loadPublicVenues, loadDrinksDirectory, loadPendingReportEntityIds } from "../data/sharedDirectories.js";
 import { DataTable, StatusBadge, VisibilityDot } from "./DataTable.jsx";
 import { VenueDetailPanel } from "./VenueDetailPanel.jsx";
 import { DetailedStatsCounterBar, applyStatFilter } from "./DetailedStatsCounterBar.jsx";
@@ -29,10 +29,13 @@ export function VenuesScreen() {
   const [creating, setCreating] = useState(false);
   const [drinksDirectory, setDrinksDirectory] = useState([]);
   const [activeFilter, setActiveFilter] = useState("total");
+  const [pendingReportIds, setPendingReportIds] = useState(new Set());
 
   const refresh = async () => {
     setLoading(true);
-    setVenues(await loadPublicVenues());
+    const [loadedVenues, reportIds] = await Promise.all([loadPublicVenues(), loadPendingReportEntityIds("venue")]);
+    setVenues(loadedVenues);
+    setPendingReportIds(reportIds);
     setLoading(false);
   };
 
@@ -40,6 +43,11 @@ export function VenuesScreen() {
     refresh();
     loadDrinksDirectory().then(setDrinksDirectory);
   }, []);
+
+  // Vraie fiche marquée hasPendingReport dès qu'elle a au moins un vrai signalement (suggestion
+  // de modification, erreur signalée, ou toute autre raison) encore en attente — alimente le
+  // bloc "Modifications suggérées" et son vrai filtre cliquable.
+  const venuesWithReports = venues.map((v) => ({ ...v, hasPendingReport: pendingReportIds.has(v.id) }));
 
   return (
     <div>
@@ -53,9 +61,9 @@ export function VenuesScreen() {
         <p style={{ color: "#8792A6" }}>Chargement...</p>
       ) : (
         <>
-          <DetailedStatsCounterBar items={venues} activeFilter={activeFilter} onFilterChange={setActiveFilter} />
+          <DetailedStatsCounterBar items={venuesWithReports} activeFilter={activeFilter} onFilterChange={setActiveFilter} />
           <DataTable
-            items={applyStatFilter(venues, activeFilter)}
+            items={applyStatFilter(venuesWithReports, activeFilter)}
             allColumns={allColumns}
             forcedKeys={["name", "status"]}
             defaultVisibleKeys={["name", "country", "city", "status", "visible", "certificationLevel"]}

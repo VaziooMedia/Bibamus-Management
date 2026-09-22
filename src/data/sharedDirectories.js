@@ -77,6 +77,19 @@ export async function loadReports(status = "pending") {
   }));
 }
 
+// Vraie source de vérité pour "Modifications suggérées" — juste l'ensemble des identifiants de
+// fiches (pour un type donné) ayant au moins un vrai signalement encore en attente. Beaucoup
+// plus léger que loadReports (pas de détails de fiche, pas de champs superflus) puisque appelé
+// à chaque rafraîchissement des blocs de comptage.
+export async function loadPendingReportEntityIds(entityType) {
+  const { data, error } = await supabase.from("entity_reports").select("entity_id").eq("entity_type", entityType).eq("status", "pending");
+  if (error) {
+    console.error("loadPendingReportEntityIds:", error);
+    return new Set();
+  }
+  return new Set((data || []).map((r) => r.entity_id));
+}
+
 // Confirme un doublon : marque le lien officiel (duplicate_of_id) et passe la fiche au statut
 // "duplicate" — plus juste qu'un archivage générique, puisque ça garde la trace de quelle
 // fiche est la bonne à conserver.
@@ -1102,7 +1115,7 @@ function applyTypeFilter(query, type) {
 // Charge une SEULE page de produits, filtrée et triée côté serveur — jamais l'ensemble du
 // répertoire d'un coup, pour rester rapide même avec des dizaines ou centaines de milliers de
 // produits.
-export async function loadDrinksPage({ type, status, certificationLevel, hasPendingContributions, hasPendingEdit, search, sortKey = "name", sortDir = 1, page = 0, pageSize = 50 } = {}) {
+export async function loadDrinksPage({ type, status, certificationLevel, hasPendingContributions, reportedIds, search, sortKey = "name", sortDir = 1, page = 0, pageSize = 50 } = {}) {
   // Jointure sur une seule profondeur seulement — une double jointure imbriquée (produit → marque
   // → producteur) s'est révélée trop fragile : si Supabase n'arrive pas à résoudre sans ambiguïté
   // l'une des deux relations, la requête ENTIÈRE échoue et plus aucun produit ne s'affiche.
@@ -1111,7 +1124,7 @@ export async function loadDrinksPage({ type, status, certificationLevel, hasPend
   if (status) query = applyStatusFilter(query, status);
   if (certificationLevel) query = query.eq("certification_level", certificationLevel);
   if (hasPendingContributions) query = query.gt("pending_contributions_count", 0);
-  if (hasPendingEdit) query = query.not("pending_edit", "is", null);
+  if (reportedIds) query = query.in("id", reportedIds.size > 0 ? Array.from(reportedIds) : ["__none__"]);
   if (search && search.trim()) query = query.ilike("name", `%${search.trim()}%`);
   // "brandName"/"producerName" résultent d'une jointure, pas d'une vraie colonne — on trie par brand_id à la place.
   const realSortKey = sortKey === "brandName" || sortKey === "producerName" ? "brand_id" : sortKey;
@@ -1142,13 +1155,13 @@ export async function loadDrinksPage({ type, status, certificationLevel, hasPend
 // Un seul décompte rapide (via count exact, sans jamais rapatrier les lignes elles-mêmes) —
 // utilisé pour les blocs de statistiques, avec un filtre de catégorie optionnel pour qu'ils
 // restent justes une fois qu'une catégorie est sélectionnée.
-export async function countDrinks({ type, status, certificationLevel, hasPendingContributions, hasPendingEdit } = {}) {
+export async function countDrinks({ type, status, certificationLevel, hasPendingContributions, reportedIds } = {}) {
   let query = supabase.from("drinks_directory").select("id", { count: "exact", head: true });
   query = applyTypeFilter(query, type);
   if (status) query = applyStatusFilter(query, status);
   if (certificationLevel) query = query.eq("certification_level", certificationLevel);
   if (hasPendingContributions) query = query.gt("pending_contributions_count", 0);
-  if (hasPendingEdit) query = query.not("pending_edit", "is", null);
+  if (reportedIds) query = query.in("id", reportedIds.size > 0 ? Array.from(reportedIds) : ["__none__"]);
   const { count, error } = await query;
   if (error) {
     console.error("countDrinks:", error);

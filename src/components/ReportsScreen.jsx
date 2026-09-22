@@ -12,6 +12,7 @@ const statusLabel = (key) => STATUSES.find((s) => s.key === key)?.label || key;
 const drinkTypeLabel = (key) => DRINK_TYPES.find((t) => t.code === key)?.fr || key;
 
 const REASON_LABELS = {
+  suggestion: "Suggestion de modification",
   closed_permanently: "Établissement fermé définitivement",
   wrong_info: "Information(s) incorrecte(s)",
   duplicate: "Fiche en double",
