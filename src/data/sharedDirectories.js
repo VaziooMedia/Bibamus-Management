@@ -529,6 +529,50 @@ export async function updateCountryRule(countryCode, minimumAge) {
   return { ok: true };
 }
 
+// Chat interne — un vrai canal unique partagé par toute l'équipe. Les 100 derniers messages,
+// avec le vrai nom/avatar de l'expéditeur (jointure sur profiles, la même table que les
+// collaborateurs) — le temps réel se branche séparément côté écran (Supabase Realtime).
+export async function loadAdminChatMessages() {
+  const { data, error } = await supabase
+    .from("admin_chat_messages")
+    .select("id, message, created_at, sender_id, profiles(name, last_name, avatar_url)")
+    .order("created_at", { ascending: true })
+    .limit(100);
+  if (error) {
+    console.error("loadAdminChatMessages:", error);
+    return [];
+  }
+  return data.map((row) => ({
+    id: row.id,
+    message: row.message,
+    createdAt: row.created_at,
+    senderId: row.sender_id,
+    senderName: [row.profiles?.name, row.profiles?.last_name].filter(Boolean).join(" ") || "Collaborateur",
+    senderAvatarUrl: row.profiles?.avatar_url || null,
+  }));
+}
+
+export async function sendAdminChatMessage(senderId, message) {
+  const { error } = await supabase.from("admin_chat_messages").insert({ sender_id: senderId, message });
+  if (error) {
+    console.error("sendAdminChatMessage:", error);
+    return { error: error.message };
+  }
+  return { ok: true };
+}
+
+// Chat clients — vrais balbutiements pour l'instant : lecture seule des vrais messages déjà
+// envoyés depuis l'app ("Nous écrire" / "Signaler un problème"), pas encore de vraie réponse
+// depuis la plateforme de gestion.
+export async function loadSupportMessages() {
+  const { data, error } = await supabase.from("support_messages").select("*").order("created_at", { ascending: false }).limit(100);
+  if (error) {
+    console.error("loadSupportMessages:", error);
+    return [];
+  }
+  return data;
+}
+
 export async function loadCollaborators() {
   const { data, error } = await supabase.from("profiles").select("id, email, name, last_name, birth_date, avatar_url, role, active, can_moderate").order("name");
   if (error) {
