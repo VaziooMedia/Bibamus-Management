@@ -27,14 +27,12 @@ export function NotificationsScreen({ onOpenReports }) {
     <div>
       <PageTitle>Notifications</PageTitle>
 
-      <p style={{ fontSize: "12px", fontWeight: 700, color: "#8792A6", margin: "0 0 10px 0" }}>Signalements en attente</p>
-
       {!reports ? (
-        <p style={{ color: "#8792A6" }}>Chargement...</p>
+        <p style={{ color: "#8792A6", marginTop: "16px" }}>Chargement...</p>
       ) : reports.length === 0 ? (
-        <p style={{ color: "#8792A6", fontSize: "13px" }}>Aucun signalement en attente.</p>
+        <p style={{ color: "#8792A6", fontSize: "13px", marginTop: "16px" }}>Aucun signalement en attente.</p>
       ) : (
-        <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
+        <div style={{ display: "flex", flexDirection: "column", gap: "6px", marginTop: "16px" }}>
           {reports.map((r) => (
             <button
               key={r.id}
@@ -43,22 +41,24 @@ export function NotificationsScreen({ onOpenReports }) {
                 textAlign: "left",
                 background: "#16273D",
                 border: "none",
-                borderRadius: "10px",
-                padding: "14px 16px",
+                borderRadius: "8px",
+                padding: "8px 12px",
                 cursor: "pointer",
                 color: "#F2F2E8",
                 display: "flex",
                 flexDirection: "column",
-                gap: "4px",
+                gap: "2px",
               }}
             >
-              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                <span style={{ fontSize: "11px", color: "#8792A6", textTransform: "uppercase", fontWeight: 700 }}>{ENTITY_TYPE_LABELS[r.entity_type] || r.entity_type}</span>
-                <span style={{ fontSize: "11px", color: "#8792A6" }}>{r.created_at ? r.created_at.slice(0, 10) : ""}</span>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: "8px" }}>
+                <span style={{ fontSize: "13px", fontWeight: 700, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{r.entityName}</span>
+                <span style={{ fontSize: "10px", color: "#8792A6", flexShrink: 0 }}>{r.created_at ? r.created_at.slice(0, 10) : ""}</span>
               </div>
-              <p style={{ fontSize: "14px", fontWeight: 700, margin: 0 }}>{r.entityName}</p>
-              <p style={{ fontSize: "12.5px", color: "#39FF66", fontWeight: 700, margin: 0 }}>{REASON_LABELS[r.reason] || r.reason}</p>
-              {r.comment && <p style={{ fontSize: "12.5px", color: "#8792A6", margin: 0, fontStyle: "italic" }}>"{r.comment}"</p>}
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: "8px" }}>
+                <span style={{ fontSize: "11px", color: "#39FF66", fontWeight: 700 }}>{REASON_LABELS[r.reason] || r.reason}</span>
+                <span style={{ fontSize: "10px", color: "#8792A6", textTransform: "uppercase", fontWeight: 700, flexShrink: 0 }}>{ENTITY_TYPE_LABELS[r.entity_type] || r.entity_type}</span>
+              </div>
+              {r.comment && <p style={{ fontSize: "11px", color: "#8792A6", margin: "2px 0 0", fontStyle: "italic" }}>"{r.comment}"</p>}
             </button>
           ))}
         </div>
