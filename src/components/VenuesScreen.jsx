@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { loadPublicVenues, loadDrinksDirectory } from "../data/sharedDirectories.js";
 import { DataTable, StatusBadge, VisibilityDot } from "./DataTable.jsx";
 import { VenueDetailPanel } from "./VenueDetailPanel.jsx";
-import { DetailedStatsCounterBar } from "./DetailedStatsCounterBar.jsx";
+import { DetailedStatsCounterBar, applyStatFilter } from "./DetailedStatsCounterBar.jsx";
 import { PageTitle } from "./PageTitle.jsx";
 import { COUNTRIES } from "../constants.js";
 import { CertificationIcon } from "./CertificationIcon.jsx";
@@ -28,6 +28,7 @@ export function VenuesScreen() {
   const [selected, setSelected] = useState(null);
   const [creating, setCreating] = useState(false);
   const [drinksDirectory, setDrinksDirectory] = useState([]);
+  const [activeFilter, setActiveFilter] = useState("total");
 
   const refresh = async () => {
     setLoading(true);
@@ -52,9 +53,9 @@ export function VenuesScreen() {
         <p style={{ color: "#8792A6" }}>Chargement...</p>
       ) : (
         <>
-          <DetailedStatsCounterBar items={venues} />
+          <DetailedStatsCounterBar items={venues} activeFilter={activeFilter} onFilterChange={setActiveFilter} />
           <DataTable
-            items={venues}
+            items={applyStatFilter(venues, activeFilter)}
             allColumns={allColumns}
             forcedKeys={["name", "status"]}
             defaultVisibleKeys={["name", "country", "city", "status", "visible", "certificationLevel"]}
