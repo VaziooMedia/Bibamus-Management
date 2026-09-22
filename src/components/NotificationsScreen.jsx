@@ -32,7 +32,7 @@ export function NotificationsScreen({ onOpenReports }) {
       ) : reports.length === 0 ? (
         <p style={{ color: "#8792A6", fontSize: "13px", marginTop: "16px" }}>Aucun signalement en attente.</p>
       ) : (
-        <div style={{ display: "flex", flexDirection: "column", gap: "6px", marginTop: "16px" }}>
+        <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-start", gap: "6px", marginTop: "16px" }}>
           {reports.map((r) => (
             <button
               key={r.id}
@@ -43,6 +43,7 @@ export function NotificationsScreen({ onOpenReports }) {
                 border: "none",
                 borderRadius: "8px",
                 padding: "8px 12px",
+                width: "320px",
                 cursor: "pointer",
                 color: "#F2F2E8",
                 display: "flex",
