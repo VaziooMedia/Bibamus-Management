@@ -73,43 +73,55 @@ function ProfileCircle({ name, size = 30 }) {
 
 // Vrai menu contextuel "•••" — remplace les vraies icônes emoji, propose Archiver/Supprimer
 // (vue Actives) ou Restaurer/Supprimer (vue Archivées).
+// Vrai menu contextuel "•••" — remplace les vraies icônes emoji, propose Archiver/Supprimer
+// (vue Actives) ou Restaurer/Supprimer (vue Archivées). position: fixed calculée depuis le
+// vrai bouton (pas position: absolute) : le vrai cadre de choix pouvait déborder du conteneur
+// à défilement/bordures arrondies qui l'entourait, position: fixed échappe à ce découpage.
 function ConversationMenu({ showArchived, onArchive, onUnarchive, onDelete }) {
   const [open, setOpen] = useState(false);
-  const ref = useRef(null);
+  const [coords, setCoords] = useState(null);
+  const buttonRef = useRef(null);
+  const menuRef = useRef(null);
+
+  const openMenu = (e) => {
+    e.stopPropagation();
+    const rect = buttonRef.current.getBoundingClientRect();
+    setCoords({ top: rect.bottom + 4, right: window.innerWidth - rect.right });
+    setOpen((o) => !o);
+  };
 
   useEffect(() => {
     const onClickOutside = (e) => {
-      if (ref.current && !ref.current.contains(e.target)) setOpen(false);
+      if (menuRef.current && !menuRef.current.contains(e.target) && !buttonRef.current.contains(e.target)) setOpen(false);
     };
     document.addEventListener("mousedown", onClickOutside);
     return () => document.removeEventListener("mousedown", onClickOutside);
   }, []);
 
   return (
-    <div ref={ref} style={{ position: "relative", flexShrink: 0 }}>
+    <div style={{ flexShrink: 0 }}>
       <button
-        onClick={(e) => {
-          e.stopPropagation();
-          setOpen((o) => !o);
-        }}
+        ref={buttonRef}
+        onClick={openMenu}
         title="Options"
-        style={{ background: "none", border: "none", color: "#8792A6", cursor: "pointer", padding: "4px 6px", fontSize: "15px", fontWeight: 800, lineHeight: 1 }}
+        style={{ background: "none", border: "none", color: "#8792A6", cursor: "pointer", padding: "4px 3px", fontSize: "11px", fontWeight: 800, letterSpacing: "-1px", lineHeight: 1 }}
       >
         •••
       </button>
-      {open && (
+      {open && coords && (
         <div
+          ref={menuRef}
           style={{
-            position: "absolute",
-            top: "100%",
-            right: 0,
-            marginTop: "4px",
+            position: "fixed",
+            top: `${coords.top}px`,
+            right: `${coords.right}px`,
             background: "#0D1B2A",
             border: "2px solid #28405C",
             borderRadius: "8px",
-            zIndex: 20,
+            zIndex: 500,
             minWidth: "140px",
             overflow: "hidden",
+            boxShadow: "0 4px 12px rgba(0,0,0,0.4)",
           }}
         >
           {showArchived ? (
@@ -149,7 +161,10 @@ function ConversationMenu({ showArchived, onArchive, onUnarchive, onDelete }) {
 }
 
 // Vrai picker de réactions — s'ouvre après un vrai appui long sur une bulle.
-function ReactionPicker({ onPick, onClose }) {
+// Vrai picker de réactions — s'ouvre après un vrai appui long sur une bulle. position: fixed
+// calculée depuis les vraies coordonnées de la bulle (passées par MessageBubble), pour échapper
+// au découpage du conteneur à défilement qui l'entoure.
+function ReactionPicker({ anchorRect, onPick, onClose }) {
   const ref = useRef(null);
   useEffect(() => {
     const onClickOutside = (e) => {
@@ -163,16 +178,16 @@ function ReactionPicker({ onPick, onClose }) {
     <div
       ref={ref}
       style={{
-        position: "absolute",
-        bottom: "100%",
-        marginBottom: "6px",
+        position: "fixed",
+        top: `${anchorRect.top - 44}px`,
+        left: `${Math.max(8, Math.min(anchorRect.left, window.innerWidth - 260))}px`,
         background: "#0D1B2A",
         border: "2px solid #28405C",
         borderRadius: "999px",
         padding: "6px 8px",
         display: "flex",
         gap: "4px",
-        zIndex: 30,
+        zIndex: 500,
         boxShadow: "0 4px 12px rgba(0,0,0,0.4)",
       }}
     >
@@ -229,7 +244,7 @@ function RecipientPicker({ collaborators, myUserId, onConfirm, onCancel }) {
                 return (
                   <label key={c.id} style={{ display: "flex", alignItems: "center", gap: "10px", padding: "8px 10px", borderRadius: "8px", background: checked ? "#0D1B2A" : "none", cursor: "pointer" }}>
                     <input type="checkbox" checked={checked} onChange={() => togglePerson(c.id)} />
-                    <ProfileCircle name={fullName} size={26} />
+                    <ProfileCircle name={fullName} size={32} />
                     <span style={{ fontSize: "13.5px", color: "#F2F2E8" }}>
                       {fullName} <span style={{ color: "#8792A6", fontSize: "11.5px" }}>({roleLabel(c.role)})</span>
                     </span>
@@ -268,10 +283,15 @@ function RecipientPicker({ collaborators, myUserId, onConfirm, onCancel }) {
 // Vraie bulle de message, avec vraies réactions (appui long pour ouvrir le vrai picker).
 function MessageBubble({ m, isMe, myUserId, reactionsByMessage, onToggleReaction }) {
   const [pickerOpen, setPickerOpen] = useState(false);
+  const [anchorRect, setAnchorRect] = useState(null);
   const pressTimer = useRef(null);
+  const bubbleRef = useRef(null);
 
   const startPress = () => {
-    pressTimer.current = setTimeout(() => setPickerOpen(true), 500);
+    pressTimer.current = setTimeout(() => {
+      setAnchorRect(bubbleRef.current.getBoundingClientRect());
+      setPickerOpen(true);
+    }, 500);
   };
   const cancelPress = () => {
     if (pressTimer.current) clearTimeout(pressTimer.current);
@@ -288,7 +308,7 @@ function MessageBubble({ m, isMe, myUserId, reactionsByMessage, onToggleReaction
     <div style={{ display: "flex", flexDirection: "column", alignItems: isMe ? "flex-end" : "flex-start" }}>
       {!isMe && (
         <div style={{ display: "flex", alignItems: "center", gap: "6px", marginBottom: "3px", marginLeft: "4px" }}>
-          <ProfileCircle name={m.senderName} size={20} />
+          <ProfileCircle name={m.senderName} size={26} />
           <span style={{ fontSize: "11px", color: "#8792A6" }}>
             {m.senderName}
             {m.senderRole && <span style={{ marginLeft: "6px", fontSize: "10px", color: "#8792A6" }}>{roleLabel(m.senderRole)}</span>}
@@ -296,8 +316,9 @@ function MessageBubble({ m, isMe, myUserId, reactionsByMessage, onToggleReaction
         </div>
       )}
       <div style={{ position: "relative" }}>
-        {pickerOpen && (
+        {pickerOpen && anchorRect && (
           <ReactionPicker
+            anchorRect={anchorRect}
             onPick={(emoji) => {
               setPickerOpen(false);
               onToggleReaction(m.id, emoji, (grouped[emoji] || []).includes(myUserId));
@@ -306,6 +327,7 @@ function MessageBubble({ m, isMe, myUserId, reactionsByMessage, onToggleReaction
           />
         )}
         <div
+          ref={bubbleRef}
           onMouseDown={startPress}
           onMouseUp={cancelPress}
           onMouseLeave={cancelPress}
@@ -543,7 +565,7 @@ export function ChatTeamScreen({ myUserId, myRole }) {
                     cursor: "pointer",
                   }}
                 >
-                  <ProfileCircle name={info.avatarSeed} size={30} />
+                  <ProfileCircle name={info.avatarSeed} size={38} />
                   <div style={{ flex: 1, minWidth: 0 }}>
                     <div style={{ fontSize: "13px", fontWeight: activeKey === c.key ? 700 : 500, color: "#F2F2E8", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{info.name}</div>
                     {info.subtitle && <div style={{ fontSize: "11px", color: "#8792A6", marginTop: "1px" }}>{info.subtitle}</div>}
