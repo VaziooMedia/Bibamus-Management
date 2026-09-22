@@ -33,7 +33,7 @@ const roleLabel = (key) => ADMIN_ROLES.find((r) => r.key === key)?.label || key;
 // utilisateur de l'app (rôle vide), ni un vrai compte Business (son propre vrai canal séparé).
 const isTeamMember = (c) => !!c.role && c.role !== "business";
 
-const REACTION_EMOJIS = ["👍", "❤️", "😂", "😮", "😢", "🙏"];
+const REACTION_EMOJIS = ["👍", "👌", "😁", "😎", "😆", "😬"];
 
 // Vrai rond profil de base, en attendant un vrai système d'avatars — initiales sur fond de
 // couleur stable (dérivée du nom, pas aléatoire, pour rester la même à chaque affichage).
@@ -306,15 +306,13 @@ function MessageBubble({ m, isMe, myUserId, reactionsByMessage, onToggleReaction
 
   return (
     <div style={{ display: "flex", flexDirection: "column", alignItems: isMe ? "flex-end" : "flex-start" }}>
-      {!isMe && (
-        <div style={{ display: "flex", alignItems: "center", gap: "6px", marginBottom: "3px", marginLeft: "4px" }}>
-          <ProfileCircle name={m.senderName} size={26} />
-          <span style={{ fontSize: "11px", color: "#8792A6" }}>
-            {m.senderName}
-            {m.senderRole && <span style={{ marginLeft: "6px", fontSize: "10px", color: "#8792A6" }}>{roleLabel(m.senderRole)}</span>}
-          </span>
-        </div>
-      )}
+      <div style={{ display: "flex", flexDirection: isMe ? "row-reverse" : "row", alignItems: "center", gap: "6px", marginBottom: "3px", marginLeft: isMe ? 0 : "4px", marginRight: isMe ? "4px" : 0 }}>
+        <ProfileCircle name={m.senderName} size={26} />
+        <span style={{ fontSize: "11px", color: "#8792A6" }}>
+          {m.senderName}
+          {m.senderRole && <span style={{ marginLeft: "6px", fontSize: "10px", color: "#8792A6" }}>{roleLabel(m.senderRole)}</span>}
+        </span>
+      </div>
       <div style={{ position: "relative" }}>
         {pickerOpen && anchorRect && (
           <ReactionPicker
