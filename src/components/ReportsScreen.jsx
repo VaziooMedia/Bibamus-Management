@@ -42,18 +42,36 @@ function EntityPreview({ entityType, details, onOpen, keeperControl }) {
             {details.name} {isCertified && <span style={{ color: "#39FF66", fontSize: "11px" }}>🛡️ Certifiée</span>}
           </p>
           {entityType === "venue" && (
-            <p style={{ fontSize: "11.5px", color: "#8792A6", margin: "2px 0 0" }}>
+            <p style={{ fontSize: "11.5px", color: "#8792A6", margin: "8px 0 0" }}>
               {[details.street_name, details.street_number].filter(Boolean).join(" ")}
               {details.city ? `, ${details.city}` : ""}
             </p>
           )}
-          {entityType === "drink" && <p style={{ fontSize: "11.5px", color: "#8792A6", margin: "2px 0 0" }}>{drinkTypeLabel(details.type)}</p>}
-          {entityType === "producer" && <p style={{ fontSize: "11.5px", color: "#8792A6", margin: "2px 0 0" }}>{details.country}</p>}
-          <p style={{ fontSize: "11px", color: "#8792A6", margin: "2px 0 0" }}>Statut : {statusLabel(details.status)}</p>
+          {entityType === "drink" && <p style={{ fontSize: "11.5px", color: "#8792A6", margin: "8px 0 0" }}>{drinkTypeLabel(details.type)}</p>}
+          {entityType === "producer" && <p style={{ fontSize: "11.5px", color: "#8792A6", margin: "8px 0 0" }}>{details.country}</p>}
+          <p style={{ fontSize: "11px", color: "#8792A6", margin: "8px 0 0" }}>Statut : {statusLabel(details.status)}</p>
         </div>
         {onOpen && (
-          <button onClick={onOpen} style={{ background: "none", border: "none", color: "#39FF66", fontSize: "12px", fontWeight: 700, cursor: "pointer", flexShrink: 0 }}>
-            Ouvrir la fiche complète
+          <button
+            onClick={onOpen}
+            title="Ouvrir la fiche complète"
+            aria-label="Ouvrir la fiche complète"
+            style={{
+              width: "28px",
+              height: "28px",
+              borderRadius: "50%",
+              border: "2px solid #39FF66",
+              background: "none",
+              cursor: "pointer",
+              flexShrink: 0,
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+            }}
+          >
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#39FF66" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+              <polyline points="9 6 15 12 9 18" />
+            </svg>
           </button>
         )}
       </div>
@@ -203,12 +221,15 @@ export function ReportsScreen() {
                   <span style={{ fontSize: "11px", color: "#39FF66", fontWeight: 700 }}>{REASON_LABELS[r.reason] || r.reason}</span>
                   <span style={{ fontSize: "10px", color: "#8792A6", textTransform: "uppercase", fontWeight: 700, flexShrink: 0 }}>{ENTITY_TYPE_LABELS[r.entity_type] || r.entity_type}</span>
                 </div>
+
+                <div style={{ borderTop: "1px solid #28405C", margin: "10px 0" }} />
+
                 {r.comment && <p style={{ fontSize: "11.5px", color: "#F2F2E8", margin: "4px 0 0", fontStyle: "italic" }}>"{r.comment}"</p>}
                 <p style={{ fontSize: "10px", color: "#8792A6", margin: "10px 0 0" }}>Signalé par : {r.reported_by || "(anonymisé)"}</p>
 
                 <button
                   onClick={() => setExpandedId(expanded ? null : r.id)}
-                  style={{ background: "none", border: "none", color: "#39FF66", fontSize: "11.5px", fontWeight: 700, cursor: "pointer", padding: 0, marginTop: "10px", marginBottom: "14px" }}
+                  style={{ background: "none", border: "none", color: "#39FF66", fontSize: "11.5px", fontWeight: 700, cursor: "pointer", padding: 0, marginTop: "18px", marginBottom: "14px" }}
                 >
                   {expanded ? "▼ Masquer la fiche" : "▶ Voir la fiche"}
                 </button>
