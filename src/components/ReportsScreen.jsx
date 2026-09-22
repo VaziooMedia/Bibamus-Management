@@ -164,7 +164,7 @@ export function ReportsScreen() {
     <div>
       <PageTitle>Signalements</PageTitle>
 
-      <div style={{ display: "flex", gap: "8px", marginTop: "16px", marginBottom: "20px" }}>
+      <div style={{ display: "flex", gap: "8px", marginTop: "28px", marginBottom: "20px" }}>
         {TABS.map((t) => (
           <button
             key={t.key}
@@ -190,11 +190,11 @@ export function ReportsScreen() {
       ) : reports.length === 0 ? (
         <p style={{ color: "#8792A6", fontSize: "13px" }}>Aucun signalement dans cette catégorie.</p>
       ) : (
-        <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
+        <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-start", gap: "12px" }}>
           {reports.map((r) => {
             const expanded = expandedId === r.id;
             return (
-              <div key={r.id} style={{ background: "#16273D", borderRadius: "8px", padding: "10px 12px" }}>
+              <div key={r.id} style={{ background: "#16273D", borderRadius: "8px", padding: "10px 12px", width: "320px" }}>
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: "8px" }}>
                   <span style={{ fontSize: "13px", fontWeight: 700, color: "#F2F2E8", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{r.entityName}</span>
                   <span style={{ fontSize: "10px", color: "#8792A6", flexShrink: 0 }}>{r.created_at ? r.created_at.slice(0, 10) : ""}</span>
@@ -204,11 +204,11 @@ export function ReportsScreen() {
                   <span style={{ fontSize: "10px", color: "#8792A6", textTransform: "uppercase", fontWeight: 700, flexShrink: 0 }}>{ENTITY_TYPE_LABELS[r.entity_type] || r.entity_type}</span>
                 </div>
                 {r.comment && <p style={{ fontSize: "11.5px", color: "#F2F2E8", margin: "4px 0 0", fontStyle: "italic" }}>"{r.comment}"</p>}
-                <p style={{ fontSize: "10px", color: "#8792A6", margin: "4px 0 0" }}>Signalé par : {r.reported_by || "(anonymisé)"}</p>
+                <p style={{ fontSize: "10px", color: "#8792A6", margin: "10px 0 0" }}>Signalé par : {r.reported_by || "(anonymisé)"}</p>
 
                 <button
                   onClick={() => setExpandedId(expanded ? null : r.id)}
-                  style={{ background: "none", border: "none", color: "#39FF66", fontSize: "11.5px", fontWeight: 700, cursor: "pointer", padding: 0, marginTop: "8px", marginBottom: "8px" }}
+                  style={{ background: "none", border: "none", color: "#39FF66", fontSize: "11.5px", fontWeight: 700, cursor: "pointer", padding: 0, marginTop: "10px", marginBottom: "14px" }}
                 >
                   {expanded ? "▼ Masquer la fiche" : "▶ Voir la fiche"}
                 </button>
