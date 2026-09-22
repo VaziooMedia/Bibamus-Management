@@ -17,8 +17,10 @@ function StatCard({ label, data }) {
       <div style={{ borderBottom: "1px solid #F2F2E8", opacity: 0.25, margin: "12px 0" }} />
       <div style={{ display: "flex", flexDirection: "column", gap: "4px", fontSize: "12px", textAlign: "left" }}>
         {STATUSES.map((s) => (
-          <div key={s.key}>
-            {s.label} : <span style={{ color: s.color, fontWeight: 700 }}>{data.byStatus[s.key]}</span>
+          <div key={s.key} style={{ display: "flex", alignItems: "baseline", gap: "6px" }}>
+            <span>{s.label}</span>
+            <span style={{ flex: 1, borderBottom: "1px dotted #8792A6", opacity: 0.4, marginBottom: "3px" }} />
+            <span style={{ color: s.color, fontWeight: 700, minWidth: "22px", textAlign: "right", fontVariantNumeric: "tabular-nums" }}>{data.byStatus[s.key]}</span>
           </div>
         ))}
       </div>
