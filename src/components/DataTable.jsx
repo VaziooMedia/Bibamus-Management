@@ -6,6 +6,12 @@ import { STATUSES } from "./StatusSelector.jsx";
 // defaultVisibleKeys: clés affichées par défaut au premier chargement.
 // storageKey: si fourni, le choix de colonnes est mémorisé (localStorage) et retrouvé après un
 // rafraîchissement de la page — propre à chaque tableau, pas partagé entre eux.
+// Ces 3 colonnes affichent toujours un contenu de taille fixe (badge, pastille, icône) — on les
+// réduit au strict minimum (largeur 1% + pas de retour à la ligne, un classique HTML pour
+// forcer une colonne à ne prendre que la place de son propre contenu) pour reporter l'espace
+// gagné sur les colonnes à contenu variable (Nom, Pays, Commune).
+const COMPACT_COLUMN_KEYS = ["status", "visible", "certificationLevel"];
+
 export function DataTable({ items, allColumns, forcedKeys = [], defaultVisibleKeys, onRowClick, onAdd, searchPlaceholder = "Rechercher...", storageKey }) {
   const [query, setQuery] = useState("");
   const [visibleKeys, setVisibleKeysState] = useState(() => {
@@ -215,6 +221,7 @@ export function DataTable({ items, allColumns, forcedKeys = [], defaultVisibleKe
                   userSelect: "none",
                   whiteSpace: "nowrap",
                   borderRight: i < columns.length - 1 ? "1px solid #28405C" : "none",
+                  width: COMPACT_COLUMN_KEYS.includes(col.key) ? "1%" : undefined,
                 }}
               >
                 {col.label} {sortKey === col.key ? (sortDir === 1 ? "▲" : "▼") : ""}
@@ -238,7 +245,9 @@ export function DataTable({ items, allColumns, forcedKeys = [], defaultVisibleKe
                     padding: "10px 12px",
                     fontSize: "14px",
                     borderRight: i < columns.length - 1 ? "1px solid #16273D" : "none",
-                    textAlign: ["status", "visible", "certificationLevel"].includes(col.key) ? "center" : "left",
+                    textAlign: COMPACT_COLUMN_KEYS.includes(col.key) ? "center" : "left",
+                    width: COMPACT_COLUMN_KEYS.includes(col.key) ? "1%" : undefined,
+                    whiteSpace: COMPACT_COLUMN_KEYS.includes(col.key) ? "nowrap" : undefined,
                   }}
                 >
                   {col.render ? col.render(item) : item[col.key]}
