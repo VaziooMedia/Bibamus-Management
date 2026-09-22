@@ -2,8 +2,9 @@ import React, { useState } from "react";
 import { TopBar } from "./TopBar.jsx";
 import { usePendingReportsCount } from "../data/usePendingReportsCount.js";
 
-const TOP_ITEMS = [
+const COMMUNICATION_ITEMS = [
   { key: "chat", label: "Chat" },
+  { key: "notifications", label: "Notifications" },
 ];
 
 const DATABASE_ITEMS = [
@@ -11,28 +12,34 @@ const DATABASE_ITEMS = [
   { key: "drinks", label: "Produits" },
   { key: "brands", label: "Marques" },
   { key: "breweries", label: "Producteurs" },
+  { key: "users", label: "Utilisateurs" },
+  { key: "reports", label: "Signalements" },
+  // Absent de la vraie liste donnée par l'utilisateur, mais gardé ici pour ne pas perdre l'accès
+  // à cet écran existant — à retirer explicitement si l'omission était volontaire.
   { key: "officialStories", label: "Stories officielles" },
-];
-
-const BOTTOM_ITEMS_BEFORE_BUSINESS = [
-  { key: "stats", label: "Analytics" },
-  { key: "finances", label: "Finances" },
 ];
 
 const BUSINESS_ITEMS = [
   { key: "businessAccounts", label: "Comptes Business" },
   { key: "claims", label: "Revendications" },
+  { key: "finances", label: "Finances" },
 ];
 
-const BOTTOM_ITEMS_AFTER_BUSINESS = [
-  { key: "notifications", label: "Notifications" },
+const ANALYTICS_ITEMS = [{ key: "stats", label: "Analytics" }];
+
+const SYSTEM_ITEMS = [
   { key: "audit", label: "Audit" },
   { key: "countryRules", label: "Configuration pays" },
   { key: "featureFlags", label: "Feature flags" },
   { key: "crashReports", label: "Crash reports" },
   { key: "admins", label: "Administrateurs" },
-  { key: "settings", label: "Paramètres" },
 ];
+
+function SectionHeader({ title }) {
+  return (
+    <div style={{ padding: "18px 20px 6px 20px", fontSize: "11px", fontWeight: 800, color: "#8792A6", letterSpacing: "1px", textTransform: "uppercase" }}>{title}</div>
+  );
+}
 
 function NavButton({ item, current, onNavigate, indent, badge }) {
   const active = current === item.key;
@@ -90,11 +97,28 @@ function NavButton({ item, current, onNavigate, indent, badge }) {
   );
 }
 
+function SettingsIcon() {
+  return (
+    <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="#39FF66" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <circle cx="12" cy="12" r="3" />
+      <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z" />
+    </svg>
+  );
+}
+
+function LogoutIcon() {
+  return (
+    <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="#ef007c" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
+      <polyline points="16 17 21 12 16 7" />
+      <line x1="21" y1="12" x2="9" y2="12" />
+    </svg>
+  );
+}
+
 export function Layout({ current, onNavigate, onLogout, myRole, myCanModerate, children }) {
   const isDatabaseScreen = DATABASE_ITEMS.some((i) => i.key === current) || current === "database";
   const [databaseOpen, setDatabaseOpen] = useState(isDatabaseScreen);
-  const isBusinessScreen = BUSINESS_ITEMS.some((i) => i.key === current);
-  const [businessOpen, setBusinessOpen] = useState(isBusinessScreen);
   const isModerator = myRole === "moderator";
   const isEditorTier = myRole === "editor" || myRole === "super_editor";
   const isBusiness = myRole === "business";
@@ -173,118 +197,43 @@ export function Layout({ current, onNavigate, onLogout, myRole, myCanModerate, c
         ) : (
           <>
             <NavButton item={{ key: "dashboard", label: "Tableau de bord" }} current={current} onNavigate={onNavigate} />
-            {TOP_ITEMS.map((item) => (
-              <NavButton key={item.key} item={item} current={current} onNavigate={onNavigate} />
-            ))}
 
-            <button
-              onClick={() => {
-                onNavigate("database");
-                setDatabaseOpen(true);
-              }}
-              style={{
-                textAlign: "left",
-                background: isDatabaseScreen ? "#28405C" : "none",
-                border: "none",
-                borderLeft: isDatabaseScreen ? "3px solid #39FF66" : "3px solid transparent",
-                padding: "12px 20px",
-                fontSize: "14px",
-                fontWeight: isDatabaseScreen ? 700 : 500,
-                color: isDatabaseScreen ? "#39FF66" : "#F2F2E8",
-                cursor: "pointer",
-                width: "100%",
-                display: "flex",
-                justifyContent: "space-between",
-                alignItems: "center",
-                gap: "10px",
-              }}
-            >
-              <span style={{ display: "flex", alignItems: "center", gap: "10px" }}>
-                <span style={{ width: "4px", height: "16px", background: "#39FF66", borderRadius: "2px", display: "inline-block", flexShrink: 0 }} />
-                DataBase
-              </span>
-              <span
-                onClick={(e) => {
-                  e.stopPropagation();
-                  setDatabaseOpen((o) => !o);
-                }}
-                style={{ fontSize: "11px", color: "#39FF66", padding: "4px", display: "inline-block" }}
-              >
-                {databaseOpen ? "▼" : "▶"}
-              </span>
-            </button>
-            {databaseOpen && (
-              <div style={{ paddingLeft: "14px" }}>
-                {DATABASE_ITEMS.map((item) => (
-                  <NavButton key={item.key} item={item} current={current} onNavigate={onNavigate} indent />
-                ))}
-              </div>
-            )}
-
-            <NavButton item={{ key: "users", label: "Utilisateurs" }} current={current} onNavigate={onNavigate} />
-            <NavButton item={{ key: "reports", label: "Signalements" }} current={current} onNavigate={onNavigate} badge={pendingReportsCount} />
-
-            {BOTTOM_ITEMS_BEFORE_BUSINESS.map((item) => (
-              <NavButton key={item.key} item={item} current={current} onNavigate={onNavigate} />
-            ))}
-
-            <button
-              onClick={() => {
-                onNavigate("businessAccounts");
-                setBusinessOpen(true);
-              }}
-              style={{
-                textAlign: "left",
-                background: isBusinessScreen ? "#28405C" : "none",
-                border: "none",
-                borderLeft: isBusinessScreen ? "3px solid #39FF66" : "3px solid transparent",
-                padding: "12px 20px",
-                fontSize: "14px",
-                fontWeight: isBusinessScreen ? 700 : 500,
-                color: isBusinessScreen ? "#39FF66" : "#F2F2E8",
-                cursor: "pointer",
-                width: "100%",
-                display: "flex",
-                justifyContent: "space-between",
-                alignItems: "center",
-                gap: "10px",
-              }}
-            >
-              <span style={{ display: "flex", alignItems: "center", gap: "10px" }}>
-                <span style={{ width: "4px", height: "16px", background: "#39FF66", borderRadius: "2px", display: "inline-block", flexShrink: 0 }} />
-                Business
-              </span>
-              <span
-                onClick={(e) => {
-                  e.stopPropagation();
-                  setBusinessOpen((o) => !o);
-                }}
-                style={{ fontSize: "11px", color: "#39FF66", padding: "4px", display: "inline-block" }}
-              >
-                {businessOpen ? "▼" : "▶"}
-              </span>
-            </button>
-            {businessOpen && (
-              <div style={{ paddingLeft: "14px" }}>
-                {BUSINESS_ITEMS.map((item) => (
-                  <NavButton key={item.key} item={item} current={current} onNavigate={onNavigate} indent />
-                ))}
-              </div>
-            )}
-
-            {BOTTOM_ITEMS_AFTER_BUSINESS.map((item) => (
+            <SectionHeader title="Communication" />
+            {COMMUNICATION_ITEMS.map((item) => (
               <NavButton key={item.key} item={item} current={current} onNavigate={onNavigate} badge={item.key === "notifications" ? pendingReportsCount : undefined} />
+            ))}
+
+            <SectionHeader title="DataBase" />
+            {DATABASE_ITEMS.map((item) => (
+              <NavButton key={item.key} item={item} current={current} onNavigate={onNavigate} badge={item.key === "reports" ? pendingReportsCount : undefined} />
+            ))}
+
+            <SectionHeader title="Business" />
+            {BUSINESS_ITEMS.map((item) => (
+              <NavButton key={item.key} item={item} current={current} onNavigate={onNavigate} />
+            ))}
+
+            <SectionHeader title="Analytics" />
+            {ANALYTICS_ITEMS.map((item) => (
+              <NavButton key={item.key} item={item} current={current} onNavigate={onNavigate} />
+            ))}
+
+            <SectionHeader title="Système" />
+            {SYSTEM_ITEMS.map((item) => (
+              <NavButton key={item.key} item={item} current={current} onNavigate={onNavigate} />
             ))}
           </>
         )}
 
         <div style={{ flex: 1 }} />
-        <button
-          onClick={onLogout}
-          style={{ margin: "0 20px 8px", background: "none", border: "none", color: "#FF3B4E", fontSize: "12px", fontWeight: 700, cursor: "pointer", textAlign: "left" }}
-        >
-          Se déconnecter
-        </button>
+        <div style={{ display: "flex", alignItems: "center", gap: "16px", padding: "8px 20px 8px" }}>
+          <button onClick={() => onNavigate("settings")} title="Paramètres" aria-label="Paramètres" style={{ background: "none", border: "none", cursor: "pointer", padding: "4px", display: "flex" }}>
+            <SettingsIcon />
+          </button>
+          <button onClick={onLogout} title="Se déconnecter" aria-label="Se déconnecter" style={{ background: "none", border: "none", cursor: "pointer", padding: "4px", display: "flex" }}>
+            <LogoutIcon />
+          </button>
+        </div>
         <div style={{ padding: "0 20px 16px", fontSize: "11px", color: "#8792A6" }}>VaziooMedia - 2026</div>
       </div>
       <div style={{ flex: 1, display: "flex", flexDirection: "column", minWidth: 0 }}>
