@@ -342,18 +342,17 @@ function CreateStoryModal({ file, onClose, onPublished, myUserId }) {
             {step === "tags" && <p style={{ fontSize: "10px", color: "#8792A6", margin: "8px 0 0", textAlign: "center" }}>Glissez chaque pastille pour la placer.</p>}
           </div>
 
-          <div style={{ flex: 1, minWidth: 0, overflowY: "auto", paddingRight: "4px" }}>
+          <div style={{ flex: 1, minWidth: 0, overflowY: "auto", paddingRight: "4px", display: "flex", flexDirection: "column" }}>
             {step === "edit" ? (
               <>
-                <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
+                <div style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
                   <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
                     <span style={{ fontSize: "10px", color: "#8792A6", width: "90px", flexShrink: 0 }}>Zoom</span>
-                    <input type="range" min="0.3" max="3" step="0.01" value={zoom} onChange={(e) => setZoom(parseFloat(e.target.value))} style={{ flex: 1, height: "14px", accentColor: "#39FF66" }} />
+                    <input type="range" min="0.3" max="3" step="0.01" value={zoom} onChange={(e) => setZoom(parseFloat(e.target.value))} style={{ width: "110px", height: "14px", accentColor: "#39FF66" }} />
                   </div>
-                  <p style={{ fontSize: "9.5px", color: "#8792A6", margin: "-4px 0 0 98px" }}>En-dessous de 1, l'image entière devient visible.</p>
                   <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
                     <span style={{ fontSize: "10px", color: "#8792A6", width: "90px", flexShrink: 0 }}>Rotation</span>
-                    <input type="range" min="-45" max="45" step="1" value={rotation} onChange={(e) => setRotation(parseFloat(e.target.value))} style={{ flex: 1, height: "14px", accentColor: "#39FF66" }} />
+                    <input type="range" min="-45" max="45" step="1" value={rotation} onChange={(e) => setRotation(parseFloat(e.target.value))} style={{ width: "110px", height: "14px", accentColor: "#39FF66" }} />
                   </div>
                   <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
                     <span style={{ fontSize: "10px", color: "#8792A6", width: "90px", flexShrink: 0 }}>Fond</span>
@@ -361,7 +360,7 @@ function CreateStoryModal({ file, onClose, onPublished, myUserId }) {
                   </div>
                 </div>
 
-                <div style={{ display: "flex", gap: "8px", marginTop: "16px" }}>
+                <div style={{ display: "flex", gap: "8px", marginTop: "auto", paddingTop: "16px" }}>
                   <button onClick={onClose} style={{ flex: 1, padding: "8px", borderRadius: "7px", border: "2px solid #28405C", background: "none", color: "#F2F2E8", fontWeight: 700, fontSize: "12.5px", cursor: "pointer" }}>
                     Annuler
                   </button>
