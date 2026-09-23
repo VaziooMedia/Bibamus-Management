@@ -455,6 +455,24 @@ export function OfficialStoriesScreen({ myUserId }) {
     setStories((prev) => prev.filter((s) => s.id !== id));
   };
 
+  // Republie une vraie Story à l'identique — même vraie image (déjà en ligne, pas de vrai
+  // nouvel upload nécessaire), même légende et mêmes tags/positions, mais avec un vrai nouveau
+  // created_at : elle redevient donc active 24h de plus, comme une vraie nouvelle publication.
+  const handleRepublish = async (s) => {
+    const result = await createOfficialStory(s.mediaUrl, s.caption, myUserId, {
+      taggedVenueId: s.taggedVenueId,
+      taggedDrinkId: s.taggedDrinkId,
+      taggedBrandId: s.taggedBrandId,
+      taggedProducerId: s.taggedProducerId,
+      tagPositions: s.tagPositions,
+    });
+    if (result.error) {
+      alert("Erreur : " + result.error);
+      return;
+    }
+    refresh();
+  };
+
   return (
     <div>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
@@ -468,7 +486,7 @@ export function OfficialStoriesScreen({ myUserId }) {
         </button>
         <input ref={inputRef} type="file" accept="image/*" onChange={handleFileChange} style={{ display: "none" }} />
       </div>
-      <p style={{ fontSize: "12.5px", color: "#8792A6", margin: "8px 0 20px", maxWidth: "560px" }}>
+      <p style={{ fontSize: "12.5px", color: "#8792A6", margin: "18px 0 20px", maxWidth: "560px" }}>
         Visibles par tous les utilisateurs dans l'app, en premier dans la barre de Stories.
         <br />
         Durée de vie de 24h.
@@ -487,12 +505,37 @@ export function OfficialStoriesScreen({ myUserId }) {
                 {s.caption && <p style={{ fontSize: "12px", color: "#F2F2E8", margin: "0 0 6px 0" }}>{s.caption}</p>}
                 {s.locationText && <p style={{ fontSize: "11px", color: "#8792A6", margin: "0 0 6px 0" }}>📍 {s.locationText}</p>}
                 <p style={{ fontSize: "11px", color: "#8792A6", margin: "0 0 8px 0" }}>{timeAgo(s.createdAt)}</p>
-                <button
-                  onClick={() => handleDelete(s.id)}
-                  style={{ width: "100%", background: "none", border: "2px solid #FF3B4E", borderRadius: "6px", padding: "6px", fontSize: "11.5px", fontWeight: 700, color: "#FF3B4E", cursor: "pointer" }}
-                >
-                  Supprimer
-                </button>
+                <div style={{ display: "flex", justifyContent: "flex-end", alignItems: "center", gap: "8px" }}>
+                  <button
+                    onClick={() => handleRepublish(s)}
+                    style={{ flex: 1, background: "none", border: "2px solid #39FF66", borderRadius: "6px", padding: "5px", fontSize: "11px", fontWeight: 700, color: "#39FF66", cursor: "pointer" }}
+                  >
+                    Republier
+                  </button>
+                  <button
+                    onClick={() => handleDelete(s.id)}
+                    title="Supprimer"
+                    aria-label="Supprimer"
+                    style={{
+                      flexShrink: 0,
+                      width: "22px",
+                      height: "22px",
+                      borderRadius: "50%",
+                      border: "none",
+                      background: "#FF3B4E",
+                      color: "#fff",
+                      fontSize: "12px",
+                      fontWeight: 800,
+                      cursor: "pointer",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      lineHeight: 1,
+                    }}
+                  >
+                    ✕
+                  </button>
+                </div>
               </div>
             </div>
           ))}
