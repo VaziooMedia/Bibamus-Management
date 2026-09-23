@@ -31,7 +31,7 @@ function TagPicker({ label, items, selectedId, onSelect }) {
 
   return (
     <div style={{ display: "flex", alignItems: "flex-start", gap: "8px" }}>
-      <label style={{ fontSize: "10.5px", fontWeight: 600, color: "#8792A6", width: "118px", flexShrink: 0, marginTop: "7px", display: "flex", alignItems: "center", gap: "6px" }}>
+      <label style={{ fontSize: "10.5px", fontWeight: 600, color: "#8792A6", width: "134px", flexShrink: 0, marginTop: "7px", display: "flex", alignItems: "center", gap: "6px" }}>
         <span style={{ width: "3px", height: "11px", background: "#39FF66", borderRadius: "2px", display: "inline-block", flexShrink: 0 }} />
         {label}
       </label>
@@ -158,7 +158,7 @@ function TagPill({ label, symbol = "#", pos, onChange }) {
         zIndex: 10,
       }}
     >
-      {symbol} {label}
+      {symbol ? `${symbol} ${label}` : label}
     </div>
   );
 }
@@ -240,6 +240,7 @@ function CreateStoryModal({ file, onClose, onPublished, myUserId }) {
   }, []);
 
   const activeLabelFor = (key) => {
+    if (key === "caption") return caption.trim() || null;
     if (key === "venue") return venues.find((v) => v.id === taggedVenueId)?.name || null;
     if (key === "drink") return drinks.find((d) => d.id === taggedDrinkId)?.name || null;
     if (key === "brand") return brands.find((b) => b.id === taggedBrandId)?.name || null;
@@ -249,12 +250,13 @@ function CreateStoryModal({ file, onClose, onPublished, myUserId }) {
 
   // Ajoute une vraie position par défaut (étagée verticalement) dès qu'un tag devient actif, et
   // retire sa position dès qu'il est désactivé — sans jamais toucher aux vraies positions déjà
-  // placées manuellement par l'admin pour les tags qui restent actifs.
+  // placées manuellement par l'admin pour les tags qui restent actifs. La légende compte comme
+  // un vrai tag de plus ici (même mécanisme de position/taille/rotation/couleur).
   useEffect(() => {
     setTagPositions((prev) => {
       const next = { ...prev };
       let changed = false;
-      const activeKeys = TAG_TYPES.map((t) => t.key).filter((key) => activeLabelFor(key));
+      const activeKeys = ["caption", ...TAG_TYPES.map((t) => t.key)].filter((key) => activeLabelFor(key));
       activeKeys.forEach((key, i) => {
         if (!next[key]) {
           next[key] = { x: 0.5, y: 0.15 + i * 0.1, scale: 1, rotation: 0, color: "#F2F2E8" };
@@ -270,7 +272,7 @@ function CreateStoryModal({ file, onClose, onPublished, myUserId }) {
       return changed ? next : prev;
     });
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [taggedVenueId, taggedDrinkId, taggedBrandId, taggedProducerId, venues, drinks, brands, producers]);
+  }, [caption, taggedVenueId, taggedDrinkId, taggedBrandId, taggedProducerId, venues, drinks, brands, producers]);
 
   const handlePublish = async () => {
     setPublishing(true);
@@ -322,6 +324,9 @@ function CreateStoryModal({ file, onClose, onPublished, myUserId }) {
         <div style={{ display: "flex", gap: "24px", overflow: "hidden", flex: 1 }}>
           <div style={{ flexShrink: 0, margin: step === "edit" ? "0 auto" : 0 }}>
             <ImageEditor ref={editorRef} file={file} interactive={step === "edit"} showControls={step === "edit"}>
+              {step === "tags" && tagPositions.caption && activeLabelFor("caption") && (
+                <TagPill label={activeLabelFor("caption")} symbol="" pos={tagPositions.caption} onChange={(newPos) => setTagPositions((prev) => ({ ...prev, caption: newPos }))} />
+              )}
               {step === "tags" &&
                 TAG_TYPES.map((t) => {
                   const label = activeLabelFor(t.key);
@@ -348,17 +353,25 @@ function CreateStoryModal({ file, onClose, onPublished, myUserId }) {
           {step === "tags" && (
             <div style={{ flex: 1, minWidth: 0, overflowY: "auto", paddingRight: "4px" }}>
               <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
-                <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-                  <label style={{ fontSize: "10.5px", fontWeight: 600, color: "#8792A6", width: "62px", flexShrink: 0, display: "flex", alignItems: "center", gap: "6px" }}>
-                    <span style={{ width: "3px", height: "11px", background: "#39FF66", borderRadius: "2px", display: "inline-block", flexShrink: 0 }} />
-                    Légende
-                  </label>
-                  <input
-                    value={caption}
-                    onChange={(e) => setCaption(e.target.value)}
-                    placeholder="Optionnel"
-                    style={{ flex: 1, minWidth: 0, boxSizing: "border-box", padding: "6px 9px", borderRadius: "7px", border: "2px solid #28405C", background: "#0D1B2A", color: "#F2F2E8", fontSize: "12px" }}
-                  />
+                <div style={{ background: "#0D1B2A", border: "1px solid #28405C", borderRadius: "8px", padding: "10px" }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                    <label style={{ fontSize: "10.5px", fontWeight: 600, color: "#8792A6", width: "62px", flexShrink: 0, display: "flex", alignItems: "center", gap: "6px" }}>
+                      <span style={{ width: "3px", height: "11px", background: "#39FF66", borderRadius: "2px", display: "inline-block", flexShrink: 0 }} />
+                      Légende
+                    </label>
+                    <input
+                      value={caption}
+                      onChange={(e) => setCaption(e.target.value)}
+                      placeholder="Optionnel"
+                      style={{ flex: 1, minWidth: 0, boxSizing: "border-box", padding: "6px 9px", borderRadius: "7px", border: "2px solid #28405C", background: "#0D1B2A", color: "#F2F2E8", fontSize: "12px" }}
+                    />
+                  </div>
+                  {tagPositions.caption && (
+                    <>
+                      <div style={{ borderTop: "1px solid #28405C", margin: "10px 0" }} />
+                      <TagControls pos={tagPositions.caption} onChange={(p) => setTagPositions((prev) => ({ ...prev, caption: p }))} />
+                    </>
+                  )}
                 </div>
 
                 <TagGroup pickerLabel="Taguer un Lieu" items={venues} selectedId={taggedVenueId} onSelect={setTaggedVenueId} pos={tagPositions.venue} onPosChange={(p) => setTagPositions((prev) => ({ ...prev, venue: p }))} />
