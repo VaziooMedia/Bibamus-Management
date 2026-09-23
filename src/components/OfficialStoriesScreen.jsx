@@ -136,19 +136,21 @@ function CreateStoryModal({ file, onClose, onPublished, myUserId }) {
       <div style={{ background: "#16273D", borderRadius: "16px", padding: "24px", width: "100%", maxWidth: "460px", maxHeight: "88vh", overflowY: "auto" }}>
         <h3 style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "18px", margin: "0 0 18px" }}>{step === "edit" ? "Cadrer l'image" : "Légende & taguage"}</h3>
 
-        {step === "edit" ? (
-          <>
-            <ImageEditor ref={editorRef} file={file} />
-            <div style={{ display: "flex", gap: "10px", marginTop: "20px" }}>
-              <button onClick={onClose} style={{ flex: 1, padding: "11px", borderRadius: "8px", border: "2px solid #28405C", background: "none", color: "#F2F2E8", fontWeight: 700, cursor: "pointer" }}>
-                Annuler
-              </button>
-              <button onClick={() => setStep("tags")} style={{ flex: 1, padding: "11px", borderRadius: "8px", border: "none", background: "#39FF66", color: "#0D1B2A", fontWeight: 800, cursor: "pointer" }}>
-                Continuer
-              </button>
-            </div>
-          </>
-        ) : (
+        {/* Reste monté sur les 2 étapes, juste masqué à l'étape "tags" — sinon React remet
+            editorRef.current à null au démontage, et handlePublish() ne le retrouve plus. */}
+        <div style={{ display: step === "edit" ? "block" : "none" }}>
+          <ImageEditor ref={editorRef} file={file} />
+          <div style={{ display: "flex", gap: "10px", marginTop: "20px" }}>
+            <button onClick={onClose} style={{ flex: 1, padding: "11px", borderRadius: "8px", border: "2px solid #28405C", background: "none", color: "#F2F2E8", fontWeight: 700, cursor: "pointer" }}>
+              Annuler
+            </button>
+            <button onClick={() => setStep("tags")} style={{ flex: 1, padding: "11px", borderRadius: "8px", border: "none", background: "#39FF66", color: "#0D1B2A", fontWeight: 800, cursor: "pointer" }}>
+              Continuer
+            </button>
+          </div>
+        </div>
+
+        {step === "tags" && (
           <>
             <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
               <div>
