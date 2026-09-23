@@ -31,13 +31,13 @@ function TagPicker({ label, items, selectedId, onSelect }) {
 
   return (
     <div>
-      <label style={{ fontSize: "12px", fontWeight: 600, color: "#8792A6", marginBottom: "6px", display: "block" }}>{label}</label>
+      <label style={{ fontSize: "10.5px", fontWeight: 600, color: "#8792A6", marginBottom: "4px", display: "block" }}>{label}</label>
       {selected ? (
-        <div style={{ display: "inline-flex", alignItems: "center", gap: "8px", background: "#28405C", borderRadius: "999px", padding: "6px 6px 6px 12px" }}>
-          <span style={{ fontSize: "12.5px", color: "#F2F2E8" }}>{selected.name}</span>
+        <div style={{ display: "inline-flex", alignItems: "center", gap: "6px", background: "#28405C", borderRadius: "999px", padding: "4px 4px 4px 9px" }}>
+          <span style={{ fontSize: "11px", color: "#F2F2E8" }}>{selected.name}</span>
           <button
             onClick={() => onSelect(null)}
-            style={{ width: "18px", height: "18px", borderRadius: "50%", border: "none", background: "#0D1B2A", color: "#8792A6", cursor: "pointer", fontSize: "11px", display: "flex", alignItems: "center", justifyContent: "center" }}
+            style={{ width: "15px", height: "15px", borderRadius: "50%", border: "none", background: "#0D1B2A", color: "#8792A6", cursor: "pointer", fontSize: "9.5px", display: "flex", alignItems: "center", justifyContent: "center" }}
           >
             ✕
           </button>
@@ -48,10 +48,10 @@ function TagPicker({ label, items, selectedId, onSelect }) {
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             placeholder={`Rechercher ${label.toLowerCase()}...`}
-            style={{ width: "100%", boxSizing: "border-box", padding: "9px 12px", borderRadius: "8px", border: "2px solid #28405C", background: "#0D1B2A", color: "#F2F2E8", fontSize: "13px" }}
+            style={{ width: "100%", boxSizing: "border-box", padding: "7px 10px", borderRadius: "7px", border: "2px solid #28405C", background: "#0D1B2A", color: "#F2F2E8", fontSize: "11.5px" }}
           />
           {results.length > 0 && (
-            <div style={{ marginTop: "4px", background: "#0D1B2A", borderRadius: "8px", border: "1px solid #28405C", overflow: "hidden" }}>
+            <div style={{ marginTop: "3px", background: "#0D1B2A", borderRadius: "7px", border: "1px solid #28405C", overflow: "hidden" }}>
               {results.map((r) => (
                 <button
                   key={r.id}
@@ -59,7 +59,7 @@ function TagPicker({ label, items, selectedId, onSelect }) {
                     onSelect(r.id);
                     setQuery("");
                   }}
-                  style={{ display: "block", width: "100%", textAlign: "left", padding: "8px 12px", background: "none", border: "none", color: "#F2F2E8", fontSize: "13px", cursor: "pointer" }}
+                  style={{ display: "block", width: "100%", textAlign: "left", padding: "6px 10px", background: "none", border: "none", color: "#F2F2E8", fontSize: "11.5px", cursor: "pointer" }}
                 >
                   {r.name}
                 </button>
@@ -150,18 +150,18 @@ function TagPill({ label, pos, onChange }) {
 function TagControls({ label, pos, onChange }) {
   if (!pos) return null;
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: "6px", marginTop: "-8px" }}>
-      <label style={{ fontSize: "11px", color: "#8792A6", display: "block" }}>
+    <div style={{ display: "flex", flexDirection: "column", gap: "4px", marginTop: "-6px" }}>
+      <label style={{ fontSize: "10px", color: "#8792A6", display: "block" }}>
         Taille du tag « {label} »
-        <input type="range" min="0.6" max="1.8" step="0.05" value={pos.scale || 1} onChange={(e) => onChange({ ...pos, scale: parseFloat(e.target.value) })} style={{ width: "100%" }} />
+        <input type="range" min="0.6" max="1.8" step="0.05" value={pos.scale || 1} onChange={(e) => onChange({ ...pos, scale: parseFloat(e.target.value) })} style={{ width: "100%", height: "14px" }} />
       </label>
-      <label style={{ fontSize: "11px", color: "#8792A6", display: "block" }}>
+      <label style={{ fontSize: "10px", color: "#8792A6", display: "block" }}>
         Rotation du tag « {label} »
-        <input type="range" min="-45" max="45" step="1" value={pos.rotation || 0} onChange={(e) => onChange({ ...pos, rotation: parseFloat(e.target.value) })} style={{ width: "100%" }} />
+        <input type="range" min="-45" max="45" step="1" value={pos.rotation || 0} onChange={(e) => onChange({ ...pos, rotation: parseFloat(e.target.value) })} style={{ width: "100%", height: "14px" }} />
       </label>
-      <label style={{ fontSize: "11px", color: "#8792A6", display: "flex", alignItems: "center", gap: "8px" }}>
+      <label style={{ fontSize: "10px", color: "#8792A6", display: "flex", alignItems: "center", gap: "6px" }}>
         Couleur du tag « {label} »
-        <input type="color" value={pos.color || "#F2F2E8"} onChange={(e) => onChange({ ...pos, color: e.target.value })} style={{ width: "32px", height: "22px", padding: 0, border: "none", borderRadius: "4px", cursor: "pointer" }} />
+        <input type="color" value={pos.color || "#F2F2E8"} onChange={(e) => onChange({ ...pos, color: e.target.value })} style={{ width: "26px", height: "16px", padding: 0, border: "none", borderRadius: "4px", cursor: "pointer" }} />
       </label>
     </div>
   );
@@ -305,29 +305,29 @@ function CreateStoryModal({ file, onClose, onPublished, myUserId }) {
                 </button>
               </div>
             ) : (
-              <p style={{ fontSize: "11px", color: "#8792A6", margin: "10px 0 0", textAlign: "center" }}>Glissez chaque pastille pour la placer.</p>
+              <p style={{ fontSize: "10px", color: "#8792A6", margin: "8px 0 0", textAlign: "center" }}>Glissez chaque pastille pour la placer.</p>
             )}
           </div>
 
           {step === "tags" && (
             <div style={{ flex: 1, minWidth: 0, overflowY: "auto", paddingRight: "4px" }}>
-              <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
+              <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
                 <div>
-                  <label style={{ fontSize: "12px", fontWeight: 600, color: "#8792A6", marginBottom: "6px", display: "block" }}>Légende (optionnelle)</label>
+                  <label style={{ fontSize: "10.5px", fontWeight: 600, color: "#8792A6", marginBottom: "4px", display: "block" }}>Légende (optionnelle)</label>
                   <input
                     value={caption}
                     onChange={(e) => setCaption(e.target.value)}
                     placeholder="Un petit mot pour accompagner l'image..."
-                    style={{ width: "100%", boxSizing: "border-box", padding: "10px 12px", borderRadius: "8px", border: "2px solid #28405C", background: "#0D1B2A", color: "#F2F2E8", fontSize: "13.5px" }}
+                    style={{ width: "100%", boxSizing: "border-box", padding: "8px 10px", borderRadius: "7px", border: "2px solid #28405C", background: "#0D1B2A", color: "#F2F2E8", fontSize: "12px" }}
                   />
                 </div>
                 <div>
-                  <label style={{ fontSize: "12px", fontWeight: 600, color: "#8792A6", marginBottom: "6px", display: "block" }}>Indiquer un lieu (texte libre)</label>
+                  <label style={{ fontSize: "10.5px", fontWeight: 600, color: "#8792A6", marginBottom: "4px", display: "block" }}>Indiquer un lieu (texte libre)</label>
                   <input
                     value={locationText}
                     onChange={(e) => setLocationText(e.target.value)}
                     placeholder="Ex. Robertville, Belgique..."
-                    style={{ width: "100%", boxSizing: "border-box", padding: "10px 12px", borderRadius: "8px", border: "2px solid #28405C", background: "#0D1B2A", color: "#F2F2E8", fontSize: "13.5px" }}
+                    style={{ width: "100%", boxSizing: "border-box", padding: "8px 10px", borderRadius: "7px", border: "2px solid #28405C", background: "#0D1B2A", color: "#F2F2E8", fontSize: "12px" }}
                   />
                 </div>
                 <TagControls label={activeLabelFor("location")} pos={tagPositions.location} onChange={(p) => setTagPositions((prev) => ({ ...prev, location: p }))} />

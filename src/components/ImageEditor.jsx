@@ -128,14 +128,14 @@ export const ImageEditor = React.forwardRef(function ImageEditor({ file, interac
       </div>
 
       {showControls && (
-        <div style={{ width: `${PREVIEW_W}px`, display: "flex", flexDirection: "column", gap: "10px" }}>
-          <label style={{ fontSize: "11px", color: "#8792A6" }}>
+        <div style={{ width: `${PREVIEW_W}px`, display: "flex", flexDirection: "column", gap: "8px" }}>
+          <label style={{ fontSize: "10px", color: "#8792A6" }}>
             Zoom (en-dessous de 1, l'image entière devient visible)
-            <input type="range" min="0.3" max="3" step="0.01" value={zoom} onChange={(e) => setZoom(parseFloat(e.target.value))} style={{ width: "100%" }} />
+            <input type="range" min="0.3" max="3" step="0.01" value={zoom} onChange={(e) => setZoom(parseFloat(e.target.value))} style={{ width: "100%", height: "14px" }} />
           </label>
-          <label style={{ fontSize: "11px", color: "#8792A6" }}>
+          <label style={{ fontSize: "10px", color: "#8792A6" }}>
             Rotation
-            <input type="range" min="-45" max="45" step="1" value={rotation} onChange={(e) => setRotation(parseFloat(e.target.value))} style={{ width: "100%" }} />
+            <input type="range" min="-45" max="45" step="1" value={rotation} onChange={(e) => setRotation(parseFloat(e.target.value))} style={{ width: "100%", height: "14px" }} />
           </label>
         </div>
       )}
