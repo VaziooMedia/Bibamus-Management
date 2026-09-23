@@ -21,6 +21,12 @@ function timeAgo(iso) {
   return `Il y a ${days} j`;
 }
 
+// Une vraie Story reste visible dans l'app pendant 24h — au-delà, elle est déjà invisible côté
+// utilisateurs même si l'admin la voit encore ici (juste pour référence/suppression).
+function isActive(iso) {
+  return Date.now() - new Date(iso).getTime() < 24 * 3600 * 1000;
+}
+
 // Vrai tag "recherche + sélection unique" réutilisé pour les 4 vrais répertoires — vrai libellé
 // à gauche (plus compact que la mise en page verticale d'origine), vrai contenu (champ de
 // recherche ou pastille choisie) à droite.
@@ -463,7 +469,9 @@ export function OfficialStoriesScreen({ myUserId }) {
         <input ref={inputRef} type="file" accept="image/*" onChange={handleFileChange} style={{ display: "none" }} />
       </div>
       <p style={{ fontSize: "12.5px", color: "#8792A6", margin: "8px 0 20px", maxWidth: "560px" }}>
-        Visibles par tous les utilisateurs dans l'app, en premier dans la barre de Stories (contour bleu, pas rose). Durée de vie de 24h, comme les Stories classiques.
+        Visibles par tous les utilisateurs dans l'app, en premier dans la barre de Stories.
+        <br />
+        Durée de vie de 24h.
       </p>
 
       {stories === null ? (
@@ -473,7 +481,7 @@ export function OfficialStoriesScreen({ myUserId }) {
       ) : (
         <div style={{ display: "flex", flexWrap: "wrap", gap: "14px" }}>
           {stories.map((s) => (
-            <div key={s.id} style={{ width: "160px", background: "#16273D", borderRadius: "10px", overflow: "hidden" }}>
+            <div key={s.id} style={{ width: "160px", background: "#16273D", borderRadius: "10px", overflow: "hidden", border: `2px solid ${isActive(s.createdAt) ? "#39FF66" : "transparent"}` }}>
               <img src={s.mediaUrl} alt="" style={{ width: "100%", height: "220px", objectFit: "cover", display: "block" }} />
               <div style={{ padding: "10px" }}>
                 {s.caption && <p style={{ fontSize: "12px", color: "#F2F2E8", margin: "0 0 6px 0" }}>{s.caption}</p>}
