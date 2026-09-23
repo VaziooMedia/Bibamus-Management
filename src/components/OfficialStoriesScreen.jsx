@@ -21,53 +21,55 @@ function timeAgo(iso) {
   return `Il y a ${days} j`;
 }
 
-// Vrai tag "recherche + sélection unique" réutilisé pour les 4 vrais répertoires — le vrai
-// choix courant s'affiche comme une vraie pastille retirable, sinon un vrai champ de recherche
-// avec ses vrais résultats en-dessous.
+// Vrai tag "recherche + sélection unique" réutilisé pour les 4 vrais répertoires — vrai libellé
+// à gauche (plus compact que la mise en page verticale d'origine), vrai contenu (champ de
+// recherche ou pastille choisie) à droite.
 function TagPicker({ label, items, selectedId, onSelect }) {
   const [query, setQuery] = useState("");
   const selected = items.find((i) => i.id === selectedId);
   const results = query.trim() ? items.filter((i) => i.name.toLowerCase().includes(query.trim().toLowerCase())).slice(0, 6) : [];
 
   return (
-    <div>
-      <label style={{ fontSize: "10.5px", fontWeight: 600, color: "#8792A6", marginBottom: "4px", display: "block" }}>{label}</label>
-      {selected ? (
-        <div style={{ display: "inline-flex", alignItems: "center", gap: "6px", background: "#28405C", borderRadius: "999px", padding: "4px 4px 4px 9px" }}>
-          <span style={{ fontSize: "11px", color: "#F2F2E8" }}>{selected.name}</span>
-          <button
-            onClick={() => onSelect(null)}
-            style={{ width: "15px", height: "15px", borderRadius: "50%", border: "none", background: "#0D1B2A", color: "#8792A6", cursor: "pointer", fontSize: "9.5px", display: "flex", alignItems: "center", justifyContent: "center" }}
-          >
-            ✕
-          </button>
-        </div>
-      ) : (
-        <>
-          <input
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-            placeholder={`Rechercher ${label.toLowerCase()}...`}
-            style={{ width: "100%", boxSizing: "border-box", padding: "7px 10px", borderRadius: "7px", border: "2px solid #28405C", background: "#0D1B2A", color: "#F2F2E8", fontSize: "11.5px" }}
-          />
-          {results.length > 0 && (
-            <div style={{ marginTop: "3px", background: "#0D1B2A", borderRadius: "7px", border: "1px solid #28405C", overflow: "hidden" }}>
-              {results.map((r) => (
-                <button
-                  key={r.id}
-                  onClick={() => {
-                    onSelect(r.id);
-                    setQuery("");
-                  }}
-                  style={{ display: "block", width: "100%", textAlign: "left", padding: "6px 10px", background: "none", border: "none", color: "#F2F2E8", fontSize: "11.5px", cursor: "pointer" }}
-                >
-                  {r.name}
-                </button>
-              ))}
-            </div>
-          )}
-        </>
-      )}
+    <div style={{ display: "flex", alignItems: "flex-start", gap: "8px" }}>
+      <label style={{ fontSize: "10.5px", fontWeight: 600, color: "#8792A6", width: "72px", flexShrink: 0, marginTop: "7px" }}>{label}</label>
+      <div style={{ flex: 1, minWidth: 0, position: "relative" }}>
+        {selected ? (
+          <div style={{ display: "inline-flex", alignItems: "center", gap: "6px", background: "#28405C", borderRadius: "999px", padding: "4px 4px 4px 9px" }}>
+            <span style={{ fontSize: "11px", color: "#F2F2E8" }}>{selected.name}</span>
+            <button
+              onClick={() => onSelect(null)}
+              style={{ width: "15px", height: "15px", borderRadius: "50%", border: "none", background: "#0D1B2A", color: "#8792A6", cursor: "pointer", fontSize: "9.5px", display: "flex", alignItems: "center", justifyContent: "center" }}
+            >
+              ✕
+            </button>
+          </div>
+        ) : (
+          <>
+            <input
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              placeholder="Rechercher..."
+              style={{ width: "100%", boxSizing: "border-box", padding: "6px 9px", borderRadius: "7px", border: "2px solid #28405C", background: "#0D1B2A", color: "#F2F2E8", fontSize: "11.5px" }}
+            />
+            {results.length > 0 && (
+              <div style={{ marginTop: "3px", background: "#0D1B2A", borderRadius: "7px", border: "1px solid #28405C", overflow: "hidden" }}>
+                {results.map((r) => (
+                  <button
+                    key={r.id}
+                    onClick={() => {
+                      onSelect(r.id);
+                      setQuery("");
+                    }}
+                    style={{ display: "block", width: "100%", textAlign: "left", padding: "6px 10px", background: "none", border: "none", color: "#F2F2E8", fontSize: "11.5px", cursor: "pointer" }}
+                  >
+                    {r.name}
+                  </button>
+                ))}
+              </div>
+            )}
+          </>
+        )}
+      </div>
     </div>
   );
 }
@@ -144,33 +146,45 @@ function TagPill({ label, pos, onChange }) {
   );
 }
 
-// Vrais contrôles d'un tag — taille, rotation et couleur — placés juste sous son propre
-// TagPicker plutôt que tous groupés en bas du formulaire, pour rester proche de l'image sticky
-// au-dessus.
-function TagControls({ label, pos, onChange }) {
+// Vrais contrôles d'un tag — taille, rotation et couleur — vrais libellés courts à gauche,
+// vrais curseurs réduits à droite (plus besoin de répéter le nom du tag : le vrai cadre de
+// TagGroup qui les entoure fait déjà ce lien).
+function TagControls({ pos, onChange }) {
   if (!pos) return null;
+  const rowStyle = { display: "flex", alignItems: "center", gap: "8px" };
+  const labelStyle = { fontSize: "10px", color: "#8792A6", width: "56px", flexShrink: 0 };
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: "4px", marginTop: "-6px" }}>
-      <label style={{ fontSize: "10px", color: "#8792A6", display: "block" }}>
-        Taille du tag « {label} »
-        <input type="range" min="0.6" max="1.8" step="0.05" value={pos.scale || 1} onChange={(e) => onChange({ ...pos, scale: parseFloat(e.target.value) })} style={{ width: "100%", height: "14px" }} />
-      </label>
-      <label style={{ fontSize: "10px", color: "#8792A6", display: "block" }}>
-        Rotation du tag « {label} »
-        <input type="range" min="-45" max="45" step="1" value={pos.rotation || 0} onChange={(e) => onChange({ ...pos, rotation: parseFloat(e.target.value) })} style={{ width: "100%", height: "14px" }} />
-      </label>
-      <label style={{ fontSize: "10px", color: "#8792A6", display: "flex", alignItems: "center", gap: "6px" }}>
-        Couleur du tag « {label} »
+    <div style={{ display: "flex", flexDirection: "column", gap: "5px", marginTop: "8px" }}>
+      <div style={rowStyle}>
+        <span style={labelStyle}>Taille</span>
+        <input type="range" min="0.6" max="1.8" step="0.05" value={pos.scale || 1} onChange={(e) => onChange({ ...pos, scale: parseFloat(e.target.value) })} style={{ width: "110px", height: "14px" }} />
+      </div>
+      <div style={rowStyle}>
+        <span style={labelStyle}>Rotation</span>
+        <input type="range" min="-45" max="45" step="1" value={pos.rotation || 0} onChange={(e) => onChange({ ...pos, rotation: parseFloat(e.target.value) })} style={{ width: "110px", height: "14px" }} />
+      </div>
+      <div style={rowStyle}>
+        <span style={labelStyle}>Couleur</span>
         <input type="color" value={pos.color || "#F2F2E8"} onChange={(e) => onChange({ ...pos, color: e.target.value })} style={{ width: "26px", height: "16px", padding: 0, border: "none", borderRadius: "4px", cursor: "pointer" }} />
-      </label>
+      </div>
     </div>
   );
 }
 
-// Les 5 vrais types de tag possibles, dans leur vrai ordre d'affichage — factorisé pour piloter
+// Vrai cadre distinct regroupant un TagPicker et ses vrais contrôles — pour que le vrai lien
+// entre un tag et ses réglages saute aux yeux plutôt que de flotter dans le même long flux.
+function TagGroup({ pickerLabel, items, selectedId, onSelect, pos, onPosChange }) {
+  return (
+    <div style={{ background: "#0D1B2A", border: "1px solid #28405C", borderRadius: "8px", padding: "10px" }}>
+      <TagPicker label={pickerLabel} items={items} selectedId={selectedId} onSelect={onSelect} />
+      <TagControls pos={pos} onChange={onPosChange} />
+    </div>
+  );
+}
+
+// Les 4 vrais types de tag possibles, dans leur vrai ordre d'affichage — factorisé pour piloter
 // à la fois la synchronisation des positions et le rendu des pastilles.
 const TAG_TYPES = [
-  { key: "location", pickerLabel: null },
   { key: "venue", pickerLabel: "Taguer un lieu" },
   { key: "drink", pickerLabel: "Taguer un produit" },
   { key: "brand", pickerLabel: "Taguer une marque" },
@@ -178,12 +192,11 @@ const TAG_TYPES = [
 ];
 
 // Vrai modal de création en 2 vraies étapes : cadrage/position/zoom/rotation de l'image, puis
-// légende + taguage (lieu indiqué en texte libre, tag lieu/produit/marque/producteur) avec
-// placement visuel de chaque tag directement sur l'image.
+// légende + taguage (tag lieu/produit/marque/producteur) avec placement visuel de chaque tag
+// directement sur l'image.
 function CreateStoryModal({ file, onClose, onPublished, myUserId }) {
   const [step, setStep] = useState("edit");
   const [caption, setCaption] = useState("");
-  const [locationText, setLocationText] = useState("");
   const [taggedVenueId, setTaggedVenueId] = useState(null);
   const [taggedDrinkId, setTaggedDrinkId] = useState(null);
   const [taggedBrandId, setTaggedBrandId] = useState(null);
@@ -205,7 +218,6 @@ function CreateStoryModal({ file, onClose, onPublished, myUserId }) {
   }, []);
 
   const activeLabelFor = (key) => {
-    if (key === "location") return locationText.trim() || null;
     if (key === "venue") return venues.find((v) => v.id === taggedVenueId)?.name || null;
     if (key === "drink") return drinks.find((d) => d.id === taggedDrinkId)?.name || null;
     if (key === "brand") return brands.find((b) => b.id === taggedBrandId)?.name || null;
@@ -236,7 +248,7 @@ function CreateStoryModal({ file, onClose, onPublished, myUserId }) {
       return changed ? next : prev;
     });
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [locationText, taggedVenueId, taggedDrinkId, taggedBrandId, taggedProducerId, venues, drinks, brands, producers]);
+  }, [taggedVenueId, taggedDrinkId, taggedBrandId, taggedProducerId, venues, drinks, brands, producers]);
 
   const handlePublish = async () => {
     setPublishing(true);
@@ -253,7 +265,6 @@ function CreateStoryModal({ file, onClose, onPublished, myUserId }) {
         return;
       }
       const createResult = await createOfficialStory(uploadResult.url, caption.trim(), myUserId, {
-        locationText: locationText.trim() || null,
         taggedVenueId,
         taggedDrinkId,
         taggedBrandId,
@@ -276,7 +287,10 @@ function CreateStoryModal({ file, onClose, onPublished, myUserId }) {
   return (
     <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.65)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 300 }}>
       <div style={{ background: "#16273D", borderRadius: "16px", padding: "24px", width: "100%", maxWidth: step === "tags" ? "760px" : "460px", maxHeight: "88vh", overflow: "hidden", display: "flex", flexDirection: "column" }}>
-        <h3 style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "18px", margin: "0 0 18px" }}>{step === "edit" ? "Cadrer l'image" : "Légende & taguage"}</h3>
+        <h3 style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "18px", margin: "0 0 18px", display: "flex", alignItems: "center", gap: "10px" }}>
+          {step === "tags" && <span style={{ width: "4px", height: "18px", background: "#39FF66", borderRadius: "2px", display: "inline-block", flexShrink: 0 }} />}
+          {step === "edit" ? "Cadrer l'image" : "Légende & Taguage"}
+        </h3>
 
         {/* Un seul vrai <ImageEditor>, toujours monté, quel que soit step — sinon React le
             démonte au changement d'étape et remet editorRef.current à null (le vrai bug déjà
@@ -311,46 +325,33 @@ function CreateStoryModal({ file, onClose, onPublished, myUserId }) {
 
           {step === "tags" && (
             <div style={{ flex: 1, minWidth: 0, overflowY: "auto", paddingRight: "4px" }}>
-              <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
-                <div>
-                  <label style={{ fontSize: "10.5px", fontWeight: 600, color: "#8792A6", marginBottom: "4px", display: "block" }}>Légende (optionnelle)</label>
+              <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
+                <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                  <label style={{ fontSize: "10.5px", fontWeight: 600, color: "#8792A6", width: "72px", flexShrink: 0 }}>Légende</label>
                   <input
                     value={caption}
                     onChange={(e) => setCaption(e.target.value)}
-                    placeholder="Un petit mot pour accompagner l'image..."
-                    style={{ width: "100%", boxSizing: "border-box", padding: "8px 10px", borderRadius: "7px", border: "2px solid #28405C", background: "#0D1B2A", color: "#F2F2E8", fontSize: "12px" }}
+                    placeholder="Un petit mot pour accompagner l'image... (optionnel)"
+                    style={{ flex: 1, minWidth: 0, boxSizing: "border-box", padding: "6px 9px", borderRadius: "7px", border: "2px solid #28405C", background: "#0D1B2A", color: "#F2F2E8", fontSize: "12px" }}
                   />
                 </div>
-                <div>
-                  <label style={{ fontSize: "10.5px", fontWeight: 600, color: "#8792A6", marginBottom: "4px", display: "block" }}>Indiquer un lieu (texte libre)</label>
-                  <input
-                    value={locationText}
-                    onChange={(e) => setLocationText(e.target.value)}
-                    placeholder="Ex. Robertville, Belgique..."
-                    style={{ width: "100%", boxSizing: "border-box", padding: "8px 10px", borderRadius: "7px", border: "2px solid #28405C", background: "#0D1B2A", color: "#F2F2E8", fontSize: "12px" }}
-                  />
-                </div>
-                <TagControls label={activeLabelFor("location")} pos={tagPositions.location} onChange={(p) => setTagPositions((prev) => ({ ...prev, location: p }))} />
-                <TagPicker label="Taguer un lieu" items={venues} selectedId={taggedVenueId} onSelect={setTaggedVenueId} />
-                <TagControls label={activeLabelFor("venue")} pos={tagPositions.venue} onChange={(p) => setTagPositions((prev) => ({ ...prev, venue: p }))} />
-                <TagPicker label="Taguer un produit" items={drinks} selectedId={taggedDrinkId} onSelect={setTaggedDrinkId} />
-                <TagControls label={activeLabelFor("drink")} pos={tagPositions.drink} onChange={(p) => setTagPositions((prev) => ({ ...prev, drink: p }))} />
-                <TagPicker label="Taguer une marque" items={brands} selectedId={taggedBrandId} onSelect={setTaggedBrandId} />
-                <TagControls label={activeLabelFor("brand")} pos={tagPositions.brand} onChange={(p) => setTagPositions((prev) => ({ ...prev, brand: p }))} />
-                <TagPicker label="Taguer un producteur" items={producers} selectedId={taggedProducerId} onSelect={setTaggedProducerId} />
-                <TagControls label={activeLabelFor("producer")} pos={tagPositions.producer} onChange={(p) => setTagPositions((prev) => ({ ...prev, producer: p }))} />
+
+                <TagGroup pickerLabel="Taguer un lieu" items={venues} selectedId={taggedVenueId} onSelect={setTaggedVenueId} pos={tagPositions.venue} onPosChange={(p) => setTagPositions((prev) => ({ ...prev, venue: p }))} />
+                <TagGroup pickerLabel="Taguer un produit" items={drinks} selectedId={taggedDrinkId} onSelect={setTaggedDrinkId} pos={tagPositions.drink} onPosChange={(p) => setTagPositions((prev) => ({ ...prev, drink: p }))} />
+                <TagGroup pickerLabel="Taguer une marque" items={brands} selectedId={taggedBrandId} onSelect={setTaggedBrandId} pos={tagPositions.brand} onPosChange={(p) => setTagPositions((prev) => ({ ...prev, brand: p }))} />
+                <TagGroup pickerLabel="Taguer un producteur" items={producers} selectedId={taggedProducerId} onSelect={setTaggedProducerId} pos={tagPositions.producer} onPosChange={(p) => setTagPositions((prev) => ({ ...prev, producer: p }))} />
               </div>
 
               {error && <p style={{ fontSize: "12px", color: "#FF3B4E", marginTop: "14px" }}>{error}</p>}
 
-              <div style={{ display: "flex", gap: "10px", marginTop: "20px" }}>
-                <button onClick={() => setStep("edit")} disabled={publishing} style={{ flex: 1, padding: "11px", borderRadius: "8px", border: "2px solid #28405C", background: "none", color: "#F2F2E8", fontWeight: 700, cursor: "pointer" }}>
+              <div style={{ display: "flex", gap: "8px", marginTop: "16px" }}>
+                <button onClick={() => setStep("edit")} disabled={publishing} style={{ flex: 1, padding: "8px", borderRadius: "7px", border: "2px solid #28405C", background: "none", color: "#F2F2E8", fontWeight: 700, fontSize: "12.5px", cursor: "pointer" }}>
                   Retour
                 </button>
                 <button
                   onClick={handlePublish}
                   disabled={publishing}
-                  style={{ flex: 1, padding: "11px", borderRadius: "8px", border: "none", background: "#39FF66", color: "#0D1B2A", fontWeight: 800, cursor: "pointer", opacity: publishing ? 0.6 : 1 }}
+                  style={{ flex: 1, padding: "8px", borderRadius: "7px", border: "none", background: "#39FF66", color: "#0D1B2A", fontWeight: 800, fontSize: "12.5px", cursor: "pointer", opacity: publishing ? 0.6 : 1 }}
                 >
                   {publishing ? "Publication..." : "Publier"}
                 </button>
