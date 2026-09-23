@@ -264,6 +264,7 @@ export async function loadMyBusinessEntities(userId) {
 
 export async function loadClaims(status = "pending") {
   const { data, error } = await supabase.from("entity_claims").select("*").eq("status", status).order("created_at", { ascending: false });
+  console.log("[DEBUG loadClaims] status:\n" + status + "\ndata:\n" + JSON.stringify(data, null, 2) + "\nerror:\n" + JSON.stringify(error, null, 2));
   if (error) {
     console.error("loadClaims:", error);
     return [];
