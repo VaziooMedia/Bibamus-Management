@@ -1069,8 +1069,19 @@ export async function uploadOfficialStoryMedia(adminUserId, file) {
   return { url: data.url };
 }
 
-export async function createOfficialStory(mediaUrl, caption, createdBy) {
-  const { error } = await supabase.from("official_stories").insert({ media_url: mediaUrl, caption: caption || null, created_by: createdBy });
+// tags : { locationText, taggedVenueId, taggedDrinkId, taggedBrandId, taggedProducerId } —
+// chacun facultatif, une Story peut cumuler plusieurs vrais tags à la fois.
+export async function createOfficialStory(mediaUrl, caption, createdBy, tags = {}) {
+  const { error } = await supabase.from("official_stories").insert({
+    media_url: mediaUrl,
+    caption: caption || null,
+    created_by: createdBy,
+    location_text: tags.locationText || null,
+    tagged_venue_id: tags.taggedVenueId || null,
+    tagged_drink_id: tags.taggedDrinkId || null,
+    tagged_brand_id: tags.taggedBrandId || null,
+    tagged_producer_id: tags.taggedProducerId || null,
+  });
   if (error) return { error: error.message };
   return { ok: true };
 }
@@ -1081,7 +1092,17 @@ export async function loadOfficialStoriesAdmin() {
     console.error("loadOfficialStoriesAdmin:", error);
     return [];
   }
-  return data.map((s) => ({ id: s.id, mediaUrl: s.media_url, caption: s.caption, createdAt: s.created_at }));
+  return data.map((s) => ({
+    id: s.id,
+    mediaUrl: s.media_url,
+    caption: s.caption,
+    createdAt: s.created_at,
+    locationText: s.location_text,
+    taggedVenueId: s.tagged_venue_id,
+    taggedDrinkId: s.tagged_drink_id,
+    taggedBrandId: s.tagged_brand_id,
+    taggedProducerId: s.tagged_producer_id,
+  }));
 }
 
 export async function deleteOfficialStory(id) {
