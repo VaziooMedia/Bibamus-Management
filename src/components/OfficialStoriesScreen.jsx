@@ -125,7 +125,7 @@ function CreateStoryModal({ file, onClose, onPublished, myUserId }) {
       onPublished();
     } catch (e) {
       console.error("handlePublish:", e);
-      setError("Une erreur inattendue est survenue pendant la publication.");
+      setError("Erreur : " + (e?.message || String(e)));
     } finally {
       setPublishing(false);
     }

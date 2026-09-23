@@ -1106,8 +1106,15 @@ export async function loadOfficialStoriesAdmin() {
 }
 
 export async function deleteOfficialStory(id) {
-  const { error } = await supabase.from("official_stories").delete().eq("id", id);
+  const { data, error } = await supabase.from("official_stories").delete().eq("id", id).select();
   if (error) return { error: error.message };
+  if (!data || data.length === 0) {
+    // .delete() sans .select() ne renvoie jamais d'erreur même si les vraies règles de
+    // sécurité (RLS) bloquent la ligne — la requête « réussit » en n'affectant simplement
+    // aucune vraie ligne. .select() permet de le détecter : rien n'est revenu, rien n'a été
+    // réellement supprimé.
+    return { error: "Suppression refusée (droits insuffisants) — la Story n'a pas été supprimée côté serveur." };
+  }
   return { ok: true };
 }
 
