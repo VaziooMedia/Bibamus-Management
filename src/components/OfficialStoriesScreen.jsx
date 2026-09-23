@@ -31,7 +31,7 @@ function TagPicker({ label, items, selectedId, onSelect }) {
 
   return (
     <div style={{ display: "flex", alignItems: "flex-start", gap: "8px" }}>
-      <label style={{ fontSize: "10.5px", fontWeight: 600, color: "#8792A6", width: "72px", flexShrink: 0, marginTop: "7px" }}>{label}</label>
+      <label style={{ fontSize: "10.5px", fontWeight: 600, color: "#8792A6", width: "118px", flexShrink: 0, marginTop: "7px" }}>{label}</label>
       <div style={{ flex: 1, minWidth: 0, position: "relative" }}>
         {selected ? (
           <div style={{ display: "inline-flex", alignItems: "center", gap: "6px", background: "#28405C", borderRadius: "999px", padding: "4px 4px 4px 9px" }}>
@@ -78,7 +78,18 @@ function TagPicker({ label, items, selectedId, onSelect }) {
 // (0 à 1) du cadre, glissée à la souris/au doigt. Le vrai cadre parent (offsetParent) sert de
 // vraie référence de coordonnées : la pastille a position:absolute dans le même vrai cadre que
 // ImageEditor gère déjà pour l'image.
-function TagPill({ label, pos, onChange }) {
+// Calcule un vrai noir ou blanc contrastant avec la couleur donnée — utilisé pour le texte du
+// tag quand les couleurs sont inversées (fond plein de la couleur choisie).
+function contrastColor(hex) {
+  const h = (hex || "#F2F2E8").replace("#", "");
+  const r = parseInt(h.substring(0, 2), 16);
+  const g = parseInt(h.substring(2, 4), 16);
+  const b = parseInt(h.substring(4, 6), 16);
+  const luminance = 0.299 * r + 0.587 * g + 0.114 * b;
+  return luminance > 140 ? "#0D1B2A" : "#F2F2E8";
+}
+
+function TagPill({ label, symbol = "#", pos, onChange }) {
   const dragState = useRef(null);
 
   useEffect(() => {
@@ -112,6 +123,9 @@ function TagPill({ label, pos, onChange }) {
     dragState.current = { rect, startX: clientX, startY: clientY, origX: pos.x, origY: pos.y };
   };
 
+  const color = pos.color || "#F2F2E8";
+  const inverted = !!pos.invert;
+
   return (
     <div
       onMouseDown={(e) => {
@@ -127,13 +141,13 @@ function TagPill({ label, pos, onChange }) {
         left: `${pos.x * 100}%`,
         top: `${pos.y * 100}%`,
         transform: `translate(-50%, -50%) rotate(${pos.rotation || 0}deg) scale(${pos.scale || 1})`,
-        background: `${pos.color || "#F2F2E8"}33`,
-        border: `1.5px solid ${pos.color || "#F2F2E8"}`,
+        background: inverted ? color : `${color}33`,
+        border: `1.5px solid ${color}`,
         borderRadius: "999px",
         padding: "5px 12px",
         fontSize: "12px",
         fontWeight: 700,
-        color: pos.color || "#F2F2E8",
+        color: inverted ? contrastColor(color) : color,
         whiteSpace: "nowrap",
         cursor: "grab",
         touchAction: "none",
@@ -141,14 +155,14 @@ function TagPill({ label, pos, onChange }) {
         zIndex: 10,
       }}
     >
-      # {label}
+      {symbol} {label}
     </div>
   );
 }
 
-// Vrais contrôles d'un tag — taille, rotation et couleur — vrais libellés courts à gauche,
-// vrais curseurs réduits à droite (plus besoin de répéter le nom du tag : le vrai cadre de
-// TagGroup qui les entoure fait déjà ce lien).
+// Vrais contrôles d'un tag — taille, rotation, couleur et inversion — vrais libellés courts à
+// gauche, vrais curseurs réduits à droite (plus besoin de répéter le nom du tag : le vrai cadre
+// de TagGroup qui les entoure fait déjà ce lien).
 function TagControls({ pos, onChange }) {
   if (!pos) return null;
   const rowStyle = { display: "flex", alignItems: "center", gap: "8px" };
@@ -167,6 +181,10 @@ function TagControls({ pos, onChange }) {
         <span style={labelStyle}>Couleur</span>
         <input type="color" value={pos.color || "#F2F2E8"} onChange={(e) => onChange({ ...pos, color: e.target.value })} style={{ width: "26px", height: "16px", padding: 0, border: "none", borderRadius: "4px", cursor: "pointer" }} />
       </div>
+      <label style={{ ...rowStyle, cursor: "pointer" }}>
+        <span style={labelStyle}>Inverser</span>
+        <input type="checkbox" checked={!!pos.invert} onChange={(e) => onChange({ ...pos, invert: e.target.checked })} />
+      </label>
     </div>
   );
 }
@@ -305,7 +323,7 @@ function CreateStoryModal({ file, onClose, onPublished, myUserId }) {
                   const label = activeLabelFor(t.key);
                   const pos = tagPositions[t.key];
                   if (!label || !pos) return null;
-                  return <TagPill key={t.key} label={label} pos={pos} onChange={(newPos) => setTagPositions((prev) => ({ ...prev, [t.key]: newPos }))} />;
+                  return <TagPill key={t.key} label={label} symbol={t.key === "venue" ? "@" : "#"} pos={pos} onChange={(newPos) => setTagPositions((prev) => ({ ...prev, [t.key]: newPos }))} />;
                 })}
             </ImageEditor>
 
@@ -327,11 +345,11 @@ function CreateStoryModal({ file, onClose, onPublished, myUserId }) {
             <div style={{ flex: 1, minWidth: 0, overflowY: "auto", paddingRight: "4px" }}>
               <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
                 <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-                  <label style={{ fontSize: "10.5px", fontWeight: 600, color: "#8792A6", width: "72px", flexShrink: 0 }}>Légende</label>
+                  <label style={{ fontSize: "10.5px", fontWeight: 600, color: "#8792A6", width: "118px", flexShrink: 0 }}>Légende</label>
                   <input
                     value={caption}
                     onChange={(e) => setCaption(e.target.value)}
-                    placeholder="Un petit mot pour accompagner l'image... (optionnel)"
+                    placeholder="Optionnel"
                     style={{ flex: 1, minWidth: 0, boxSizing: "border-box", padding: "6px 9px", borderRadius: "7px", border: "2px solid #28405C", background: "#0D1B2A", color: "#F2F2E8", fontSize: "12px" }}
                   />
                 </div>
