@@ -144,6 +144,26 @@ function TagPill({ label, pos, onChange }) {
   );
 }
 
+// Vrai slider de taille pour un tag — placé juste sous son propre TagPicker plutôt que tous
+// groupés en bas du formulaire, pour rester proche de l'image sticky au-dessus.
+function TagSizeSlider({ label, pos, onChange }) {
+  if (!pos) return null;
+  return (
+    <label style={{ fontSize: "11px", color: "#8792A6", display: "block", marginTop: "-8px" }}>
+      Taille du tag « {label} »
+      <input
+        type="range"
+        min="0.6"
+        max="1.8"
+        step="0.05"
+        value={pos.scale || 1}
+        onChange={(e) => onChange({ ...pos, scale: parseFloat(e.target.value) })}
+        style={{ width: "100%" }}
+      />
+    </label>
+  );
+}
+
 // Les 5 vrais types de tag possibles, dans leur vrai ordre d'affichage — factorisé pour piloter
 // à la fois la synchronisation des positions et le rendu des pastilles.
 const TAG_TYPES = [
@@ -257,16 +277,20 @@ function CreateStoryModal({ file, onClose, onPublished, myUserId }) {
 
         {/* Reste monté sur les 2 étapes (sinon React remet editorRef.current à null au
             démontage) — interactive/showControls basculent son vrai comportement selon
-            l'étape, plutôt que de le masquer entièrement. */}
-        <ImageEditor ref={editorRef} file={file} interactive={step === "edit"} showControls={step === "edit"}>
-          {step === "tags" &&
-            TAG_TYPES.map((t) => {
-              const label = activeLabelFor(t.key);
-              const pos = tagPositions[t.key];
-              if (!label || !pos) return null;
-              return <TagPill key={t.key} label={label} pos={pos} onChange={(newPos) => setTagPositions((prev) => ({ ...prev, [t.key]: newPos }))} />;
-            })}
-        </ImageEditor>
+            l'étape, plutôt que de le masquer entièrement. Sticky en haut de la vraie zone
+            défilante du modal : sans ça, l'image (et ses pastilles) sortait de l'écran dès
+            qu'on descendait vers les sliders de taille, rendant leur effet invisible. */}
+        <div style={{ position: "sticky", top: 0, background: "#16273D", zIndex: 50, paddingBottom: "8px" }}>
+          <ImageEditor ref={editorRef} file={file} interactive={step === "edit"} showControls={step === "edit"}>
+            {step === "tags" &&
+              TAG_TYPES.map((t) => {
+                const label = activeLabelFor(t.key);
+                const pos = tagPositions[t.key];
+                if (!label || !pos) return null;
+                return <TagPill key={t.key} label={label} pos={pos} onChange={(newPos) => setTagPositions((prev) => ({ ...prev, [t.key]: newPos }))} />;
+              })}
+          </ImageEditor>
+        </div>
 
         {step === "edit" ? (
           <div style={{ display: "flex", gap: "10px", marginTop: "20px" }}>
@@ -300,25 +324,15 @@ function CreateStoryModal({ file, onClose, onPublished, myUserId }) {
                   style={{ width: "100%", boxSizing: "border-box", padding: "10px 12px", borderRadius: "8px", border: "2px solid #28405C", background: "#0D1B2A", color: "#F2F2E8", fontSize: "13.5px" }}
                 />
               </div>
+              <TagSizeSlider label={activeLabelFor("location")} pos={tagPositions.location} onChange={(p) => setTagPositions((prev) => ({ ...prev, location: p }))} />
               <TagPicker label="Taguer un lieu" items={venues} selectedId={taggedVenueId} onSelect={setTaggedVenueId} />
+              <TagSizeSlider label={activeLabelFor("venue")} pos={tagPositions.venue} onChange={(p) => setTagPositions((prev) => ({ ...prev, venue: p }))} />
               <TagPicker label="Taguer un produit" items={drinks} selectedId={taggedDrinkId} onSelect={setTaggedDrinkId} />
+              <TagSizeSlider label={activeLabelFor("drink")} pos={tagPositions.drink} onChange={(p) => setTagPositions((prev) => ({ ...prev, drink: p }))} />
               <TagPicker label="Taguer une marque" items={brands} selectedId={taggedBrandId} onSelect={setTaggedBrandId} />
+              <TagSizeSlider label={activeLabelFor("brand")} pos={tagPositions.brand} onChange={(p) => setTagPositions((prev) => ({ ...prev, brand: p }))} />
               <TagPicker label="Taguer un producteur" items={producers} selectedId={taggedProducerId} onSelect={setTaggedProducerId} />
-
-              {TAG_TYPES.filter((t) => activeLabelFor(t.key) && tagPositions[t.key]).map((t) => (
-                <label key={t.key} style={{ fontSize: "11px", color: "#8792A6" }}>
-                  Taille du tag « {activeLabelFor(t.key)} »
-                  <input
-                    type="range"
-                    min="0.6"
-                    max="1.8"
-                    step="0.05"
-                    value={tagPositions[t.key].scale || 1}
-                    onChange={(e) => setTagPositions((prev) => ({ ...prev, [t.key]: { ...prev[t.key], scale: parseFloat(e.target.value) } }))}
-                    style={{ width: "100%" }}
-                  />
-                </label>
-              ))}
+              <TagSizeSlider label={activeLabelFor("producer")} pos={tagPositions.producer} onChange={(p) => setTagPositions((prev) => ({ ...prev, producer: p }))} />
             </div>
 
             {error && <p style={{ fontSize: "12px", color: "#FF3B4E", marginTop: "14px" }}>{error}</p>}
