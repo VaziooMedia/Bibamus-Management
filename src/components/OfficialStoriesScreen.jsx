@@ -219,6 +219,9 @@ const TAG_TYPES = [
 function CreateStoryModal({ file, onClose, onPublished, myUserId }) {
   const [step, setStep] = useState("edit");
   const [caption, setCaption] = useState("");
+  const [zoom, setZoom] = useState(1);
+  const [rotation, setRotation] = useState(0);
+  const [bgColor, setBgColor] = useState("#0D1B2A");
   const [taggedVenueId, setTaggedVenueId] = useState(null);
   const [taggedDrinkId, setTaggedDrinkId] = useState(null);
   const [taggedBrandId, setTaggedBrandId] = useState(null);
@@ -310,20 +313,20 @@ function CreateStoryModal({ file, onClose, onPublished, myUserId }) {
 
   return (
     <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.65)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 300 }}>
-      <div style={{ background: "#16273D", borderRadius: "16px", padding: "24px", width: "100%", maxWidth: step === "tags" ? "760px" : "460px", maxHeight: "88vh", overflow: "hidden", display: "flex", flexDirection: "column" }}>
+      <div style={{ background: "#16273D", borderRadius: "16px", padding: "24px", width: "100%", maxWidth: "760px", maxHeight: "88vh", overflow: "hidden", display: "flex", flexDirection: "column" }}>
         <h3 style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "18px", margin: "0 0 18px", display: "flex", alignItems: "center", gap: "10px" }}>
-          {step === "tags" && <span style={{ width: "4px", height: "18px", background: "#39FF66", borderRadius: "2px", display: "inline-block", flexShrink: 0 }} />}
+          <span style={{ width: "4px", height: "18px", background: "#39FF66", borderRadius: "2px", display: "inline-block", flexShrink: 0 }} />
           {step === "edit" ? "Cadrer l'image" : "Légende & Taguage"}
         </h3>
 
         {/* Un seul vrai <ImageEditor>, toujours monté, quel que soit step — sinon React le
             démonte au changement d'étape et remet editorRef.current à null (le vrai bug déjà
-            rencontré), en perdant aussi le vrai cadrage déjà réglé. Seule sa vraie mise en page
-            (colonne unique centrée à l'étape "edit", colonne de gauche fixe à l'étape "tags")
-            change, via CSS uniquement. */}
+            rencontré), en perdant aussi le vrai cadrage déjà réglé. Même vraie disposition à 2
+            colonnes sur les 2 vraies étapes : image fixe à gauche, réglages propres à l'étape à
+            droite dans leur propre vraie zone défilante. */}
         <div style={{ display: "flex", gap: "24px", overflow: "hidden", flex: 1 }}>
-          <div style={{ flexShrink: 0, margin: step === "edit" ? "0 auto" : 0 }}>
-            <ImageEditor ref={editorRef} file={file} interactive={step === "edit"} showControls={step === "edit"}>
+          <div style={{ flexShrink: 0 }}>
+            <ImageEditor ref={editorRef} file={file} interactive={step === "edit"} zoom={zoom} rotation={rotation} backgroundColor={bgColor}>
               {step === "tags" && tagPositions.caption && activeLabelFor("caption") && (
                 <TagPill label={activeLabelFor("caption")} symbol="" pos={tagPositions.caption} onChange={(newPos) => setTagPositions((prev) => ({ ...prev, caption: newPos }))} />
               )}
@@ -336,66 +339,84 @@ function CreateStoryModal({ file, onClose, onPublished, myUserId }) {
                 })}
             </ImageEditor>
 
-            {step === "edit" ? (
-              <div style={{ display: "flex", gap: "10px", marginTop: "20px" }}>
-                <button onClick={onClose} style={{ flex: 1, padding: "11px", borderRadius: "8px", border: "2px solid #28405C", background: "none", color: "#F2F2E8", fontWeight: 700, cursor: "pointer" }}>
-                  Annuler
-                </button>
-                <button onClick={() => setStep("tags")} style={{ flex: 1, padding: "11px", borderRadius: "8px", border: "none", background: "#39FF66", color: "#0D1B2A", fontWeight: 800, cursor: "pointer" }}>
-                  Continuer
-                </button>
-              </div>
-            ) : (
-              <p style={{ fontSize: "10px", color: "#8792A6", margin: "8px 0 0", textAlign: "center" }}>Glissez chaque pastille pour la placer.</p>
-            )}
+            {step === "tags" && <p style={{ fontSize: "10px", color: "#8792A6", margin: "8px 0 0", textAlign: "center" }}>Glissez chaque pastille pour la placer.</p>}
           </div>
 
-          {step === "tags" && (
-            <div style={{ flex: 1, minWidth: 0, overflowY: "auto", paddingRight: "4px" }}>
-              <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
-                <div style={{ background: "#0D1B2A", border: "1px solid #28405C", borderRadius: "8px", padding: "10px" }}>
+          <div style={{ flex: 1, minWidth: 0, overflowY: "auto", paddingRight: "4px" }}>
+            {step === "edit" ? (
+              <>
+                <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
                   <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-                    <label style={{ fontSize: "10.5px", fontWeight: 600, color: "#8792A6", width: "62px", flexShrink: 0, display: "flex", alignItems: "center", gap: "6px" }}>
-                      <span style={{ width: "3px", height: "11px", background: "#39FF66", borderRadius: "2px", display: "inline-block", flexShrink: 0 }} />
-                      Légende
-                    </label>
-                    <input
-                      value={caption}
-                      onChange={(e) => setCaption(e.target.value)}
-                      placeholder="Optionnel"
-                      style={{ flex: 1, minWidth: 0, boxSizing: "border-box", padding: "6px 9px", borderRadius: "7px", border: "2px solid #28405C", background: "#0D1B2A", color: "#F2F2E8", fontSize: "12px" }}
-                    />
+                    <span style={{ fontSize: "10px", color: "#8792A6", width: "90px", flexShrink: 0 }}>Zoom</span>
+                    <input type="range" min="0.3" max="3" step="0.01" value={zoom} onChange={(e) => setZoom(parseFloat(e.target.value))} style={{ flex: 1, height: "14px", accentColor: "#39FF66" }} />
                   </div>
-                  {tagPositions.caption && (
-                    <>
-                      <div style={{ borderTop: "1px solid #28405C", margin: "10px 0" }} />
-                      <TagControls pos={tagPositions.caption} onChange={(p) => setTagPositions((prev) => ({ ...prev, caption: p }))} />
-                    </>
-                  )}
+                  <p style={{ fontSize: "9.5px", color: "#8792A6", margin: "-4px 0 0 98px" }}>En-dessous de 1, l'image entière devient visible.</p>
+                  <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                    <span style={{ fontSize: "10px", color: "#8792A6", width: "90px", flexShrink: 0 }}>Rotation</span>
+                    <input type="range" min="-45" max="45" step="1" value={rotation} onChange={(e) => setRotation(parseFloat(e.target.value))} style={{ flex: 1, height: "14px", accentColor: "#39FF66" }} />
+                  </div>
+                  <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                    <span style={{ fontSize: "10px", color: "#8792A6", width: "90px", flexShrink: 0 }}>Fond</span>
+                    <input type="color" value={bgColor} onChange={(e) => setBgColor(e.target.value)} style={{ width: "28px", height: "18px", padding: 0, border: "none", borderRadius: "4px", cursor: "pointer" }} />
+                  </div>
                 </div>
 
-                <TagGroup pickerLabel="Taguer un Lieu" items={venues} selectedId={taggedVenueId} onSelect={setTaggedVenueId} pos={tagPositions.venue} onPosChange={(p) => setTagPositions((prev) => ({ ...prev, venue: p }))} />
-                <TagGroup pickerLabel="Taguer un Produit" items={drinks} selectedId={taggedDrinkId} onSelect={setTaggedDrinkId} pos={tagPositions.drink} onPosChange={(p) => setTagPositions((prev) => ({ ...prev, drink: p }))} />
-                <TagGroup pickerLabel="Taguer une Marque" items={brands} selectedId={taggedBrandId} onSelect={setTaggedBrandId} pos={tagPositions.brand} onPosChange={(p) => setTagPositions((prev) => ({ ...prev, brand: p }))} />
-                <TagGroup pickerLabel="Taguer un Producteur" items={producers} selectedId={taggedProducerId} onSelect={setTaggedProducerId} pos={tagPositions.producer} onPosChange={(p) => setTagPositions((prev) => ({ ...prev, producer: p }))} />
-              </div>
+                <div style={{ display: "flex", gap: "8px", marginTop: "16px" }}>
+                  <button onClick={onClose} style={{ flex: 1, padding: "8px", borderRadius: "7px", border: "2px solid #28405C", background: "none", color: "#F2F2E8", fontWeight: 700, fontSize: "12.5px", cursor: "pointer" }}>
+                    Annuler
+                  </button>
+                  <button onClick={() => setStep("tags")} style={{ flex: 1, padding: "8px", borderRadius: "7px", border: "none", background: "#39FF66", color: "#0D1B2A", fontWeight: 800, fontSize: "12.5px", cursor: "pointer" }}>
+                    Continuer
+                  </button>
+                </div>
+              </>
+            ) : (
+              <>
+                <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
+                  <div style={{ background: "#0D1B2A", border: "1px solid #28405C", borderRadius: "8px", padding: "10px" }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                      <label style={{ fontSize: "10.5px", fontWeight: 600, color: "#8792A6", width: "62px", flexShrink: 0, display: "flex", alignItems: "center", gap: "6px" }}>
+                        <span style={{ width: "3px", height: "11px", background: "#39FF66", borderRadius: "2px", display: "inline-block", flexShrink: 0 }} />
+                        Légende
+                      </label>
+                      <input
+                        value={caption}
+                        onChange={(e) => setCaption(e.target.value)}
+                        placeholder="Optionnel"
+                        style={{ flex: 1, minWidth: 0, boxSizing: "border-box", padding: "6px 9px", borderRadius: "7px", border: "2px solid #28405C", background: "#0D1B2A", color: "#F2F2E8", fontSize: "12px" }}
+                      />
+                    </div>
+                    {tagPositions.caption && (
+                      <>
+                        <div style={{ borderTop: "1px solid #28405C", margin: "10px 0" }} />
+                        <TagControls pos={tagPositions.caption} onChange={(p) => setTagPositions((prev) => ({ ...prev, caption: p }))} />
+                      </>
+                    )}
+                  </div>
 
-              {error && <p style={{ fontSize: "12px", color: "#FF3B4E", marginTop: "14px" }}>{error}</p>}
+                  <TagGroup pickerLabel="Taguer un Lieu" items={venues} selectedId={taggedVenueId} onSelect={setTaggedVenueId} pos={tagPositions.venue} onPosChange={(p) => setTagPositions((prev) => ({ ...prev, venue: p }))} />
+                  <TagGroup pickerLabel="Taguer un Produit" items={drinks} selectedId={taggedDrinkId} onSelect={setTaggedDrinkId} pos={tagPositions.drink} onPosChange={(p) => setTagPositions((prev) => ({ ...prev, drink: p }))} />
+                  <TagGroup pickerLabel="Taguer une Marque" items={brands} selectedId={taggedBrandId} onSelect={setTaggedBrandId} pos={tagPositions.brand} onPosChange={(p) => setTagPositions((prev) => ({ ...prev, brand: p }))} />
+                  <TagGroup pickerLabel="Taguer un Producteur" items={producers} selectedId={taggedProducerId} onSelect={setTaggedProducerId} pos={tagPositions.producer} onPosChange={(p) => setTagPositions((prev) => ({ ...prev, producer: p }))} />
+                </div>
 
-              <div style={{ display: "flex", gap: "8px", marginTop: "16px" }}>
-                <button onClick={() => setStep("edit")} disabled={publishing} style={{ flex: 1, padding: "8px", borderRadius: "7px", border: "2px solid #28405C", background: "none", color: "#F2F2E8", fontWeight: 700, fontSize: "12.5px", cursor: "pointer" }}>
-                  Retour
-                </button>
-                <button
-                  onClick={handlePublish}
-                  disabled={publishing}
-                  style={{ flex: 1, padding: "8px", borderRadius: "7px", border: "none", background: "#39FF66", color: "#0D1B2A", fontWeight: 800, fontSize: "12.5px", cursor: "pointer", opacity: publishing ? 0.6 : 1 }}
-                >
-                  {publishing ? "Publication..." : "Publier"}
-                </button>
-              </div>
-            </div>
-          )}
+                {error && <p style={{ fontSize: "12px", color: "#FF3B4E", marginTop: "14px" }}>{error}</p>}
+
+                <div style={{ display: "flex", gap: "8px", marginTop: "16px" }}>
+                  <button onClick={() => setStep("edit")} disabled={publishing} style={{ flex: 1, padding: "8px", borderRadius: "7px", border: "2px solid #28405C", background: "none", color: "#F2F2E8", fontWeight: 700, fontSize: "12.5px", cursor: "pointer" }}>
+                    Retour
+                  </button>
+                  <button
+                    onClick={handlePublish}
+                    disabled={publishing}
+                    style={{ flex: 1, padding: "8px", borderRadius: "7px", border: "none", background: "#39FF66", color: "#0D1B2A", fontWeight: 800, fontSize: "12.5px", cursor: "pointer", opacity: publishing ? 0.6 : 1 }}
+                  >
+                    {publishing ? "Publication..." : "Publier"}
+                  </button>
+                </div>
+              </>
+            )}
+          </div>
         </div>
       </div>
     </div>
