@@ -31,7 +31,10 @@ function TagPicker({ label, items, selectedId, onSelect }) {
 
   return (
     <div style={{ display: "flex", alignItems: "flex-start", gap: "8px" }}>
-      <label style={{ fontSize: "10.5px", fontWeight: 600, color: "#8792A6", width: "118px", flexShrink: 0, marginTop: "7px" }}>{label}</label>
+      <label style={{ fontSize: "10.5px", fontWeight: 600, color: "#8792A6", width: "118px", flexShrink: 0, marginTop: "7px", display: "flex", alignItems: "center", gap: "6px" }}>
+        <span style={{ width: "3px", height: "11px", background: "#39FF66", borderRadius: "2px", display: "inline-block", flexShrink: 0 }} />
+        {label}
+      </label>
       <div style={{ flex: 1, minWidth: 0, position: "relative" }}>
         {selected ? (
           <div style={{ display: "inline-flex", alignItems: "center", gap: "6px", background: "#28405C", borderRadius: "999px", padding: "4px 4px 4px 9px" }}>
@@ -171,11 +174,11 @@ function TagControls({ pos, onChange }) {
     <div style={{ display: "flex", flexDirection: "column", gap: "5px", marginTop: "8px" }}>
       <div style={rowStyle}>
         <span style={labelStyle}>Taille</span>
-        <input type="range" min="0.6" max="1.8" step="0.05" value={pos.scale || 1} onChange={(e) => onChange({ ...pos, scale: parseFloat(e.target.value) })} style={{ width: "110px", height: "14px" }} />
+        <input type="range" min="0.6" max="1.8" step="0.05" value={pos.scale || 1} onChange={(e) => onChange({ ...pos, scale: parseFloat(e.target.value) })} style={{ width: "110px", height: "14px", accentColor: "#39FF66" }} />
       </div>
       <div style={rowStyle}>
         <span style={labelStyle}>Rotation</span>
-        <input type="range" min="-45" max="45" step="1" value={pos.rotation || 0} onChange={(e) => onChange({ ...pos, rotation: parseFloat(e.target.value) })} style={{ width: "110px", height: "14px" }} />
+        <input type="range" min="-45" max="45" step="1" value={pos.rotation || 0} onChange={(e) => onChange({ ...pos, rotation: parseFloat(e.target.value) })} style={{ width: "110px", height: "14px", accentColor: "#39FF66" }} />
       </div>
       <div style={rowStyle}>
         <span style={labelStyle}>Couleur</span>
@@ -183,7 +186,7 @@ function TagControls({ pos, onChange }) {
       </div>
       <label style={{ ...rowStyle, cursor: "pointer" }}>
         <span style={labelStyle}>Inverser</span>
-        <input type="checkbox" checked={!!pos.invert} onChange={(e) => onChange({ ...pos, invert: e.target.checked })} />
+        <input type="checkbox" checked={!!pos.invert} onChange={(e) => onChange({ ...pos, invert: e.target.checked })} style={{ accentColor: "#39FF66" }} />
       </label>
     </div>
   );
@@ -195,6 +198,7 @@ function TagGroup({ pickerLabel, items, selectedId, onSelect, pos, onPosChange }
   return (
     <div style={{ background: "#0D1B2A", border: "1px solid #28405C", borderRadius: "8px", padding: "10px" }}>
       <TagPicker label={pickerLabel} items={items} selectedId={selectedId} onSelect={onSelect} />
+      {pos && <div style={{ borderTop: "1px solid #28405C", margin: "10px 0" }} />}
       <TagControls pos={pos} onChange={onPosChange} />
     </div>
   );
@@ -345,7 +349,10 @@ function CreateStoryModal({ file, onClose, onPublished, myUserId }) {
             <div style={{ flex: 1, minWidth: 0, overflowY: "auto", paddingRight: "4px" }}>
               <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
                 <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-                  <label style={{ fontSize: "10.5px", fontWeight: 600, color: "#8792A6", width: "118px", flexShrink: 0 }}>Légende</label>
+                  <label style={{ fontSize: "10.5px", fontWeight: 600, color: "#8792A6", width: "62px", flexShrink: 0, display: "flex", alignItems: "center", gap: "6px" }}>
+                    <span style={{ width: "3px", height: "11px", background: "#39FF66", borderRadius: "2px", display: "inline-block", flexShrink: 0 }} />
+                    Légende
+                  </label>
                   <input
                     value={caption}
                     onChange={(e) => setCaption(e.target.value)}
@@ -354,10 +361,10 @@ function CreateStoryModal({ file, onClose, onPublished, myUserId }) {
                   />
                 </div>
 
-                <TagGroup pickerLabel="Taguer un lieu" items={venues} selectedId={taggedVenueId} onSelect={setTaggedVenueId} pos={tagPositions.venue} onPosChange={(p) => setTagPositions((prev) => ({ ...prev, venue: p }))} />
-                <TagGroup pickerLabel="Taguer un produit" items={drinks} selectedId={taggedDrinkId} onSelect={setTaggedDrinkId} pos={tagPositions.drink} onPosChange={(p) => setTagPositions((prev) => ({ ...prev, drink: p }))} />
-                <TagGroup pickerLabel="Taguer une marque" items={brands} selectedId={taggedBrandId} onSelect={setTaggedBrandId} pos={tagPositions.brand} onPosChange={(p) => setTagPositions((prev) => ({ ...prev, brand: p }))} />
-                <TagGroup pickerLabel="Taguer un producteur" items={producers} selectedId={taggedProducerId} onSelect={setTaggedProducerId} pos={tagPositions.producer} onPosChange={(p) => setTagPositions((prev) => ({ ...prev, producer: p }))} />
+                <TagGroup pickerLabel="Taguer un Lieu" items={venues} selectedId={taggedVenueId} onSelect={setTaggedVenueId} pos={tagPositions.venue} onPosChange={(p) => setTagPositions((prev) => ({ ...prev, venue: p }))} />
+                <TagGroup pickerLabel="Taguer un Produit" items={drinks} selectedId={taggedDrinkId} onSelect={setTaggedDrinkId} pos={tagPositions.drink} onPosChange={(p) => setTagPositions((prev) => ({ ...prev, drink: p }))} />
+                <TagGroup pickerLabel="Taguer une Marque" items={brands} selectedId={taggedBrandId} onSelect={setTaggedBrandId} pos={tagPositions.brand} onPosChange={(p) => setTagPositions((prev) => ({ ...prev, brand: p }))} />
+                <TagGroup pickerLabel="Taguer un Producteur" items={producers} selectedId={taggedProducerId} onSelect={setTaggedProducerId} pos={tagPositions.producer} onPosChange={(p) => setTagPositions((prev) => ({ ...prev, producer: p }))} />
               </div>
 
               {error && <p style={{ fontSize: "12px", color: "#FF3B4E", marginTop: "14px" }}>{error}</p>}
