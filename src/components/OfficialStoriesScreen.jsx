@@ -124,14 +124,14 @@ function TagPill({ label, pos, onChange }) {
         position: "absolute",
         left: `${pos.x * 100}%`,
         top: `${pos.y * 100}%`,
-        transform: `translate(-50%, -50%) scale(${pos.scale || 1})`,
-        background: "rgba(13,27,42,0.85)",
-        border: "1.5px solid #F2F2E8",
+        transform: `translate(-50%, -50%) rotate(${pos.rotation || 0}deg) scale(${pos.scale || 1})`,
+        background: `${pos.color || "#F2F2E8"}33`,
+        border: `1.5px solid ${pos.color || "#F2F2E8"}`,
         borderRadius: "999px",
         padding: "5px 12px",
         fontSize: "12px",
         fontWeight: 700,
-        color: "#F2F2E8",
+        color: pos.color || "#F2F2E8",
         whiteSpace: "nowrap",
         cursor: "grab",
         touchAction: "none",
@@ -139,28 +139,31 @@ function TagPill({ label, pos, onChange }) {
         zIndex: 10,
       }}
     >
-      📍 {label}
+      # {label}
     </div>
   );
 }
 
-// Vrai slider de taille pour un tag — placé juste sous son propre TagPicker plutôt que tous
-// groupés en bas du formulaire, pour rester proche de l'image sticky au-dessus.
-function TagSizeSlider({ label, pos, onChange }) {
+// Vrais contrôles d'un tag — taille, rotation et couleur — placés juste sous son propre
+// TagPicker plutôt que tous groupés en bas du formulaire, pour rester proche de l'image sticky
+// au-dessus.
+function TagControls({ label, pos, onChange }) {
   if (!pos) return null;
   return (
-    <label style={{ fontSize: "11px", color: "#8792A6", display: "block", marginTop: "-8px" }}>
-      Taille du tag « {label} »
-      <input
-        type="range"
-        min="0.6"
-        max="1.8"
-        step="0.05"
-        value={pos.scale || 1}
-        onChange={(e) => onChange({ ...pos, scale: parseFloat(e.target.value) })}
-        style={{ width: "100%" }}
-      />
-    </label>
+    <div style={{ display: "flex", flexDirection: "column", gap: "6px", marginTop: "-8px" }}>
+      <label style={{ fontSize: "11px", color: "#8792A6", display: "block" }}>
+        Taille du tag « {label} »
+        <input type="range" min="0.6" max="1.8" step="0.05" value={pos.scale || 1} onChange={(e) => onChange({ ...pos, scale: parseFloat(e.target.value) })} style={{ width: "100%" }} />
+      </label>
+      <label style={{ fontSize: "11px", color: "#8792A6", display: "block" }}>
+        Rotation du tag « {label} »
+        <input type="range" min="-45" max="45" step="1" value={pos.rotation || 0} onChange={(e) => onChange({ ...pos, rotation: parseFloat(e.target.value) })} style={{ width: "100%" }} />
+      </label>
+      <label style={{ fontSize: "11px", color: "#8792A6", display: "flex", alignItems: "center", gap: "8px" }}>
+        Couleur du tag « {label} »
+        <input type="color" value={pos.color || "#F2F2E8"} onChange={(e) => onChange({ ...pos, color: e.target.value })} style={{ width: "32px", height: "22px", padding: 0, border: "none", borderRadius: "4px", cursor: "pointer" }} />
+      </label>
+    </div>
   );
 }
 
@@ -220,7 +223,7 @@ function CreateStoryModal({ file, onClose, onPublished, myUserId }) {
       const activeKeys = TAG_TYPES.map((t) => t.key).filter((key) => activeLabelFor(key));
       activeKeys.forEach((key, i) => {
         if (!next[key]) {
-          next[key] = { x: 0.5, y: 0.15 + i * 0.1, scale: 1 };
+          next[key] = { x: 0.5, y: 0.15 + i * 0.1, scale: 1, rotation: 0, color: "#F2F2E8" };
           changed = true;
         }
       });
@@ -324,15 +327,15 @@ function CreateStoryModal({ file, onClose, onPublished, myUserId }) {
                   style={{ width: "100%", boxSizing: "border-box", padding: "10px 12px", borderRadius: "8px", border: "2px solid #28405C", background: "#0D1B2A", color: "#F2F2E8", fontSize: "13.5px" }}
                 />
               </div>
-              <TagSizeSlider label={activeLabelFor("location")} pos={tagPositions.location} onChange={(p) => setTagPositions((prev) => ({ ...prev, location: p }))} />
+              <TagControls label={activeLabelFor("location")} pos={tagPositions.location} onChange={(p) => setTagPositions((prev) => ({ ...prev, location: p }))} />
               <TagPicker label="Taguer un lieu" items={venues} selectedId={taggedVenueId} onSelect={setTaggedVenueId} />
-              <TagSizeSlider label={activeLabelFor("venue")} pos={tagPositions.venue} onChange={(p) => setTagPositions((prev) => ({ ...prev, venue: p }))} />
+              <TagControls label={activeLabelFor("venue")} pos={tagPositions.venue} onChange={(p) => setTagPositions((prev) => ({ ...prev, venue: p }))} />
               <TagPicker label="Taguer un produit" items={drinks} selectedId={taggedDrinkId} onSelect={setTaggedDrinkId} />
-              <TagSizeSlider label={activeLabelFor("drink")} pos={tagPositions.drink} onChange={(p) => setTagPositions((prev) => ({ ...prev, drink: p }))} />
+              <TagControls label={activeLabelFor("drink")} pos={tagPositions.drink} onChange={(p) => setTagPositions((prev) => ({ ...prev, drink: p }))} />
               <TagPicker label="Taguer une marque" items={brands} selectedId={taggedBrandId} onSelect={setTaggedBrandId} />
-              <TagSizeSlider label={activeLabelFor("brand")} pos={tagPositions.brand} onChange={(p) => setTagPositions((prev) => ({ ...prev, brand: p }))} />
+              <TagControls label={activeLabelFor("brand")} pos={tagPositions.brand} onChange={(p) => setTagPositions((prev) => ({ ...prev, brand: p }))} />
               <TagPicker label="Taguer un producteur" items={producers} selectedId={taggedProducerId} onSelect={setTaggedProducerId} />
-              <TagSizeSlider label={activeLabelFor("producer")} pos={tagPositions.producer} onChange={(p) => setTagPositions((prev) => ({ ...prev, producer: p }))} />
+              <TagControls label={activeLabelFor("producer")} pos={tagPositions.producer} onChange={(p) => setTagPositions((prev) => ({ ...prev, producer: p }))} />
             </div>
 
             {error && <p style={{ fontSize: "12px", color: "#FF3B4E", marginTop: "14px" }}>{error}</p>}
