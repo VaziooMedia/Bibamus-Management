@@ -72,8 +72,91 @@ function TagPicker({ label, items, selectedId, onSelect }) {
   );
 }
 
+// Vraie pastille de tag déplaçable sur l'image, style Stories Instagram — position en fraction
+// (0 à 1) du cadre, glissée à la souris/au doigt. Le vrai cadre parent (offsetParent) sert de
+// vraie référence de coordonnées : la pastille a position:absolute dans le même vrai cadre que
+// ImageEditor gère déjà pour l'image.
+function TagPill({ label, pos, onChange }) {
+  const dragState = useRef(null);
+
+  useEffect(() => {
+    const onMove = (clientX, clientY) => {
+      if (!dragState.current) return;
+      const { rect, startX, startY, origX, origY } = dragState.current;
+      const dx = (clientX - startX) / rect.width;
+      const dy = (clientY - startY) / rect.height;
+      onChange({ ...pos, x: Math.min(1, Math.max(0, origX + dx)), y: Math.min(1, Math.max(0, origY + dy)) });
+    };
+    const onMouseMove = (e) => onMove(e.clientX, e.clientY);
+    const onTouchMove = (e) => onMove(e.touches[0].clientX, e.touches[0].clientY);
+    const onEnd = () => {
+      dragState.current = null;
+    };
+    document.addEventListener("mousemove", onMouseMove);
+    document.addEventListener("mouseup", onEnd);
+    document.addEventListener("touchmove", onTouchMove);
+    document.addEventListener("touchend", onEnd);
+    return () => {
+      document.removeEventListener("mousemove", onMouseMove);
+      document.removeEventListener("mouseup", onEnd);
+      document.removeEventListener("touchmove", onTouchMove);
+      document.removeEventListener("touchend", onEnd);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [pos]);
+
+  const startDrag = (clientX, clientY, frameEl) => {
+    const rect = frameEl.getBoundingClientRect();
+    dragState.current = { rect, startX: clientX, startY: clientY, origX: pos.x, origY: pos.y };
+  };
+
+  return (
+    <div
+      onMouseDown={(e) => {
+        e.stopPropagation();
+        startDrag(e.clientX, e.clientY, e.currentTarget.offsetParent);
+      }}
+      onTouchStart={(e) => {
+        e.stopPropagation();
+        startDrag(e.touches[0].clientX, e.touches[0].clientY, e.currentTarget.offsetParent);
+      }}
+      style={{
+        position: "absolute",
+        left: `${pos.x * 100}%`,
+        top: `${pos.y * 100}%`,
+        transform: `translate(-50%, -50%) scale(${pos.scale || 1})`,
+        background: "rgba(13,27,42,0.85)",
+        border: "1.5px solid #F2F2E8",
+        borderRadius: "999px",
+        padding: "5px 12px",
+        fontSize: "12px",
+        fontWeight: 700,
+        color: "#F2F2E8",
+        whiteSpace: "nowrap",
+        cursor: "grab",
+        touchAction: "none",
+        userSelect: "none",
+        zIndex: 10,
+      }}
+    >
+      📍 {label}
+    </div>
+  );
+}
+
+// Les 5 vrais types de tag possibles, dans leur vrai ordre d'affichage — factorisé pour piloter
+// à la fois la synchronisation des positions et le rendu des pastilles.
+const TAG_TYPES = [
+  { key: "location", pickerLabel: null },
+  { key: "venue", pickerLabel: "Taguer un lieu" },
+  { key: "drink", pickerLabel: "Taguer un produit" },
+  { key: "brand", pickerLabel: "Taguer une marque" },
+  { key: "producer", pickerLabel: "Taguer un producteur" },
+];
+
 // Vrai modal de création en 2 vraies étapes : cadrage/position/zoom/rotation de l'image, puis
-// légende + taguage (lieu indiqué en texte libre, tag lieu/produit/marque/producteur).
+// légende + taguage (lieu indiqué en texte libre, tag lieu/produit/marque/producteur) avec
+// placement visuel de chaque tag directement sur l'image.
 function CreateStoryModal({ file, onClose, onPublished, myUserId }) {
   const [step, setStep] = useState("edit");
   const [caption, setCaption] = useState("");
@@ -82,6 +165,7 @@ function CreateStoryModal({ file, onClose, onPublished, myUserId }) {
   const [taggedDrinkId, setTaggedDrinkId] = useState(null);
   const [taggedBrandId, setTaggedBrandId] = useState(null);
   const [taggedProducerId, setTaggedProducerId] = useState(null);
+  const [tagPositions, setTagPositions] = useState({});
   const [venues, setVenues] = useState([]);
   const [drinks, setDrinks] = useState([]);
   const [brands, setBrands] = useState([]);
@@ -96,6 +180,40 @@ function CreateStoryModal({ file, onClose, onPublished, myUserId }) {
     loadBrandsDirectory().then(setBrands);
     loadBreweriesDirectory().then(setProducers);
   }, []);
+
+  const activeLabelFor = (key) => {
+    if (key === "location") return locationText.trim() || null;
+    if (key === "venue") return venues.find((v) => v.id === taggedVenueId)?.name || null;
+    if (key === "drink") return drinks.find((d) => d.id === taggedDrinkId)?.name || null;
+    if (key === "brand") return brands.find((b) => b.id === taggedBrandId)?.name || null;
+    if (key === "producer") return producers.find((p) => p.id === taggedProducerId)?.name || null;
+    return null;
+  };
+
+  // Ajoute une vraie position par défaut (étagée verticalement) dès qu'un tag devient actif, et
+  // retire sa position dès qu'il est désactivé — sans jamais toucher aux vraies positions déjà
+  // placées manuellement par l'admin pour les tags qui restent actifs.
+  useEffect(() => {
+    setTagPositions((prev) => {
+      const next = { ...prev };
+      let changed = false;
+      const activeKeys = TAG_TYPES.map((t) => t.key).filter((key) => activeLabelFor(key));
+      activeKeys.forEach((key, i) => {
+        if (!next[key]) {
+          next[key] = { x: 0.5, y: 0.15 + i * 0.1, scale: 1 };
+          changed = true;
+        }
+      });
+      Object.keys(next).forEach((key) => {
+        if (!activeKeys.includes(key)) {
+          delete next[key];
+          changed = true;
+        }
+      });
+      return changed ? next : prev;
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [locationText, taggedVenueId, taggedDrinkId, taggedBrandId, taggedProducerId, venues, drinks, brands, producers]);
 
   const handlePublish = async () => {
     setPublishing(true);
@@ -117,6 +235,7 @@ function CreateStoryModal({ file, onClose, onPublished, myUserId }) {
         taggedDrinkId,
         taggedBrandId,
         taggedProducerId,
+        tagPositions,
       });
       if (createResult.error) {
         setError(createResult.error);
@@ -136,10 +255,20 @@ function CreateStoryModal({ file, onClose, onPublished, myUserId }) {
       <div style={{ background: "#16273D", borderRadius: "16px", padding: "24px", width: "100%", maxWidth: "460px", maxHeight: "88vh", overflowY: "auto" }}>
         <h3 style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "18px", margin: "0 0 18px" }}>{step === "edit" ? "Cadrer l'image" : "Légende & taguage"}</h3>
 
-        {/* Reste monté sur les 2 étapes, juste masqué à l'étape "tags" — sinon React remet
-            editorRef.current à null au démontage, et handlePublish() ne le retrouve plus. */}
-        <div style={{ display: step === "edit" ? "block" : "none" }}>
-          <ImageEditor ref={editorRef} file={file} />
+        {/* Reste monté sur les 2 étapes (sinon React remet editorRef.current à null au
+            démontage) — interactive/showControls basculent son vrai comportement selon
+            l'étape, plutôt que de le masquer entièrement. */}
+        <ImageEditor ref={editorRef} file={file} interactive={step === "edit"} showControls={step === "edit"}>
+          {step === "tags" &&
+            TAG_TYPES.map((t) => {
+              const label = activeLabelFor(t.key);
+              const pos = tagPositions[t.key];
+              if (!label || !pos) return null;
+              return <TagPill key={t.key} label={label} pos={pos} onChange={(newPos) => setTagPositions((prev) => ({ ...prev, [t.key]: newPos }))} />;
+            })}
+        </ImageEditor>
+
+        {step === "edit" ? (
           <div style={{ display: "flex", gap: "10px", marginTop: "20px" }}>
             <button onClick={onClose} style={{ flex: 1, padding: "11px", borderRadius: "8px", border: "2px solid #28405C", background: "none", color: "#F2F2E8", fontWeight: 700, cursor: "pointer" }}>
               Annuler
@@ -148,10 +277,10 @@ function CreateStoryModal({ file, onClose, onPublished, myUserId }) {
               Continuer
             </button>
           </div>
-        </div>
-
-        {step === "tags" && (
+        ) : (
           <>
+            <p style={{ fontSize: "11px", color: "#8792A6", margin: "10px 0 16px", textAlign: "center" }}>Glissez chaque pastille pour la placer sur l'image.</p>
+
             <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
               <div>
                 <label style={{ fontSize: "12px", fontWeight: 600, color: "#8792A6", marginBottom: "6px", display: "block" }}>Légende (optionnelle)</label>
@@ -175,6 +304,21 @@ function CreateStoryModal({ file, onClose, onPublished, myUserId }) {
               <TagPicker label="Taguer un produit" items={drinks} selectedId={taggedDrinkId} onSelect={setTaggedDrinkId} />
               <TagPicker label="Taguer une marque" items={brands} selectedId={taggedBrandId} onSelect={setTaggedBrandId} />
               <TagPicker label="Taguer un producteur" items={producers} selectedId={taggedProducerId} onSelect={setTaggedProducerId} />
+
+              {TAG_TYPES.filter((t) => activeLabelFor(t.key) && tagPositions[t.key]).map((t) => (
+                <label key={t.key} style={{ fontSize: "11px", color: "#8792A6" }}>
+                  Taille du tag « {activeLabelFor(t.key)} »
+                  <input
+                    type="range"
+                    min="0.6"
+                    max="1.8"
+                    step="0.05"
+                    value={tagPositions[t.key].scale || 1}
+                    onChange={(e) => setTagPositions((prev) => ({ ...prev, [t.key]: { ...prev[t.key], scale: parseFloat(e.target.value) } }))}
+                    style={{ width: "100%" }}
+                  />
+                </label>
+              ))}
             </div>
 
             {error && <p style={{ fontSize: "12px", color: "#FF3B4E", marginTop: "14px" }}>{error}</p>}

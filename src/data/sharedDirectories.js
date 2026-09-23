@@ -1081,6 +1081,7 @@ export async function createOfficialStory(mediaUrl, caption, createdBy, tags = {
     tagged_drink_id: tags.taggedDrinkId || null,
     tagged_brand_id: tags.taggedBrandId || null,
     tagged_producer_id: tags.taggedProducerId || null,
+    tag_positions: tags.tagPositions || null,
   });
   if (error) return { error: error.message };
   return { ok: true };
@@ -1102,6 +1103,7 @@ export async function loadOfficialStoriesAdmin() {
     taggedDrinkId: s.tagged_drink_id,
     taggedBrandId: s.tagged_brand_id,
     taggedProducerId: s.tagged_producer_id,
+    tagPositions: s.tag_positions || {},
   }));
 }
 
