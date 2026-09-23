@@ -49,7 +49,7 @@ export const ImageEditor = React.forwardRef(function ImageEditor({ file }, ref) 
   // 9:16, donc ce facteur est uniforme en x comme en y).
   const getFinalBlob = () => {
     return new Promise((resolve) => {
-      if (!naturalSize) {
+      if (!naturalSize || !imgRef.current) {
         resolve(null);
         return;
       }
@@ -95,28 +95,28 @@ export const ImageEditor = React.forwardRef(function ImageEditor({ file }, ref) 
         onTouchMove={(e) => moveDrag(e.touches[0].clientX, e.touches[0].clientY)}
         onTouchEnd={endDrag}
       >
-        {imgUrl && naturalSize && (
+        {imgUrl && (
           <img
             ref={imgRef}
             src={imgUrl}
             alt=""
             onLoad={onImgLoad}
             draggable={false}
-            style={{
-              position: "absolute",
-              left: "50%",
-              top: "50%",
-              width: `${naturalSize.w * baseScalePreview}px`,
-              height: `${naturalSize.h * baseScalePreview}px`,
-              transform: `translate(-50%, -50%) translate(${offset.x}px, ${offset.y}px) rotate(${rotation}deg) scale(${zoom})`,
-              userSelect: "none",
-              pointerEvents: "none",
-            }}
+            style={
+              naturalSize
+                ? {
+                    position: "absolute",
+                    left: "50%",
+                    top: "50%",
+                    width: `${naturalSize.w * baseScalePreview}px`,
+                    height: `${naturalSize.h * baseScalePreview}px`,
+                    transform: `translate(-50%, -50%) translate(${offset.x}px, ${offset.y}px) rotate(${rotation}deg) scale(${zoom})`,
+                    userSelect: "none",
+                    pointerEvents: "none",
+                  }
+                : { display: "none" }
+            }
           />
-        )}
-        {imgUrl && !naturalSize && (
-          // L'image sert quand même à mesurer sa vraie taille naturelle avant le premier rendu positionné.
-          <img ref={imgRef} src={imgUrl} alt="" onLoad={onImgLoad} style={{ display: "none" }} />
         )}
       </div>
 

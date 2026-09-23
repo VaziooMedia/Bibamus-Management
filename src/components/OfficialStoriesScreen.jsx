@@ -100,31 +100,35 @@ function CreateStoryModal({ file, onClose, onPublished, myUserId }) {
   const handlePublish = async () => {
     setPublishing(true);
     setError(null);
-    const blob = await editorRef.current.getFinalBlob();
-    if (!blob) {
-      setError("Impossible de préparer l'image.");
+    try {
+      const blob = await editorRef.current.getFinalBlob();
+      if (!blob) {
+        setError("Impossible de préparer l'image.");
+        return;
+      }
+      const uploadResult = await uploadOfficialStoryMedia(myUserId, blob);
+      if (uploadResult.error) {
+        setError(uploadResult.error);
+        return;
+      }
+      const createResult = await createOfficialStory(uploadResult.url, caption.trim(), myUserId, {
+        locationText: locationText.trim() || null,
+        taggedVenueId,
+        taggedDrinkId,
+        taggedBrandId,
+        taggedProducerId,
+      });
+      if (createResult.error) {
+        setError(createResult.error);
+        return;
+      }
+      onPublished();
+    } catch (e) {
+      console.error("handlePublish:", e);
+      setError("Une erreur inattendue est survenue pendant la publication.");
+    } finally {
       setPublishing(false);
-      return;
     }
-    const uploadResult = await uploadOfficialStoryMedia(myUserId, blob);
-    if (uploadResult.error) {
-      setError(uploadResult.error);
-      setPublishing(false);
-      return;
-    }
-    const createResult = await createOfficialStory(uploadResult.url, caption.trim(), myUserId, {
-      locationText: locationText.trim() || null,
-      taggedVenueId,
-      taggedDrinkId,
-      taggedBrandId,
-      taggedProducerId,
-    });
-    setPublishing(false);
-    if (createResult.error) {
-      setError(createResult.error);
-      return;
-    }
-    onPublished();
   };
 
   return (
@@ -211,8 +215,12 @@ export function OfficialStoriesScreen({ myUserId }) {
 
   const handleDelete = async (id) => {
     if (!window.confirm("Supprimer cette Story officielle ?")) return;
+    const result = await deleteOfficialStory(id);
+    if (result.error) {
+      alert("Erreur : " + result.error);
+      return;
+    }
     setStories((prev) => prev.filter((s) => s.id !== id));
-    await deleteOfficialStory(id);
   };
 
   return (
