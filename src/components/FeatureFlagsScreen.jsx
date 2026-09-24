@@ -141,8 +141,9 @@ export function FeatureFlagsScreen() {
     <div>
       <PageTitle>Feature flags</PageTitle>
       <p style={{ fontSize: "12.5px", color: "#8792A6", marginBottom: "20px" }}>
-        Active ou désactive des fonctionnalités de l'app sans déploiement de code. La valeur globale s'applique partout, sauf pays avec une surcharge — jamais lié aux permissions
-        utilisateur (rôle, Business...), qui restent un système séparé.
+        Activation ou désactivation des fonctionnalités de l'app sans déploiement de code.
+        <br />
+        La valeur globale s'applique partout, sauf pays avec une surcharge.
       </p>
 
       {!flags ? (
