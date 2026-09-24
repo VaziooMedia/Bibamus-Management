@@ -548,7 +548,7 @@ export async function loadCountryRules() {
 export async function updateCountryRule(countryCode, minimumAge) {
   const { error } = await supabase
     .from("market_config")
-    .upsert({ country_code: countryCode, config_key: "minimum_age", config_value: minimumAge, updated_at: new Date().toISOString() });
+    .upsert({ country_code: countryCode, config_key: "minimum_age", config_value: minimumAge, updated_at: new Date().toISOString() }, { onConflict: "country_code,config_key" });
   if (error) return { error: error.message };
   return { ok: true };
 }
