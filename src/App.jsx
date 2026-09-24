@@ -33,6 +33,8 @@ export default function App() {
   const [authChecked, setAuthChecked] = useState(false);
   const [unlocked, setUnlocked] = useState(false);
   const [myRole, setMyRole] = useState(null);
+  const [myFirstName, setMyFirstName] = useState("");
+  const [myLastName, setMyLastName] = useState("");
   const [chatTeamTargetId, setChatTeamTargetId] = useState(null);
   const [myCanModerate, setMyCanModerate] = useState(false);
   const [myUserId, setMyUserId] = useState(null);
@@ -49,13 +51,15 @@ export default function App() {
         setAuthChecked(true);
         return;
       }
-      const { data: profile } = await supabase.from("profiles").select("role, active, blocked_until, can_moderate").eq("id", data.session.user.id).single();
+      const { data: profile } = await supabase.from("profiles").select("role, active, blocked_until, can_moderate, name, last_name").eq("id", data.session.user.id).single();
       const stillBlocked = profile && profile.active === false && (!profile.blocked_until || new Date(profile.blocked_until) > new Date());
       if (profile && ["editor", "super_editor", "moderator", "business", "admin", "super_admin"].includes(profile.role) && !stillBlocked) {
         setUnlocked(true);
         setMyRole(profile.role);
         setMyCanModerate(!!profile.can_moderate);
         setMyUserId(data.session.user.id);
+        setMyFirstName(profile.name || "");
+        setMyLastName(profile.last_name || "");
         if (profile.role === "moderator") setScreen("reports");
         else if (profile.role === "business") setScreen("myEntities");
         else if (["editor", "super_editor"].includes(profile.role)) setScreen("database");
@@ -72,13 +76,17 @@ export default function App() {
     setMyRole(null);
     setMyCanModerate(false);
     setMyUserId(null);
+    setMyFirstName("");
+    setMyLastName("");
   };
 
-  const handleUnlock = (role, canModerate, userId) => {
+  const handleUnlock = (role, canModerate, userId, firstName, lastName) => {
     setUnlocked(true);
     setMyRole(role);
     setMyCanModerate(!!canModerate);
     setMyUserId(userId);
+    setMyFirstName(firstName || "");
+    setMyLastName(lastName || "");
     if (role === "moderator") setScreen("reports");
     else if (role === "business") setScreen("myEntities");
     else if (["editor", "super_editor"].includes(role)) setScreen("database");
@@ -93,7 +101,7 @@ export default function App() {
   }
 
   return (
-    <Layout current={screen} onNavigate={setScreen} onLogout={handleLogout} myRole={myRole} myCanModerate={myCanModerate} myUserId={myUserId}>
+    <Layout current={screen} onNavigate={setScreen} onLogout={handleLogout} myRole={myRole} myCanModerate={myCanModerate} myUserId={myUserId} myFirstName={myFirstName} myLastName={myLastName}>
       {screen === "dashboard" && <Dashboard />}
       {screen === "database" && <DataBaseOverviewScreen onNavigate={setScreen} supabaseUrl={SUPABASE_PROJECT_URL} />}
       {screen === "venues" && (

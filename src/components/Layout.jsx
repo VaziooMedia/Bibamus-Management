@@ -138,7 +138,18 @@ function LogoutIcon() {
   );
 }
 
-export function Layout({ current, onNavigate, onLogout, myRole, myCanModerate, myUserId, children }) {
+// Même vrais libellés que Système/Administrateurs, pour afficher le vrai rôle lisible dans la
+// barre du haut plutôt que le vrai code brut ("super_admin").
+const ROLE_LABELS = {
+  editor: "Éditeur",
+  super_editor: "Super éditeur",
+  moderator: "Modérateur",
+  business: "Business",
+  admin: "Admin",
+  super_admin: "Super Admin",
+};
+
+export function Layout({ current, onNavigate, onLogout, myRole, myCanModerate, myUserId, myFirstName, myLastName, children }) {
   const isDatabaseScreen = DATABASE_ITEMS.some((i) => i.key === current) || current === "database";
   const [databaseOpen, setDatabaseOpen] = useState(isDatabaseScreen);
   const isModerator = myRole === "moderator";
@@ -277,6 +288,8 @@ export function Layout({ current, onNavigate, onLogout, myRole, myCanModerate, m
       </div>
       <div style={{ flex: 1, display: "flex", flexDirection: "column", minWidth: 0 }}>
         <TopBar
+          adminName={[myFirstName, myLastName].filter(Boolean).join(" ") || "—"}
+          adminRole={ROLE_LABELS[myRole] || myRole}
           pendingReportsCount={pendingReportsCount}
           openClaimsCount={openClaimsCount}
           onOpenReports={() => onNavigate("notifications")}

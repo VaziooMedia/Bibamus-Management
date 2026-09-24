@@ -49,7 +49,7 @@ function useBusinessCount() {
   return count;
 }
 
-export function TopBar({ adminName = "Mehdi Alorchi", adminRole = "Super Admin", onSearch, pendingReportsCount, openClaimsCount, onOpenReports, unreadMessagesCount, onOpenMessages }) {
+export function TopBar({ adminName, adminRole, onSearch, pendingReportsCount, openClaimsCount, onOpenReports, unreadMessagesCount, onOpenMessages }) {
   // La cloche regroupe toutes les vraies notifications admin confondues — signalements et
   // revendications en attente, plutôt qu'un badge séparé par type.
   const bellCount = (pendingReportsCount || 0) + (openClaimsCount || 0);

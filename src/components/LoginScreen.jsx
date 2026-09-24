@@ -22,7 +22,7 @@ export function LoginScreen({ onUnlock }) {
       return;
     }
 
-    const { data: profile, error: profileError } = await supabase.from("profiles").select("role, active, blocked_until, can_moderate").eq("id", data.user.id).single();
+    const { data: profile, error: profileError } = await supabase.from("profiles").select("role, active, blocked_until, can_moderate, name, last_name").eq("id", data.user.id).single();
     setLoading(false);
 
     if (profileError || !profile || !["editor", "super_editor", "moderator", "business", "admin", "super_admin"].includes(profile.role)) {
@@ -38,7 +38,7 @@ export function LoginScreen({ onUnlock }) {
       return;
     }
 
-    onUnlock(profile.role, profile.can_moderate, data.user.id);
+    onUnlock(profile.role, profile.can_moderate, data.user.id, profile.name, profile.last_name);
   };
 
   return (
