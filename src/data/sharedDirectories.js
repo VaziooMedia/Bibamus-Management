@@ -697,6 +697,12 @@ export async function loadCollaborators() {
 // Passe par la fonction serveur dédiée — un compte ne peut jamais être créé directement
 // depuis le navigateur, quel que soit le rôle de la personne connectée.
 export async function createCollaborator(email, password, firstName, lastName, birthDate, role, canModerate, extra = {}) {
+  // Vérifié ici plutôt que de vraiment se fier au message renvoyé par la vraie fonction
+  // serveur en cas de doublon — celui-ci ("Unable to validate email address: invalid
+  // format") est vraiment trompeur et ne dit jamais que l'adresse est déjà prise.
+  const { data: existing } = await supabase.from("profiles").select("id").ilike("email", email).limit(1);
+  if (existing && existing.length > 0) return { error: "Adresse déjà utilisée" };
+
   const { data, error } = await supabase.functions.invoke("admin-create-collaborator", {
     body: { email, password, firstName, lastName, birthDate, role, canModerate, ...extra },
   });
