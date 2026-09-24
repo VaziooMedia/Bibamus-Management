@@ -63,21 +63,32 @@ const labelStyle = { fontSize: "12.5px", color: "#8792A6", marginBottom: "4px", 
 
 function SectionTitle({ children, first }) {
   return (
-    <p style={{ display: "flex", alignItems: "center", gap: "8px", fontSize: "12px", color: "#39FF66", fontWeight: 700, textTransform: "uppercase", margin: first ? "0 0 10px" : "24px 0 10px", paddingTop: first ? 0 : "18px", borderTop: first ? "none" : "1px solid #28405C" }}>
-      <span style={{ width: "3px", height: "12px", borderRadius: "2px", background: "#39FF66", flexShrink: 0 }} />
+    <p style={{ fontSize: "12px", color: "#39FF66", fontWeight: 700, textTransform: "uppercase", margin: first ? "0 0 10px" : "24px 0 10px", paddingTop: first ? 0 : "18px", borderTop: first ? "none" : "1px solid #28405C" }}>
       {children}
     </p>
+  );
+}
+
+// Vraie petite barre verte devant chaque vrai sous-sous-titre (les vrais labels de champ), pas
+// devant les vrais titres de section eux-mêmes.
+function Label({ children }) {
+  return (
+    <label style={{ ...labelStyle, display: "flex", alignItems: "center", gap: "8px" }}>
+      <span style={{ width: "3px", height: "10px", borderRadius: "2px", background: "#39FF66", flexShrink: 0 }} />
+      {children}
+    </label>
   );
 }
 
 // Vrai mini préfixe pays compact (drapeau + code), collé devant un vrai champ — même vrai
 // principe que côté app web (revendication d'une fiche) : un vrai menu déroulant personnalisé,
 // vu qu'un select natif ne peut pas afficher de vrai drapeau dans ses options.
-function CountryPrefix({ value, onChange }) {
+function CountryPrefix({ value, onChange, fullName }) {
   const [open, setOpen] = useState(false);
   const iso = COUNTRY_ISO_BY_SLUG[value];
+  const label = fullName ? countryLabel(value) || "Pays —" : iso ? iso.toUpperCase() : "—";
   return (
-    <div style={{ position: "relative", flexShrink: 0 }}>
+    <div style={{ position: "relative", flexShrink: 0, width: fullName ? "100%" : "auto" }}>
       <button
         type="button"
         onClick={() => setOpen((o) => !o)}
@@ -86,6 +97,7 @@ function CountryPrefix({ value, onChange }) {
           alignItems: "center",
           gap: "6px",
           height: "100%",
+          width: fullName ? "100%" : "auto",
           padding: "10px 8px",
           borderRadius: "8px",
           border: "2px solid #28405C",
@@ -97,8 +109,8 @@ function CountryPrefix({ value, onChange }) {
         }}
       >
         {iso ? <CountryFlagImg isoCode={iso} size={15} /> : null}
-        {iso ? iso.toUpperCase() : "—"}
-        <span style={{ color: "#8792A6", fontSize: "10px" }}>▾</span>
+        {label}
+        <span style={{ color: "#8792A6", fontSize: "10px", marginLeft: fullName ? "auto" : 0 }}>▾</span>
       </button>
       {open && (
         <div
@@ -394,28 +406,29 @@ export function BusinessAccountDetailScreen({ accountId, onBack }) {
         </div>
       ) : (
         <div style={{ maxWidth: "480px" }}>
+          <div style={{ height: "1px", background: "#28405C", margin: "20px 0" }} />
           <SectionTitle first>Société</SectionTitle>
-          <label style={labelStyle}>Nom de la société</label>
+          <Label>Dénomination</Label>
           <input value={form.companyName} onChange={(e) => setForm({ ...form, companyName: e.target.value })} style={{ ...fieldStyle, marginBottom: "12px" }} />
 
-          <label style={labelStyle}>Numéro d'entreprise</label>
+          <Label>Numéro d'entreprise</Label>
           <div style={{ display: "flex", gap: "8px", marginBottom: "12px" }}>
             <CountryPrefix value={form.companyCountry} onChange={(code) => setForm({ ...form, companyCountry: code })} />
             <input value={form.vatNumber} onChange={(e) => setForm({ ...form, vatNumber: e.target.value })} style={{ ...fieldStyle, flex: 1 }} />
           </div>
 
-          <label style={labelStyle}>Email</label>
+          <Label>Email</Label>
           <input type="email" value={form.companyEmail} onChange={(e) => setForm({ ...form, companyEmail: e.target.value })} style={{ ...fieldStyle, marginBottom: "12px" }} />
 
-          <label style={labelStyle}>Téléphone</label>
+          <Label>Téléphone</Label>
           <div style={{ display: "flex", gap: "8px", marginBottom: "12px" }}>
             <CountryPrefix value={form.companyCountry} onChange={(code) => setForm({ ...form, companyCountry: code })} />
             <input value={form.companyPhone} onChange={(e) => setForm({ ...form, companyPhone: e.target.value })} style={{ ...fieldStyle, flex: 1 }} />
           </div>
 
-          <label style={labelStyle}>Siège social</label>
+          <Label>Siège social</Label>
           <div style={{ marginBottom: "8px" }}>
-            <CountryPrefix value={form.companyCountry} onChange={(code) => setForm({ ...form, companyCountry: code })} />
+            <CountryPrefix value={form.companyCountry} onChange={(code) => setForm({ ...form, companyCountry: code })} fullName />
           </div>
           <div style={{ display: "flex", gap: "8px", marginBottom: "8px" }}>
             <input value={form.companyStreet} onChange={(e) => setForm({ ...form, companyStreet: e.target.value })} placeholder="Adresse" style={{ ...fieldStyle, flex: 3 }} />
@@ -435,21 +448,21 @@ export function BusinessAccountDetailScreen({ accountId, onBack }) {
           <SectionTitle>Personne de contact</SectionTitle>
           <div style={{ display: "flex", gap: "10px", marginBottom: "12px" }}>
             <div style={{ flex: 1 }}>
-              <label style={labelStyle}>Prénom</label>
+              <Label>Prénom</Label>
               <input value={form.firstName} onChange={(e) => setForm({ ...form, firstName: e.target.value })} style={fieldStyle} />
             </div>
             <div style={{ flex: 1 }}>
-              <label style={labelStyle}>Nom</label>
+              <Label>Nom</Label>
               <input value={form.lastName} onChange={(e) => setForm({ ...form, lastName: e.target.value })} style={fieldStyle} />
             </div>
           </div>
-          <label style={labelStyle}>Fonction</label>
+          <Label>Fonction</Label>
           <input value={form.contactFunction} onChange={(e) => setForm({ ...form, contactFunction: e.target.value })} style={{ ...fieldStyle, marginBottom: "12px" }} />
-          <label style={labelStyle}>Email Pro</label>
+          <Label>Email Pro</Label>
           <input type="email" value={form.contactEmail} onChange={(e) => setForm({ ...form, contactEmail: e.target.value })} style={{ ...fieldStyle, marginBottom: "12px" }} />
-          <label style={labelStyle}>Téléphone</label>
+          <Label>Téléphone</Label>
           <input value={form.contactPhone} onChange={(e) => setForm({ ...form, contactPhone: e.target.value })} style={{ ...fieldStyle, marginBottom: "12px" }} />
-          <label style={labelStyle}>Langue(s) parlée(s)</label>
+          <Label>Langue(s) parlée(s)</Label>
           <div style={{ display: "flex", gap: "6px", flexWrap: "wrap", marginBottom: "16px" }}>
             {LANGUAGE_OPTIONS.map((l) => {
               const selected = form.contactLanguages.includes(l.code);
@@ -473,6 +486,8 @@ export function BusinessAccountDetailScreen({ accountId, onBack }) {
               );
             })}
           </div>
+
+          <div style={{ height: "1px", background: "#28405C", margin: "16px 0" }} />
 
           <div style={{ display: "flex", gap: "8px", marginBottom: "20px" }}>
             <button
