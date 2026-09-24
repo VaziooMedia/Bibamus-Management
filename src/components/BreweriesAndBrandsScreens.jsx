@@ -94,9 +94,9 @@ export function BreweriesScreen({ initialBreweryId, onInitialBreweryOpened } = {
         <p style={{ color: "#8792A6" }}>Chargement...</p>
       ) : (
         <>
-          <DetailedStatsCounterBar items={itemsWithReports} activeFilter={activeFilter} onFilterChange={setActiveFilter} />
+          <DetailedStatsCounterBar items={itemsWithReports} activeFilter={activeFilter} onFilterChange={setActiveFilter} getCountry={(b) => countryLabel(b.country)} />
           <DataTable
-            items={applyStatFilter(itemsWithReports, activeFilter)}
+            items={applyStatFilter(itemsWithReports, activeFilter, (b) => countryLabel(b.country))}
             allColumns={breweryColumns}
             forcedKeys={["name", "status"]}
             defaultVisibleKeys={["name", "country", "city", "producerTypes", "producerProfiles", "status", "visible", "certificationLevel"]}
@@ -175,9 +175,9 @@ export function BrandsScreen({ initialBrandId, onInitialBrandOpened } = {}) {
         <p style={{ color: "#8792A6" }}>Chargement...</p>
       ) : (
         <>
-          <DetailedStatsCounterBar items={itemsWithReports} activeFilter={activeFilter} onFilterChange={setActiveFilter} />
+          <DetailedStatsCounterBar items={itemsWithReports} activeFilter={activeFilter} onFilterChange={setActiveFilter} getCountry={(b) => countryLabel(b.originCountry)} />
           <DataTable
-            items={applyStatFilter(itemsWithReports, activeFilter)}
+            items={applyStatFilter(itemsWithReports, activeFilter, (b) => countryLabel(b.originCountry))}
             allColumns={getBrandColumns(breweriesDirectory)}
             forcedKeys={["name", "status"]}
             defaultVisibleKeys={["name", "originCountry", "brandTypes", "producerId", "status", "visible", "certificationLevel"]}

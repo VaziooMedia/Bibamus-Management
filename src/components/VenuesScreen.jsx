@@ -75,9 +75,9 @@ export function VenuesScreen({ initialVenueId, onInitialVenueOpened } = {}) {
         <p style={{ color: "#8792A6" }}>Chargement...</p>
       ) : (
         <>
-          <DetailedStatsCounterBar items={venuesWithReports} activeFilter={activeFilter} onFilterChange={setActiveFilter} />
+          <DetailedStatsCounterBar items={venuesWithReports} activeFilter={activeFilter} onFilterChange={setActiveFilter} getCountry={(v) => countryLabel(v.country)} />
           <DataTable
-            items={applyStatFilter(venuesWithReports, activeFilter)}
+            items={applyStatFilter(venuesWithReports, activeFilter, (v) => countryLabel(v.country))}
             allColumns={allColumns}
             forcedKeys={["name", "status"]}
             defaultVisibleKeys={["name", "country", "city", "status", "visible", "certificationLevel"]}

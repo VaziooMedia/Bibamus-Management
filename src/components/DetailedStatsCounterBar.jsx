@@ -4,6 +4,69 @@ import { CERTIFICATION_LEVELS } from "./CertificationLevelSelector.jsx";
 import { VisibilityDot } from "./DataTable.jsx";
 import { CertificationIcon } from "./CertificationIcon.jsx";
 
+const COUNTRY_BLOCKS = ["Belgique", "France", "Pays-Bas", "Allemagne", "Luxembourg", "Espagne"];
+const CONTINENT_BLOCKS = ["Europe", "Amérique du Nord", "Amérique du Sud", "Afrique", "Asie", "Océanie"];
+
+// Même vrai mapping que Database/Utilisateurs.
+const COUNTRY_TO_CONTINENT = {
+  Belgique: "Europe",
+  France: "Europe",
+  "Pays-Bas": "Europe",
+  Allemagne: "Europe",
+  Luxembourg: "Europe",
+  Espagne: "Europe",
+  Italie: "Europe",
+  Portugal: "Europe",
+  Suisse: "Europe",
+  "Royaume-Uni": "Europe",
+  Irlande: "Europe",
+  Autriche: "Europe",
+  "États-Unis": "Amérique du Nord",
+  Canada: "Amérique du Nord",
+  Mexique: "Amérique du Nord",
+  Brésil: "Amérique du Sud",
+  Argentine: "Amérique du Sud",
+  Chili: "Amérique du Sud",
+  Maroc: "Afrique",
+  Algérie: "Afrique",
+  Tunisie: "Afrique",
+  Sénégal: "Afrique",
+  "Côte d'Ivoire": "Afrique",
+  Chine: "Asie",
+  Japon: "Asie",
+  Inde: "Asie",
+  Thaïlande: "Asie",
+  Australie: "Océanie",
+  "Nouvelle-Zélande": "Océanie",
+};
+
+// Même vrai bloc que Database/Utilisateurs — vrai petit bloc pays/continent, distinct du vrai
+// bloc Stat (plus grand) déjà utilisé pour statut/certification ci-dessous.
+function FilterBlock({ label, count, active, onClick }) {
+  return (
+    <button
+      onClick={onClick}
+      style={{
+        padding: "8px 4px",
+        borderRadius: "8px",
+        border: `2px solid ${active ? "#39FF66" : "#28405C"}`,
+        background: active ? "#28405C" : "#16273D",
+        color: active ? "#39FF66" : "#F2F2E8",
+        fontSize: "12.5px",
+        fontWeight: active ? 700 : 500,
+        cursor: "pointer",
+        textAlign: "center",
+        display: "flex",
+        flexDirection: "column",
+        gap: "4px",
+      }}
+    >
+      <span>{label}</span>
+      <span style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "15px", color: "#39FF66" }}>{count}</span>
+    </button>
+  );
+}
+
 function Stat({ label, value, color = "#39FF66", indicator, border, active, onClick }) {
   return (
     <div
@@ -46,12 +109,14 @@ const separatorStyle = { borderBottom: "1px solid #28405C", margin: "16px 0" };
 // signifie "aucun filtre". Utilisé côté client (items déjà en mémoire) — pour les répertoires
 // trop volumineux pour être chargés entièrement (produits), le filtrage se fait côté serveur à
 // la place, via les mêmes clés passées directement à la fonction de chargement de page.
-export function applyStatFilter(items, filterKey) {
+export function applyStatFilter(items, filterKey, getCountry = (item) => item.country) {
   if (!filterKey || filterKey === "total") return items;
   if (filterKey === "newContributions") return items.filter((i) => (i.pendingContributionsCount || 0) > 0);
   if (filterKey === "suggestedEdits") return items.filter((i) => i.hasPendingReport);
   if (filterKey.startsWith("status:")) return items.filter((i) => i.status === filterKey.slice("status:".length));
   if (filterKey.startsWith("cert:")) return items.filter((i) => i.certificationLevel === filterKey.slice("cert:".length));
+  if (filterKey.startsWith("country:")) return items.filter((i) => getCountry(i) === filterKey.slice("country:".length));
+  if (filterKey.startsWith("continent:")) return items.filter((i) => COUNTRY_TO_CONTINENT[getCountry(i)] === filterKey.slice("continent:".length));
   return items;
 }
 
@@ -75,16 +140,19 @@ export function applyStatFilter(items, filterKey) {
 //   comptages arrivent déjà calculés côté serveur, sous la forme
 //   { total, newContributions, suggestedEdits, byStatus: {draft, to_process, ...},
 //   byCertification: {utilisateur, bibamus, producteur} }.
-export function DetailedStatsCounterBar({ items, counts, activeFilter, onFilterChange }) {
+export function DetailedStatsCounterBar({ items, counts, activeFilter, onFilterChange, getCountry = (item) => item.country }) {
   const [expandedRow1, setExpandedRow1] = useState(true);
   const [expandedRow2, setExpandedRow2] = useState(true);
   const [expandedRow3, setExpandedRow3] = useState(true);
+  const [expandedGeo, setExpandedGeo] = useState(false);
 
   const total = counts ? counts.total : items.length;
   const newContributions = counts ? counts.newContributions : items.filter((i) => (i.pendingContributionsCount || 0) > 0).length;
   const suggestedEdits = counts ? counts.suggestedEdits : items.filter((i) => i.hasPendingReport).length;
   const statusCount = (key) => (counts ? counts.byStatus?.[key] || 0 : items.filter((i) => i.status === key).length);
   const certCount = (key) => (counts ? counts.byCertification?.[key] || 0 : items.filter((i) => i.certificationLevel === key).length);
+  const countryCount = (c) => (counts ? counts.byCountry?.[c] || 0 : items.filter((i) => getCountry(i) === c).length);
+  const continentCount = (c) => (counts ? counts.byContinent?.[c] || 0 : items.filter((i) => COUNTRY_TO_CONTINENT[getCountry(i)] === c).length);
 
   const handleClick = (key) => onFilterChange(activeFilter === key ? "total" : key);
 
@@ -158,6 +226,23 @@ export function DetailedStatsCounterBar({ items, counts, activeFilter, onFilterC
             onClick={() => handleClick("cert:producteur")}
           />
         </div>
+      )}
+
+      <div style={separatorStyle} />
+      <RowHeader title="Pays / Continents" expanded={expandedGeo} onToggle={() => setExpandedGeo((e) => !e)} />
+      {expandedGeo && (
+        <>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(6, 1fr)", gap: "8px", marginBottom: "8px" }}>
+            {COUNTRY_BLOCKS.map((c) => (
+              <FilterBlock key={c} label={c} count={countryCount(c)} active={activeFilter === `country:${c}`} onClick={() => handleClick(`country:${c}`)} />
+            ))}
+          </div>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(6, 1fr)", gap: "8px" }}>
+            {CONTINENT_BLOCKS.map((c) => (
+              <FilterBlock key={c} label={c} count={continentCount(c)} active={activeFilter === `continent:${c}`} onClick={() => handleClick(`continent:${c}`)} />
+            ))}
+          </div>
+        </>
       )}
       <div style={separatorStyle} />
     </div>
