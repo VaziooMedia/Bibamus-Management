@@ -199,20 +199,24 @@ function NewBusinessForm({ claim, onCreated }) {
 
 export function ClaimsScreen({ onOpenEntity }) {
   const [claims, setClaims] = useState(null);
+  const [rejectedClaims, setRejectedClaims] = useState(null);
+  const [viewMode, setViewMode] = useState("pending"); // "pending" | "rejected"
   const [typeFilter, setTypeFilter] = useState("all");
   const [creatingNewFor, setCreatingNewFor] = useState(null);
   const [busyId, setBusyId] = useState(null);
   const [sortKey, setSortKey] = useState(null);
   const [sortDir, setSortDir] = useState(1);
 
-  // Toujours les revendications en attente — un OK/NON les fait sortir de cette vraie liste,
-  // il n'y a donc plus besoin de vrais onglets par statut.
-  const refresh = () => loadClaims("pending").then(setClaims);
+  const refresh = () => {
+    loadClaims("pending").then(setClaims);
+    loadClaims("rejected").then(setRejectedClaims);
+  };
   useEffect(() => {
     refresh();
   }, []);
 
   const filtered = useMemo(() => {
+    if (viewMode === "rejected") return rejectedClaims;
     if (!claims) return null;
     let list = typeFilter === "all" ? claims : claims.filter((c) => c.entity_type === typeFilter);
     if (sortKey) {
@@ -223,7 +227,7 @@ export function ClaimsScreen({ onOpenEntity }) {
       });
     }
     return list;
-  }, [claims, typeFilter, sortKey, sortDir]);
+  }, [claims, rejectedClaims, viewMode, typeFilter, sortKey, sortDir]);
 
   const toggleSort = (key) => {
     if (sortKey === key) setSortDir((d) => -d);
@@ -260,18 +264,21 @@ export function ClaimsScreen({ onOpenEntity }) {
       <div style={{ display: "flex", gap: "12px", marginBottom: "20px", flexWrap: "wrap" }}>
         {TYPE_FILTERS.map((t) => {
           const count = claims ? (t.key === "all" ? claims.length : claims.filter((c) => c.entity_type === t.key).length) : 0;
-          const active = typeFilter === t.key;
+          const active = viewMode === "pending" && typeFilter === t.key;
           return (
             <div
               key={t.key}
-              onClick={() => setTypeFilter(t.key)}
+              onClick={() => {
+                setViewMode("pending");
+                setTypeFilter(t.key);
+              }}
               style={{
                 background: active ? "#1D3450" : "#16273D",
                 borderRadius: "10px",
                 padding: "8px 16px",
                 minWidth: "110px",
                 textAlign: "center",
-                border: active ? "2px solid #F2F2E8" : "none",
+                border: active ? "2px solid #39FF66" : "none",
                 cursor: "pointer",
               }}
             >
@@ -280,12 +287,32 @@ export function ClaimsScreen({ onOpenEntity }) {
             </div>
           );
         })}
+        {(() => {
+          const active = viewMode === "rejected";
+          return (
+            <div
+              onClick={() => setViewMode("rejected")}
+              style={{
+                background: active ? "#1D3450" : "#16273D",
+                borderRadius: "10px",
+                padding: "8px 16px",
+                minWidth: "110px",
+                textAlign: "center",
+                border: active ? "2px solid #ef007c" : "none",
+                cursor: "pointer",
+              }}
+            >
+              <div style={{ fontSize: "11.5px", color: "#8792A6", marginBottom: "4px" }}>Refus</div>
+              <div style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "20px", color: "#ef007c" }}>{rejectedClaims ? rejectedClaims.length : 0}</div>
+            </div>
+          );
+        })()}
       </div>
 
       {!filtered ? (
         <p style={{ color: "#8792A6" }}>Chargement...</p>
       ) : filtered.length === 0 ? (
-        <p style={{ color: "#8792A6", fontSize: "13px" }}>Aucune revendication en attente dans cette catégorie.</p>
+        <p style={{ color: "#8792A6", fontSize: "13px" }}>{viewMode === "rejected" ? "Aucune revendication refusée." : "Aucune revendication en attente dans cette catégorie."}</p>
       ) : (
         <table style={{ width: "100%", borderCollapse: "collapse" }}>
           <thead>
@@ -341,36 +368,40 @@ export function ClaimsScreen({ onOpenEntity }) {
                   </td>
                   <td style={{ ...cellStyle, textAlign: "center", whiteSpace: "nowrap" }}>{c.created_at ? c.created_at.slice(0, 10) : ""}</td>
                   <td style={{ ...cellStyle, textAlign: "center", whiteSpace: "nowrap", borderRight: "none" }}>
-                    <div style={{ display: "flex", gap: "6px", justifyContent: "center" }}>
-                      <button
-                        onClick={() => setCreatingNewFor(creatingNewFor === c.id ? null : c.id)}
-                        disabled={busyId === c.id}
-                        title="Approuver"
-                        aria-label="Approuver"
-                        style={{
-                          width: "28px",
-                          height: "28px",
-                          background: creatingNewFor === c.id ? "#39FF66" : "none",
-                          border: "2px solid #39FF66",
-                          borderRadius: "6px",
-                          fontWeight: 800,
-                          fontSize: "13px",
-                          color: creatingNewFor === c.id ? "#0D1B2A" : "#39FF66",
-                          cursor: "pointer",
-                        }}
-                      >
-                        V
-                      </button>
-                      <button
-                        onClick={() => handleReject(c)}
-                        disabled={busyId === c.id}
-                        title="Refuser"
-                        aria-label="Refuser"
-                        style={{ width: "28px", height: "28px", background: "none", border: "2px solid #FF3B4E", borderRadius: "6px", fontWeight: 800, fontSize: "13px", color: "#FF3B4E", cursor: "pointer" }}
-                      >
-                        X
-                      </button>
-                    </div>
+                    {viewMode === "rejected" ? (
+                      <span style={{ fontSize: "11.5px", color: "#ef007c", fontWeight: 700 }}>Refusée</span>
+                    ) : (
+                      <div style={{ display: "flex", gap: "6px", justifyContent: "center" }}>
+                        <button
+                          onClick={() => setCreatingNewFor(creatingNewFor === c.id ? null : c.id)}
+                          disabled={busyId === c.id}
+                          title="Approuver"
+                          aria-label="Approuver"
+                          style={{
+                            width: "28px",
+                            height: "28px",
+                            background: creatingNewFor === c.id ? "#39FF66" : "none",
+                            border: "2px solid #39FF66",
+                            borderRadius: "6px",
+                            fontWeight: 800,
+                            fontSize: "13px",
+                            color: creatingNewFor === c.id ? "#0D1B2A" : "#39FF66",
+                            cursor: "pointer",
+                          }}
+                        >
+                          V
+                        </button>
+                        <button
+                          onClick={() => handleReject(c)}
+                          disabled={busyId === c.id}
+                          title="Refuser"
+                          aria-label="Refuser"
+                          style={{ width: "28px", height: "28px", background: "none", border: "2px solid #FF3B4E", borderRadius: "6px", fontWeight: 800, fontSize: "13px", color: "#FF3B4E", cursor: "pointer" }}
+                        >
+                          X
+                        </button>
+                      </div>
+                    )}
                   </td>
                 </tr>
                 {creatingNewFor === c.id && (
