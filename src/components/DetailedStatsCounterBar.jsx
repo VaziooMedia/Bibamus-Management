@@ -4,11 +4,11 @@ import { CERTIFICATION_LEVELS } from "./CertificationLevelSelector.jsx";
 import { VisibilityDot } from "./DataTable.jsx";
 import { CertificationIcon } from "./CertificationIcon.jsx";
 
-const COUNTRY_BLOCKS = ["Belgique", "France", "Pays-Bas", "Allemagne", "Luxembourg", "Espagne"];
-const CONTINENT_BLOCKS = ["Europe", "Amérique du Nord", "Amérique du Sud", "Afrique", "Asie", "Océanie"];
+export const COUNTRY_BLOCKS = ["Belgique", "France", "Pays-Bas", "Allemagne", "Luxembourg", "Espagne"];
+export const CONTINENT_BLOCKS = ["Europe", "Amérique du Nord", "Amérique du Sud", "Afrique", "Asie", "Océanie"];
 
 // Même vrai mapping que Database/Utilisateurs.
-const COUNTRY_TO_CONTINENT = {
+export const COUNTRY_TO_CONTINENT = {
   Belgique: "Europe",
   France: "Europe",
   "Pays-Bas": "Europe",

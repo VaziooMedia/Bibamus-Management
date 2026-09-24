@@ -1323,7 +1323,7 @@ export async function loadDrinkById(id) {
   };
 }
 
-export async function loadDrinksPage({ type, status, certificationLevel, hasPendingContributions, reportedIds, search, sortKey = "name", sortDir = 1, page = 0, pageSize = 50 } = {}) {
+export async function loadDrinksPage({ type, status, certificationLevel, hasPendingContributions, reportedIds, nationalityCodes, search, sortKey = "name", sortDir = 1, page = 0, pageSize = 50 } = {}) {
   // Jointure sur une seule profondeur seulement — une double jointure imbriquée (produit → marque
   // → producteur) s'est révélée trop fragile : si Supabase n'arrive pas à résoudre sans ambiguïté
   // l'une des deux relations, la requête ENTIÈRE échoue et plus aucun produit ne s'affiche.
@@ -1333,6 +1333,7 @@ export async function loadDrinksPage({ type, status, certificationLevel, hasPend
   if (certificationLevel) query = query.eq("certification_level", certificationLevel);
   if (hasPendingContributions) query = query.gt("pending_contributions_count", 0);
   if (reportedIds) query = query.in("id", reportedIds.size > 0 ? Array.from(reportedIds) : ["__none__"]);
+  if (nationalityCodes) query = query.in("nationality", nationalityCodes.length > 0 ? nationalityCodes : ["__none__"]);
   if (search && search.trim()) {
     query = query.ilike("search_text", `%${normalizeSearchText(search)}%`);
   }
@@ -1365,13 +1366,14 @@ export async function loadDrinksPage({ type, status, certificationLevel, hasPend
 // Un seul décompte rapide (via count exact, sans jamais rapatrier les lignes elles-mêmes) —
 // utilisé pour les blocs de statistiques, avec un filtre de catégorie optionnel pour qu'ils
 // restent justes une fois qu'une catégorie est sélectionnée.
-export async function countDrinks({ type, status, certificationLevel, hasPendingContributions, reportedIds } = {}) {
+export async function countDrinks({ type, status, certificationLevel, hasPendingContributions, reportedIds, nationalityCodes } = {}) {
   let query = supabase.from("drinks_directory").select("id", { count: "exact", head: true });
   query = applyTypeFilter(query, type);
   if (status) query = applyStatusFilter(query, status);
   if (certificationLevel) query = query.eq("certification_level", certificationLevel);
   if (hasPendingContributions) query = query.gt("pending_contributions_count", 0);
   if (reportedIds) query = query.in("id", reportedIds.size > 0 ? Array.from(reportedIds) : ["__none__"]);
+  if (nationalityCodes) query = query.in("nationality", nationalityCodes.length > 0 ? nationalityCodes : ["__none__"]);
   const { count, error } = await query;
   if (error) {
     console.error("countDrinks:", error);

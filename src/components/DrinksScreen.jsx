@@ -3,7 +3,7 @@ import { loadDrinksPage, countDrinks, countDrinksByType, loadPendingReportEntity
 import { ServerDataTable } from "./ServerDataTable.jsx";
 import { StatusBadge, VisibilityDot } from "./DataTable.jsx";
 import { DrinkDetailPanel, DRINK_TYPES, BEER_CIDER_SUBTYPES } from "./DrinkDetailPanel.jsx";
-import { DetailedStatsCounterBar, applyStatFilter } from "./DetailedStatsCounterBar.jsx";
+import { DetailedStatsCounterBar, applyStatFilter, COUNTRY_BLOCKS, CONTINENT_BLOCKS, COUNTRY_TO_CONTINENT } from "./DetailedStatsCounterBar.jsx";
 import { STATUSES } from "./StatusSelector.jsx";
 import { ProductCategoryBar } from "./ProductCategoryBar.jsx";
 import { PageTitle } from "./PageTitle.jsx";
@@ -22,6 +22,17 @@ const typeLabel = labelFromList(DRINK_TYPES);
 const subtypeLabel = labelFromList(BEER_CIDER_SUBTYPES);
 const countryLabel = labelFromList(COUNTRIES);
 const productStatusLabel = labelFromList(BEER_CIDER_COMMERCIAL_STATUSES);
+
+// nationality est stocké en code technique (ex. "belgique"), alors que les blocs Pays/Continents
+// travaillent avec le vrai libellé français ("Belgique") — même logique que les 3 autres
+// répertoires, résolution en sens inverse ici.
+const countryCodeByLabel = {};
+COUNTRIES.forEach((c) => (countryCodeByLabel[c.fr] = c.code));
+const codesForContinent = (continent) =>
+  Object.keys(COUNTRY_TO_CONTINENT)
+    .filter((label) => COUNTRY_TO_CONTINENT[label] === continent)
+    .map((label) => countryCodeByLabel[label])
+    .filter(Boolean);
 
 const allColumns = [
   { key: "name", label: "Nom" },
@@ -47,6 +58,8 @@ function filterKeyToParams(filterKey, reportedIds) {
   if (filterKey === "suggestedEdits") return { reportedIds };
   if (filterKey.startsWith("status:")) return { status: filterKey.slice("status:".length) };
   if (filterKey.startsWith("cert:")) return { certificationLevel: filterKey.slice("cert:".length) };
+  if (filterKey.startsWith("country:")) return { nationalityCodes: [countryCodeByLabel[filterKey.slice("country:".length)]].filter(Boolean) };
+  if (filterKey.startsWith("continent:")) return { nationalityCodes: codesForContinent(filterKey.slice("continent:".length)) };
   return {};
 }
 
@@ -79,20 +92,26 @@ export function DrinksScreen({ initialDrinkId, onInitialDrinkOpened } = {}) {
   // répertoire, qui pourrait représenter des dizaines ou centaines de milliers de lignes.
   const refreshCounts = useCallback(async () => {
     const type = selectedType === "__other__" ? "__other__" : selectedType;
-    const [total, newContributions, reportIds, statusResults, certResults, byType] = await Promise.all([
+    const [total, newContributions, reportIds, statusResults, certResults, byType, countryResults, continentResults] = await Promise.all([
       countDrinks({ type }),
       countDrinks({ type, hasPendingContributions: true }),
       loadPendingReportEntityIds("drink"),
       Promise.all(STATUSES.map((s) => countDrinks({ type, status: s.key }))),
       Promise.all(["utilisateur", "bibamus", "producteur"].map((c) => countDrinks({ type, certificationLevel: c }))),
       countDrinksByType(),
+      Promise.all(COUNTRY_BLOCKS.map((c) => countDrinks({ type, nationalityCodes: [countryCodeByLabel[c]].filter(Boolean) }))),
+      Promise.all(CONTINENT_BLOCKS.map((c) => countDrinks({ type, nationalityCodes: codesForContinent(c) }))),
     ]);
     const suggestedEdits = await countDrinks({ type, reportedIds: reportIds });
     const byStatus = {};
     STATUSES.forEach((s, i) => (byStatus[s.key] = statusResults[i]));
     const byCertification = { utilisateur: certResults[0], bibamus: certResults[1], producteur: certResults[2] };
+    const byCountry = {};
+    COUNTRY_BLOCKS.forEach((c, i) => (byCountry[c] = countryResults[i]));
+    const byContinent = {};
+    CONTINENT_BLOCKS.forEach((c, i) => (byContinent[c] = continentResults[i]));
     setPendingReportIds(reportIds);
-    setStatCounts({ total, newContributions, suggestedEdits, byStatus, byCertification });
+    setStatCounts({ total, newContributions, suggestedEdits, byStatus, byCertification, byCountry, byContinent });
     setCategoryCounts(byType);
   }, [selectedType]);
 
