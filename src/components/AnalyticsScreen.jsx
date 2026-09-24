@@ -1,11 +1,22 @@
 import React, { useState, useEffect } from "react";
-import { loadAnalyticsEvents } from "../data/sharedDirectories.js";
+import { loadAnalyticsEvents, loadCrashReports } from "../data/sharedDirectories.js";
 import { PageTitle } from "./PageTitle.jsx";
 
 const EVENT_TYPE_LABELS = {
   screen_view: "Vue d'écran",
   bibax_added: "Bibax ajouté",
   report_submitted: "Signalement envoyé",
+};
+
+// Même vraies raisons que les vrais écrans Signalements/Notifications — pour vraiment
+// exploiter le vrai metadata.reason déjà stocké sur les événements report_submitted.
+const REPORT_REASON_LABELS = {
+  suggestion: "Suggestion de modification",
+  closed_permanently: "Établissement fermé définitivement",
+  wrong_info: "Information(s) incorrecte(s)",
+  duplicate: "Fiche en double",
+  inappropriate: "Contenu inapproprié",
+  other: "Autre raison",
 };
 
 const PERIOD_OPTIONS = [
@@ -15,9 +26,12 @@ const PERIOD_OPTIONS = [
   { key: null, label: "Tout" },
 ];
 
-function StatBlock({ value, label }) {
+function StatBlock({ value, label, onClick }) {
   return (
-    <div style={{ flex: 1, background: "#16273D", borderRadius: "12px", padding: "18px", textAlign: "center" }}>
+    <div
+      onClick={onClick}
+      style={{ flex: 1, background: "#16273D", borderRadius: "12px", padding: "18px", textAlign: "center", cursor: onClick ? "pointer" : "default" }}
+    >
       <div style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "30px", color: "#39FF66" }}>{value}</div>
       <div style={{ fontSize: "12px", color: "#8792A6", fontWeight: 600 }}>{label}</div>
     </div>
@@ -50,27 +64,71 @@ function RankedList({ title, entries }) {
   );
 }
 
-export function AnalyticsScreen() {
+// Vraie petite courbe d'évolution en SVG artisanal — pas de vraie bibliothèque de graphiques
+// déjà installée sur cette plateforme, et le vrai besoin reste simple (une vraie série de
+// points reliés).
+function LineChart({ title, points }) {
+  const width = 640;
+  const height = 160;
+  const padding = 24;
+  const max = Math.max(1, ...points.map((p) => p.value));
+  const stepX = points.length > 1 ? (width - padding * 2) / (points.length - 1) : 0;
+  const coords = points.map((p, i) => ({
+    x: padding + i * stepX,
+    y: height - padding - (p.value / max) * (height - padding * 2),
+  }));
+  const linePath = coords.map((c, i) => `${i === 0 ? "M" : "L"} ${c.x} ${c.y}`).join(" ");
+  const showEvery = Math.max(1, Math.ceil(points.length / 8));
+
+  return (
+    <div style={{ background: "#16273D", borderRadius: "12px", padding: "18px" }}>
+      <p style={{ margin: "0 0 14px", fontSize: "13px", fontWeight: 700, color: "#F2F2E8" }}>{title}</p>
+      {points.length === 0 ? (
+        <p style={{ fontSize: "12.5px", color: "#8792A6" }}>Pas encore de données.</p>
+      ) : (
+        <svg viewBox={`0 0 ${width} ${height + 20}`} style={{ width: "100%", height: "auto", display: "block" }}>
+          <path d={linePath} fill="none" stroke="#39FF66" strokeWidth="2" />
+          {coords.map((c, i) => (
+            <circle key={i} cx={c.x} cy={c.y} r="2.5" fill="#39FF66" />
+          ))}
+          {points.map(
+            (p, i) =>
+              i % showEvery === 0 && (
+                <text key={i} x={coords[i].x} y={height + 14} fontSize="9" fill="#8792A6" textAnchor="middle">
+                  {p.label}
+                </text>
+              )
+          )}
+        </svg>
+      )}
+    </div>
+  );
+}
+
+export function AnalyticsScreen({ onNavigate }) {
   const [events, setEvents] = useState(null);
+  const [crashes, setCrashes] = useState(null);
   const [periodDays, setPeriodDays] = useState(7);
 
   useEffect(() => {
     loadAnalyticsEvents().then(setEvents);
+    loadCrashReports().then(setCrashes);
   }, []);
 
-  const filtered = events
-    ? periodDays
-      ? events.filter((e) => new Date(e.created_at) > new Date(Date.now() - periodDays * 86400000))
-      : events
-    : [];
+  const inPeriod = (createdAt) => !periodDays || new Date(createdAt) > new Date(Date.now() - periodDays * 86400000);
+
+  const filtered = events ? events.filter((e) => inPeriod(e.created_at)) : [];
+  const filteredCrashes = crashes ? crashes.filter((c) => inPeriod(c.created_at)) : [];
 
   const distinctUsers = new Set(filtered.filter((e) => e.bibro_code).map((e) => e.bibro_code)).size;
 
   const screenCounts = {};
   const eventTypeCounts = {};
+  const reportReasonCounts = {};
   filtered.forEach((e) => {
     if (e.event_type === "screen_view" && e.screen) screenCounts[e.screen] = (screenCounts[e.screen] || 0) + 1;
     eventTypeCounts[e.event_type] = (eventTypeCounts[e.event_type] || 0) + 1;
+    if (e.event_type === "report_submitted" && e.metadata?.reason) reportReasonCounts[e.metadata.reason] = (reportReasonCounts[e.metadata.reason] || 0) + 1;
   });
 
   const topScreens = Object.entries(screenCounts)
@@ -82,6 +140,26 @@ export function AnalyticsScreen() {
     .map(([key, count]) => ({ label: EVENT_TYPE_LABELS[key] || key, count }))
     .sort((a, b) => b.count - a.count)
     .slice(0, 8);
+
+  const topReportReasons = Object.entries(reportReasonCounts)
+    .map(([key, count]) => ({ label: REPORT_REASON_LABELS[key] || key, count }))
+    .sort((a, b) => b.count - a.count);
+
+  // Groupe par vraie heure sur "24 heures" (un vrai regroupement par jour ne donnerait qu'un
+  // vrai seul point), par vrai jour calendaire sinon.
+  const byHour = periodDays === 1;
+  const bucketKey = (d) => (byHour ? `${d.getFullYear()}-${d.getMonth()}-${d.getDate()}-${d.getHours()}` : `${d.getFullYear()}-${d.getMonth()}-${d.getDate()}`);
+  const bucketLabel = (d) => (byHour ? `${d.getHours()}h` : `${d.getDate()}/${d.getMonth() + 1}`);
+  const buckets = {};
+  filtered.forEach((e) => {
+    const d = new Date(e.created_at);
+    const key = bucketKey(d);
+    if (!buckets[key]) buckets[key] = { date: d, count: 0 };
+    buckets[key].count += 1;
+  });
+  const timeline = Object.values(buckets)
+    .sort((a, b) => a.date - b.date)
+    .map((b) => ({ label: bucketLabel(b.date), value: b.count }));
 
   return (
     <div>
@@ -117,12 +195,23 @@ export function AnalyticsScreen() {
             <StatBlock value={distinctUsers} label="Bibax actifs" />
             <StatBlock value={eventTypeCounts.screen_view || 0} label="Vues d'écran" />
             <StatBlock value={filtered.length} label="Événements au total" />
+            <StatBlock value={filteredCrashes.length} label="Plantages" onClick={() => onNavigate?.("crashReports")} />
           </div>
 
-          <div style={{ display: "flex", gap: "12px", flexWrap: "wrap" }}>
+          <div style={{ marginBottom: "20px" }}>
+            <LineChart title="Évolution des événements" points={timeline} />
+          </div>
+
+          <div style={{ display: "flex", gap: "12px", flexWrap: "wrap", marginBottom: "12px" }}>
             <RankedList title="Écrans les plus visités" entries={topScreens} />
             <RankedList title="Actions" entries={topEventTypes} />
           </div>
+
+          {topReportReasons.length > 0 && (
+            <div style={{ display: "flex", gap: "12px", flexWrap: "wrap" }}>
+              <RankedList title="Raisons de signalement" entries={topReportReasons} />
+            </div>
+          )}
         </>
       )}
     </div>

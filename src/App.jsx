@@ -117,7 +117,7 @@ export default function App() {
       {screen === "chatTeam" && <ChatTeamScreen myUserId={myUserId} myRole={myRole} />}
       {screen === "chatUsers" && <ChatUsersScreen myUserId={myUserId} myRole={myRole} />}
       {screen === "chatBusiness" && <ChatBusinessScreen myUserId={myUserId} myRole={myRole} />}
-      {screen === "stats" && <AnalyticsScreen />}
+      {screen === "stats" && <AnalyticsScreen onNavigate={setScreen} />}
       {screen === "finances" && <ComingSoon title="Finances" />}
       {screen === "claims" && (
         <ClaimsScreen
