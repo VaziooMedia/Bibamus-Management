@@ -253,9 +253,9 @@ export function AdministratorDetailPanel({ administrator, onClose, onSaved }) {
                   <button
                     onClick={handleDelete}
                     disabled={deleting || !deletePassword}
-                    style={{ flex: 1, background: "#FF3B4E", border: "none", borderRadius: "8px", padding: "10px", fontWeight: 700, color: "#fff", cursor: "pointer", opacity: deleting || !deletePassword ? 0.6 : 1 }}
+                    style={{ flex: 1, background: "#5C0E17", border: "none", borderRadius: "8px", padding: "10px", fontWeight: 700, color: "#fff", cursor: "pointer", opacity: deleting || !deletePassword ? 0.6 : 1 }}
                   >
-                    {deleting ? "Suppression..." : "Confirmer la suppression"}
+                    {deleting ? "Suppression..." : "Suppression"}
                   </button>
                 </div>
               </div>
