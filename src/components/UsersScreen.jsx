@@ -45,7 +45,7 @@ const COUNTRY_TO_CONTINENT = {
   "Nouvelle-Zélande": "Océanie",
 };
 
-function FilterBlock({ label, active, onClick }) {
+function FilterBlock({ label, count, active, onClick }) {
   return (
     <button
       onClick={onClick}
@@ -59,9 +59,13 @@ function FilterBlock({ label, active, onClick }) {
         fontWeight: active ? 700 : 500,
         cursor: "pointer",
         textAlign: "center",
+        display: "flex",
+        flexDirection: "column",
+        gap: "4px",
       }}
     >
-      {label}
+      <span>{label}</span>
+      <span style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "15px", color: "#39FF66" }}>{count}</span>
     </button>
   );
 }
@@ -164,6 +168,7 @@ export function UsersScreen() {
           <FilterBlock
             key={c}
             label={c}
+            count={(users || []).filter((u) => u.country === c).length}
             active={countryFilter === c}
             onClick={() => {
               setCountryFilter((prev) => (prev === c ? null : c));
@@ -177,6 +182,7 @@ export function UsersScreen() {
           <FilterBlock
             key={c}
             label={c}
+            count={(users || []).filter((u) => COUNTRY_TO_CONTINENT[u.country] === c).length}
             active={continentFilter === c}
             onClick={() => {
               setContinentFilter((prev) => (prev === c ? null : c));

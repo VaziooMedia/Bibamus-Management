@@ -9,18 +9,87 @@ const normalize = (s) =>
     .normalize("NFD")
     .replace(/[\u0300-\u036f]/g, "");
 
+const COUNTRY_BLOCKS = ["Belgique", "France", "Pays-Bas", "Allemagne", "Luxembourg", "Espagne"];
+const CONTINENT_BLOCKS = ["Europe", "Amérique du Nord", "Amérique du Sud", "Afrique", "Asie", "Océanie"];
+
+// Même vrai principe que Database/Utilisateurs — chaque vrai pays connu de l'app est rattaché
+// à son vrai continent, pour filtrer à ce niveau sans vrai champ dédié en base.
+const COUNTRY_TO_CONTINENT = {
+  Belgique: "Europe",
+  France: "Europe",
+  "Pays-Bas": "Europe",
+  Allemagne: "Europe",
+  Luxembourg: "Europe",
+  Espagne: "Europe",
+  Italie: "Europe",
+  Portugal: "Europe",
+  Suisse: "Europe",
+  "Royaume-Uni": "Europe",
+  Irlande: "Europe",
+  Autriche: "Europe",
+  "États-Unis": "Amérique du Nord",
+  Canada: "Amérique du Nord",
+  Mexique: "Amérique du Nord",
+  Brésil: "Amérique du Sud",
+  Argentine: "Amérique du Sud",
+  Chili: "Amérique du Sud",
+  Maroc: "Afrique",
+  Algérie: "Afrique",
+  Tunisie: "Afrique",
+  Sénégal: "Afrique",
+  "Côte d'Ivoire": "Afrique",
+  Chine: "Asie",
+};
+
+function FilterBlock({ label, count, active, onClick }) {
+  return (
+    <button
+      onClick={onClick}
+      style={{
+        padding: "8px 4px",
+        borderRadius: "8px",
+        border: `2px solid ${active ? "#39FF66" : "#28405C"}`,
+        background: active ? "#28405C" : "#16273D",
+        color: active ? "#39FF66" : "#F2F2E8",
+        fontSize: "12.5px",
+        fontWeight: active ? 700 : 500,
+        cursor: "pointer",
+        textAlign: "center",
+        display: "flex",
+        flexDirection: "column",
+        gap: "4px",
+      }}
+    >
+      <span>{label}</span>
+      <span style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "15px", color: "#39FF66" }}>{count}</span>
+    </button>
+  );
+}
+
 export function BusinessAccountsScreen({ onOpenAccount }) {
   const [accounts, setAccounts] = useState(null);
   const [entityCounts, setEntityCounts] = useState({});
   const [query, setQuery] = useState("");
+  const [countryFilter, setCountryFilter] = useState(null);
+  const [continentFilter, setContinentFilter] = useState(null);
 
   useEffect(() => {
     loadBusinessAccountsFull().then(setAccounts);
     loadBusinessEntityCounts().then(setEntityCounts);
   }, []);
 
+  // company_country est un vrai code (ex. "belgique"), pas un vrai nom français direct — on le
+  // résout d'abord, comme pour la vraie colonne "Pays" déjà affichée.
+  const countryNameOf = (a) => COUNTRIES.find((c) => c.code === a.company_country)?.fr || null;
+
   const q = normalize(query.trim());
-  const filtered = accounts ? accounts.filter((a) => !q || [a.company_name, a.email].some((field) => normalize(field).includes(q))) : null;
+  const filtered = accounts
+    ? accounts.filter((a) => {
+        if (countryFilter && countryNameOf(a) !== countryFilter) return false;
+        if (continentFilter && COUNTRY_TO_CONTINENT[countryNameOf(a)] !== continentFilter) return false;
+        return !q || [a.company_name, a.email].some((field) => normalize(field).includes(q));
+      })
+    : null;
 
   // Même vrai style que les autres vrais tableaux de la plateforme (Lieux, Produits,
   // Revendications...) — vraie bordure épaisse sur l'en-tête, vrai survol des lignes, vraies
@@ -32,6 +101,35 @@ export function BusinessAccountsScreen({ onOpenAccount }) {
     <div>
       <PageTitle>Comptes Business</PageTitle>
       <p style={{ fontSize: "12.5px", color: "#8792A6", marginBottom: "16px" }}>Comptes créés suite à une revendication approuvée.</p>
+
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(6, 1fr)", gap: "8px", marginBottom: "8px" }}>
+        {COUNTRY_BLOCKS.map((c) => (
+          <FilterBlock
+            key={c}
+            label={c}
+            count={(accounts || []).filter((a) => countryNameOf(a) === c).length}
+            active={countryFilter === c}
+            onClick={() => {
+              setCountryFilter((prev) => (prev === c ? null : c));
+              setContinentFilter(null);
+            }}
+          />
+        ))}
+      </div>
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(6, 1fr)", gap: "8px", marginBottom: "20px" }}>
+        {CONTINENT_BLOCKS.map((c) => (
+          <FilterBlock
+            key={c}
+            label={c}
+            count={(accounts || []).filter((a) => COUNTRY_TO_CONTINENT[countryNameOf(a)] === c).length}
+            active={continentFilter === c}
+            onClick={() => {
+              setContinentFilter((prev) => (prev === c ? null : c));
+              setCountryFilter(null);
+            }}
+          />
+        ))}
+      </div>
 
       <input
         value={query}
@@ -68,7 +166,7 @@ export function BusinessAccountsScreen({ onOpenAccount }) {
               >
                 <td style={{ ...cellStyle, textAlign: "center", whiteSpace: "nowrap" }}>{String(i + 1).padStart(2, "0")}</td>
                 <td style={{ ...cellStyle, fontWeight: 700 }}>{a.company_name || "—"}</td>
-                <td style={{ ...cellStyle, textAlign: "center", whiteSpace: "nowrap" }}>{COUNTRIES.find((c) => c.code === a.company_country)?.fr || "—"}</td>
+                <td style={{ ...cellStyle, textAlign: "center", whiteSpace: "nowrap" }}>{countryNameOf(a) || "—"}</td>
                 <td style={{ ...cellStyle, textAlign: "center" }}>
                   {a.contact_email ? (
                     <a href={`mailto:${a.contact_email}`} onClick={(e) => e.stopPropagation()} title={a.contact_email} style={{ display: "inline-flex" }}>
