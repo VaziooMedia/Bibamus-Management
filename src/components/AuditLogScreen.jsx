@@ -118,7 +118,7 @@ export function AuditLogScreen() {
   return (
     <div>
       <PageTitle>Audit</PageTitle>
-      <p style={{ fontSize: "12.5px", color: "#8792A6", marginBottom: "20px" }}>Historique des actions sensibles sur la plateforme — création, statut, certification, suppression, blocage, rôles.</p>
+      <p style={{ fontSize: "12.5px", color: "#8792A6", marginBottom: "20px" }}>Historique des actions sensibles sur la plateforme.</p>
 
       <div style={{ display: "flex", gap: "8px", marginBottom: "20px", flexWrap: "wrap" }}>
         {ACTION_FILTERS.map((f) => (
