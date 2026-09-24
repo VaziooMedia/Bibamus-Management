@@ -1332,7 +1332,10 @@ export async function loadDrinksPage({ type, status, certificationLevel, hasPend
   if (certificationLevel) query = query.eq("certification_level", certificationLevel);
   if (hasPendingContributions) query = query.gt("pending_contributions_count", 0);
   if (reportedIds) query = query.in("id", reportedIds.size > 0 ? Array.from(reportedIds) : ["__none__"]);
-  if (search && search.trim()) query = query.ilike("name", `%${search.trim()}%`);
+  if (search && search.trim()) {
+    const s = search.trim().replace(/,/g, "");
+    query = query.or(`name.ilike.%${s}%,alternate_name.ilike.%${s}%`);
+  }
   // "brandName"/"producerName" résultent d'une jointure, pas d'une vraie colonne — on trie par brand_id à la place.
   const realSortKey = sortKey === "brandName" || sortKey === "producerName" ? "brand_id" : sortKey;
   query = query.order(realSortKey, { ascending: sortDir === 1, nullsFirst: false });

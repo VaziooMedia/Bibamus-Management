@@ -1,6 +1,13 @@
 import React from "react";
 import { LANGUAGES } from "./AdministratorDetailPanel.jsx";
 
+// Vraie fonction partagée — extrait toutes les vraies valeurs cherchables de ces 3 vrais
+// blocs (utilisée dans les vraies barres de recherche des 4 vrais écrans de liste), pour ne
+// pas répéter cette vraie logique dans chacun.
+export function alternateNameSearchFields(item) {
+  return [...(item.aliases || []), item.alternateName, ...(item.translations || []).map((t) => t.value)];
+}
+
 const fieldStyle = { padding: "10px 12px", borderRadius: "8px", border: "2px solid #28405C", fontSize: "14px", width: "100%", color: "#F2F2E8", background: "#0D1B2A", boxSizing: "border-box" };
 const labelStyle = { fontSize: "12.5px", color: "#8792A6", marginBottom: "4px", display: "block", fontWeight: 600 };
 

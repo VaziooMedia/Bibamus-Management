@@ -12,7 +12,7 @@ import { STATUSES } from "./StatusSelector.jsx";
 // gagné sur les colonnes à contenu variable (Nom, Pays, Commune).
 const COMPACT_COLUMN_KEYS = ["status", "visible", "certificationLevel"];
 
-export function DataTable({ items, allColumns, forcedKeys = [], defaultVisibleKeys, onRowClick, onAdd, searchPlaceholder = "Rechercher...", storageKey }) {
+export function DataTable({ items, allColumns, forcedKeys = [], defaultVisibleKeys, onRowClick, onAdd, searchPlaceholder = "Rechercher...", storageKey, extraSearchFields }) {
   const [query, setQuery] = useState("");
   const [visibleKeys, setVisibleKeysState] = useState(() => {
     if (storageKey) {
@@ -83,12 +83,15 @@ export function DataTable({ items, allColumns, forcedKeys = [], defaultVisibleKe
     const q = query.trim().toLowerCase();
     let list = items;
     if (q) {
-      list = list.filter((item) =>
-        columns.some((col) => {
+      list = list.filter((item) => {
+        const inColumns = columns.some((col) => {
           const val = item[col.key];
           return val != null && String(val).toLowerCase().includes(q);
-        })
-      );
+        });
+        if (inColumns) return true;
+        if (!extraSearchFields) return false;
+        return extraSearchFields(item).some((val) => val != null && String(val).toLowerCase().includes(q));
+      });
     }
     return [...list].sort((a, b) => {
       const av = a[sortKey];

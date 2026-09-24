@@ -3,6 +3,7 @@ import { loadBreweriesDirectory, loadBrandsDirectory, loadPendingReportEntityIds
 import { DataTable, StatusBadge, VisibilityDot } from "./DataTable.jsx";
 import { BreweryDetailPanel } from "./BreweryDetailPanel.jsx";
 import { BrandDetailPanel } from "./BrandDetailPanel.jsx";
+import { alternateNameSearchFields } from "./AlternateNamesFields.jsx";
 import { DetailedStatsCounterBar, applyStatFilter } from "./DetailedStatsCounterBar.jsx";
 import { PageTitle } from "./PageTitle.jsx";
 import { COUNTRIES, PRODUCER_TYPES, PRODUCER_PROFILES, BRAND_CLASSIFICATIONS, BRAND_TYPES } from "../constants.js";
@@ -103,6 +104,7 @@ export function BreweriesScreen({ initialBreweryId, onInitialBreweryOpened } = {
             onRowClick={setSelected}
             onAdd={() => setCreating(true)}
             searchPlaceholder="Rechercher Producteurs"
+            extraSearchFields={alternateNameSearchFields}
           />
         </>
       )}
@@ -183,6 +185,7 @@ export function BrandsScreen({ initialBrandId, onInitialBrandOpened } = {}) {
             onRowClick={setSelected}
             onAdd={() => setCreating(true)}
             searchPlaceholder="Rechercher Marques"
+            extraSearchFields={alternateNameSearchFields}
           />
         </>
       )}

@@ -3,6 +3,7 @@ import { loadPublicVenues, loadDrinksDirectory, loadPendingReportEntityIds } fro
 import { DataTable, StatusBadge, VisibilityDot } from "./DataTable.jsx";
 import { VenueDetailPanel } from "./VenueDetailPanel.jsx";
 import { DetailedStatsCounterBar, applyStatFilter } from "./DetailedStatsCounterBar.jsx";
+import { alternateNameSearchFields } from "./AlternateNamesFields.jsx";
 import { PageTitle } from "./PageTitle.jsx";
 import { COUNTRIES } from "../constants.js";
 import { CertificationIcon } from "./CertificationIcon.jsx";
@@ -84,6 +85,7 @@ export function VenuesScreen({ initialVenueId, onInitialVenueOpened } = {}) {
             onRowClick={setSelected}
             onAdd={() => setCreating(true)}
             searchPlaceholder="Rechercher Lieux"
+            extraSearchFields={alternateNameSearchFields}
           />
         </>
       )}
