@@ -85,13 +85,13 @@ function FilterBlock({ label, count, active, onClick }) {
   );
 }
 
-function SortHeader({ label, sortKey, currentSort, onSort }) {
+const headerCellStyle = { padding: "10px 12px", fontSize: "12.5px", color: "#8792A6", textAlign: "left", whiteSpace: "nowrap", borderRight: "1px solid #28405C" };
+const cellStyle = { padding: "10px 12px", fontSize: "14px", color: "#F2F2E8", borderBottom: "1px solid #16273D", borderRight: "1px solid #16273D" };
+
+function SortHeader({ label, sortKey, currentSort, onSort, style }) {
   const active = currentSort.key === sortKey;
   return (
-    <th
-      onClick={() => onSort(sortKey)}
-      style={{ textAlign: "left", padding: "10px", color: active ? "#39FF66" : "#8792A6", fontSize: "12px", cursor: "pointer", userSelect: "none" }}
-    >
+    <th onClick={() => onSort(sortKey)} style={{ ...headerCellStyle, cursor: "pointer", userSelect: "none", color: active ? "#39FF66" : headerCellStyle.color, ...style }}>
       {label} {active ? (currentSort.dir === 1 ? "▲" : "▼") : ""}
     </th>
   );
@@ -185,6 +185,8 @@ export function CollaboratorsScreen() {
         ))}
       </div>
 
+      <div style={{ height: "1px", background: "#28405C", margin: "0 0 20px", maxWidth: "900px" }} />
+
       <div style={{ display: "grid", gridTemplateColumns: "repeat(6, 1fr)", gap: "8px", marginBottom: "8px", maxWidth: "900px" }}>
         {COUNTRY_BLOCKS.map((c) => (
           <FilterBlock
@@ -214,6 +216,8 @@ export function CollaboratorsScreen() {
         ))}
       </div>
 
+      <div style={{ height: "1px", background: "#28405C", margin: "0 0 20px", maxWidth: "900px" }} />
+
       <input
         value={query}
         onChange={(e) => setQuery(e.target.value)}
@@ -226,24 +230,32 @@ export function CollaboratorsScreen() {
       ) : sorted.length === 0 ? (
         <p style={{ color: "#8792A6", fontSize: "13px" }}>{query ? "Aucun résultat pour cette recherche." : "Aucun administrateur pour l'instant."}</p>
       ) : (
-        <table style={{ width: "100%", borderCollapse: "collapse" }}>
+        <table style={{ width: "100%", maxWidth: "900px", borderCollapse: "collapse" }}>
           <thead>
-            <tr style={{ borderBottom: "2px solid #28405C" }}>
+            <tr style={{ borderTop: "2px solid #28405C", borderBottom: "2px solid #28405C" }}>
+              <th style={{ ...headerCellStyle, width: "1%" }}>#</th>
               <SortHeader label="Nom" sortKey="last_name" currentSort={sort} onSort={handleSort} />
               <SortHeader label="Prénom" sortKey="name" currentSort={sort} onSort={handleSort} />
-              <th style={{ textAlign: "left", padding: "10px", color: "#8792A6", fontSize: "12px" }}>Email</th>
+              <th style={headerCellStyle}>Email</th>
               <SortHeader label="Rôle" sortKey="role" currentSort={sort} onSort={handleSort} />
-              <SortHeader label="Statut" sortKey="active" currentSort={sort} onSort={handleSort} />
+              <SortHeader label="Statut" sortKey="active" currentSort={sort} onSort={handleSort} style={{ width: "1%", borderRight: "none" }} />
             </tr>
           </thead>
           <tbody>
-            {sorted.map((a) => (
-              <tr key={a.id} onClick={() => setSelected(a)} style={{ borderBottom: "1px solid #28405C", cursor: "pointer" }}>
-                <td style={{ padding: "10px", color: "#F2F2E8", fontSize: "13.5px" }}>{a.last_name || "—"}</td>
-                <td style={{ padding: "10px", color: "#F2F2E8", fontSize: "13.5px" }}>{a.name || "—"}</td>
-                <td style={{ padding: "10px", color: "#F2F2E8", fontSize: "13.5px" }}>{a.email}</td>
-                <td style={{ padding: "10px", color: "#F2F2E8", fontSize: "13.5px" }}>{roleLabel(a.role)}</td>
-                <td style={{ padding: "10px" }}>
+            {sorted.map((a, i) => (
+              <tr
+                key={a.id}
+                onClick={() => setSelected(a)}
+                style={{ borderBottom: "1px solid #16273D", cursor: "pointer" }}
+                onMouseEnter={(e) => (e.currentTarget.style.background = "#16273D")}
+                onMouseLeave={(e) => (e.currentTarget.style.background = "transparent")}
+              >
+                <td style={{ ...cellStyle, textAlign: "center", whiteSpace: "nowrap" }}>{String(i + 1).padStart(2, "0")}</td>
+                <td style={cellStyle}>{a.last_name || "—"}</td>
+                <td style={cellStyle}>{a.name || "—"}</td>
+                <td style={cellStyle}>{a.email}</td>
+                <td style={cellStyle}>{roleLabel(a.role)}</td>
+                <td style={{ ...cellStyle, textAlign: "center", whiteSpace: "nowrap", borderRight: "none" }}>
                   <span
                     title={a.active !== false ? "Actif" : "Non actif"}
                     style={{ display: "inline-block", width: "10px", height: "10px", borderRadius: "50%", background: a.active !== false ? "#39FF66" : "#FF3B4E" }}
