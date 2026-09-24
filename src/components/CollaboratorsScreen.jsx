@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useMemo } from "react";
 import { loadCollaborators } from "../data/sharedDirectories.js";
 import { PageTitle } from "./PageTitle.jsx";
-import { AdministratorDetailPanel } from "./AdministratorDetailPanel.jsx";
+import { AdministratorDetailPanel, LANGUAGES } from "./AdministratorDetailPanel.jsx";
 
 // "business" gardé ici pour l'affichage seul (roleLabel) — d'anciens comptes pourraient encore
 // avoir ce vrai rôle en base — mais retiré des vrais 5 blocs de filtre, cohérent avec son
@@ -15,6 +15,7 @@ const ROLES = [
   { key: "super_admin", label: "Super admin" },
 ];
 const roleLabel = (key) => ROLES.find((r) => r.key === key)?.label || key;
+const languagePrefix = (label) => LANGUAGES.find((l) => l.label === label)?.prefix || "—";
 
 const STATUS_BLOCKS = [
   { key: "super_admin", label: "Super Admin" },
@@ -239,6 +240,7 @@ export function CollaboratorsScreen({ onOpenChatWith }) {
               <SortHeader label="Rôle" sortKey="role" currentSort={sort} onSort={handleSort} />
               <th style={headerCellStyle}>Email</th>
               <SortHeader label="Pays" sortKey="country" currentSort={sort} onSort={handleSort} style={{ width: "1%" }} />
+              <th style={{ ...headerCellStyle, width: "1%", textAlign: "center" }}>Langue</th>
               <th style={{ ...headerCellStyle, width: "1%", textAlign: "center" }}>Chat Team</th>
               <SortHeader label="Statut" sortKey="active" currentSort={sort} onSort={handleSort} style={{ width: "1%", borderRight: "none" }} />
             </tr>
@@ -268,6 +270,9 @@ export function CollaboratorsScreen({ onOpenChatWith }) {
                   </div>
                 </td>
                 <td style={{ ...cellStyle, textAlign: "center", whiteSpace: "nowrap" }}>{a.country || "—"}</td>
+                <td style={{ ...cellStyle, textAlign: "center", whiteSpace: "nowrap" }} title={a.main_language || ""}>
+                  {a.main_language ? languagePrefix(a.main_language) : "—"}
+                </td>
                 <td style={{ ...cellStyle, textAlign: "center", whiteSpace: "nowrap" }}>
                   <button
                     onClick={(e) => {

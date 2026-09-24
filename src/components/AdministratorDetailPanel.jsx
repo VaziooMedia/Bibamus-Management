@@ -16,6 +16,20 @@ const ROLES = [
   { key: "super_admin", label: "Super admin" },
 ];
 
+// Exporté pour que CollaboratorsScreen affiche le vrai même préfixe dans sa vraie colonne
+// "Langue", sans dupliquer cette vraie liste.
+export const LANGUAGES = [
+  { label: "Français", prefix: "FR" },
+  { label: "Anglais (UK)", prefix: "UK" },
+  { label: "Néerlandais", prefix: "NL" },
+  { label: "Allemand", prefix: "DE" },
+  { label: "Espagnol", prefix: "ES" },
+  { label: "Portugais", prefix: "PT" },
+  { label: "Italien", prefix: "IT" },
+  { label: "Anglais (US)", prefix: "US" },
+  { label: "Arabe", prefix: "AR" },
+];
+
 // administrator=null → mode création (fiche vide, email/mot de passe demandés). Sinon → mode
 // édition (email figé, un bouton de suppression sécurisé apparaît).
 export function AdministratorDetailPanel({ administrator, onClose, onSaved }) {
@@ -26,6 +40,7 @@ export function AdministratorDetailPanel({ administrator, onClose, onSaved }) {
   const [lastName, setLastName] = useState(administrator?.last_name || "");
   const [birthDate, setBirthDate] = useState(administrator?.birth_date || "");
   const [country, setCountry] = useState(administrator?.country || "");
+  const [mainLanguage, setMainLanguage] = useState(administrator?.main_language || "");
   const [role, setRole] = useState(administrator?.role || "admin");
   const [canModerate, setCanModerate] = useState(administrator?.can_moderate || false);
   const [active, setActive] = useState(administrator?.active !== false);
@@ -50,7 +65,7 @@ export function AdministratorDetailPanel({ administrator, onClose, onSaved }) {
     // uploadAdminAvatar envoie bien le vrai fichier, mais n'écrit jamais avatar_url en base —
     // c'était le vrai bug (la photo semblait prise en compte, puis disparaissait à la
     // prochaine édition) : on persiste donc immédiatement, sans attendre l'Enregistrer global.
-    await updateCollaboratorProfile(administrator.id, { firstName, lastName, birthDate, role, active, canModerate, avatarUrl: url, country });
+    await updateCollaboratorProfile(administrator.id, { firstName, lastName, birthDate, role, active, canModerate, avatarUrl: url, country, mainLanguage });
   };
 
   const handleSave = async () => {
@@ -58,14 +73,14 @@ export function AdministratorDetailPanel({ administrator, onClose, onSaved }) {
     setError(null);
 
     if (isNew) {
-      const result = await createCollaborator(email, password, firstName, lastName, birthDate, role, canModerate);
+      const result = await createCollaborator(email, password, firstName, lastName, birthDate, role, canModerate, { country, mainLanguage });
       setSaving(false);
       if (result.error) {
         setError(result.error);
         return;
       }
     } else {
-      const result = await updateCollaboratorProfile(administrator.id, { firstName, lastName, birthDate, role, active, canModerate, avatarUrl, country });
+      const result = await updateCollaboratorProfile(administrator.id, { firstName, lastName, birthDate, role, active, canModerate, avatarUrl, country, mainLanguage });
       setSaving(false);
       if (result.error) {
         setError(result.error);
@@ -152,6 +167,16 @@ export function AdministratorDetailPanel({ administrator, onClose, onSaved }) {
           {COUNTRIES.map((c) => (
             <option key={c.code} value={c.fr}>
               {c.fr}
+            </option>
+          ))}
+        </select>
+
+        <label style={labelStyle}>Langue principale</label>
+        <select value={mainLanguage} onChange={(e) => setMainLanguage(e.target.value)} style={{ ...fieldStyle, marginBottom: "12px" }}>
+          <option value="">—</option>
+          {LANGUAGES.map((l) => (
+            <option key={l.label} value={l.label}>
+              {l.label}
             </option>
           ))}
         </select>
