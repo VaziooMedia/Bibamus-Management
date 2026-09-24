@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { loadBusinessAccountById, updateBusinessAccount, loadMyBusinessEntities, unlinkEntityFromBusiness, linkEntityToBusiness, searchEntitiesByName, loadOrganizationForProfile } from "../data/sharedDirectories.js";
 import { PageTitle } from "./PageTitle.jsx";
 import { COUNTRIES } from "../constants.js";
+import { CountryFlagImg } from "./icons.jsx";
 
 const LANGUAGE_OPTIONS = [
   { code: "fr", label: "Français" },
@@ -10,9 +11,129 @@ const LANGUAGE_OPTIONS = [
   { code: "de", label: "Allemand" },
 ];
 
+// Vrai code ISO (pour le vrai drapeau) de chaque vrai slug de COUNTRIES qui a réellement un
+// drapeau importé côté plateforme de gestion — les 2 seuls pays sans correspondance
+// (Nouvelle-Zélande, International) n'affichent simplement aucun drapeau.
+const COUNTRY_ISO_BY_SLUG = {
+  belgique: "be",
+  france: "fr",
+  pays_bas: "nl",
+  allemagne: "de",
+  luxembourg: "lu",
+  algerie: "dz",
+  autriche: "at",
+  bulgarie: "bg",
+  canada: "ca",
+  chypre: "cy",
+  cote_d_ivoire: "ci",
+  croatie: "hr",
+  cuba: "cu",
+  danemark: "dk",
+  espagne: "es",
+  estonie: "ee",
+  etats_unis: "us",
+  finlande: "fi",
+  grece: "gr",
+  hongrie: "hu",
+  irlande: "ie",
+  islande: "is",
+  italie: "it",
+  lettonie: "lv",
+  lituanie: "lt",
+  malte: "mt",
+  maroc: "ma",
+  mexique: "mx",
+  norvege: "no",
+  pologne: "pl",
+  portugal: "pt",
+  republique_tcheque: "cz",
+  roumanie: "ro",
+  royaume_uni: "gb",
+  senegal: "sn",
+  slovaquie: "sk",
+  slovenie: "si",
+  suede: "se",
+  suisse: "ch",
+  tunisie: "tn",
+  venezuela: "ve",
+};
+
 const fieldStyle = { padding: "10px 12px", borderRadius: "8px", border: "2px solid #28405C", fontSize: "14px", width: "100%", color: "#F2F2E8", background: "#0D1B2A", boxSizing: "border-box" };
 const labelStyle = { fontSize: "12.5px", color: "#8792A6", marginBottom: "4px", display: "block", fontWeight: 600 };
-const sectionTitleStyle = { fontSize: "12px", color: "#39FF66", fontWeight: 700, textTransform: "uppercase", margin: "24px 0 10px", paddingTop: "18px", borderTop: "1px solid #28405C" };
+
+function SectionTitle({ children, first }) {
+  return (
+    <p style={{ display: "flex", alignItems: "center", gap: "8px", fontSize: "12px", color: "#39FF66", fontWeight: 700, textTransform: "uppercase", margin: first ? "0 0 10px" : "24px 0 10px", paddingTop: first ? 0 : "18px", borderTop: first ? "none" : "1px solid #28405C" }}>
+      <span style={{ width: "3px", height: "12px", borderRadius: "2px", background: "#39FF66", flexShrink: 0 }} />
+      {children}
+    </p>
+  );
+}
+
+// Vrai mini préfixe pays compact (drapeau + code), collé devant un vrai champ — même vrai
+// principe que côté app web (revendication d'une fiche) : un vrai menu déroulant personnalisé,
+// vu qu'un select natif ne peut pas afficher de vrai drapeau dans ses options.
+function CountryPrefix({ value, onChange }) {
+  const [open, setOpen] = useState(false);
+  const iso = COUNTRY_ISO_BY_SLUG[value];
+  return (
+    <div style={{ position: "relative", flexShrink: 0 }}>
+      <button
+        type="button"
+        onClick={() => setOpen((o) => !o)}
+        style={{
+          display: "flex",
+          alignItems: "center",
+          gap: "6px",
+          height: "100%",
+          padding: "10px 8px",
+          borderRadius: "8px",
+          border: "2px solid #28405C",
+          fontSize: "13px",
+          color: "#F2F2E8",
+          background: "#0D1B2A",
+          boxSizing: "border-box",
+          cursor: "pointer",
+        }}
+      >
+        {iso ? <CountryFlagImg isoCode={iso} size={15} /> : null}
+        {iso ? iso.toUpperCase() : "—"}
+        <span style={{ color: "#8792A6", fontSize: "10px" }}>▾</span>
+      </button>
+      {open && (
+        <div
+          style={{
+            position: "absolute",
+            top: "calc(100% + 4px)",
+            left: 0,
+            minWidth: "190px",
+            maxHeight: "220px",
+            overflowY: "auto",
+            background: "#16273D",
+            border: "2px solid #28405C",
+            borderRadius: "8px",
+            zIndex: 20,
+          }}
+        >
+          {COUNTRIES.map((c) => (
+            <button
+              key={c.code}
+              type="button"
+              onClick={() => {
+                onChange(c.code);
+                setOpen(false);
+              }}
+              style={{ display: "flex", alignItems: "center", gap: "10px", width: "100%", padding: "9px 12px", background: "none", border: "none", fontSize: "13px", color: "#F2F2E8", cursor: "pointer", textAlign: "left", whiteSpace: "nowrap" }}
+            >
+              {COUNTRY_ISO_BY_SLUG[c.code] ? <CountryFlagImg isoCode={COUNTRY_ISO_BY_SLUG[c.code]} size={14} /> : <span style={{ width: "14px" }} />}
+              {c.fr}
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
 
 const ENTITY_TYPE_OPTIONS = [
   { key: "venue", label: "Établissement" },
@@ -158,7 +279,7 @@ export function BusinessAccountDetailScreen({ accountId, onBack }) {
 
       {!editing ? (
         <div style={{ maxWidth: "560px" }}>
-          <div style={{ ...sectionTitleStyle, marginTop: 0, paddingTop: 0, borderTop: "none" }}>Aperçu</div>
+          <SectionTitle first>Aperçu</SectionTitle>
           <ReadRow label="Étiquette" value={account.business_label} />
           <ReadRow label="Statut" value={account.business_status} />
           <ReadRow label="État" value={account.active !== false ? "Actif" : "Non actif"} />
@@ -166,21 +287,21 @@ export function BusinessAccountDetailScreen({ accountId, onBack }) {
           <ReadRow label="Organisation" value={orgInfo?.organization?.name} />
           <ReadRow label="Plan" value={orgInfo?.subscription ? `${orgInfo.subscription.plan === "pro" ? "Pro" : "Gratuit"} (${orgInfo.subscription.status === "active" ? "actif" : orgInfo.subscription.status})` : null} />
 
-          <p style={sectionTitleStyle}>Société</p>
+          <SectionTitle>Société</SectionTitle>
           <ReadRow label="Nom de la société" value={account.company_name} />
           <ReadRow label="Numéro d'entreprise" value={account.vat_number} />
           <ReadRow label="Email" value={account.company_email} />
           <ReadRow label="Téléphone" value={account.company_phone} />
           <ReadRow label="Siège social" value={addressParts.length > 0 ? addressParts.join(", ") : null} />
 
-          <p style={sectionTitleStyle}>Personne de contact</p>
+          <SectionTitle>Personne de contact</SectionTitle>
           <ReadRow label="Nom" value={[account.name, account.last_name].filter(Boolean).join(" ")} />
           <ReadRow label="Fonction" value={account.contact_function} />
           <ReadRow label="Email Pro" value={account.contact_email} />
           <ReadRow label="Téléphone" value={account.contact_phone} />
           <ReadRow label="Langue(s) parlée(s)" value={languages.length > 0 ? languages.join(", ") : null} />
 
-          <p style={sectionTitleStyle}>Fiches liées</p>
+          <SectionTitle>Fiches liées</SectionTitle>
           {!entities ? (
             <p style={{ color: "#8792A6", fontSize: "13px" }}>Chargement...</p>
           ) : entities.length === 0 ? (
@@ -268,62 +389,34 @@ export function BusinessAccountDetailScreen({ accountId, onBack }) {
             </div>
           )}
 
-          <p style={sectionTitleStyle}>À venir</p>
+          <SectionTitle>À venir</SectionTitle>
           <p style={{ fontSize: "13px", color: "#8792A6" }}>Comptabilité (en cas de Business payant), projets publicitaires, et autres informations — chantiers séparés à construire plus tard.</p>
         </div>
       ) : (
         <div style={{ maxWidth: "480px" }}>
-          <p style={{ ...sectionTitleStyle, marginTop: 0, paddingTop: 0, borderTop: "none" }}>Identification</p>
-          <label style={labelStyle}>Étiquette personnalisable</label>
-          <input value={form.businessLabel} onChange={(e) => setForm({ ...form, businessLabel: e.target.value })} style={{ ...fieldStyle, marginBottom: "12px" }} />
-          <label style={labelStyle}>Statut</label>
-          <input value={form.businessStatus} onChange={(e) => setForm({ ...form, businessStatus: e.target.value })} style={{ ...fieldStyle, marginBottom: "12px" }} />
-
-          <label style={labelStyle}>État</label>
-          <div style={{ display: "flex", gap: "8px", marginBottom: "12px" }}>
-            <button
-              onClick={() => setForm({ ...form, active: true })}
-              style={{
-                flex: 1,
-                padding: "9px",
-                borderRadius: "8px",
-                border: `2px solid ${form.active ? "#39FF66" : "#28405C"}`,
-                background: form.active ? "#39FF66" : "none",
-                color: form.active ? "#0D1B2A" : "#F2F2E8",
-                fontWeight: 700,
-                cursor: "pointer",
-              }}
-            >
-              Actif
-            </button>
-            <button
-              onClick={() => setForm({ ...form, active: false })}
-              style={{
-                flex: 1,
-                padding: "9px",
-                borderRadius: "8px",
-                border: `2px solid ${!form.active ? "#FF3B4E" : "#28405C"}`,
-                background: !form.active ? "#FF3B4E" : "none",
-                color: !form.active ? "#0D1B2A" : "#F2F2E8",
-                fontWeight: 700,
-                cursor: "pointer",
-              }}
-            >
-              Non actif
-            </button>
-          </div>
-
-          <p style={sectionTitleStyle}>Société</p>
+          <SectionTitle first>Société</SectionTitle>
           <label style={labelStyle}>Nom de la société</label>
           <input value={form.companyName} onChange={(e) => setForm({ ...form, companyName: e.target.value })} style={{ ...fieldStyle, marginBottom: "12px" }} />
+
           <label style={labelStyle}>Numéro d'entreprise</label>
-          <input value={form.vatNumber} onChange={(e) => setForm({ ...form, vatNumber: e.target.value })} style={{ ...fieldStyle, marginBottom: "12px" }} />
+          <div style={{ display: "flex", gap: "8px", marginBottom: "12px" }}>
+            <CountryPrefix value={form.companyCountry} onChange={(code) => setForm({ ...form, companyCountry: code })} />
+            <input value={form.vatNumber} onChange={(e) => setForm({ ...form, vatNumber: e.target.value })} style={{ ...fieldStyle, flex: 1 }} />
+          </div>
+
           <label style={labelStyle}>Email</label>
           <input type="email" value={form.companyEmail} onChange={(e) => setForm({ ...form, companyEmail: e.target.value })} style={{ ...fieldStyle, marginBottom: "12px" }} />
+
           <label style={labelStyle}>Téléphone</label>
-          <input value={form.companyPhone} onChange={(e) => setForm({ ...form, companyPhone: e.target.value })} style={{ ...fieldStyle, marginBottom: "12px" }} />
+          <div style={{ display: "flex", gap: "8px", marginBottom: "12px" }}>
+            <CountryPrefix value={form.companyCountry} onChange={(code) => setForm({ ...form, companyCountry: code })} />
+            <input value={form.companyPhone} onChange={(e) => setForm({ ...form, companyPhone: e.target.value })} style={{ ...fieldStyle, flex: 1 }} />
+          </div>
 
           <label style={labelStyle}>Siège social</label>
+          <div style={{ marginBottom: "8px" }}>
+            <CountryPrefix value={form.companyCountry} onChange={(code) => setForm({ ...form, companyCountry: code })} />
+          </div>
           <div style={{ display: "flex", gap: "8px", marginBottom: "8px" }}>
             <input value={form.companyStreet} onChange={(e) => setForm({ ...form, companyStreet: e.target.value })} placeholder="Adresse" style={{ ...fieldStyle, flex: 3 }} />
             <input value={form.companyStreetNumber} onChange={(e) => setForm({ ...form, companyStreetNumber: e.target.value })} placeholder="Numéro" style={{ ...fieldStyle, flex: 1 }} />
@@ -334,20 +427,12 @@ export function BusinessAccountDetailScreen({ accountId, onBack }) {
             placeholder="Complément d'adresse"
             style={{ ...fieldStyle, marginBottom: "8px" }}
           />
-          <div style={{ display: "flex", gap: "8px", marginBottom: "8px" }}>
+          <div style={{ display: "flex", gap: "8px", marginBottom: "12px" }}>
             <input value={form.companyPostalCode} onChange={(e) => setForm({ ...form, companyPostalCode: e.target.value })} placeholder="Code postal" style={{ ...fieldStyle, flex: 1 }} />
             <input value={form.companyCity} onChange={(e) => setForm({ ...form, companyCity: e.target.value })} placeholder="Ville" style={{ ...fieldStyle, flex: 2 }} />
           </div>
-          <select value={form.companyCountry} onChange={(e) => setForm({ ...form, companyCountry: e.target.value })} style={{ ...fieldStyle, marginBottom: "12px" }}>
-            <option value="">Pays —</option>
-            {COUNTRIES.map((c) => (
-              <option key={c.code} value={c.code}>
-                {c.fr}
-              </option>
-            ))}
-          </select>
 
-          <p style={sectionTitleStyle}>Personne de contact</p>
+          <SectionTitle>Personne de contact</SectionTitle>
           <div style={{ display: "flex", gap: "10px", marginBottom: "12px" }}>
             <div style={{ flex: 1 }}>
               <label style={labelStyle}>Prénom</label>
@@ -389,18 +474,51 @@ export function BusinessAccountDetailScreen({ accountId, onBack }) {
             })}
           </div>
 
+          <div style={{ display: "flex", gap: "8px", marginBottom: "20px" }}>
+            <button
+              onClick={() => setForm({ ...form, active: true })}
+              style={{
+                padding: "6px 14px",
+                borderRadius: "6px",
+                border: `2px solid ${form.active ? "#39FF66" : "#28405C"}`,
+                background: form.active ? "#39FF66" : "none",
+                color: form.active ? "#0D1B2A" : "#F2F2E8",
+                fontWeight: 700,
+                fontSize: "11.5px",
+                cursor: "pointer",
+              }}
+            >
+              Actif
+            </button>
+            <button
+              onClick={() => setForm({ ...form, active: false })}
+              style={{
+                padding: "6px 14px",
+                borderRadius: "6px",
+                border: `2px solid ${!form.active ? "#FF3B4E" : "#28405C"}`,
+                background: !form.active ? "#FF3B4E" : "none",
+                color: !form.active ? "#0D1B2A" : "#F2F2E8",
+                fontWeight: 700,
+                fontSize: "11.5px",
+                cursor: "pointer",
+              }}
+            >
+              Non actif
+            </button>
+          </div>
+
           {error && <p style={{ color: "#FF3B4E", fontSize: "12.5px", marginBottom: "12px" }}>{error}</p>}
-          <div style={{ display: "flex", gap: "8px" }}>
+          <div style={{ display: "flex", gap: "8px", paddingTop: "16px", borderTop: "1px solid #28405C" }}>
             <button
               onClick={() => setEditing(false)}
-              style={{ flex: 1, background: "none", border: "2px solid #28405C", borderRadius: "8px", padding: "12px", color: "#F2F2E8", cursor: "pointer" }}
+              style={{ flex: 1, background: "none", border: "2px solid #28405C", borderRadius: "8px", padding: "8px", fontSize: "12.5px", color: "#F2F2E8", cursor: "pointer" }}
             >
               Annuler
             </button>
             <button
               onClick={handleSave}
               disabled={saving}
-              style={{ flex: 1, background: "#39FF66", border: "none", borderRadius: "8px", padding: "12px", fontWeight: 700, color: "#0D1B2A", cursor: "pointer", opacity: saving ? 0.6 : 1 }}
+              style={{ flex: 1, background: "#39FF66", border: "none", borderRadius: "8px", padding: "8px", fontWeight: 700, fontSize: "12.5px", color: "#0D1B2A", cursor: "pointer", opacity: saving ? 0.6 : 1 }}
             >
               {saving ? "Enregistrement..." : "Enregistrer"}
             </button>
