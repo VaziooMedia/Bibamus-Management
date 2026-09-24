@@ -94,7 +94,7 @@ function NewBusinessForm({ claim, onCreated }) {
   };
 
   return (
-    <div style={{ marginTop: "10px", padding: "12px", background: "#0D1B2A", borderRadius: "8px", display: "flex", flexDirection: "column", gap: "8px" }}>
+    <div style={{ marginTop: "10px", padding: "12px", background: "#0D1B2A", borderRadius: "8px", display: "flex", flexDirection: "column", gap: "8px", maxWidth: "380px" }}>
       <p style={{ ...sectionTitleStyle, marginTop: 0, paddingTop: 0, borderTop: "none" }}>Société</p>
       <label style={labelStyle}>Nom de la société *</label>
       <input value={companyName} onChange={(e) => setCompanyName(e.target.value)} style={fieldStyle} />
