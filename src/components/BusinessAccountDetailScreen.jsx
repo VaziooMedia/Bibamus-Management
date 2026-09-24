@@ -58,6 +58,52 @@ const COUNTRY_ISO_BY_SLUG = {
   venezuela: "ve",
 };
 
+// Vrai préfixe téléphonique international (pas le code ISO à 2 lettres) — pour les vrais
+// champs Téléphone spécifiquement, indexé par le vrai code ISO déjà résolu ci-dessus.
+const CALLING_CODE_BY_ISO = {
+  be: "+32",
+  fr: "+33",
+  nl: "+31",
+  de: "+49",
+  lu: "+352",
+  dz: "+213",
+  at: "+43",
+  bg: "+359",
+  ca: "+1",
+  cy: "+357",
+  ci: "+225",
+  hr: "+385",
+  cu: "+53",
+  dk: "+45",
+  es: "+34",
+  ee: "+372",
+  us: "+1",
+  fi: "+358",
+  gr: "+30",
+  hu: "+36",
+  ie: "+353",
+  is: "+354",
+  it: "+39",
+  lv: "+371",
+  lt: "+370",
+  mt: "+356",
+  ma: "+212",
+  mx: "+52",
+  no: "+47",
+  pl: "+48",
+  pt: "+351",
+  cz: "+420",
+  ro: "+40",
+  gb: "+44",
+  sn: "+221",
+  sk: "+421",
+  si: "+386",
+  se: "+46",
+  ch: "+41",
+  tn: "+216",
+  ve: "+58",
+};
+
 const fieldStyle = { padding: "10px 12px", borderRadius: "8px", border: "2px solid #28405C", fontSize: "14px", width: "100%", color: "#F2F2E8", background: "#0D1B2A", boxSizing: "border-box" };
 const labelStyle = { fontSize: "12.5px", color: "#8792A6", marginBottom: "4px", display: "block", fontWeight: 600 };
 
@@ -83,10 +129,10 @@ function Label({ children }) {
 // Vrai mini préfixe pays compact (drapeau + code), collé devant un vrai champ — même vrai
 // principe que côté app web (revendication d'une fiche) : un vrai menu déroulant personnalisé,
 // vu qu'un select natif ne peut pas afficher de vrai drapeau dans ses options.
-function CountryPrefix({ value, onChange, fullName }) {
+function CountryPrefix({ value, onChange, fullName, calling }) {
   const [open, setOpen] = useState(false);
   const iso = COUNTRY_ISO_BY_SLUG[value];
-  const label = fullName ? countryLabel(value) || "Pays —" : iso ? iso.toUpperCase() : "—";
+  const label = fullName ? countryLabel(value) || "Pays —" : calling ? CALLING_CODE_BY_ISO[iso] || "—" : iso ? iso.toUpperCase() : "—";
   return (
     <div style={{ position: "relative", flexShrink: 0, width: fullName ? "100%" : "auto" }}>
       <button
@@ -168,8 +214,9 @@ function ReadRow({ label, value }) {
 
 // Même vrai préfixe (drapeau + code pays) que celui posé dans la page d'édition, devant le
 // numéro d'entreprise et le téléphone de la société.
-function ReadRowWithFlag({ label, countryCode, value }) {
+function ReadRowWithFlag({ label, countryCode, value, calling }) {
   const iso = COUNTRY_ISO_BY_SLUG[countryCode];
+  const prefixLabel = calling ? CALLING_CODE_BY_ISO[iso] : iso ? iso.toUpperCase() : null;
   return (
     <div style={{ marginBottom: "12px" }}>
       <p style={{ ...labelStyle, marginBottom: "2px", display: "flex", alignItems: "center", gap: "8px" }}>
@@ -180,7 +227,7 @@ function ReadRowWithFlag({ label, countryCode, value }) {
         {value ? (
           <>
             {iso && <CountryFlagImg isoCode={iso} size={14} />}
-            {iso && <span style={{ color: "#8792A6" }}>{iso.toUpperCase()}</span>}
+            {prefixLabel && <span style={{ color: "#8792A6" }}>{prefixLabel}</span>}
             {value}
           </>
         ) : (
@@ -352,23 +399,24 @@ export function BusinessAccountDetailScreen({ accountId, onBack }) {
               <ReadRow label="État" value={account.active !== false ? "Actif" : "Non actif"} />
               <ReadRow label="Email de connexion" value={account.email} />
               <ReadRow label="Plan" value={orgInfo?.subscription ? `${orgInfo.subscription.plan === "pro" ? "Pro" : "Gratuit"} (${orgInfo.subscription.status === "active" ? "actif" : orgInfo.subscription.status})` : null} />
+              <ReadRow label="Fiches liées" value={entities && entities.length > 0 ? entities.map((e) => `${e.name} (${e.entityTypeLabel})`).join(", ") : null} />
             </div>
 
             <div style={{ borderLeft: "1px solid #28405C", paddingLeft: "32px" }}>
               <SectionTitle first>Société</SectionTitle>
-              <ReadRow label="Nom de la société" value={account.company_name} />
+              <ReadRow label="Dénomination" value={account.company_name} />
               <ReadRowWithFlag label="Numéro d'entreprise" countryCode={account.company_country} value={account.vat_number} />
               <ReadRow label="Email" value={account.company_email} />
-              <ReadRowWithFlag label="Téléphone" countryCode={account.company_country} value={account.company_phone} />
+              <ReadRowWithFlag label="Téléphone" countryCode={account.company_country} value={account.company_phone} calling />
               <ReadRowAddress account={account} />
             </div>
 
             <div style={{ borderLeft: "1px solid #28405C", paddingLeft: "32px" }}>
               <SectionTitle first>Personne de contact</SectionTitle>
-              <ReadRow label="Nom" value={[account.name, account.last_name].filter(Boolean).join(" ")} />
+              <ReadRow label="Prénom / Nom" value={[account.name, account.last_name].filter(Boolean).join(" ")} />
               <ReadRow label="Fonction" value={account.contact_function} />
               <ReadRow label="Email Pro" value={account.contact_email} />
-              <ReadRow label="Téléphone" value={account.contact_phone} />
+              <ReadRowWithFlag label="Téléphone" countryCode={account.company_country} value={account.contact_phone} calling />
               <ReadRow label="Langue(s) parlée(s)" value={languages.length > 0 ? languages.join(", ") : null} />
             </div>
           </div>
@@ -482,7 +530,7 @@ export function BusinessAccountDetailScreen({ accountId, onBack }) {
 
           <Label>Téléphone</Label>
           <div style={{ display: "flex", gap: "8px", marginBottom: "12px" }}>
-            <CountryPrefix value={form.companyCountry} onChange={(code) => setForm({ ...form, companyCountry: code })} />
+            <CountryPrefix value={form.companyCountry} onChange={(code) => setForm({ ...form, companyCountry: code })} calling />
             <input value={form.companyPhone} onChange={(e) => setForm({ ...form, companyPhone: e.target.value })} style={{ ...fieldStyle, flex: 1 }} />
           </div>
 
@@ -521,7 +569,10 @@ export function BusinessAccountDetailScreen({ accountId, onBack }) {
           <Label>Email Pro</Label>
           <input type="email" value={form.contactEmail} onChange={(e) => setForm({ ...form, contactEmail: e.target.value })} style={{ ...fieldStyle, marginBottom: "12px" }} />
           <Label>Téléphone</Label>
-          <input value={form.contactPhone} onChange={(e) => setForm({ ...form, contactPhone: e.target.value })} style={{ ...fieldStyle, marginBottom: "12px" }} />
+          <div style={{ display: "flex", gap: "8px", marginBottom: "12px" }}>
+            <CountryPrefix value={form.companyCountry} onChange={(code) => setForm({ ...form, companyCountry: code })} calling />
+            <input value={form.contactPhone} onChange={(e) => setForm({ ...form, contactPhone: e.target.value })} style={{ ...fieldStyle, flex: 1 }} />
+          </div>
           <Label>Langue(s) parlée(s)</Label>
           <div style={{ display: "flex", gap: "6px", flexWrap: "wrap", marginBottom: "16px" }}>
             {LANGUAGE_OPTIONS.map((l) => {

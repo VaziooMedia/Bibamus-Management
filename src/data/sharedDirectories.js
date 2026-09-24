@@ -248,7 +248,7 @@ const CLAIM_ENTITY_TABLE = { venue: "public_venues", drink: "drinks_directory", 
 // Toutes les fiches liées au compte Business actuellement connecté, tous types confondus.
 export async function loadMyBusinessEntities(userId) {
   const tables = [
-    { table: "public_venues", type: "venue", label: "Établissement" },
+    { table: "public_venues", type: "venue", label: "Lieu" },
     { table: "drinks_directory", type: "drink", label: "Produit" },
     { table: "brands_directory", type: "brand", label: "Marque" },
     { table: "breweries_directory", type: "producer", label: "Producteur" },
