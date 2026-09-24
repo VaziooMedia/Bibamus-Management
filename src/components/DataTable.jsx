@@ -1,5 +1,6 @@
 import React, { useState, useMemo, useRef, useEffect } from "react";
 import { STATUSES } from "./StatusSelector.jsx";
+import { normalizeSearchText } from "../utils.js";
 
 // allColumns: [{ key, label, render? }] — la liste complète des colonnes possibles.
 // forcedKeys: clés toujours affichées, non désactivables (ex. ["name", "status"]).
@@ -80,17 +81,17 @@ export function DataTable({ items, allColumns, forcedKeys = [], defaultVisibleKe
   };
 
   const filtered = useMemo(() => {
-    const q = query.trim().toLowerCase();
+    const q = normalizeSearchText(query);
     let list = items;
     if (q) {
       list = list.filter((item) => {
         const inColumns = columns.some((col) => {
           const val = item[col.key];
-          return val != null && String(val).toLowerCase().includes(q);
+          return val != null && normalizeSearchText(String(val)).includes(q);
         });
         if (inColumns) return true;
         if (!extraSearchFields) return false;
-        return extraSearchFields(item).some((val) => val != null && String(val).toLowerCase().includes(q));
+        return extraSearchFields(item).some((val) => val != null && normalizeSearchText(String(val)).includes(q));
       });
     }
     return [...list].sort((a, b) => {

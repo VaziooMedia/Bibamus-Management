@@ -13,6 +13,7 @@
 
 import { supabase } from "../supabaseClient.js";
 import { DRINK_TYPE_CODE_TO_LABEL } from "../constants.js";
+import { normalizeSearchText } from "../utils.js";
 
 /* ---------------- PERMISSIONS CENTRALISÉES ---------------- */
 
@@ -354,7 +355,7 @@ export async function linkEntityToBusiness(entityType, entityId, businessId, ent
 export async function searchEntitiesByName(entityType, query) {
   const table = BUSINESS_ENTITY_TABLE[entityType];
   if (!table || !query.trim()) return [];
-  const { data, error } = await supabase.from(table).select("id, name, business_owner_id").ilike("name", `%${query.trim()}%`).limit(8);
+  const { data, error } = await supabase.from(table).select("id, name, business_owner_id").ilike("search_text", `%${normalizeSearchText(query)}%`).limit(8);
   if (error) {
     console.error("searchEntitiesByName:", error);
     return [];
@@ -1333,8 +1334,7 @@ export async function loadDrinksPage({ type, status, certificationLevel, hasPend
   if (hasPendingContributions) query = query.gt("pending_contributions_count", 0);
   if (reportedIds) query = query.in("id", reportedIds.size > 0 ? Array.from(reportedIds) : ["__none__"]);
   if (search && search.trim()) {
-    const s = search.trim().replace(/,/g, "");
-    query = query.or(`name.ilike.%${s}%,alternate_name.ilike.%${s}%`);
+    query = query.ilike("search_text", `%${normalizeSearchText(search)}%`);
   }
   // "brandName"/"producerName" résultent d'une jointure, pas d'une vraie colonne — on trie par brand_id à la place.
   const realSortKey = sortKey === "brandName" || sortKey === "producerName" ? "brand_id" : sortKey;
