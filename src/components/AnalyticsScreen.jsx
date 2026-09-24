@@ -25,13 +25,77 @@ const REPORT_REASON_LABELS = {
 const ENTITY_TYPE_LABELS = { venue: "Lieu", drink: "Produit", brand: "Marque", producer: "Producteur" };
 
 const PERIOD_OPTIONS = [
-  { key: 1, label: "24 heures" },
-  { key: 7, label: "7 jours" },
-  { key: 30, label: "30 jours" },
-  { key: null, label: "Tout" },
+  { key: "24h", label: "24 heures" },
+  { key: "7d", label: "7 jours" },
+  { key: "30d", label: "30 jours" },
+  { key: "90d", label: "90 derniers jours" },
+  { key: "all", label: "Tout" },
+  { key: "q_current", label: "Trimestre en cours" },
+  { key: "q_previous", label: "Trimestre passé" },
+  { key: "h_current", label: "Semestre en cours" },
+  { key: "h_previous", label: "Semestre passé" },
+  { key: "y_current", label: "Année en cours" },
+  { key: "y_previous", label: "Année passée" },
 ];
 
 const WEEKDAY_LABELS = ["Lun", "Mar", "Mer", "Jeu", "Ven", "Sam", "Dim"];
+
+function startOfQuarter(d) {
+  return new Date(d.getFullYear(), Math.floor(d.getMonth() / 3) * 3, 1);
+}
+function startOfSemester(d) {
+  return new Date(d.getFullYear(), d.getMonth() < 6 ? 0 : 6, 1);
+}
+function startOfYear(d) {
+  return new Date(d.getFullYear(), 0, 1);
+}
+
+// Vraie plage courante pour chaque vraie option de période — certaines sont de vraies
+// fenêtres glissantes (24h/7j/30j/90j/Tout), d'autres de vraies bornes calendaires (trimestre/
+// semestre/année, en cours ou passé).
+function getCurrentRange(key) {
+  const now = new Date();
+  switch (key) {
+    case "24h":
+      return { start: new Date(now - 86400000), end: now };
+    case "7d":
+      return { start: new Date(now - 7 * 86400000), end: now };
+    case "30d":
+      return { start: new Date(now - 30 * 86400000), end: now };
+    case "90d":
+      return { start: new Date(now - 90 * 86400000), end: now };
+    case "all":
+      return { start: null, end: now };
+    case "q_current":
+      return { start: startOfQuarter(now), end: now };
+    case "q_previous": {
+      const curStart = startOfQuarter(now);
+      return { start: startOfQuarter(new Date(curStart.getTime() - 1)), end: curStart };
+    }
+    case "h_current":
+      return { start: startOfSemester(now), end: now };
+    case "h_previous": {
+      const curStart = startOfSemester(now);
+      return { start: startOfSemester(new Date(curStart.getTime() - 1)), end: curStart };
+    }
+    case "y_current":
+      return { start: startOfYear(now), end: now };
+    case "y_previous": {
+      const curStart = startOfYear(now);
+      return { start: new Date(curStart.getFullYear() - 1, 0, 1), end: curStart };
+    }
+    default:
+      return { start: new Date(now - 7 * 86400000), end: now };
+  }
+}
+
+// Vraie plage de comparaison : même vraie durée, juste avant — générique, marche pour toutes
+// les vraies périodes (glissantes ou calendaires) sans distinction de cas particulier.
+function getComparisonRange({ start, end }) {
+  if (!start) return null;
+  const duration = end - start;
+  return { start: new Date(start.getTime() - duration), end: start };
+}
 
 // Vraie variation en % par rapport à la vraie période précédente de même durée — absente pour
 // "Tout" (pas de vraie période précédente comparable).
@@ -52,7 +116,7 @@ function StatBlock({ value, label, onClick, previous }) {
   return (
     <div
       onClick={onClick}
-      style={{ flex: 1, background: "#16273D", borderRadius: "12px", padding: "18px", textAlign: "center", cursor: onClick ? "pointer" : "default" }}
+      style={{ flex: 1, background: "#16273D", borderRadius: "12px", padding: "8px 16px", textAlign: "center", cursor: onClick ? "pointer" : "default" }}
     >
       <div style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "30px", color: "#39FF66" }}>{value}</div>
       <div style={{ fontSize: "12px", color: "#8792A6", fontWeight: 600 }}>
@@ -172,27 +236,25 @@ function LineChart({ title, series }) {
 export function AnalyticsScreen({ onNavigate }) {
   const [events, setEvents] = useState(null);
   const [crashes, setCrashes] = useState(null);
-  const [periodDays, setPeriodDays] = useState(7);
+  const [periodKey, setPeriodKey] = useState("7d");
 
   useEffect(() => {
     loadAnalyticsEvents().then(setEvents);
     loadCrashReports().then(setCrashes);
   }, []);
 
-  // Vraie période actuelle, et vraie période précédente de même durée juste avant (pour la
-  // vraie variation en %) — absente pour "Tout", qui n'a pas de vraie période comparable.
-  const now = Date.now();
-  const inRange = (createdAt, startMs, endMs) => {
+  const range = getCurrentRange(periodKey);
+  const comparisonRange = getComparisonRange(range);
+  const inRange = (createdAt, r) => {
+    if (!r) return false;
     const t = new Date(createdAt).getTime();
-    return t > startMs && t <= endMs;
+    return (r.start === null || t > r.start.getTime()) && t <= r.end.getTime();
   };
-  const currentStart = periodDays ? now - periodDays * 86400000 : -Infinity;
-  const previousStart = periodDays ? now - periodDays * 2 * 86400000 : null;
 
-  const filtered = events ? events.filter((e) => inRange(e.created_at, currentStart, now)) : [];
-  const previousFiltered = events && periodDays ? events.filter((e) => inRange(e.created_at, previousStart, currentStart)) : null;
-  const filteredCrashes = crashes ? crashes.filter((c) => inRange(c.created_at, currentStart, now)) : [];
-  const previousCrashes = crashes && periodDays ? crashes.filter((c) => inRange(c.created_at, previousStart, currentStart)) : null;
+  const filtered = events ? events.filter((e) => inRange(e.created_at, range)) : [];
+  const previousFiltered = events && comparisonRange ? events.filter((e) => inRange(e.created_at, comparisonRange)) : null;
+  const filteredCrashes = crashes ? crashes.filter((c) => inRange(c.created_at, range)) : [];
+  const previousCrashes = crashes && comparisonRange ? crashes.filter((c) => inRange(c.created_at, comparisonRange)) : null;
 
   const distinctUsers = new Set(filtered.filter((e) => e.bibro_code).map((e) => e.bibro_code)).size;
   const previousDistinctUsers = previousFiltered ? new Set(previousFiltered.filter((e) => e.bibro_code).map((e) => e.bibro_code)).size : null;
@@ -235,7 +297,7 @@ export function AnalyticsScreen({ onNavigate }) {
 
   // Groupe par vraie heure sur "24 heures" (un vrai regroupement par jour ne donnerait qu'un
   // vrai seul point), par vrai jour calendaire sinon.
-  const byHour = periodDays === 1;
+  const byHour = periodKey === "24h";
   const bucketKey = (d) => (byHour ? `${d.getFullYear()}-${d.getMonth()}-${d.getDate()}-${d.getHours()}` : `${d.getFullYear()}-${d.getMonth()}-${d.getDate()}`);
   const bucketLabel = (d) => (byHour ? `${d.getHours()}h` : `${d.getDate()}/${d.getMonth() + 1}`);
   const buckets = {};
@@ -267,17 +329,17 @@ export function AnalyticsScreen({ onNavigate }) {
       <PageTitle>Analytics</PageTitle>
       <p style={{ fontSize: "12.5px", color: "#8792A6", marginBottom: "16px" }}>Usage de l'app — vues d'écran et actions clés.</p>
 
-      <div style={{ display: "flex", gap: "8px", marginBottom: "20px" }}>
+      <div style={{ display: "flex", gap: "8px", flexWrap: "wrap", marginBottom: "20px" }}>
         {PERIOD_OPTIONS.map((opt) => (
           <button
-            key={opt.key ?? "all"}
-            onClick={() => setPeriodDays(opt.key)}
+            key={opt.key}
+            onClick={() => setPeriodKey(opt.key)}
             style={{
               padding: "7px 14px",
               borderRadius: "8px",
-              border: `2px solid ${periodDays === opt.key ? "#39FF66" : "#28405C"}`,
-              background: periodDays === opt.key ? "#39FF66" : "none",
-              color: periodDays === opt.key ? "#0D1B2A" : "#F2F2E8",
+              border: `2px solid ${periodKey === opt.key ? "#39FF66" : "#28405C"}`,
+              background: periodKey === opt.key ? "#39FF66" : "none",
+              color: periodKey === opt.key ? "#0D1B2A" : "#F2F2E8",
               fontWeight: 700,
               fontSize: "12.5px",
               cursor: "pointer",
