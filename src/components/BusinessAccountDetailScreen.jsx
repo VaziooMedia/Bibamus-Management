@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { loadBusinessAccountById, updateBusinessAccount, loadMyBusinessEntities, unlinkEntityFromBusiness, linkEntityToBusiness, searchEntitiesByName, loadOrganizationForProfile } from "../data/sharedDirectories.js";
 import { PageTitle } from "./PageTitle.jsx";
-import { COUNTRIES } from "../constants.js";
+import { COUNTRIES, COUNTRY_ISO_BY_SLUG } from "../constants.js";
 import { CountryFlagImg } from "./icons.jsx";
 import { ComingSoon } from "./ComingSoon.jsx";
 
@@ -15,50 +15,6 @@ const LANGUAGE_OPTIONS = [
 // Vrai code ISO (pour le vrai drapeau) de chaque vrai slug de COUNTRIES qui a réellement un
 // drapeau importé côté plateforme de gestion — les 2 seuls pays sans correspondance
 // (Nouvelle-Zélande, International) n'affichent simplement aucun drapeau.
-const COUNTRY_ISO_BY_SLUG = {
-  belgique: "be",
-  france: "fr",
-  pays_bas: "nl",
-  allemagne: "de",
-  luxembourg: "lu",
-  algerie: "dz",
-  autriche: "at",
-  bulgarie: "bg",
-  canada: "ca",
-  chypre: "cy",
-  cote_d_ivoire: "ci",
-  croatie: "hr",
-  cuba: "cu",
-  danemark: "dk",
-  espagne: "es",
-  estonie: "ee",
-  etats_unis: "us",
-  finlande: "fi",
-  grece: "gr",
-  hongrie: "hu",
-  irlande: "ie",
-  islande: "is",
-  italie: "it",
-  lettonie: "lv",
-  lituanie: "lt",
-  malte: "mt",
-  maroc: "ma",
-  mexique: "mx",
-  norvege: "no",
-  pologne: "pl",
-  portugal: "pt",
-  republique_tcheque: "cz",
-  roumanie: "ro",
-  royaume_uni: "gb",
-  senegal: "sn",
-  slovaquie: "sk",
-  slovenie: "si",
-  suede: "se",
-  suisse: "ch",
-  tunisie: "tn",
-  venezuela: "ve",
-};
-
 // Vrai préfixe téléphonique international (pas le code ISO à 2 lettres) — pour les vrais
 // champs Téléphone spécifiquement, indexé par le vrai code ISO déjà résolu ci-dessus.
 const CALLING_CODE_BY_ISO = {
