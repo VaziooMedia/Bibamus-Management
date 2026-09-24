@@ -157,8 +157,68 @@ const ENTITY_TYPE_OPTIONS = [
 function ReadRow({ label, value }) {
   return (
     <div style={{ marginBottom: "12px" }}>
-      <p style={{ ...labelStyle, marginBottom: "2px" }}>{label}</p>
+      <p style={{ ...labelStyle, marginBottom: "2px", display: "flex", alignItems: "center", gap: "8px" }}>
+        <span style={{ width: "3px", height: "10px", borderRadius: "2px", background: "#39FF66", flexShrink: 0 }} />
+        {label}
+      </p>
       <p style={{ margin: 0, fontSize: "14px", color: value ? "#F2F2E8" : "#8792A6" }}>{value || "—"}</p>
+    </div>
+  );
+}
+
+// Même vrai préfixe (drapeau + code pays) que celui posé dans la page d'édition, devant le
+// numéro d'entreprise et le téléphone de la société.
+function ReadRowWithFlag({ label, countryCode, value }) {
+  const iso = COUNTRY_ISO_BY_SLUG[countryCode];
+  return (
+    <div style={{ marginBottom: "12px" }}>
+      <p style={{ ...labelStyle, marginBottom: "2px", display: "flex", alignItems: "center", gap: "8px" }}>
+        <span style={{ width: "3px", height: "10px", borderRadius: "2px", background: "#39FF66", flexShrink: 0 }} />
+        {label}
+      </p>
+      <p style={{ margin: 0, fontSize: "14px", color: value ? "#F2F2E8" : "#8792A6", display: "flex", alignItems: "center", gap: "6px" }}>
+        {value ? (
+          <>
+            {iso && <CountryFlagImg isoCode={iso} size={14} />}
+            {iso && <span style={{ color: "#8792A6" }}>{iso.toUpperCase()}</span>}
+            {value}
+          </>
+        ) : (
+          "—"
+        )}
+      </p>
+    </div>
+  );
+}
+
+// Vraie adresse du siège social sur 3 vraies lignes : rue+numéro, code postal+ville, drapeau+
+// pays — plutôt qu'un vrai ReadRow générique à une vraie seule ligne concaténée.
+function ReadRowAddress({ account }) {
+  const iso = COUNTRY_ISO_BY_SLUG[account.company_country];
+  const line1 = [account.company_street, account.company_street_number].filter(Boolean).join(", ");
+  const line2 = [account.company_postal_code, account.company_city].filter(Boolean).join(" ");
+  const hasAny = line1 || account.company_address_line2 || line2 || account.company_country;
+  return (
+    <div style={{ marginBottom: "12px" }}>
+      <p style={{ ...labelStyle, marginBottom: "2px", display: "flex", alignItems: "center", gap: "8px" }}>
+        <span style={{ width: "3px", height: "10px", borderRadius: "2px", background: "#39FF66", flexShrink: 0 }} />
+        Siège social
+      </p>
+      {!hasAny ? (
+        <p style={{ margin: 0, fontSize: "14px", color: "#8792A6" }}>—</p>
+      ) : (
+        <div style={{ fontSize: "14px", color: "#F2F2E8" }}>
+          {line1 && <p style={{ margin: 0 }}>{line1}</p>}
+          {account.company_address_line2 && <p style={{ margin: 0 }}>{account.company_address_line2}</p>}
+          {line2 && <p style={{ margin: 0 }}>{line2}</p>}
+          {account.company_country && (
+            <p style={{ margin: 0, display: "flex", alignItems: "center", gap: "6px" }}>
+              {iso && <CountryFlagImg isoCode={iso} size={14} />}
+              {countryLabel(account.company_country)}
+            </p>
+          )}
+        </div>
+      )}
     </div>
   );
 }
@@ -264,12 +324,6 @@ export function BusinessAccountDetailScreen({ accountId, onBack }) {
   if (!account) return <p style={{ color: "#8792A6" }}>Chargement...</p>;
 
   const languages = account.contact_languages ? account.contact_languages.split(",").filter(Boolean).map((c) => LANGUAGE_OPTIONS.find((l) => l.code === c)?.label || c) : [];
-  const addressParts = [
-    [account.company_street, account.company_street_number].filter(Boolean).join(" "),
-    account.company_address_line2,
-    [account.company_postal_code, account.company_city].filter(Boolean).join(" "),
-    account.company_country ? countryLabel(account.company_country) : null,
-  ].filter(Boolean);
 
   return (
     <div>
@@ -288,30 +342,28 @@ export function BusinessAccountDetailScreen({ accountId, onBack }) {
         )}
       </div>
       {account.business_label && <p style={{ fontSize: "13px", color: "#8792A6", marginBottom: "24px" }}>{account.business_label}</p>}
+      <div style={{ height: "1px", background: "#28405C", margin: "20px 0" }} />
 
       {!editing ? (
         <div style={{ maxWidth: "900px" }}>
           <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "32px", marginBottom: "24px" }}>
             <div>
               <SectionTitle first>Aperçu</SectionTitle>
-              <ReadRow label="Étiquette" value={account.business_label} />
-              <ReadRow label="Statut" value={account.business_status} />
               <ReadRow label="État" value={account.active !== false ? "Actif" : "Non actif"} />
               <ReadRow label="Email de connexion" value={account.email} />
-              <ReadRow label="Organisation" value={orgInfo?.organization?.name} />
               <ReadRow label="Plan" value={orgInfo?.subscription ? `${orgInfo.subscription.plan === "pro" ? "Pro" : "Gratuit"} (${orgInfo.subscription.status === "active" ? "actif" : orgInfo.subscription.status})` : null} />
             </div>
 
-            <div>
+            <div style={{ borderLeft: "1px solid #28405C", paddingLeft: "32px" }}>
               <SectionTitle first>Société</SectionTitle>
               <ReadRow label="Nom de la société" value={account.company_name} />
-              <ReadRow label="Numéro d'entreprise" value={account.vat_number} />
+              <ReadRowWithFlag label="Numéro d'entreprise" countryCode={account.company_country} value={account.vat_number} />
               <ReadRow label="Email" value={account.company_email} />
-              <ReadRow label="Téléphone" value={account.company_phone} />
-              <ReadRow label="Siège social" value={addressParts.length > 0 ? addressParts.join(", ") : null} />
+              <ReadRowWithFlag label="Téléphone" countryCode={account.company_country} value={account.company_phone} />
+              <ReadRowAddress account={account} />
             </div>
 
-            <div>
+            <div style={{ borderLeft: "1px solid #28405C", paddingLeft: "32px" }}>
               <SectionTitle first>Personne de contact</SectionTitle>
               <ReadRow label="Nom" value={[account.name, account.last_name].filter(Boolean).join(" ")} />
               <ReadRow label="Fonction" value={account.contact_function} />
