@@ -49,7 +49,7 @@ function useBusinessCount() {
   return count;
 }
 
-export function TopBar({ adminName, adminRole, onSearch, pendingReportsCount, openClaimsCount, onOpenReports, unreadMessagesCount, onOpenMessages }) {
+export function TopBar({ adminName, adminRole, avatarUrl, onSearch, pendingReportsCount, openClaimsCount, onOpenReports, unreadMessagesCount, onOpenMessages }) {
   // La cloche regroupe toutes les vraies notifications admin confondues — signalements et
   // revendications en attente, plutôt qu'un badge séparé par type.
   const bellCount = (pendingReportsCount || 0) + (openClaimsCount || 0);
@@ -77,14 +77,14 @@ export function TopBar({ adminName, adminRole, onSearch, pendingReportsCount, op
             width: "34px",
             height: "34px",
             borderRadius: "50%",
-            background: "#28405C",
+            background: avatarUrl ? `url(${avatarUrl}) center/cover` : "#28405C",
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
             flexShrink: 0,
           }}
         >
-          <NavIcon name="default-avatar" size={18} color="#8792A6" />
+          {!avatarUrl && <NavIcon name="default-avatar" size={18} color="#8792A6" />}
         </div>
         <div>
           <div style={{ fontSize: "13.5px", fontWeight: 700, color: "#F2F2E8" }}>{adminName}</div>
