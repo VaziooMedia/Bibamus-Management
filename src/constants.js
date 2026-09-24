@@ -705,6 +705,9 @@ export const DRINK_TYPE_CODE_TO_LABEL = {
 // Vrai code ISO (pour le vrai drapeau) de chaque vrai slug de COUNTRIES ci-dessus qui a
 // réellement un drapeau importé côté plateforme de gestion — les 2 seuls pays sans
 // correspondance (Nouvelle-Zélande, International) n'affichent simplement aucun drapeau.
+// "autre" est un vrai cas spécial géré directement par CountryFlagImg (vrai globe SVG),
+// pas un vrai code ISO — il utilise ce vrai même mapping pour être atteint par les vrais
+// appelants existants.
 export const COUNTRY_ISO_BY_SLUG = {
   belgique: "be",
   france: "fr",
@@ -745,6 +748,7 @@ export const COUNTRY_ISO_BY_SLUG = {
   slovenie: "si",
   suede: "se",
   suisse: "ch",
+  autre: "autre",
   tunisie: "tn",
   venezuela: "ve",
 };

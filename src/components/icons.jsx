@@ -95,6 +95,15 @@ const FLAG_URLS_BY_CODE = {
 
 // Vrai fichier SVG du pays (pas un emoji) — sans fond ni bordure, tel que demandé.
 export function CountryFlagImg({ isoCode, size = 16, style }) {
+  if (isoCode === "autre") {
+    return (
+      <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="#8792A6" strokeWidth="1.6" style={{ display: "inline-block", verticalAlign: "middle", ...style }}>
+        <circle cx="12" cy="12" r="10" />
+        <ellipse cx="12" cy="12" rx="4.5" ry="10" />
+        <path d="M2 12h20M3.5 7h17M3.5 17h17" />
+      </svg>
+    );
+  }
   const url = isoCode && FLAG_URLS_BY_CODE[isoCode];
   if (!url) return null;
   return (
