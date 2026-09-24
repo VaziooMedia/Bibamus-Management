@@ -20,9 +20,7 @@ export function BusinessAccountsScreen({ onOpenAccount }) {
   }, []);
 
   const q = normalize(query.trim());
-  const filtered = accounts
-    ? accounts.filter((a) => !q || [a.company_name, a.email, a.business_label, a.business_status].some((field) => normalize(field).includes(q)))
-    : null;
+  const filtered = accounts ? accounts.filter((a) => !q || [a.company_name, a.email].some((field) => normalize(field).includes(q))) : null;
 
   // Même vrai style que les autres vrais tableaux de la plateforme (Lieux, Produits,
   // Revendications...) — vraie bordure épaisse sur l'en-tête, vrai survol des lignes, vraies
@@ -38,7 +36,7 @@ export function BusinessAccountsScreen({ onOpenAccount }) {
       <input
         value={query}
         onChange={(e) => setQuery(e.target.value)}
-        placeholder="Rechercher : société, email, étiquette, statut..."
+        placeholder="Rechercher : société, email..."
         style={{ padding: "10px 14px", borderRadius: "8px", border: "2px solid #28405C", fontSize: "13px", color: "#F2F2E8", background: "#16273D", width: "100%", maxWidth: "420px", boxSizing: "border-box", marginBottom: "20px" }}
       />
 
@@ -53,11 +51,9 @@ export function BusinessAccountsScreen({ onOpenAccount }) {
               <th style={{ ...headerCellStyle, width: "1%" }}>#</th>
               <th style={headerCellStyle}>Société</th>
               <th style={{ ...headerCellStyle, width: "1%" }}>Pays</th>
-              <th style={headerCellStyle}>Étiquette</th>
               <th style={{ ...headerCellStyle, width: "1%" }}>Email contact</th>
               <th style={{ ...headerCellStyle, width: "1%" }}>Plan</th>
               <th style={{ ...headerCellStyle, width: "1%" }}>Nbre fiches</th>
-              <th style={{ ...headerCellStyle, width: "1%" }}>Statut</th>
               <th style={{ ...headerCellStyle, width: "1%", borderRight: "none" }}>État</th>
             </tr>
           </thead>
@@ -73,7 +69,6 @@ export function BusinessAccountsScreen({ onOpenAccount }) {
                 <td style={{ ...cellStyle, textAlign: "center", whiteSpace: "nowrap" }}>{String(i + 1).padStart(2, "0")}</td>
                 <td style={{ ...cellStyle, fontWeight: 700 }}>{a.company_name || "—"}</td>
                 <td style={{ ...cellStyle, textAlign: "center", whiteSpace: "nowrap" }}>{COUNTRIES.find((c) => c.code === a.company_country)?.fr || "—"}</td>
-                <td style={cellStyle}>{a.business_label || "—"}</td>
                 <td style={{ ...cellStyle, textAlign: "center" }}>
                   {a.contact_email ? (
                     <a href={`mailto:${a.contact_email}`} onClick={(e) => e.stopPropagation()} title={a.contact_email} style={{ display: "inline-flex" }}>
@@ -87,8 +82,9 @@ export function BusinessAccountsScreen({ onOpenAccount }) {
                   )}
                 </td>
                 <td style={{ ...cellStyle, textAlign: "center", whiteSpace: "nowrap" }}>Gratuit</td>
-                <td style={{ ...cellStyle, textAlign: "center", whiteSpace: "nowrap" }}>{entityCounts[a.id] || 0}</td>
-                <td style={{ ...cellStyle, textAlign: "center", whiteSpace: "nowrap" }}>{a.business_status || "—"}</td>
+                <td style={{ ...cellStyle, textAlign: "center", whiteSpace: "nowrap", cursor: "help" }} title={(entityCounts[a.id] || []).join("\n") || "Aucune fiche liée"}>
+                  {(entityCounts[a.id] || []).length}
+                </td>
                 <td style={{ ...cellStyle, textAlign: "center", whiteSpace: "nowrap", borderRight: "none" }}>
                   <span style={{ width: "9px", height: "9px", borderRadius: "50%", background: a.active !== false ? "#39FF66" : "#FF3B4E", display: "inline-block" }} />
                 </td>
