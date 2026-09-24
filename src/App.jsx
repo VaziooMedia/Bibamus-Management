@@ -139,7 +139,7 @@ export default function App() {
       {screen === "businessAccountDetail" && (
         <BusinessAccountDetailScreen accountId={viewedBusinessAccountId} onBack={() => setScreen("businessAccounts")} />
       )}
-      {screen === "notifications" && <NotificationsScreen onOpenReports={() => setScreen("reports")} />}
+      {screen === "notifications" && <NotificationsScreen onOpenReports={() => setScreen("reports")} onOpenClaims={() => setScreen("claims")} />}
       {screen === "admins" && <CollaboratorsScreen />}
       {screen === "users" && <UsersScreen />}
       {screen === "reports" && <ReportsScreen />}
