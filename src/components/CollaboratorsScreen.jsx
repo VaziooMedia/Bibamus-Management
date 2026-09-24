@@ -3,6 +3,9 @@ import { loadCollaborators } from "../data/sharedDirectories.js";
 import { PageTitle } from "./PageTitle.jsx";
 import { AdministratorDetailPanel } from "./AdministratorDetailPanel.jsx";
 
+// "business" gardé ici pour l'affichage seul (roleLabel) — d'anciens comptes pourraient encore
+// avoir ce vrai rôle en base — mais retiré des vrais 5 blocs de filtre, cohérent avec son
+// retrait du formulaire de création/édition.
 const ROLES = [
   { key: "editor", label: "Éditeur" },
   { key: "super_editor", label: "Super éditeur" },
@@ -12,6 +15,75 @@ const ROLES = [
   { key: "super_admin", label: "Super admin" },
 ];
 const roleLabel = (key) => ROLES.find((r) => r.key === key)?.label || key;
+
+const STATUS_BLOCKS = [
+  { key: "editor", label: "Éditeur" },
+  { key: "super_editor", label: "Super éditeur" },
+  { key: "moderator", label: "Modérateur" },
+  { key: "admin", label: "Admin" },
+  { key: "super_admin", label: "Super admin" },
+];
+
+const COUNTRY_BLOCKS = ["Belgique", "France", "Pays-Bas", "Allemagne", "Luxembourg", "Espagne"];
+const CONTINENT_BLOCKS = ["Europe", "Amérique du Nord", "Amérique du Sud", "Afrique", "Asie", "Océanie"];
+
+// Même vrai mapping que Database/Utilisateurs.
+const COUNTRY_TO_CONTINENT = {
+  Belgique: "Europe",
+  France: "Europe",
+  "Pays-Bas": "Europe",
+  Allemagne: "Europe",
+  Luxembourg: "Europe",
+  Espagne: "Europe",
+  Italie: "Europe",
+  Portugal: "Europe",
+  Suisse: "Europe",
+  "Royaume-Uni": "Europe",
+  Irlande: "Europe",
+  Autriche: "Europe",
+  "États-Unis": "Amérique du Nord",
+  Canada: "Amérique du Nord",
+  Mexique: "Amérique du Nord",
+  Brésil: "Amérique du Sud",
+  Argentine: "Amérique du Sud",
+  Chili: "Amérique du Sud",
+  Maroc: "Afrique",
+  Algérie: "Afrique",
+  Tunisie: "Afrique",
+  Sénégal: "Afrique",
+  "Côte d'Ivoire": "Afrique",
+  Chine: "Asie",
+  Japon: "Asie",
+  Inde: "Asie",
+  Thaïlande: "Asie",
+  Australie: "Océanie",
+  "Nouvelle-Zélande": "Océanie",
+};
+
+function FilterBlock({ label, count, active, onClick }) {
+  return (
+    <button
+      onClick={onClick}
+      style={{
+        padding: "8px 4px",
+        borderRadius: "8px",
+        border: `2px solid ${active ? "#39FF66" : "#28405C"}`,
+        background: active ? "#28405C" : "#16273D",
+        color: active ? "#39FF66" : "#F2F2E8",
+        fontSize: "12.5px",
+        fontWeight: active ? 700 : 500,
+        cursor: "pointer",
+        textAlign: "center",
+        display: "flex",
+        flexDirection: "column",
+        gap: "4px",
+      }}
+    >
+      <span>{label}</span>
+      <span style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "15px", color: "#39FF66" }}>{count}</span>
+    </button>
+  );
+}
 
 function SortHeader({ label, sortKey, currentSort, onSort }) {
   const active = currentSort.key === sortKey;
@@ -31,6 +103,9 @@ export function CollaboratorsScreen() {
   const [creating, setCreating] = useState(false);
   const [sort, setSort] = useState({ key: "last_name", dir: 1 });
   const [query, setQuery] = useState("");
+  const [roleFilter, setRoleFilter] = useState(null);
+  const [countryFilter, setCountryFilter] = useState(null);
+  const [continentFilter, setContinentFilter] = useState(null);
 
   const refresh = () => loadCollaborators().then(setAdministrators);
   useEffect(() => {
@@ -47,9 +122,14 @@ export function CollaboratorsScreen() {
     setSort((prev) => (prev.key === key ? { key, dir: -prev.dir } : { key, dir: 1 }));
   };
 
+  const relevant = useMemo(() => (administrators ? administrators.filter((a) => a.role !== "user") : null), [administrators]);
+
   const sorted = useMemo(() => {
-    if (!administrators) return null;
-    const list = administrators.filter((a) => a.role !== "user");
+    if (!relevant) return null;
+    let list = relevant;
+    if (roleFilter) list = list.filter((a) => a.role === roleFilter);
+    if (countryFilter) list = list.filter((a) => a.country === countryFilter);
+    else if (continentFilter) list = list.filter((a) => COUNTRY_TO_CONTINENT[a.country] === continentFilter);
     const q = query.trim().toLowerCase();
     const filtered = q ? list.filter((a) => [a.name, a.last_name, a.email].some((field) => (field || "").toLowerCase().includes(q))) : list;
     const getValue = (a) => {
@@ -64,7 +144,7 @@ export function CollaboratorsScreen() {
       if (va > vb) return 1 * sort.dir;
       return 0;
     });
-  }, [administrators, sort, query]);
+  }, [relevant, roleFilter, countryFilter, continentFilter, sort, query]);
 
   return (
     <div>
@@ -91,6 +171,47 @@ export function CollaboratorsScreen() {
         >
           +
         </button>
+      </div>
+
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(5, 1fr)", gap: "8px", marginBottom: "20px", maxWidth: "900px" }}>
+        {STATUS_BLOCKS.map((s) => (
+          <FilterBlock
+            key={s.key}
+            label={s.label}
+            count={(relevant || []).filter((a) => a.role === s.key).length}
+            active={roleFilter === s.key}
+            onClick={() => setRoleFilter((prev) => (prev === s.key ? null : s.key))}
+          />
+        ))}
+      </div>
+
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(6, 1fr)", gap: "8px", marginBottom: "8px", maxWidth: "900px" }}>
+        {COUNTRY_BLOCKS.map((c) => (
+          <FilterBlock
+            key={c}
+            label={c}
+            count={(relevant || []).filter((a) => a.country === c).length}
+            active={countryFilter === c}
+            onClick={() => {
+              setCountryFilter((prev) => (prev === c ? null : c));
+              setContinentFilter(null);
+            }}
+          />
+        ))}
+      </div>
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(6, 1fr)", gap: "8px", marginBottom: "20px", maxWidth: "900px" }}>
+        {CONTINENT_BLOCKS.map((c) => (
+          <FilterBlock
+            key={c}
+            label={c}
+            count={(relevant || []).filter((a) => COUNTRY_TO_CONTINENT[a.country] === c).length}
+            active={continentFilter === c}
+            onClick={() => {
+              setContinentFilter((prev) => (prev === c ? null : c));
+              setCountryFilter(null);
+            }}
+          />
+        ))}
       </div>
 
       <input
