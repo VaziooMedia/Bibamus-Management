@@ -685,7 +685,7 @@ export async function loadSupportMessages() {
 }
 
 export async function loadCollaborators() {
-  const { data, error } = await supabase.from("profiles").select("id, email, name, last_name, birth_date, avatar_url, role, active, can_moderate").order("name");
+  const { data, error } = await supabase.from("profiles").select("id, email, name, last_name, birth_date, country, avatar_url, role, active, can_moderate").order("name");
   if (error) {
     console.error("loadCollaborators:", error);
     return [];
