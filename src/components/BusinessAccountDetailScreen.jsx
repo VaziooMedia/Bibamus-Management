@@ -3,6 +3,7 @@ import { loadBusinessAccountById, updateBusinessAccount, loadMyBusinessEntities,
 import { PageTitle } from "./PageTitle.jsx";
 import { COUNTRIES } from "../constants.js";
 import { CountryFlagImg } from "./icons.jsx";
+import { ComingSoon } from "./ComingSoon.jsx";
 
 const LANGUAGE_OPTIONS = [
   { code: "fr", label: "Français" },
@@ -309,6 +310,7 @@ const countryLabel = (code) => COUNTRIES.find((c) => c.code === code)?.fr || cod
 
 export function BusinessAccountDetailScreen({ accountId, onBack }) {
   const [account, setAccount] = useState(null);
+  const [activeTab, setActiveTab] = useState("fiche");
   const [entities, setEntities] = useState(null);
   const [editing, setEditing] = useState(false);
   const [form, setForm] = useState(null);
@@ -414,7 +416,7 @@ export function BusinessAccountDetailScreen({ accountId, onBack }) {
       </button>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "4px" }}>
         <PageTitle>{account.company_name || "(société non renseignée)"}</PageTitle>
-        {!editing && (
+        {!editing && activeTab === "fiche" && (
           <button
             onClick={startEdit}
             style={{ background: "none", border: "2px solid #39FF66", borderRadius: "8px", padding: "8px 16px", fontWeight: 700, fontSize: "12.5px", color: "#39FF66", cursor: "pointer" }}
@@ -426,7 +428,39 @@ export function BusinessAccountDetailScreen({ accountId, onBack }) {
       {account.business_label && <p style={{ fontSize: "13px", color: "#8792A6", marginBottom: "24px" }}>{account.business_label}</p>}
       <div style={{ height: "1px", background: "#28405C", margin: "20px 0" }} />
 
-      {!editing ? (
+      <div style={{ display: "flex", gap: "6px", marginBottom: "20px", borderBottom: "2px solid #28405C" }}>
+        {[
+          { key: "fiche", label: "Fiche" },
+          { key: "stats", label: "Statistiques" },
+          { key: "finances", label: "Finances" },
+          { key: "chat", label: "Chat" },
+        ].map((tab) => (
+          <button
+            key={tab.key}
+            onClick={() => setActiveTab(tab.key)}
+            style={{
+              background: "none",
+              border: "none",
+              borderBottom: `2px solid ${activeTab === tab.key ? "#39FF66" : "transparent"}`,
+              marginBottom: "-2px",
+              padding: "8px 12px",
+              fontSize: "13px",
+              fontWeight: 700,
+              color: activeTab === tab.key ? "#39FF66" : "#8792A6",
+              cursor: "pointer",
+            }}
+          >
+            {tab.label}
+          </button>
+        ))}
+      </div>
+
+      {activeTab === "stats" && <ComingSoon title="Statistiques" />}
+      {activeTab === "finances" && <ComingSoon title="Finances" />}
+      {activeTab === "chat" && <ComingSoon title="Chat" />}
+
+      {activeTab === "fiche" &&
+        (!editing ? (
         <div style={{ maxWidth: "900px" }}>
           <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "32px", marginBottom: "24px" }}>
             <div>
@@ -698,7 +732,7 @@ export function BusinessAccountDetailScreen({ accountId, onBack }) {
             </button>
           </div>
         </div>
-      )}
+      ))}
     </div>
   );
 }
