@@ -256,25 +256,29 @@ export function ClaimsScreen({ onOpenVenue }) {
       <PageTitle>Revendications</PageTitle>
       <p style={{ fontSize: "12.5px", color: "#8792A6", marginBottom: "20px" }}>Demandes de propriétaires souhaitant gérer leur propre fiche.</p>
 
-      <div style={{ display: "flex", gap: "8px", marginBottom: "20px" }}>
-        {TYPE_FILTERS.map((t) => (
-          <button
-            key={t.key}
-            onClick={() => setTypeFilter(t.key)}
-            style={{
-              padding: "8px 16px",
-              borderRadius: "8px",
-              border: `2px solid ${typeFilter === t.key ? "#39FF66" : "#28405C"}`,
-              background: typeFilter === t.key ? "#39FF66" : "none",
-              color: typeFilter === t.key ? "#0D1B2A" : "#F2F2E8",
-              fontWeight: 700,
-              fontSize: "13px",
-              cursor: "pointer",
-            }}
-          >
-            {t.label}
-          </button>
-        ))}
+      <div style={{ display: "flex", gap: "12px", marginBottom: "20px", flexWrap: "wrap" }}>
+        {TYPE_FILTERS.map((t) => {
+          const count = claims ? (t.key === "all" ? claims.length : claims.filter((c) => c.entity_type === t.key).length) : 0;
+          const active = typeFilter === t.key;
+          return (
+            <div
+              key={t.key}
+              onClick={() => setTypeFilter(t.key)}
+              style={{
+                background: active ? "#1D3450" : "#16273D",
+                borderRadius: "10px",
+                padding: "8px 16px",
+                minWidth: "110px",
+                textAlign: "center",
+                border: active ? "2px solid #F2F2E8" : "none",
+                cursor: "pointer",
+              }}
+            >
+              <div style={{ fontSize: "11.5px", color: "#8792A6", marginBottom: "4px" }}>{t.label}</div>
+              <div style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "20px", color: "#39FF66" }}>{count}</div>
+            </div>
+          );
+        })}
       </div>
 
       {!filtered ? (
@@ -286,14 +290,20 @@ export function ClaimsScreen({ onOpenVenue }) {
           <thead>
             <tr style={{ borderTop: "2px solid #28405C", borderBottom: "2px solid #28405C" }}>
               <th style={{ ...headerCellStyle, width: "1%" }}>#</th>
-              <th style={{ ...headerCellStyle, width: "1%", cursor: "pointer", userSelect: "none" }} onClick={() => toggleSort("entity_type")}>
+              <th
+                style={{ ...headerCellStyle, width: "1%", cursor: "pointer", userSelect: "none", color: sortKey === "entity_type" ? "#39FF66" : headerCellStyle.color }}
+                onClick={() => toggleSort("entity_type")}
+              >
                 Type {sortKey === "entity_type" ? (sortDir === 1 ? "▲" : "▼") : ""}
               </th>
               <th style={headerCellStyle}>Nom de la fiche</th>
               <th style={headerCellStyle}>Nom de l'utilisateur</th>
               <th style={headerCellStyle}>Adresse email utilisateur</th>
               <th style={{ ...headerCellStyle, width: "1%" }}>Texte</th>
-              <th style={{ ...headerCellStyle, width: "1%", cursor: "pointer", userSelect: "none" }} onClick={() => toggleSort("created_at")}>
+              <th
+                style={{ ...headerCellStyle, width: "1%", cursor: "pointer", userSelect: "none", color: sortKey === "created_at" ? "#39FF66" : headerCellStyle.color }}
+                onClick={() => toggleSort("created_at")}
+              >
                 Date {sortKey === "created_at" ? (sortDir === 1 ? "▲" : "▼") : ""}
               </th>
               <th style={{ ...headerCellStyle, width: "1%", borderRight: "none" }}></th>
