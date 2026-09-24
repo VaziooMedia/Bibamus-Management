@@ -227,8 +227,8 @@ export function ClaimsScreen({ onOpenVenue }) {
     { key: "producer", label: "Producteurs" },
   ];
 
-  const cellStyle = { padding: "10px 8px", fontSize: "12.5px", color: "#F2F2E8", verticalAlign: "top", borderBottom: "1px solid #28405C", borderRight: "1px solid #28405C" };
-  const headerCellStyle = { padding: "0 8px 8px", fontSize: "11px", color: "#8792A6", fontWeight: 700, textTransform: "uppercase", textAlign: "left", borderRight: "1px solid #28405C" };
+  const cellStyle = { padding: "10px 12px", fontSize: "14px", color: "#F2F2E8", verticalAlign: "top", borderBottom: "1px solid #16273D", borderRight: "1px solid #16273D" };
+  const headerCellStyle = { padding: "10px 12px", fontSize: "12.5px", color: "#8792A6", textAlign: "center", whiteSpace: "nowrap", borderRight: "1px solid #28405C" };
 
   return (
     <div>
@@ -263,28 +263,28 @@ export function ClaimsScreen({ onOpenVenue }) {
       ) : (
         <table style={{ width: "100%", borderCollapse: "collapse" }}>
           <thead>
-            <tr>
-              <th style={{ ...headerCellStyle, width: "36px" }}>#</th>
-              <th style={headerCellStyle}>Type de fiche</th>
+            <tr style={{ borderTop: "2px solid #28405C", borderBottom: "2px solid #28405C" }}>
+              <th style={{ ...headerCellStyle, width: "1%" }}>#</th>
+              <th style={{ ...headerCellStyle, width: "1%" }}>Type de fiche</th>
               <th style={headerCellStyle}>Nom de la fiche</th>
               <th style={headerCellStyle}>Nom de l'utilisateur</th>
               <th style={headerCellStyle}>Adresse email utilisateur</th>
               <th style={headerCellStyle}>Texte libre</th>
-              <th style={headerCellStyle}>Date de la revendication</th>
-              <th style={{ ...headerCellStyle, width: "110px" }}></th>
+              <th style={{ ...headerCellStyle, width: "1%" }}>Date de la revendication</th>
+              <th style={{ ...headerCellStyle, width: "1%", borderRight: "none" }}></th>
             </tr>
           </thead>
           <tbody>
             {filtered.map((c, i) => (
               <React.Fragment key={c.id}>
-                <tr>
-                  <td style={cellStyle}>{String(i + 1).padStart(2, "0")}</td>
-                  <td style={cellStyle}>{ENTITY_TYPE_LABELS[c.entity_type] || c.entity_type}</td>
+                <tr style={{ borderBottom: "1px solid #16273D" }} onMouseEnter={(e) => (e.currentTarget.style.background = "#16273D")} onMouseLeave={(e) => (e.currentTarget.style.background = "transparent")}>
+                  <td style={{ ...cellStyle, textAlign: "center", whiteSpace: "nowrap" }}>{String(i + 1).padStart(2, "0")}</td>
+                  <td style={{ ...cellStyle, textAlign: "center", whiteSpace: "nowrap" }}>{ENTITY_TYPE_LABELS[c.entity_type] || c.entity_type}</td>
                   <td style={cellStyle}>
                     {c.entity_type === "venue" && onOpenVenue ? (
                       <button
                         onClick={() => onOpenVenue(c.entity_id)}
-                        style={{ background: "none", border: "none", padding: 0, fontSize: "12.5px", color: "#39FF66", fontWeight: 700, cursor: "pointer", textDecoration: "underline" }}
+                        style={{ background: "none", border: "none", padding: 0, fontSize: "14px", color: "#39FF66", fontWeight: 700, cursor: "pointer", textDecoration: "underline" }}
                       >
                         {c.entity_name}
                       </button>
@@ -295,8 +295,8 @@ export function ClaimsScreen({ onOpenVenue }) {
                   <td style={cellStyle}>{c.claimant ? `${c.claimant.name || ""} ${c.claimant.last_name || ""}`.trim() : "(compte inconnu)"}</td>
                   <td style={cellStyle}>{c.claimant?.email || "—"}</td>
                   <td style={{ ...cellStyle, maxWidth: "260px" }}>{c.justification}</td>
-                  <td style={cellStyle}>{c.created_at ? c.created_at.slice(0, 10) : ""}</td>
-                  <td style={cellStyle}>
+                  <td style={{ ...cellStyle, textAlign: "center", whiteSpace: "nowrap" }}>{c.created_at ? c.created_at.slice(0, 10) : ""}</td>
+                  <td style={{ ...cellStyle, textAlign: "center", whiteSpace: "nowrap", borderRight: "none" }}>
                     <div style={{ display: "flex", gap: "6px" }}>
                       <button
                         onClick={() => setCreatingNewFor(creatingNewFor === c.id ? null : c.id)}
