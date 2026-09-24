@@ -42,6 +42,8 @@ export default function App() {
   const [screen, setScreen] = useState("dashboard");
   const [viewedClaimEntity, setViewedClaimEntity] = useState(null); // {type, id} | null
   const [viewedBusinessAccountId, setViewedBusinessAccountId] = useState(null);
+  const [viewedUserId, setViewedUserId] = useState(null);
+  const [viewedAdminId, setViewedAdminId] = useState(null);
 
   // Vérifie une session déjà active (ex. après un rafraîchissement de page) — revérifie le
   // rôle à chaque fois, pas seulement à la connexion, au cas où il aurait changé depuis.
@@ -105,7 +107,33 @@ export default function App() {
   }
 
   return (
-    <Layout current={screen} onNavigate={setScreen} onLogout={handleLogout} myRole={myRole} myCanModerate={myCanModerate} myUserId={myUserId} myFirstName={myFirstName} myLastName={myLastName} myAvatarUrl={myAvatarUrl}>
+    <Layout
+      current={screen}
+      onNavigate={setScreen}
+      onLogout={handleLogout}
+      myRole={myRole}
+      myCanModerate={myCanModerate}
+      myUserId={myUserId}
+      myFirstName={myFirstName}
+      myLastName={myLastName}
+      myAvatarUrl={myAvatarUrl}
+      onSelectResult={(entityType, id) => {
+        if (["venue", "drink", "brand", "producer"].includes(entityType)) {
+          setViewedClaimEntity({ type: entityType, id });
+          const screenByType = { venue: "venues", drink: "drinks", brand: "brands", producer: "breweries" };
+          setScreen(screenByType[entityType]);
+        } else if (entityType === "business") {
+          setViewedBusinessAccountId(id);
+          setScreen("businessAccountDetail");
+        } else if (entityType === "user") {
+          setViewedUserId(id);
+          setScreen("users");
+        } else if (entityType === "admin") {
+          setViewedAdminId(id);
+          setScreen("admins");
+        }
+      }}
+    >
       {screen === "dashboard" && <Dashboard />}
       {screen === "database" && <DataBaseOverviewScreen onNavigate={setScreen} supabaseUrl={SUPABASE_PROJECT_URL} />}
       {screen === "venues" && (
@@ -155,13 +183,15 @@ export default function App() {
       {screen === "notifications" && <NotificationsScreen onOpenReports={() => setScreen("reports")} onOpenClaims={() => setScreen("claims")} />}
       {screen === "admins" && (
         <CollaboratorsScreen
+          initialAdminId={viewedAdminId}
+          onInitialAdminOpened={() => setViewedAdminId(null)}
           onOpenChatWith={(id) => {
             setChatTeamTargetId(id);
             setScreen("chatTeam");
           }}
         />
       )}
-      {screen === "users" && <UsersScreen />}
+      {screen === "users" && <UsersScreen initialUserId={viewedUserId} onInitialUserOpened={() => setViewedUserId(null)} />}
       {screen === "reports" && <ReportsScreen />}
       {screen === "audit" && <AuditLogScreen />}
       {screen === "myEntities" && <MyBusinessEntitiesScreen myUserId={myUserId} />}

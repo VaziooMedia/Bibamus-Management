@@ -94,7 +94,7 @@ function SortHeader({ label, sortKey, currentSort, onSort, borderRight, compact 
 
 // Première version simple, en lecture seule — les actions de modération (bloquer, suspendre)
 // viendront avec le chantier dédié.
-export function UsersScreen() {
+export function UsersScreen({ initialUserId, onInitialUserOpened } = {}) {
   const [users, setUsers] = useState(null);
   const [selected, setSelected] = useState(null);
   const [creating, setCreating] = useState(false);
@@ -107,6 +107,19 @@ export function UsersScreen() {
   useEffect(() => {
     refresh();
   }, []);
+
+  // Ouvre directement la vraie fiche visée (ex. depuis la recherche générale de la barre du
+  // haut) — le vrai répertoire est déjà chargé en entier ici, donc on cherche dedans plutôt que
+  // de le recharger par id.
+  useEffect(() => {
+    if (!initialUserId || !users) return;
+    const u = users.find((x) => x.id === initialUserId);
+    if (u) {
+      setSelected(u);
+      onInitialUserOpened?.();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [initialUserId, users]);
 
   const handleSaved = () => {
     setSelected(null);

@@ -2159,3 +2159,39 @@ export async function uploadBrandGalleryPhoto(brandId, file) {
   }
   return data.url;
 }
+
+// Vraie recherche transversale de la barre du haut — un vrai appel par catégorie, en
+// parallèle, limité à 5 résultats chacun (aperçu rapide, pas un vrai remplacement des tableaux
+// complets de chaque écran). Utilise search_text quand la vraie table l'a déjà (lieux,
+// produits, marques, producteurs) ; les vrais comptes (utilisateurs/business/administrateurs)
+// n'ont pas cette vraie colonne, donc recherche sur nom/email directement.
+export async function globalSearch(query) {
+  const q = (query || "").trim();
+  if (!q) return { venues: [], drinks: [], brands: [], breweries: [], users: [], business: [], admins: [] };
+  const nq = normalizeSearchText(q);
+
+  const [venuesRes, drinksRes, brandsRes, breweriesRes, usersRes, businessRes, adminsRes] = await Promise.all([
+    supabase.from("public_venues").select("id, name, city").ilike("search_text", `%${nq}%`).limit(5),
+    loadDrinksPage({ search: q, pageSize: 5 }),
+    supabase.from("brands_directory").select("id, name").ilike("search_text", `%${nq}%`).limit(5),
+    supabase.from("breweries_directory").select("id, name, country").ilike("search_text", `%${nq}%`).limit(5),
+    supabase.from("profiles").select("id, name, last_name, email, bibro_code").eq("role", "user").or(`name.ilike.%${q}%,last_name.ilike.%${q}%,email.ilike.%${q}%,bibro_code.ilike.%${q}%`).limit(5),
+    supabase.from("profiles").select("id, company_name, email").eq("role", "business").ilike("company_name", `%${q}%`).limit(5),
+    supabase
+      .from("profiles")
+      .select("id, name, last_name, email, role")
+      .in("role", ["editor", "super_editor", "moderator", "admin", "super_admin"])
+      .or(`name.ilike.%${q}%,last_name.ilike.%${q}%,email.ilike.%${q}%`)
+      .limit(5),
+  ]);
+
+  return {
+    venues: venuesRes.data || [],
+    drinks: ((drinksRes || {}).items || []).slice(0, 5),
+    brands: brandsRes.data || [],
+    breweries: breweriesRes.data || [],
+    users: usersRes.data || [],
+    business: businessRes.data || [],
+    admins: adminsRes.data || [],
+  };
+}

@@ -149,7 +149,7 @@ const ROLE_LABELS = {
   super_admin: "Super Admin",
 };
 
-export function Layout({ current, onNavigate, onLogout, myRole, myCanModerate, myUserId, myFirstName, myLastName, myAvatarUrl, children }) {
+export function Layout({ current, onNavigate, onLogout, myRole, myCanModerate, myUserId, myFirstName, myLastName, myAvatarUrl, onSelectResult, children }) {
   const isDatabaseScreen = DATABASE_ITEMS.some((i) => i.key === current) || current === "database";
   const [databaseOpen, setDatabaseOpen] = useState(isDatabaseScreen);
   const isModerator = myRole === "moderator";
@@ -291,6 +291,7 @@ export function Layout({ current, onNavigate, onLogout, myRole, myCanModerate, m
           adminName={[myFirstName, myLastName].filter(Boolean).join(" ") || "—"}
           adminRole={ROLE_LABELS[myRole] || myRole}
           avatarUrl={myAvatarUrl}
+          onSelectResult={onSelectResult}
           pendingReportsCount={pendingReportsCount}
           openClaimsCount={openClaimsCount}
           onOpenReports={() => onNavigate("notifications")}

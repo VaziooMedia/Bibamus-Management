@@ -98,7 +98,7 @@ function SortHeader({ label, sortKey, currentSort, onSort, style }) {
   );
 }
 
-export function CollaboratorsScreen({ onOpenChatWith }) {
+export function CollaboratorsScreen({ onOpenChatWith, initialAdminId, onInitialAdminOpened }) {
   const [administrators, setAdministrators] = useState(null);
   const [selected, setSelected] = useState(null);
   const [creating, setCreating] = useState(false);
@@ -112,6 +112,19 @@ export function CollaboratorsScreen({ onOpenChatWith }) {
   useEffect(() => {
     refresh();
   }, []);
+
+  // Ouvre directement la vraie fiche visée (ex. depuis la recherche générale de la barre du
+  // haut) — le vrai répertoire est déjà chargé en entier ici, donc on cherche dedans plutôt que
+  // de le recharger par id.
+  useEffect(() => {
+    if (!initialAdminId || !administrators) return;
+    const a = administrators.find((x) => x.id === initialAdminId);
+    if (a) {
+      setSelected(a);
+      onInitialAdminOpened?.();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [initialAdminId, administrators]);
 
   const handleSaved = () => {
     setSelected(null);

@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from "react";
-import { loadAppUsers, loadBusinessAccountsFull } from "../data/sharedDirectories.js";
+import { loadAppUsers, loadBusinessAccountsFull, globalSearch } from "../data/sharedDirectories.js";
 import { supabase } from "../supabaseClient.js";
 import { NavIcon } from "./icons.jsx";
+import { GlobalSearchResults } from "./GlobalSearchResults.jsx";
 
 // Se met à jour en temps réel via Supabase Realtime — dès qu'un compte est créé, supprimé, ou
 // change de rôle, le compteur se recalcule sans même changer d'écran. Recompte tout à chaque
@@ -49,13 +50,30 @@ function useBusinessCount() {
   return count;
 }
 
-export function TopBar({ adminName, adminRole, avatarUrl, onSearch, pendingReportsCount, openClaimsCount, onOpenReports, unreadMessagesCount, onOpenMessages }) {
+export function TopBar({ adminName, adminRole, avatarUrl, onSelectResult, pendingReportsCount, openClaimsCount, onOpenReports, unreadMessagesCount, onOpenMessages }) {
   // La cloche regroupe toutes les vraies notifications admin confondues — signalements et
   // revendications en attente, plutôt qu'un badge séparé par type.
   const bellCount = (pendingReportsCount || 0) + (openClaimsCount || 0);
   const userCount = useUserCount();
   const businessCount = useBusinessCount();
   const [query, setQuery] = useState("");
+  const [results, setResults] = useState(null);
+  const [dropdownOpen, setDropdownOpen] = useState(false);
+
+  useEffect(() => {
+    if (!query.trim()) {
+      setResults(null);
+      setDropdownOpen(false);
+      return;
+    }
+    const timeout = setTimeout(() => {
+      globalSearch(query).then((r) => {
+        setResults(r);
+        setDropdownOpen(true);
+      });
+    }, 300);
+    return () => clearTimeout(timeout);
+  }, [query]);
 
   return (
     <div
@@ -92,22 +110,35 @@ export function TopBar({ adminName, adminRole, avatarUrl, onSearch, pendingRepor
         </div>
       </div>
 
-      <input
-        value={query}
-        onChange={(e) => setQuery(e.target.value)}
-        onKeyDown={(e) => e.key === "Enter" && onSearch && onSearch(query)}
-        placeholder="Rechercher sur toute la plateforme..."
-        style={{
-          flex: 1,
-          maxWidth: "720px",
-          padding: "11px 16px",
-          borderRadius: "8px",
-          border: "2px solid #28405C",
-          background: "#16273D",
-          color: "#F2F2E8",
-          fontSize: "14px",
-        }}
-      />
+      <div style={{ position: "relative", flex: 1, maxWidth: "720px" }}>
+        <input
+          value={query}
+          onChange={(e) => setQuery(e.target.value)}
+          onFocus={() => results && setDropdownOpen(true)}
+          onBlur={() => setTimeout(() => setDropdownOpen(false), 150)}
+          placeholder="Rechercher sur toute la plateforme..."
+          style={{
+            width: "100%",
+            padding: "11px 16px",
+            borderRadius: "8px",
+            border: "2px solid #28405C",
+            background: "#16273D",
+            color: "#F2F2E8",
+            fontSize: "14px",
+            boxSizing: "border-box",
+          }}
+        />
+        {dropdownOpen && results && (
+          <GlobalSearchResults
+            results={results}
+            onSelect={(entityType, id) => {
+              setDropdownOpen(false);
+              setQuery("");
+              onSelectResult?.(entityType, id);
+            }}
+          />
+        )}
+      </div>
 
       <button onClick={onOpenReports} title="Notifications" style={{ background: "none", border: "none", cursor: "pointer", padding: "6px", display: "flex", position: "relative", flexShrink: 0 }}>
         <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="#39FF66" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
