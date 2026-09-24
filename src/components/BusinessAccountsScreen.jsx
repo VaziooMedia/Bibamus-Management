@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { loadBusinessAccountsFull, loadBusinessEntityCounts } from "../data/sharedDirectories.js";
 import { PageTitle } from "./PageTitle.jsx";
 import { COUNTRIES } from "../constants.js";
+import { NewBusinessForm } from "./NewBusinessForm.jsx";
 
 const normalize = (s) =>
   (s || "")
@@ -72,10 +73,14 @@ export function BusinessAccountsScreen({ onOpenAccount }) {
   const [query, setQuery] = useState("");
   const [countryFilter, setCountryFilter] = useState(null);
   const [continentFilter, setContinentFilter] = useState(null);
+  const [creating, setCreating] = useState(false);
 
-  useEffect(() => {
+  const refresh = () => {
     loadBusinessAccountsFull().then(setAccounts);
     loadBusinessEntityCounts().then(setEntityCounts);
+  };
+  useEffect(() => {
+    refresh();
   }, []);
 
   // company_country est un vrai code (ex. "belgique"), pas un vrai nom français direct — on le
@@ -99,8 +104,31 @@ export function BusinessAccountsScreen({ onOpenAccount }) {
 
   return (
     <div>
-      <PageTitle>Comptes Business</PageTitle>
-      <p style={{ fontSize: "12.5px", color: "#8792A6", marginBottom: "16px" }}>Comptes créés suite à une revendication approuvée.</p>
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "4px" }}>
+        <PageTitle>Comptes Business</PageTitle>
+        <button
+          onClick={() => setCreating(true)}
+          title="Ajouter un compte Business"
+          style={{
+            width: "36px",
+            height: "36px",
+            borderRadius: "50%",
+            background: "#39FF66",
+            border: "none",
+            color: "#0D1B2A",
+            fontSize: "20px",
+            fontWeight: 800,
+            cursor: "pointer",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            lineHeight: 1,
+          }}
+        >
+          +
+        </button>
+      </div>
+      <p style={{ fontSize: "12.5px", color: "#8792A6", marginBottom: "16px" }}>Comptes créés suite à une revendication approuvée, ou ajoutés manuellement.</p>
 
       <div style={{ display: "grid", gridTemplateColumns: "repeat(6, 1fr)", gap: "8px", marginBottom: "8px" }}>
         {COUNTRY_BLOCKS.map((c) => (
@@ -190,6 +218,25 @@ export function BusinessAccountsScreen({ onOpenAccount }) {
             ))}
           </tbody>
         </table>
+      )}
+
+      {creating && (
+        <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.5)", display: "flex", alignItems: "flex-start", justifyContent: "center", padding: "40px 20px", zIndex: 50, overflowY: "auto" }}>
+          <div style={{ background: "#16273D", borderRadius: "14px", padding: "28px", width: "480px", maxWidth: "100%" }}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "10px" }}>
+              <h2 style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "22px", color: "#F2F2E8", margin: 0 }}>Nouveau compte Business</h2>
+              <button onClick={() => setCreating(false)} style={{ background: "none", border: "none", color: "#8792A6", fontSize: "20px", cursor: "pointer" }}>
+                ✕
+              </button>
+            </div>
+            <NewBusinessForm
+              onCreated={() => {
+                setCreating(false);
+                refresh();
+              }}
+            />
+          </div>
+        </div>
       )}
     </div>
   );
