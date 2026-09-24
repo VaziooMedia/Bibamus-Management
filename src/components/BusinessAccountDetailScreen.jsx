@@ -466,9 +466,9 @@ export function BusinessAccountDetailScreen({ accountId, onBack }) {
           </div>
 
           <SectionTitle>
-            Fiches liées <span style={{ color: "#8792A6" }}>(</span>
+            Fiches liées <span style={{ color: "#8792A6" }}>( </span>
             <span style={{ color: "#39FF66" }}>{entities ? entities.length : 0}</span>
-            <span style={{ color: "#8792A6" }}>)</span>
+            <span style={{ color: "#8792A6" }}> )</span>
           </SectionTitle>
           {!entities ? (
             <p style={{ color: "#8792A6", fontSize: "13px" }}>Chargement...</p>
