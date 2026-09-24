@@ -1,15 +1,17 @@
 import React, { useState } from "react";
 import { updateCollaboratorProfile, uploadAdminAvatar, createCollaborator, deleteCollaborator } from "../data/sharedDirectories.js";
+import { COUNTRIES } from "../constants.js";
+import { NavIcon } from "./icons.jsx";
 
 const fieldStyle = { padding: "10px 12px", borderRadius: "8px", border: "2px solid #28405C", fontSize: "14px", width: "100%", color: "#F2F2E8", background: "#0D1B2A", boxSizing: "border-box" };
 const labelStyle = { fontSize: "12.5px", color: "#8792A6", marginBottom: "4px", display: "block", fontWeight: 600 };
 const separatorStyle = { borderBottom: "1px solid #28405C", margin: "20px 0" };
 
+// "Business" retiré — il existe désormais un vrai espace Comptes Business séparé et dédié.
 const ROLES = [
   { key: "editor", label: "Éditeur" },
   { key: "super_editor", label: "Super éditeur" },
   { key: "moderator", label: "Modérateur" },
-  { key: "business", label: "Business" },
   { key: "admin", label: "Admin" },
   { key: "super_admin", label: "Super admin" },
 ];
@@ -23,6 +25,7 @@ export function AdministratorDetailPanel({ administrator, onClose, onSaved }) {
   const [firstName, setFirstName] = useState(administrator?.name || "");
   const [lastName, setLastName] = useState(administrator?.last_name || "");
   const [birthDate, setBirthDate] = useState(administrator?.birth_date || "");
+  const [country, setCountry] = useState(administrator?.country || "");
   const [role, setRole] = useState(administrator?.role || "admin");
   const [canModerate, setCanModerate] = useState(administrator?.can_moderate || false);
   const [active, setActive] = useState(administrator?.active !== false);
@@ -41,8 +44,13 @@ export function AdministratorDetailPanel({ administrator, onClose, onSaved }) {
     if (!file || isNew) return; // pas d'upload possible avant que le compte existe (pas d'id)
     setUploadingAvatar(true);
     const url = await uploadAdminAvatar(administrator.id, file);
-    if (url) setAvatarUrl(url);
     setUploadingAvatar(false);
+    if (!url) return;
+    setAvatarUrl(url);
+    // uploadAdminAvatar envoie bien le vrai fichier, mais n'écrit jamais avatar_url en base —
+    // c'était le vrai bug (la photo semblait prise en compte, puis disparaissait à la
+    // prochaine édition) : on persiste donc immédiatement, sans attendre l'Enregistrer global.
+    await updateCollaboratorProfile(administrator.id, { firstName, lastName, birthDate, role, active, canModerate, avatarUrl: url, country });
   };
 
   const handleSave = async () => {
@@ -57,7 +65,7 @@ export function AdministratorDetailPanel({ administrator, onClose, onSaved }) {
         return;
       }
     } else {
-      const result = await updateCollaboratorProfile(administrator.id, { firstName, lastName, birthDate, role, active, canModerate });
+      const result = await updateCollaboratorProfile(administrator.id, { firstName, lastName, birthDate, role, active, canModerate, avatarUrl, country });
       setSaving(false);
       if (result.error) {
         setError(result.error);
@@ -83,7 +91,10 @@ export function AdministratorDetailPanel({ administrator, onClose, onSaved }) {
     <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.5)", display: "flex", alignItems: "flex-start", justifyContent: "center", padding: "40px 20px", zIndex: 50, overflowY: "auto" }}>
       <div style={{ background: "#16273D", borderRadius: "14px", padding: "28px", width: "480px", maxWidth: "100%" }}>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "20px" }}>
-          <h2 style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "22px", color: "#F2F2E8", margin: 0 }}>{isNew ? "Nouvel administrateur" : "Fiche administrateur"}</h2>
+          <h2 style={{ display: "flex", alignItems: "center", gap: "10px", fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "22px", color: "#F2F2E8", margin: 0 }}>
+            {!isNew && <span style={{ width: "4px", height: "20px", borderRadius: "2px", background: "#39FF66", flexShrink: 0 }} />}
+            {isNew ? "Nouvel administrateur" : "Fiche administrateur"}
+          </h2>
           <button onClick={onClose} style={{ background: "none", border: "none", color: "#8792A6", fontSize: "20px", cursor: "pointer" }}>
             ✕
           </button>
@@ -101,11 +112,9 @@ export function AdministratorDetailPanel({ administrator, onClose, onSaved }) {
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "center",
-                fontSize: "28px",
-                color: "#8792A6",
               }}
             >
-              {!avatarUrl && "👤"}
+              {!avatarUrl && <NavIcon name="default-avatar" size={40} color="#8792A6" />}
             </div>
             <label style={{ fontSize: "12.5px", color: "#39FF66", cursor: "pointer", fontWeight: 700 }}>
               {uploadingAvatar ? "Envoi..." : "Changer la photo"}
@@ -136,6 +145,16 @@ export function AdministratorDetailPanel({ administrator, onClose, onSaved }) {
 
         <label style={labelStyle}>Date de naissance</label>
         <input type="date" value={birthDate || ""} onChange={(e) => setBirthDate(e.target.value)} style={{ ...fieldStyle, marginBottom: "12px", colorScheme: "dark" }} />
+
+        <label style={labelStyle}>Pays</label>
+        <select value={country} onChange={(e) => setCountry(e.target.value)} style={{ ...fieldStyle, marginBottom: "12px" }}>
+          <option value="">—</option>
+          {COUNTRIES.map((c) => (
+            <option key={c.code} value={c.fr}>
+              {c.fr}
+            </option>
+          ))}
+        </select>
 
         <label style={labelStyle}>Rôle</label>
         <select value={role} onChange={(e) => setRole(e.target.value)} style={{ ...fieldStyle, marginBottom: "14px" }}>
@@ -205,7 +224,7 @@ export function AdministratorDetailPanel({ administrator, onClose, onSaved }) {
                 onClick={() => setConfirmingDelete(true)}
                 style={{ width: "100%", background: "none", border: "2px solid #FF3B4E", borderRadius: "8px", padding: "10px", fontWeight: 700, color: "#FF3B4E", cursor: "pointer" }}
               >
-                Supprimer ce compte administrateur
+                Supprimer
               </button>
             ) : (
               <div>
