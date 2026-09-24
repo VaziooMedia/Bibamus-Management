@@ -19,6 +19,11 @@ const REPORT_REASON_LABELS = {
   other: "Autre raison",
 };
 
+// Le vrai type de fiche concerné est déjà stocké dans le champ "screen" de ces vrais
+// événements précis (trackEvent("report_submitted", entityType, ...)) — jamais exploité
+// jusqu'ici.
+const ENTITY_TYPE_LABELS = { venue: "Lieu", drink: "Produit", brand: "Marque", producer: "Producteur" };
+
 const PERIOD_OPTIONS = [
   { key: 1, label: "24 heures" },
   { key: 7, label: "7 jours" },
@@ -26,14 +31,34 @@ const PERIOD_OPTIONS = [
   { key: null, label: "Tout" },
 ];
 
-function StatBlock({ value, label, onClick }) {
+const WEEKDAY_LABELS = ["Lun", "Mar", "Mer", "Jeu", "Ven", "Sam", "Dim"];
+
+// Vraie variation en % par rapport à la vraie période précédente de même durée — absente pour
+// "Tout" (pas de vraie période précédente comparable).
+function PercentChange({ current, previous }) {
+  if (previous == null) return null;
+  if (previous === 0) return current > 0 ? <span style={{ fontSize: "11px", color: "#39FF66", marginLeft: "6px" }}>nouveau</span> : null;
+  const pct = Math.round(((current - previous) / previous) * 100);
+  if (pct === 0) return <span style={{ fontSize: "11px", color: "#8792A6", marginLeft: "6px" }}>= </span>;
+  const up = pct > 0;
+  return (
+    <span style={{ fontSize: "11px", color: up ? "#39FF66" : "#FF3B4E", marginLeft: "6px" }}>
+      {up ? "▲" : "▼"} {Math.abs(pct)}%
+    </span>
+  );
+}
+
+function StatBlock({ value, label, onClick, previous }) {
   return (
     <div
       onClick={onClick}
       style={{ flex: 1, background: "#16273D", borderRadius: "12px", padding: "18px", textAlign: "center", cursor: onClick ? "pointer" : "default" }}
     >
       <div style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "30px", color: "#39FF66" }}>{value}</div>
-      <div style={{ fontSize: "12px", color: "#8792A6", fontWeight: 600 }}>{label}</div>
+      <div style={{ fontSize: "12px", color: "#8792A6", fontWeight: 600 }}>
+        {label}
+        <PercentChange current={value} previous={previous} />
+      </div>
     </div>
   );
 }
@@ -60,6 +85,26 @@ function RankedList({ title, entries }) {
           ))}
         </div>
       )}
+    </div>
+  );
+}
+
+// Même vrai principe visuel que RankedList, mais garde le vrai ordre naturel (0h à 23h, Lundi
+// à Dimanche) plutôt que de trier par grandeur — pour vraiment voir le vrai motif quotidien/
+// hebdomadaire, pas un vrai classement.
+function OrderedBars({ title, entries }) {
+  const max = Math.max(1, ...entries.map((e) => e.count));
+  return (
+    <div style={{ background: "#16273D", borderRadius: "12px", padding: "18px", flex: 1, minWidth: 0 }}>
+      <p style={{ margin: "0 0 14px", fontSize: "13px", fontWeight: 700, color: "#F2F2E8" }}>{title}</p>
+      <div style={{ display: "flex", alignItems: "flex-end", gap: "4px", height: "90px" }}>
+        {entries.map((e) => (
+          <div key={e.label} title={`${e.label} : ${e.count}`} style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", gap: "4px", height: "100%", justifyContent: "flex-end" }}>
+            <div style={{ width: "100%", height: `${(e.count / max) * 100}%`, minHeight: e.count > 0 ? "2px" : 0, background: "#39FF66", borderRadius: "3px 3px 0 0" }} />
+            <span style={{ fontSize: "9px", color: "#8792A6" }}>{e.label}</span>
+          </div>
+        ))}
+      </div>
     </div>
   );
 }
@@ -134,20 +179,40 @@ export function AnalyticsScreen({ onNavigate }) {
     loadCrashReports().then(setCrashes);
   }, []);
 
-  const inPeriod = (createdAt) => !periodDays || new Date(createdAt) > new Date(Date.now() - periodDays * 86400000);
+  // Vraie période actuelle, et vraie période précédente de même durée juste avant (pour la
+  // vraie variation en %) — absente pour "Tout", qui n'a pas de vraie période comparable.
+  const now = Date.now();
+  const inRange = (createdAt, startMs, endMs) => {
+    const t = new Date(createdAt).getTime();
+    return t > startMs && t <= endMs;
+  };
+  const currentStart = periodDays ? now - periodDays * 86400000 : -Infinity;
+  const previousStart = periodDays ? now - periodDays * 2 * 86400000 : null;
 
-  const filtered = events ? events.filter((e) => inPeriod(e.created_at)) : [];
-  const filteredCrashes = crashes ? crashes.filter((c) => inPeriod(c.created_at)) : [];
+  const filtered = events ? events.filter((e) => inRange(e.created_at, currentStart, now)) : [];
+  const previousFiltered = events && periodDays ? events.filter((e) => inRange(e.created_at, previousStart, currentStart)) : null;
+  const filteredCrashes = crashes ? crashes.filter((c) => inRange(c.created_at, currentStart, now)) : [];
+  const previousCrashes = crashes && periodDays ? crashes.filter((c) => inRange(c.created_at, previousStart, currentStart)) : null;
 
   const distinctUsers = new Set(filtered.filter((e) => e.bibro_code).map((e) => e.bibro_code)).size;
+  const previousDistinctUsers = previousFiltered ? new Set(previousFiltered.filter((e) => e.bibro_code).map((e) => e.bibro_code)).size : null;
 
   const screenCounts = {};
   const eventTypeCounts = {};
   const reportReasonCounts = {};
+  const reportEntityTypeCounts = {};
   filtered.forEach((e) => {
     if (e.event_type === "screen_view" && e.screen) screenCounts[e.screen] = (screenCounts[e.screen] || 0) + 1;
     eventTypeCounts[e.event_type] = (eventTypeCounts[e.event_type] || 0) + 1;
-    if (e.event_type === "report_submitted" && e.metadata?.reason) reportReasonCounts[e.metadata.reason] = (reportReasonCounts[e.metadata.reason] || 0) + 1;
+    if (e.event_type === "report_submitted") {
+      if (e.metadata?.reason) reportReasonCounts[e.metadata.reason] = (reportReasonCounts[e.metadata.reason] || 0) + 1;
+      if (e.screen) reportEntityTypeCounts[e.screen] = (reportEntityTypeCounts[e.screen] || 0) + 1;
+    }
+  });
+
+  const previousEventTypeCounts = {};
+  (previousFiltered || []).forEach((e) => {
+    previousEventTypeCounts[e.event_type] = (previousEventTypeCounts[e.event_type] || 0) + 1;
   });
 
   const topScreens = Object.entries(screenCounts)
@@ -162,6 +227,10 @@ export function AnalyticsScreen({ onNavigate }) {
 
   const topReportReasons = Object.entries(reportReasonCounts)
     .map(([key, count]) => ({ label: REPORT_REASON_LABELS[key] || key, count }))
+    .sort((a, b) => b.count - a.count);
+
+  const topReportEntityTypes = Object.entries(reportEntityTypeCounts)
+    .map(([key, count]) => ({ label: ENTITY_TYPE_LABELS[key] || key, count }))
     .sort((a, b) => b.count - a.count);
 
   // Groupe par vraie heure sur "24 heures" (un vrai regroupement par jour ne donnerait qu'un
@@ -180,6 +249,18 @@ export function AnalyticsScreen({ onNavigate }) {
   const sortedBuckets = Object.values(buckets).sort((a, b) => a.date - b.date);
   const eventsTimeline = sortedBuckets.map((b) => ({ label: bucketLabel(b.date), value: b.count }));
   const usersTimeline = sortedBuckets.map((b) => ({ label: bucketLabel(b.date), value: b.users.size }));
+
+  // Vraie répartition par heure de la journée et par jour de la semaine, tous vrais jours de
+  // la vraie période confondus — pour repérer les vrais pics d'usage.
+  const hourCounts = Array.from({ length: 24 }, () => 0);
+  const weekdayCounts = Array.from({ length: 7 }, () => 0);
+  filtered.forEach((e) => {
+    const d = new Date(e.created_at);
+    hourCounts[d.getHours()] += 1;
+    weekdayCounts[(d.getDay() + 6) % 7] += 1; // getDay() commence un vrai dimanche (0) — décalé pour démarrer un vrai lundi.
+  });
+  const hourEntries = hourCounts.map((count, h) => ({ label: `${h}h`, count }));
+  const weekdayEntries = weekdayCounts.map((count, i) => ({ label: WEEKDAY_LABELS[i], count }));
 
   return (
     <div>
@@ -212,10 +293,10 @@ export function AnalyticsScreen({ onNavigate }) {
       ) : (
         <>
           <div style={{ display: "flex", gap: "12px", marginBottom: "20px" }}>
-            <StatBlock value={distinctUsers} label="Bibax actifs" />
-            <StatBlock value={eventTypeCounts.screen_view || 0} label="Vues d'écran" />
-            <StatBlock value={filtered.length} label="Événements au total" />
-            <StatBlock value={filteredCrashes.length} label="Plantages" onClick={() => onNavigate?.("crashReports")} />
+            <StatBlock value={distinctUsers} label="Bibax actifs" previous={previousDistinctUsers} />
+            <StatBlock value={eventTypeCounts.screen_view || 0} label="Vues d'écran" previous={previousFiltered ? previousEventTypeCounts.screen_view || 0 : null} />
+            <StatBlock value={filtered.length} label="Événements au total" previous={previousFiltered ? previousFiltered.length : null} />
+            <StatBlock value={filteredCrashes.length} label="Plantages" onClick={() => onNavigate?.("crashReports")} previous={previousCrashes ? previousCrashes.length : null} />
           </div>
 
           <div style={{ marginBottom: "20px" }}>
@@ -229,13 +310,19 @@ export function AnalyticsScreen({ onNavigate }) {
           </div>
 
           <div style={{ display: "flex", gap: "12px", flexWrap: "wrap", marginBottom: "12px" }}>
+            <OrderedBars title="Répartition par heure" entries={hourEntries} />
+            <OrderedBars title="Répartition par jour de la semaine" entries={weekdayEntries} />
+          </div>
+
+          <div style={{ display: "flex", gap: "12px", flexWrap: "wrap", marginBottom: "12px" }}>
             <RankedList title="Écrans les plus visités" entries={topScreens} />
             <RankedList title="Actions" entries={topEventTypes} />
           </div>
 
-          {topReportReasons.length > 0 && (
+          {(topReportReasons.length > 0 || topReportEntityTypes.length > 0) && (
             <div style={{ display: "flex", gap: "12px", flexWrap: "wrap" }}>
-              <RankedList title="Raisons de signalement" entries={topReportReasons} />
+              {topReportReasons.length > 0 && <RankedList title="Raisons de signalement" entries={topReportReasons} />}
+              {topReportEntityTypes.length > 0 && <RankedList title="Signalements par type de fiche" entries={topReportEntityTypes} />}
             </div>
           )}
         </>
