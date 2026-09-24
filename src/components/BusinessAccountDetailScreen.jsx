@@ -590,9 +590,6 @@ export function BusinessAccountDetailScreen({ accountId, onBack }) {
               </button>
             </div>
           )}
-
-          <SectionTitle>À venir</SectionTitle>
-          <p style={{ fontSize: "13px", color: "#8792A6" }}>Comptabilité (en cas de Business payant), projets publicitaires, et autres informations — chantiers séparés à construire plus tard.</p>
         </div>
       ) : (
         <div style={{ maxWidth: "480px" }}>
