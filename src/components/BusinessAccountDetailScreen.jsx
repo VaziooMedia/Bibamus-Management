@@ -434,7 +434,16 @@ export function BusinessAccountDetailScreen({ accountId, onBack }) {
               <ReadRow label="État" value={account.active !== false ? "Actif" : "Non actif"} />
               <ReadRow label="Email de connexion" value={account.email} />
               <ReadRow label="Plan" value={orgInfo?.subscription ? `${orgInfo.subscription.plan === "pro" ? "Pro" : "Gratuit"} (${orgInfo.subscription.status === "active" ? "actif" : orgInfo.subscription.status})` : null} />
-              <ReadRowList label="Fiches liées" items={entities ? entities.map((e) => `${e.name} (${e.entityTypeLabel})`) : []} />
+              <ReadRowList
+                label={
+                  <>
+                    Fiches liées <span style={{ color: "#8792A6" }}>(</span>
+                    <span style={{ color: "#39FF66" }}>{entities ? entities.length : 0}</span>
+                    <span style={{ color: "#8792A6" }}>)</span>
+                  </>
+                }
+                items={entities ? entities.map((e) => `${e.name} (${e.entityTypeLabel})`) : []}
+              />
             </div>
 
             <div style={{ borderLeft: "1px solid #28405C", paddingLeft: "32px" }}>
@@ -466,7 +475,7 @@ export function BusinessAccountDetailScreen({ accountId, onBack }) {
           ) : entities.length === 0 ? (
             <p style={{ color: "#8792A6", fontSize: "13px" }}>Aucune fiche liée pour l'instant.</p>
           ) : (
-            <div style={{ display: "flex", flexDirection: "column", gap: "6px", marginBottom: "12px" }}>
+            <div style={{ display: "flex", flexDirection: "column", gap: "6px", marginBottom: "12px", maxWidth: "400px" }}>
               {entities.map((e) => (
                 <div key={`${e.entityType}-${e.id}`} style={{ background: "#16273D", borderRadius: "8px", padding: "10px 14px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                   <div>
