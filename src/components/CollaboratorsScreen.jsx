@@ -236,11 +236,11 @@ export function CollaboratorsScreen({ onOpenChatWith }) {
               <th style={{ ...headerCellStyle, width: "1%" }}>#</th>
               <SortHeader label="Nom" sortKey="last_name" currentSort={sort} onSort={handleSort} />
               <SortHeader label="Prénom" sortKey="name" currentSort={sort} onSort={handleSort} />
-              <th style={headerCellStyle}>Email</th>
               <SortHeader label="Rôle" sortKey="role" currentSort={sort} onSort={handleSort} />
-              <th style={{ ...headerCellStyle, width: "1%" }}>Pays</th>
-              <SortHeader label="Statut" sortKey="active" currentSort={sort} onSort={handleSort} />
-              <th style={{ ...headerCellStyle, width: "1%", textAlign: "center", borderRight: "none" }}>Chat Team</th>
+              <th style={headerCellStyle}>Email</th>
+              <SortHeader label="Pays" sortKey="country" currentSort={sort} onSort={handleSort} style={{ width: "1%" }} />
+              <th style={{ ...headerCellStyle, width: "1%", textAlign: "center" }}>Chat Team</th>
+              <SortHeader label="Statut" sortKey="active" currentSort={sort} onSort={handleSort} style={{ width: "1%", borderRight: "none" }} />
             </tr>
           </thead>
           <tbody>
@@ -255,6 +255,7 @@ export function CollaboratorsScreen({ onOpenChatWith }) {
                 <td style={{ ...cellStyle, textAlign: "center", whiteSpace: "nowrap" }}>{String(i + 1).padStart(2, "0")}</td>
                 <td style={cellStyle}>{a.last_name || "—"}</td>
                 <td style={cellStyle}>{a.name || "—"}</td>
+                <td style={cellStyle}>{roleLabel(a.role)}</td>
                 <td style={cellStyle}>
                   <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
                     <a href={`mailto:${a.email}`} onClick={(e) => e.stopPropagation()} title={a.email} style={{ display: "inline-flex", flexShrink: 0 }}>
@@ -266,15 +267,8 @@ export function CollaboratorsScreen({ onOpenChatWith }) {
                     {a.email}
                   </div>
                 </td>
-                <td style={cellStyle}>{roleLabel(a.role)}</td>
                 <td style={{ ...cellStyle, textAlign: "center", whiteSpace: "nowrap" }}>{a.country || "—"}</td>
                 <td style={{ ...cellStyle, textAlign: "center", whiteSpace: "nowrap" }}>
-                  <span
-                    title={a.active !== false ? "Actif" : "Non actif"}
-                    style={{ display: "inline-block", width: "10px", height: "10px", borderRadius: "50%", background: a.active !== false ? "#39FF66" : "#FF3B4E" }}
-                  />
-                </td>
-                <td style={{ ...cellStyle, textAlign: "center", whiteSpace: "nowrap", borderRight: "none" }}>
                   <button
                     onClick={(e) => {
                       e.stopPropagation();
@@ -287,6 +281,12 @@ export function CollaboratorsScreen({ onOpenChatWith }) {
                       <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z" />
                     </svg>
                   </button>
+                </td>
+                <td style={{ ...cellStyle, textAlign: "center", whiteSpace: "nowrap", borderRight: "none" }}>
+                  <span
+                    title={a.active !== false ? "Actif" : "Non actif"}
+                    style={{ display: "inline-block", width: "10px", height: "10px", borderRadius: "50%", background: a.active !== false ? "#39FF66" : "#FF3B4E" }}
+                  />
                 </td>
               </tr>
             ))}
