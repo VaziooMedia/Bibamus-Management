@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { TopBar } from "./TopBar.jsx";
 import { usePendingReportsCount } from "../data/usePendingReportsCount.js";
+import { useOpenClaimsCount } from "../data/useOpenClaimsCount.js";
 import { useUnreadChatCounts } from "../data/useUnreadChatCounts.js";
 
 const COMMUNICATION_ITEMS = [
@@ -144,6 +145,7 @@ export function Layout({ current, onNavigate, onLogout, myRole, myCanModerate, m
   const isEditorTier = myRole === "editor" || myRole === "super_editor";
   const isBusiness = myRole === "business";
   const pendingReportsCount = usePendingReportsCount();
+  const openClaimsCount = useOpenClaimsCount();
   const unreadChatCounts = useUnreadChatCounts(myUserId, myRole);
 
   const [communicationOpen, setCommunicationOpen] = useState(true);
@@ -249,7 +251,10 @@ export function Layout({ current, onNavigate, onLogout, myRole, myCanModerate, m
               ))}
 
             <SectionHeader title="Business" expanded={businessSectionOpen} onToggle={() => setBusinessSectionOpen((o) => !o)} />
-            {businessSectionOpen && BUSINESS_ITEMS.map((item) => <NavButton key={item.key} item={item} current={current} onNavigate={onNavigate} />)}
+            {businessSectionOpen &&
+              BUSINESS_ITEMS.map((item) => (
+                <NavButton key={item.key} item={item} current={current} onNavigate={onNavigate} badge={item.key === "claims" ? openClaimsCount : undefined} />
+              ))}
 
             <SectionHeader title="Analytics" expanded={analyticsOpen} onToggle={() => setAnalyticsOpen((o) => !o)} />
             {analyticsOpen && ANALYTICS_ITEMS.map((item) => <NavButton key={item.key} item={item} current={current} onNavigate={onNavigate} />)}
@@ -273,6 +278,7 @@ export function Layout({ current, onNavigate, onLogout, myRole, myCanModerate, m
       <div style={{ flex: 1, display: "flex", flexDirection: "column", minWidth: 0 }}>
         <TopBar
           pendingReportsCount={pendingReportsCount}
+          openClaimsCount={openClaimsCount}
           onOpenReports={() => onNavigate("notifications")}
           unreadMessagesCount={unreadChatCounts.chatTeam + unreadChatCounts.chatUsers + unreadChatCounts.chatBusiness}
           onOpenMessages={() => onNavigate("chatTeam")}

@@ -26,7 +26,10 @@ function useUserCount() {
   return count;
 }
 
-export function TopBar({ adminName = "Mehdi Alorchi", adminRole = "Super Admin", onSearch, pendingReportsCount, onOpenReports, unreadMessagesCount, onOpenMessages }) {
+export function TopBar({ adminName = "Mehdi Alorchi", adminRole = "Super Admin", onSearch, pendingReportsCount, openClaimsCount, onOpenReports, unreadMessagesCount, onOpenMessages }) {
+  // La cloche regroupe toutes les vraies notifications admin confondues — signalements et
+  // revendications en attente, plutôt qu'un badge séparé par type.
+  const bellCount = (pendingReportsCount || 0) + (openClaimsCount || 0);
   const userCount = useUserCount();
   const [query, setQuery] = useState("");
 
@@ -73,7 +76,7 @@ export function TopBar({ adminName = "Mehdi Alorchi", adminRole = "Super Admin",
           <path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9" />
           <path d="M13.73 21a2 2 0 0 1-3.46 0" />
         </svg>
-        {!!pendingReportsCount && (
+        {!!bellCount && (
           <span
             style={{
               position: "absolute",
@@ -93,7 +96,7 @@ export function TopBar({ adminName = "Mehdi Alorchi", adminRole = "Super Admin",
               lineHeight: 1,
             }}
           >
-            {pendingReportsCount > 99 ? "99+" : pendingReportsCount}
+            {bellCount > 99 ? "99+" : bellCount}
           </span>
         )}
       </button>

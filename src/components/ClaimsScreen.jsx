@@ -3,7 +3,7 @@ import { loadClaims, loadBusinessAccounts, approveClaim, rejectClaim, createColl
 import { PageTitle } from "./PageTitle.jsx";
 import { COUNTRIES } from "../constants.js";
 
-const ENTITY_TYPE_LABELS = { venue: "Établissement", drink: "Produit", brand: "Marque", producer: "Producteur" };
+const ENTITY_TYPE_LABELS = { venue: "Lieu", drink: "Produit", brand: "Marque", producer: "Producteur" };
 
 const TABS = [
   { key: "pending", label: "En attente" },
@@ -202,7 +202,7 @@ function NewBusinessForm({ claim, onCreated }) {
   );
 }
 
-export function ClaimsScreen() {
+export function ClaimsScreen({ onOpenVenue }) {
   const [tab, setTab] = useState("pending");
   const [claims, setClaims] = useState(null);
   const [businessAccounts, setBusinessAccounts] = useState([]);
@@ -271,7 +271,7 @@ export function ClaimsScreen() {
       ) : claims.length === 0 ? (
         <p style={{ color: "#8792A6", fontSize: "13px" }}>Aucune revendication dans cette catégorie.</p>
       ) : (
-        <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
+        <div style={{ display: "flex", flexDirection: "column", gap: "12px", maxWidth: "440px" }}>
           {claims.map((c) => {
             const expanded = expandedId === c.id;
             return (
@@ -279,15 +279,31 @@ export function ClaimsScreen() {
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "8px" }}>
                   <div>
                     <span style={{ fontSize: "11px", color: "#8792A6", textTransform: "uppercase", fontWeight: 700 }}>{ENTITY_TYPE_LABELS[c.entity_type] || c.entity_type}</span>
-                    <p style={{ fontSize: "15px", color: "#F2F2E8", fontWeight: 700, margin: "2px 0 0" }}>{c.entity_name}</p>
+                    {c.entity_type === "venue" && onOpenVenue ? (
+                      <button
+                        onClick={() => onOpenVenue(c.entity_id)}
+                        style={{
+                          display: "block",
+                          marginTop: "4px",
+                          background: "none",
+                          border: "2px solid #39FF66",
+                          borderRadius: "8px",
+                          padding: "4px 10px",
+                          fontSize: "15px",
+                          color: "#39FF66",
+                          fontWeight: 700,
+                          cursor: "pointer",
+                        }}
+                      >
+                        {c.entity_name}
+                      </button>
+                    ) : (
+                      <p style={{ fontSize: "15px", color: "#F2F2E8", fontWeight: 700, margin: "2px 0 0" }}>{c.entity_name}</p>
+                    )}
                   </div>
                   <span style={{ fontSize: "11px", color: "#8792A6" }}>{c.created_at ? c.created_at.slice(0, 10) : ""}</span>
                 </div>
 
-                <p style={{ fontSize: "13.5px", color: "#F2F2E8", margin: "0 0 4px" }}>
-                  <strong>{c.company_name}</strong>
-                  {c.vat_number ? ` · ${c.vat_number}` : ""}
-                </p>
                 {c.officers && <p style={{ fontSize: "12.5px", color: "#8792A6", margin: "0 0 8px" }}>Administrateurs déclarés : {c.officers}</p>}
                 <p style={{ fontSize: "13px", color: "#F2F2E8", fontStyle: "italic", margin: "0 0 8px" }}>"{c.justification}"</p>
                 <p style={{ fontSize: "11px", color: "#8792A6", marginBottom: "12px" }}>

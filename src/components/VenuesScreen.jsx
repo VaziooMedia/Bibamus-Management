@@ -22,7 +22,7 @@ const allColumns = [
   { key: "certificationLevel", label: "Certification", render: (v) => <CertificationIcon level={v.certificationLevel} /> },
 ];
 
-export function VenuesScreen() {
+export function VenuesScreen({ initialVenueId, onInitialVenueOpened } = {}) {
   const [venues, setVenues] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selected, setSelected] = useState(null);
@@ -43,6 +43,19 @@ export function VenuesScreen() {
     refresh();
     loadDrinksDirectory().then(setDrinksDirectory);
   }, []);
+
+  // Ouvre directement la vraie fiche visée (ex. depuis une revendication cliquée) une fois le
+  // vrai répertoire chargé.
+  useEffect(() => {
+    if (initialVenueId && venues.length > 0) {
+      const v = venues.find((x) => x.id === initialVenueId);
+      if (v) {
+        setSelected(v);
+        onInitialVenueOpened?.();
+      }
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [initialVenueId, venues]);
 
   // Vraie fiche marquée hasPendingReport dès qu'elle a au moins un vrai signalement (suggestion
   // de modification, erreur signalée, ou toute autre raison) encore en attente — alimente le

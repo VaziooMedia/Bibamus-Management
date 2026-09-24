@@ -36,6 +36,7 @@ export default function App() {
   const [myCanModerate, setMyCanModerate] = useState(false);
   const [myUserId, setMyUserId] = useState(null);
   const [screen, setScreen] = useState("dashboard");
+  const [viewedClaimVenueId, setViewedClaimVenueId] = useState(null);
   const [viewedBusinessAccountId, setViewedBusinessAccountId] = useState(null);
 
   // Vérifie une session déjà active (ex. après un rafraîchissement de page) — revérifie le
@@ -94,7 +95,7 @@ export default function App() {
     <Layout current={screen} onNavigate={setScreen} onLogout={handleLogout} myRole={myRole} myCanModerate={myCanModerate} myUserId={myUserId}>
       {screen === "dashboard" && <Dashboard />}
       {screen === "database" && <DataBaseOverviewScreen onNavigate={setScreen} supabaseUrl={SUPABASE_PROJECT_URL} />}
-      {screen === "venues" && <VenuesScreen />}
+      {screen === "venues" && <VenuesScreen initialVenueId={viewedClaimVenueId} onInitialVenueOpened={() => setViewedClaimVenueId(null)} />}
       {screen === "drinks" && <DrinksScreen />}
       {screen === "breweries" && <BreweriesScreen />}
       {screen === "officialStories" && <OfficialStoriesScreen myUserId={myUserId} />}
@@ -104,7 +105,14 @@ export default function App() {
       {screen === "chatBusiness" && <ChatBusinessScreen myUserId={myUserId} myRole={myRole} />}
       {screen === "stats" && <AnalyticsScreen />}
       {screen === "finances" && <ComingSoon title="Finances" />}
-      {screen === "claims" && <ClaimsScreen />}
+      {screen === "claims" && (
+        <ClaimsScreen
+          onOpenVenue={(id) => {
+            setViewedClaimVenueId(id);
+            setScreen("venues");
+          }}
+        />
+      )}
       {screen === "businessAccounts" && (
         <BusinessAccountsScreen
           onOpenAccount={(id) => {
