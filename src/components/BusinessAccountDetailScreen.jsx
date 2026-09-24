@@ -290,28 +290,36 @@ export function BusinessAccountDetailScreen({ accountId, onBack }) {
       {account.business_label && <p style={{ fontSize: "13px", color: "#8792A6", marginBottom: "24px" }}>{account.business_label}</p>}
 
       {!editing ? (
-        <div style={{ maxWidth: "560px" }}>
-          <SectionTitle first>Aperçu</SectionTitle>
-          <ReadRow label="Étiquette" value={account.business_label} />
-          <ReadRow label="Statut" value={account.business_status} />
-          <ReadRow label="État" value={account.active !== false ? "Actif" : "Non actif"} />
-          <ReadRow label="Email de connexion" value={account.email} />
-          <ReadRow label="Organisation" value={orgInfo?.organization?.name} />
-          <ReadRow label="Plan" value={orgInfo?.subscription ? `${orgInfo.subscription.plan === "pro" ? "Pro" : "Gratuit"} (${orgInfo.subscription.status === "active" ? "actif" : orgInfo.subscription.status})` : null} />
+        <div style={{ maxWidth: "900px" }}>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "32px", marginBottom: "24px" }}>
+            <div>
+              <SectionTitle first>Aperçu</SectionTitle>
+              <ReadRow label="Étiquette" value={account.business_label} />
+              <ReadRow label="Statut" value={account.business_status} />
+              <ReadRow label="État" value={account.active !== false ? "Actif" : "Non actif"} />
+              <ReadRow label="Email de connexion" value={account.email} />
+              <ReadRow label="Organisation" value={orgInfo?.organization?.name} />
+              <ReadRow label="Plan" value={orgInfo?.subscription ? `${orgInfo.subscription.plan === "pro" ? "Pro" : "Gratuit"} (${orgInfo.subscription.status === "active" ? "actif" : orgInfo.subscription.status})` : null} />
+            </div>
 
-          <SectionTitle>Société</SectionTitle>
-          <ReadRow label="Nom de la société" value={account.company_name} />
-          <ReadRow label="Numéro d'entreprise" value={account.vat_number} />
-          <ReadRow label="Email" value={account.company_email} />
-          <ReadRow label="Téléphone" value={account.company_phone} />
-          <ReadRow label="Siège social" value={addressParts.length > 0 ? addressParts.join(", ") : null} />
+            <div>
+              <SectionTitle first>Société</SectionTitle>
+              <ReadRow label="Nom de la société" value={account.company_name} />
+              <ReadRow label="Numéro d'entreprise" value={account.vat_number} />
+              <ReadRow label="Email" value={account.company_email} />
+              <ReadRow label="Téléphone" value={account.company_phone} />
+              <ReadRow label="Siège social" value={addressParts.length > 0 ? addressParts.join(", ") : null} />
+            </div>
 
-          <SectionTitle>Personne de contact</SectionTitle>
-          <ReadRow label="Nom" value={[account.name, account.last_name].filter(Boolean).join(" ")} />
-          <ReadRow label="Fonction" value={account.contact_function} />
-          <ReadRow label="Email Pro" value={account.contact_email} />
-          <ReadRow label="Téléphone" value={account.contact_phone} />
-          <ReadRow label="Langue(s) parlée(s)" value={languages.length > 0 ? languages.join(", ") : null} />
+            <div>
+              <SectionTitle first>Personne de contact</SectionTitle>
+              <ReadRow label="Nom" value={[account.name, account.last_name].filter(Boolean).join(" ")} />
+              <ReadRow label="Fonction" value={account.contact_function} />
+              <ReadRow label="Email Pro" value={account.contact_email} />
+              <ReadRow label="Téléphone" value={account.contact_phone} />
+              <ReadRow label="Langue(s) parlée(s)" value={languages.length > 0 ? languages.join(", ") : null} />
+            </div>
+          </div>
 
           <SectionTitle>Fiches liées</SectionTitle>
           {!entities ? (
