@@ -6,6 +6,13 @@ const EVENT_TYPE_LABELS = {
   screen_view: "Vue d'écran",
   bibax_added: "Bibax ajouté",
   report_submitted: "Signalement envoyé",
+  place_checked: "Check-in lieu",
+  drink_checked: "Check-in produit",
+  venue_added: "Lieu ajouté",
+  drink_added: "Produit ajouté",
+  brand_added: "Marque ajoutée",
+  producer_added: "Producteur ajouté",
+  claim_submitted: "Revendication soumise",
 };
 
 // Même vraies raisons que les vrais écrans Signalements/Notifications — pour vraiment
