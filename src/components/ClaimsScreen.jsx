@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { loadClaims, approveClaim, rejectClaim, createCollaborator } from "../data/sharedDirectories.js";
 import { PageTitle } from "./PageTitle.jsx";
 import { COUNTRIES } from "../constants.js";
@@ -201,6 +201,8 @@ export function ClaimsScreen({ onOpenVenue }) {
   const [typeFilter, setTypeFilter] = useState("all");
   const [creatingNewFor, setCreatingNewFor] = useState(null);
   const [busyId, setBusyId] = useState(null);
+  const [sortKey, setSortKey] = useState(null);
+  const [sortDir, setSortDir] = useState(1);
 
   // Toujours les revendications en attente — un OK/NON les fait sortir de cette vraie liste,
   // il n'y a donc plus besoin de vrais onglets par statut.
@@ -209,7 +211,26 @@ export function ClaimsScreen({ onOpenVenue }) {
     refresh();
   }, []);
 
-  const filtered = claims ? (typeFilter === "all" ? claims : claims.filter((c) => c.entity_type === typeFilter)) : null;
+  const filtered = useMemo(() => {
+    if (!claims) return null;
+    let list = typeFilter === "all" ? claims : claims.filter((c) => c.entity_type === typeFilter);
+    if (sortKey) {
+      list = [...list].sort((a, b) => {
+        const av = sortKey === "entity_type" ? ENTITY_TYPE_LABELS[a.entity_type] || a.entity_type : a.created_at || "";
+        const bv = sortKey === "entity_type" ? ENTITY_TYPE_LABELS[b.entity_type] || b.entity_type : b.created_at || "";
+        return String(av).localeCompare(String(bv)) * sortDir;
+      });
+    }
+    return list;
+  }, [claims, typeFilter, sortKey, sortDir]);
+
+  const toggleSort = (key) => {
+    if (sortKey === key) setSortDir((d) => -d);
+    else {
+      setSortKey(key);
+      setSortDir(1);
+    }
+  };
 
   const handleReject = async (claim) => {
     const reason = prompt("Raison du refus (optionnel) :") || "";
@@ -265,12 +286,16 @@ export function ClaimsScreen({ onOpenVenue }) {
           <thead>
             <tr style={{ borderTop: "2px solid #28405C", borderBottom: "2px solid #28405C" }}>
               <th style={{ ...headerCellStyle, width: "1%" }}>#</th>
-              <th style={{ ...headerCellStyle, width: "1%" }}>Type de fiche</th>
+              <th style={{ ...headerCellStyle, width: "1%", cursor: "pointer", userSelect: "none" }} onClick={() => toggleSort("entity_type")}>
+                Type {sortKey === "entity_type" ? (sortDir === 1 ? "▲" : "▼") : ""}
+              </th>
               <th style={headerCellStyle}>Nom de la fiche</th>
               <th style={headerCellStyle}>Nom de l'utilisateur</th>
               <th style={headerCellStyle}>Adresse email utilisateur</th>
-              <th style={headerCellStyle}>Texte libre</th>
-              <th style={{ ...headerCellStyle, width: "1%" }}>Date de la revendication</th>
+              <th style={{ ...headerCellStyle, width: "1%" }}>Texte</th>
+              <th style={{ ...headerCellStyle, width: "1%", cursor: "pointer", userSelect: "none" }} onClick={() => toggleSort("created_at")}>
+                Date {sortKey === "created_at" ? (sortDir === 1 ? "▲" : "▼") : ""}
+              </th>
               <th style={{ ...headerCellStyle, width: "1%", borderRight: "none" }}></th>
             </tr>
           </thead>
@@ -279,13 +304,10 @@ export function ClaimsScreen({ onOpenVenue }) {
               <React.Fragment key={c.id}>
                 <tr style={{ borderBottom: "1px solid #16273D" }} onMouseEnter={(e) => (e.currentTarget.style.background = "#16273D")} onMouseLeave={(e) => (e.currentTarget.style.background = "transparent")}>
                   <td style={{ ...cellStyle, textAlign: "center", whiteSpace: "nowrap" }}>{String(i + 1).padStart(2, "0")}</td>
-                  <td style={{ ...cellStyle, textAlign: "center", whiteSpace: "nowrap" }}>{ENTITY_TYPE_LABELS[c.entity_type] || c.entity_type}</td>
+                  <td style={cellStyle}>{ENTITY_TYPE_LABELS[c.entity_type] || c.entity_type}</td>
                   <td style={cellStyle}>
                     {c.entity_type === "venue" && onOpenVenue ? (
-                      <button
-                        onClick={() => onOpenVenue(c.entity_id)}
-                        style={{ background: "none", border: "none", padding: 0, fontSize: "14px", color: "#39FF66", fontWeight: 700, cursor: "pointer", textDecoration: "underline" }}
-                      >
+                      <button onClick={() => onOpenVenue(c.entity_id)} style={{ background: "none", border: "none", padding: 0, fontSize: "14px", color: "#39FF66", fontWeight: 700, cursor: "pointer" }}>
                         {c.entity_name}
                       </button>
                     ) : (
@@ -294,23 +316,43 @@ export function ClaimsScreen({ onOpenVenue }) {
                   </td>
                   <td style={cellStyle}>{c.claimant ? `${c.claimant.name || ""} ${c.claimant.last_name || ""}`.trim() : "(compte inconnu)"}</td>
                   <td style={cellStyle}>{c.claimant?.email || "—"}</td>
-                  <td style={{ ...cellStyle, maxWidth: "260px" }}>{c.justification}</td>
+                  <td style={{ ...cellStyle, textAlign: "center" }} title={c.justification}>
+                    <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#8792A6" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ cursor: "help" }}>
+                      <line x1="4" y1="6" x2="20" y2="6" />
+                      <line x1="4" y1="12" x2="16" y2="12" />
+                      <line x1="4" y1="18" x2="12" y2="18" />
+                    </svg>
+                  </td>
                   <td style={{ ...cellStyle, textAlign: "center", whiteSpace: "nowrap" }}>{c.created_at ? c.created_at.slice(0, 10) : ""}</td>
                   <td style={{ ...cellStyle, textAlign: "center", whiteSpace: "nowrap", borderRight: "none" }}>
-                    <div style={{ display: "flex", gap: "6px" }}>
+                    <div style={{ display: "flex", gap: "6px", justifyContent: "center" }}>
                       <button
                         onClick={() => setCreatingNewFor(creatingNewFor === c.id ? null : c.id)}
                         disabled={busyId === c.id}
-                        style={{ background: creatingNewFor === c.id ? "#39FF66" : "none", border: "2px solid #39FF66", borderRadius: "6px", padding: "5px 10px", fontWeight: 700, fontSize: "11.5px", color: creatingNewFor === c.id ? "#0D1B2A" : "#39FF66", cursor: "pointer" }}
+                        title="Approuver"
+                        aria-label="Approuver"
+                        style={{
+                          width: "28px",
+                          height: "28px",
+                          background: creatingNewFor === c.id ? "#39FF66" : "none",
+                          border: "2px solid #39FF66",
+                          borderRadius: "6px",
+                          fontWeight: 800,
+                          fontSize: "13px",
+                          color: creatingNewFor === c.id ? "#0D1B2A" : "#39FF66",
+                          cursor: "pointer",
+                        }}
                       >
-                        OK
+                        V
                       </button>
                       <button
                         onClick={() => handleReject(c)}
                         disabled={busyId === c.id}
-                        style={{ background: "none", border: "2px solid #FF3B4E", borderRadius: "6px", padding: "5px 10px", fontWeight: 700, fontSize: "11.5px", color: "#FF3B4E", cursor: "pointer" }}
+                        title="Refuser"
+                        aria-label="Refuser"
+                        style={{ width: "28px", height: "28px", background: "none", border: "2px solid #FF3B4E", borderRadius: "6px", fontWeight: 800, fontSize: "13px", color: "#FF3B4E", cursor: "pointer" }}
                       >
-                        NON
+                        X
                       </button>
                     </div>
                   </td>
