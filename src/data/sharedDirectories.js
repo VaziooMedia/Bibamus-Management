@@ -264,7 +264,6 @@ export async function loadMyBusinessEntities(userId) {
 
 export async function loadClaims(status = "pending") {
   const { data, error } = await supabase.from("entity_claims").select("*").eq("status", status).order("created_at", { ascending: false });
-  console.log("[DEBUG loadClaims] status:\n" + status + "\ndata:\n" + JSON.stringify(data, null, 2) + "\nerror:\n" + JSON.stringify(error, null, 2));
   if (error) {
     console.error("loadClaims:", error);
     return [];
@@ -1277,6 +1276,24 @@ function applyTypeFilter(query, type) {
 // Charge une SEULE page de produits, filtrée et triée côté serveur — jamais l'ensemble du
 // répertoire d'un coup, pour rester rapide même avec des dizaines ou centaines de milliers de
 // produits.
+// Un vrai seul produit complet par id — nécessaire pour l'ouvrir directement (ex. depuis une
+// revendication) sans dépendre de la vraie page actuellement chargée côté ServerDataTable.
+export async function loadDrinkById(id) {
+  const { data, error } = await supabase.from("drinks_directory").select("*, brands_directory(name, producer_id)").eq("id", id).single();
+  if (error) {
+    console.error("loadDrinkById:", error);
+    return null;
+  }
+  const { data: breweriesData } = await supabase.from("breweries_directory").select("id, name");
+  const producerNameById = {};
+  (breweriesData || []).forEach((b) => (producerNameById[b.id] = b.name));
+  return {
+    ...rowToDrink(data),
+    brandName: data.brands_directory?.name || null,
+    producerName: data.brands_directory?.producer_id ? producerNameById[data.brands_directory.producer_id] || null : null,
+  };
+}
+
 export async function loadDrinksPage({ type, status, certificationLevel, hasPendingContributions, reportedIds, search, sortKey = "name", sortDir = 1, page = 0, pageSize = 50 } = {}) {
   // Jointure sur une seule profondeur seulement — une double jointure imbriquée (produit → marque
   // → producteur) s'est révélée trop fragile : si Supabase n'arrive pas à résoudre sans ambiguïté

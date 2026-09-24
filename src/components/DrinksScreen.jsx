@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from "react";
-import { loadDrinksPage, countDrinks, countDrinksByType, loadPendingReportEntityIds } from "../data/sharedDirectories.js";
+import { loadDrinksPage, countDrinks, countDrinksByType, loadPendingReportEntityIds, loadDrinkById } from "../data/sharedDirectories.js";
 import { ServerDataTable } from "./ServerDataTable.jsx";
 import { StatusBadge, VisibilityDot } from "./DataTable.jsx";
 import { DrinkDetailPanel, DRINK_TYPES, BEER_CIDER_SUBTYPES } from "./DrinkDetailPanel.jsx";
@@ -50,7 +50,7 @@ function filterKeyToParams(filterKey, reportedIds) {
   return {};
 }
 
-export function DrinksScreen() {
+export function DrinksScreen({ initialDrinkId, onInitialDrinkOpened } = {}) {
   const [selected, setSelected] = useState(null);
   const [creating, setCreating] = useState(false);
   const [selectedType, setSelectedType] = useState(null);
@@ -59,6 +59,20 @@ export function DrinksScreen() {
   const [categoryCounts, setCategoryCounts] = useState(null);
   const [pendingReportIds, setPendingReportIds] = useState(new Set());
   const [refreshKey, setRefreshKey] = useState(0);
+
+  // Ouvre directement la vraie fiche visée (ex. depuis une revendication cliquée) — chargée
+  // directement par id plutôt que cherchée dans une vraie page déjà en mémoire, vu que les
+  // produits sont paginés côté serveur (jamais tous chargés en même temps).
+  useEffect(() => {
+    if (!initialDrinkId) return;
+    loadDrinkById(initialDrinkId).then((d) => {
+      if (d) {
+        setSelected(d);
+        onInitialDrinkOpened?.();
+      }
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [initialDrinkId]);
 
   // Les statistiques (7 statuts + certification + contributions/suggestions) et la répartition
   // par catégorie utilisent de simples comptages côté serveur — jamais un chargement complet du

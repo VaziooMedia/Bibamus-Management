@@ -36,7 +36,7 @@ export default function App() {
   const [myCanModerate, setMyCanModerate] = useState(false);
   const [myUserId, setMyUserId] = useState(null);
   const [screen, setScreen] = useState("dashboard");
-  const [viewedClaimVenueId, setViewedClaimVenueId] = useState(null);
+  const [viewedClaimEntity, setViewedClaimEntity] = useState(null); // {type, id} | null
   const [viewedBusinessAccountId, setViewedBusinessAccountId] = useState(null);
 
   // Vérifie une session déjà active (ex. après un rafraîchissement de page) — revérifie le
@@ -95,11 +95,25 @@ export default function App() {
     <Layout current={screen} onNavigate={setScreen} onLogout={handleLogout} myRole={myRole} myCanModerate={myCanModerate} myUserId={myUserId}>
       {screen === "dashboard" && <Dashboard />}
       {screen === "database" && <DataBaseOverviewScreen onNavigate={setScreen} supabaseUrl={SUPABASE_PROJECT_URL} />}
-      {screen === "venues" && <VenuesScreen initialVenueId={viewedClaimVenueId} onInitialVenueOpened={() => setViewedClaimVenueId(null)} />}
-      {screen === "drinks" && <DrinksScreen />}
-      {screen === "breweries" && <BreweriesScreen />}
+      {screen === "venues" && (
+        <VenuesScreen
+          initialVenueId={viewedClaimEntity?.type === "venue" ? viewedClaimEntity.id : null}
+          onInitialVenueOpened={() => setViewedClaimEntity(null)}
+        />
+      )}
+      {screen === "drinks" && (
+        <DrinksScreen initialDrinkId={viewedClaimEntity?.type === "drink" ? viewedClaimEntity.id : null} onInitialDrinkOpened={() => setViewedClaimEntity(null)} />
+      )}
+      {screen === "breweries" && (
+        <BreweriesScreen
+          initialBreweryId={viewedClaimEntity?.type === "producer" ? viewedClaimEntity.id : null}
+          onInitialBreweryOpened={() => setViewedClaimEntity(null)}
+        />
+      )}
       {screen === "officialStories" && <OfficialStoriesScreen myUserId={myUserId} />}
-      {screen === "brands" && <BrandsScreen />}
+      {screen === "brands" && (
+        <BrandsScreen initialBrandId={viewedClaimEntity?.type === "brand" ? viewedClaimEntity.id : null} onInitialBrandOpened={() => setViewedClaimEntity(null)} />
+      )}
       {screen === "chatTeam" && <ChatTeamScreen myUserId={myUserId} myRole={myRole} />}
       {screen === "chatUsers" && <ChatUsersScreen myUserId={myUserId} myRole={myRole} />}
       {screen === "chatBusiness" && <ChatBusinessScreen myUserId={myUserId} myRole={myRole} />}
@@ -107,9 +121,10 @@ export default function App() {
       {screen === "finances" && <ComingSoon title="Finances" />}
       {screen === "claims" && (
         <ClaimsScreen
-          onOpenVenue={(id) => {
-            setViewedClaimVenueId(id);
-            setScreen("venues");
+          onOpenEntity={(entityType, id) => {
+            setViewedClaimEntity({ type: entityType, id });
+            const screenByType = { venue: "venues", drink: "drinks", brand: "brands", producer: "breweries" };
+            setScreen(screenByType[entityType]);
           }}
         />
       )}

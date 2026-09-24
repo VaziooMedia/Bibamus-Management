@@ -2,6 +2,7 @@ import React, { useState, useEffect, useMemo } from "react";
 import { loadClaims, approveClaim, rejectClaim, createCollaborator } from "../data/sharedDirectories.js";
 import { PageTitle } from "./PageTitle.jsx";
 import { COUNTRIES } from "../constants.js";
+import { CountryFlagImg } from "./icons.jsx";
 
 const ENTITY_TYPE_LABELS = { venue: "Lieu", drink: "Produit", brand: "Marque", producer: "Producteur" };
 
@@ -196,7 +197,7 @@ function NewBusinessForm({ claim, onCreated }) {
   );
 }
 
-export function ClaimsScreen({ onOpenVenue }) {
+export function ClaimsScreen({ onOpenEntity }) {
   const [claims, setClaims] = useState(null);
   const [typeFilter, setTypeFilter] = useState("all");
   const [creatingNewFor, setCreatingNewFor] = useState(null);
@@ -316,15 +317,20 @@ export function ClaimsScreen({ onOpenVenue }) {
                   <td style={{ ...cellStyle, textAlign: "center", whiteSpace: "nowrap" }}>{String(i + 1).padStart(2, "0")}</td>
                   <td style={cellStyle}>{ENTITY_TYPE_LABELS[c.entity_type] || c.entity_type}</td>
                   <td style={cellStyle}>
-                    {c.entity_type === "venue" && onOpenVenue ? (
-                      <button onClick={() => onOpenVenue(c.entity_id)} style={{ background: "none", border: "none", padding: 0, fontSize: "14px", color: "#39FF66", fontWeight: 700, cursor: "pointer" }}>
+                    {onOpenEntity ? (
+                      <button onClick={() => onOpenEntity(c.entity_type, c.entity_id)} style={{ background: "none", border: "none", padding: 0, fontSize: "14px", color: "#39FF66", fontWeight: 700, cursor: "pointer" }}>
                         {c.entity_name}
                       </button>
                     ) : (
                       c.entity_name
                     )}
                   </td>
-                  <td style={cellStyle}>{c.claimant ? `${c.claimant.name || ""} ${c.claimant.last_name || ""}`.trim() : "(compte inconnu)"}</td>
+                  <td style={cellStyle}>
+                    <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+                      {c.claimant_country && <CountryFlagImg isoCode={c.claimant_country.toLowerCase()} size={14} />}
+                      {c.claimant ? `${c.claimant.name || ""} ${c.claimant.last_name || ""}`.trim() : "(compte inconnu)"}
+                    </div>
+                  </td>
                   <td style={cellStyle}>{c.claimant?.email || "—"}</td>
                   <td style={{ ...cellStyle, textAlign: "center" }} title={c.justification}>
                     <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#8792A6" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ cursor: "help" }}>

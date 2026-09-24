@@ -46,7 +46,7 @@ const getBrandColumns = (breweriesDirectory) => {
   ];
 };
 
-export function BreweriesScreen() {
+export function BreweriesScreen({ initialBreweryId, onInitialBreweryOpened } = {}) {
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selected, setSelected] = useState(null);
@@ -65,6 +65,19 @@ export function BreweriesScreen() {
   useEffect(() => {
     refresh();
   }, []);
+
+  // Ouvre directement la vraie fiche visée (ex. depuis une revendication cliquée) une fois le
+  // vrai répertoire chargé.
+  useEffect(() => {
+    if (initialBreweryId && items.length > 0) {
+      const b = items.find((x) => x.id === initialBreweryId);
+      if (b) {
+        setSelected(b);
+        onInitialBreweryOpened?.();
+      }
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [initialBreweryId, items]);
 
   const itemsWithReports = items.map((i) => ({ ...i, hasPendingReport: pendingReportIds.has(i.id) }));
 
@@ -113,7 +126,7 @@ export function BreweriesScreen() {
   );
 }
 
-export function BrandsScreen() {
+export function BrandsScreen({ initialBrandId, onInitialBrandOpened } = {}) {
   const [items, setItems] = useState([]);
   const [breweriesDirectory, setBreweriesDirectory] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -134,6 +147,17 @@ export function BrandsScreen() {
     refresh();
     loadBreweriesDirectory().then(setBreweriesDirectory);
   }, []);
+
+  useEffect(() => {
+    if (initialBrandId && items.length > 0) {
+      const b = items.find((x) => x.id === initialBrandId);
+      if (b) {
+        setSelected(b);
+        onInitialBrandOpened?.();
+      }
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [initialBrandId, items]);
 
   const itemsWithReports = items.map((i) => ({ ...i, hasPendingReport: pendingReportIds.has(i.id) }));
 
