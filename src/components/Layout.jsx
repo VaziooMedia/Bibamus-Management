@@ -33,7 +33,7 @@ const ANALYTICS_ITEMS = [{ key: "stats", label: "Analytics" }];
 
 const SYSTEM_ITEMS = [
   { key: "audit", label: "Audit" },
-  { key: "countryRules", label: "Configuration pays" },
+  { key: "countryRules", label: "Âge minimum / Pays" },
   { key: "featureFlags", label: "Feature flags" },
   { key: "crashReports", label: "Crash reports" },
   { key: "admins", label: "Administrateurs" },

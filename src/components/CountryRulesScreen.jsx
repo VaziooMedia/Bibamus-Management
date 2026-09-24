@@ -36,7 +36,7 @@ export function CountryRulesScreen() {
 
   return (
     <div>
-      <PageTitle>Configuration pays</PageTitle>
+      <PageTitle>Âge minimum / Pays</PageTitle>
       <p style={{ fontSize: "12.5px", color: "#8792A6", marginBottom: "20px" }}>Âge minimum requis pour l'inscription (politique "alcool")</p>
 
       {!sorted ? (
