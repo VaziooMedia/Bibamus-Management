@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
-import { loadBusinessAccountsFull } from "../data/sharedDirectories.js";
+import { loadBusinessAccountsFull, loadBusinessEntityCounts } from "../data/sharedDirectories.js";
 import { PageTitle } from "./PageTitle.jsx";
+import { COUNTRIES } from "../constants.js";
 
 const normalize = (s) =>
   (s || "")
@@ -10,10 +11,12 @@ const normalize = (s) =>
 
 export function BusinessAccountsScreen({ onOpenAccount }) {
   const [accounts, setAccounts] = useState(null);
+  const [entityCounts, setEntityCounts] = useState({});
   const [query, setQuery] = useState("");
 
   useEffect(() => {
     loadBusinessAccountsFull().then(setAccounts);
+    loadBusinessEntityCounts().then(setEntityCounts);
   }, []);
 
   const q = normalize(query.trim());
@@ -44,18 +47,22 @@ export function BusinessAccountsScreen({ onOpenAccount }) {
       ) : filtered.length === 0 ? (
         <p style={{ color: "#8792A6", fontSize: "13px" }}>{accounts.length === 0 ? "Aucun compte Business pour l'instant." : "Aucun compte ne correspond à cette recherche."}</p>
       ) : (
-        <table style={{ width: "100%", maxWidth: "900px", borderCollapse: "collapse" }}>
+        <table style={{ width: "100%", maxWidth: "1100px", borderCollapse: "collapse" }}>
           <thead>
             <tr style={{ borderTop: "2px solid #28405C", borderBottom: "2px solid #28405C" }}>
+              <th style={{ ...headerCellStyle, width: "1%" }}>#</th>
               <th style={headerCellStyle}>Société</th>
-              <th style={headerCellStyle}>Email de connexion</th>
+              <th style={{ ...headerCellStyle, width: "1%" }}>Pays</th>
               <th style={headerCellStyle}>Étiquette</th>
+              <th style={{ ...headerCellStyle, width: "1%" }}>Email contact</th>
+              <th style={{ ...headerCellStyle, width: "1%" }}>Plan</th>
+              <th style={{ ...headerCellStyle, width: "1%" }}>Nbre fiches</th>
               <th style={{ ...headerCellStyle, width: "1%" }}>Statut</th>
               <th style={{ ...headerCellStyle, width: "1%", borderRight: "none" }}>État</th>
             </tr>
           </thead>
           <tbody>
-            {filtered.map((a) => (
+            {filtered.map((a, i) => (
               <tr
                 key={a.id}
                 onClick={() => onOpenAccount(a.id)}
@@ -63,9 +70,24 @@ export function BusinessAccountsScreen({ onOpenAccount }) {
                 onMouseEnter={(e) => (e.currentTarget.style.background = "#16273D")}
                 onMouseLeave={(e) => (e.currentTarget.style.background = "transparent")}
               >
+                <td style={{ ...cellStyle, textAlign: "center", whiteSpace: "nowrap" }}>{String(i + 1).padStart(2, "0")}</td>
                 <td style={{ ...cellStyle, fontWeight: 700 }}>{a.company_name || "—"}</td>
-                <td style={cellStyle}>{a.email}</td>
+                <td style={{ ...cellStyle, textAlign: "center", whiteSpace: "nowrap" }}>{COUNTRIES.find((c) => c.code === a.company_country)?.fr || "—"}</td>
                 <td style={cellStyle}>{a.business_label || "—"}</td>
+                <td style={{ ...cellStyle, textAlign: "center" }}>
+                  {a.contact_email ? (
+                    <a href={`mailto:${a.contact_email}`} onClick={(e) => e.stopPropagation()} title={a.contact_email} style={{ display: "inline-flex" }}>
+                      <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#39FF66" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <rect x="2" y="4" width="20" height="16" rx="2" />
+                        <path d="m2 7 10 6 10-6" />
+                      </svg>
+                    </a>
+                  ) : (
+                    "—"
+                  )}
+                </td>
+                <td style={{ ...cellStyle, textAlign: "center", whiteSpace: "nowrap" }}>Gratuit</td>
+                <td style={{ ...cellStyle, textAlign: "center", whiteSpace: "nowrap" }}>{entityCounts[a.id] || 0}</td>
                 <td style={{ ...cellStyle, textAlign: "center", whiteSpace: "nowrap" }}>{a.business_status || "—"}</td>
                 <td style={{ ...cellStyle, textAlign: "center", whiteSpace: "nowrap", borderRight: "none" }}>
                   <span style={{ width: "9px", height: "9px", borderRadius: "50%", background: a.active !== false ? "#39FF66" : "#FF3B4E", display: "inline-block" }} />

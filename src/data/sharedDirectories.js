@@ -292,6 +292,26 @@ export async function loadBusinessAccountsFull() {
   return data;
 }
 
+// Nombre de vraies fiches (lieux/produits/marques/producteurs confondus) liées à chaque compte
+// Business — un vrai comptage séparé par table, vu qu'il n'existe aucune vraie table commune.
+export async function loadBusinessEntityCounts() {
+  const tables = ["public_venues", "drinks_directory", "brands_directory", "breweries_directory"];
+  const counts = {};
+  await Promise.all(
+    tables.map(async (table) => {
+      const { data, error } = await supabase.from(table).select("business_owner_id").not("business_owner_id", "is", null);
+      if (error) {
+        console.error(`loadBusinessEntityCounts (${table}):`, error);
+        return;
+      }
+      data.forEach((row) => {
+        counts[row.business_owner_id] = (counts[row.business_owner_id] || 0) + 1;
+      });
+    })
+  );
+  return counts;
+}
+
 const BUSINESS_ENTITY_TABLE = { venue: "public_venues", drink: "drinks_directory", brand: "brands_directory", producer: "breweries_directory" };
 
 export async function unlinkEntityFromBusiness(entityType, entityId, entityName) {
