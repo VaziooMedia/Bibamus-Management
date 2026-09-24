@@ -107,8 +107,7 @@ function getComparisonRange({ start, end }) {
 // Vraie variation en % par rapport à la vraie période précédente de même durée — absente pour
 // "Tout" (pas de vraie période précédente comparable).
 function PercentChange({ current, previous }) {
-  if (previous == null) return null;
-  if (previous === 0) return current > 0 ? <span style={{ fontSize: "11px", color: "#39FF66", marginLeft: "6px" }}>nouveau</span> : null;
+  if (previous == null || previous === 0) return null;
   const pct = Math.round(((current - previous) / previous) * 100);
   if (pct === 0) return <span style={{ fontSize: "11px", color: "#8792A6", marginLeft: "6px" }}>= </span>;
   const up = pct > 0;
@@ -138,7 +137,10 @@ function RankedList({ title, entries }) {
   const max = entries[0]?.count || 1;
   return (
     <div style={{ background: "#16273D", borderRadius: "12px", padding: "18px", flex: 1, minWidth: 0 }}>
-      <p style={{ margin: "0 0 14px", fontSize: "13px", fontWeight: 700, color: "#F2F2E8" }}>{title}</p>
+      <p style={{ margin: "0 0 14px", display: "flex", alignItems: "center", gap: "8px", fontSize: "13px", fontWeight: 700, color: "#F2F2E8" }}>
+        <span style={{ width: "3px", height: "12px", borderRadius: "2px", background: "#39FF66", flexShrink: 0 }} />
+        {title}
+      </p>
       {entries.length === 0 ? (
         <p style={{ fontSize: "12.5px", color: "#8792A6" }}>Pas encore de données.</p>
       ) : (
@@ -167,7 +169,10 @@ function OrderedBars({ title, entries }) {
   const max = Math.max(1, ...entries.map((e) => e.count));
   return (
     <div style={{ background: "#16273D", borderRadius: "12px", padding: "18px", flex: 1, minWidth: 0 }}>
-      <p style={{ margin: "0 0 14px", fontSize: "13px", fontWeight: 700, color: "#F2F2E8" }}>{title}</p>
+      <p style={{ margin: "0 0 14px", display: "flex", alignItems: "center", gap: "8px", fontSize: "13px", fontWeight: 700, color: "#F2F2E8" }}>
+        <span style={{ width: "3px", height: "12px", borderRadius: "2px", background: "#39FF66", flexShrink: 0 }} />
+        {title}
+      </p>
       <div style={{ display: "flex", alignItems: "flex-end", gap: "4px", height: "90px" }}>
         {entries.map((e) => (
           <div key={e.label} title={`${e.label} : ${e.count}`} style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", gap: "4px", height: "100%", justifyContent: "flex-end" }}>
@@ -204,7 +209,10 @@ function LineChart({ title, series }) {
   return (
     <div style={{ background: "#16273D", borderRadius: "12px", padding: "18px" }}>
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "14px" }}>
-        <p style={{ margin: 0, fontSize: "13px", fontWeight: 700, color: "#F2F2E8" }}>{title}</p>
+        <p style={{ margin: 0, display: "flex", alignItems: "center", gap: "8px", fontSize: "13px", fontWeight: 700, color: "#F2F2E8" }}>
+          <span style={{ width: "3px", height: "12px", borderRadius: "2px", background: "#39FF66", flexShrink: 0 }} />
+          {title}
+        </p>
         <div style={{ display: "flex", gap: "14px" }}>
           {series.map((s) => (
             <span key={s.label} style={{ display: "flex", alignItems: "center", gap: "6px", fontSize: "11.5px", color: "#8792A6" }}>
@@ -334,7 +342,7 @@ export function AnalyticsScreen({ onNavigate }) {
   return (
     <div>
       <PageTitle>Analytics</PageTitle>
-      <p style={{ fontSize: "12.5px", color: "#8792A6", marginBottom: "16px" }}>Usage de l'app — vues d'écran et actions clés.</p>
+      <div style={{ height: "18px", marginBottom: "16px" }} />
 
       <div style={{ display: "flex", gap: "8px", flexWrap: "wrap", marginBottom: "20px" }}>
         {PERIOD_OPTIONS.map((opt) => (
