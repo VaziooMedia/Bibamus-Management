@@ -3,6 +3,7 @@ import { capitalizeFirst } from "../utils.js";
 import { updateBrand, deleteBrand, createBrand, uploadBrandLogo, uploadBrandCoverPhoto, uploadBrandGalleryPhoto, loadBreweriesDirectory, loadBrandsDirectory, mergeEntities } from "../data/sharedDirectories.js";
 import { StatusSelector } from "./StatusSelector.jsx";
 import { AdminPhotoField } from "./AdminPhotoField.jsx";
+import { AlternateNamesFields } from "./AlternateNamesFields.jsx";
 import { GalleryManager } from "./GalleryManager.jsx";
 import { SearchableSelect } from "./SearchableSelect.jsx";
 import { CertificationLevelSelector } from "./CertificationLevelSelector.jsx";
@@ -116,6 +117,7 @@ export function BrandDetailPanel({ brand, onClose, onSaved }) {
     name: brand?.name || "",
     aliasesText: (brand?.aliases || []).join(", "),
     alternateName: brand?.alternateName || "",
+    translations: brand?.translations || [],
     slogan: brand?.slogan || "",
     foundedYear: brand?.foundedYear ?? "",
     originCountry: brand?.originCountry || "belgique",
@@ -167,6 +169,7 @@ export function BrandDetailPanel({ brand, onClose, onSaved }) {
     name: capitalizeWords(form.name.trim()),
     aliases: form.aliasesText.split(",").map((a) => a.trim()).filter(Boolean),
     alternateName: capitalizeWords(form.alternateName.trim()),
+    translations: form.translations.filter((t) => t.value.trim()),
     slogan: capitalizeFirst(form.slogan.trim()),
     foundedYear: form.foundedYear === "" ? null : parseInt(form.foundedYear, 10),
     originCountry: form.originCountry,
@@ -324,16 +327,14 @@ export function BrandDetailPanel({ brand, onClose, onSaved }) {
               <label style={labelStyle}>Nom *</label>
               <input value={form.name} onChange={(e) => set("name", e.target.value)} onBlur={capitalizeOnBlur("name")} style={{ ...fieldStyle, marginBottom: "14px" }} />
 
-              <label style={labelStyle}>Alias / traductions (séparés par une virgule)</label>
-              <input
-                value={form.aliasesText}
-                onChange={(e) => set("aliasesText", e.target.value)}
-                placeholder="Ex. anciens noms, traductions dans une autre langue..."
-                style={{ ...fieldStyle, marginBottom: "14px" }}
+              <AlternateNamesFields
+                aliasesText={form.aliasesText}
+                onAliasesTextChange={(v) => set("aliasesText", v)}
+                alternateName={form.alternateName}
+                onAlternateNameChange={(v) => set("alternateName", v)}
+                translations={form.translations}
+                onTranslationsChange={(v) => set("translations", v)}
               />
-
-              <label style={labelStyle}>Nom alternatif / Ancien nom</label>
-              <input value={form.alternateName} onChange={(e) => set("alternateName", e.target.value)} style={{ ...fieldStyle, marginBottom: "14px" }} />
 
               <label style={labelStyle}>Slogan</label>
               <input value={form.slogan} onChange={(e) => set("slogan", e.target.value)} onBlur={() => set("slogan", capitalizeFirst(form.slogan))} style={fieldStyle} />

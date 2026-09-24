@@ -3,6 +3,7 @@ import { updateDrink, deleteDrink, createDrink, uploadDrinkMainPhoto, uploadDrin
 import { GrapeVarietySelect } from "./GrapeVarietySelect.jsx";
 import { StatusSelector } from "./StatusSelector.jsx";
 import { AdminPhotoField } from "./AdminPhotoField.jsx";
+import { AlternateNamesFields } from "./AlternateNamesFields.jsx";
 import { GalleryManager } from "./GalleryManager.jsx";
 import { SearchableSelect, SearchableMultiSelect } from "./SearchableSelect.jsx";
 import { CertificationLevelSelector } from "./CertificationLevelSelector.jsx";
@@ -104,6 +105,7 @@ export function DrinkDetailPanel({ drink, onClose, onSaved }) {
     kcalPer100ml: drink?.kcalPer100ml ?? "",
     productStatus: drink?.productStatus || BEER_CIDER_COMMERCIAL_STATUSES[0].code,
     alternateName: drink?.alternateName || "",
+    translations: drink?.translations || [],
     launchYear: drink?.launchYear ?? "",
     // Niveau 2 — composition bière
     malts: drink?.malts || [],
@@ -273,6 +275,8 @@ export function DrinkDetailPanel({ drink, onClose, onSaved }) {
     const base = {
       name: form.name.trim(),
       aliases: form.aliasesText.split(",").map((a) => a.trim()).filter(Boolean),
+      alternateName: form.alternateName.trim(),
+      translations: form.translations.filter((t) => t.value.trim()),
       type: form.type,
       abv: form.abv === "" ? null : parseFloat(form.abv),
       kcalPer100ml: form.kcalPer100ml === "" ? null : parseFloat(form.kcalPer100ml),
@@ -299,7 +303,6 @@ export function DrinkDetailPanel({ drink, onClose, onSaved }) {
       originCity: form.originCity.trim(),
       styles: form.styles,
       productStatus: form.productStatus,
-      alternateName: form.alternateName.trim(),
       launchYear: form.launchYear === "" ? null : parseInt(form.launchYear, 10),
       malts: form.malts,
       hops: form.hops,
@@ -725,8 +728,14 @@ export function DrinkDetailPanel({ drink, onClose, onSaved }) {
 
             {activeTab === "niveau1" && (
               <>
-            <label style={labelStyle}>Nom alternatif / ancien nom</label>
-            <input value={form.alternateName} onChange={(e) => set("alternateName", e.target.value)} style={{ ...fieldStyle, marginBottom: "14px" }} />
+            <AlternateNamesFields
+              aliasesText={form.aliasesText}
+              onAliasesTextChange={(v) => set("aliasesText", v)}
+              alternateName={form.alternateName}
+              onAlternateNameChange={(v) => set("alternateName", v)}
+              translations={form.translations}
+              onTranslationsChange={(v) => set("translations", v)}
+            />
 
 
             <div style={separatorStyle} />

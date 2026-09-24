@@ -3,6 +3,7 @@ import { supabase } from "../supabaseClient.js";
 import { WhatsappIcon, NavIcon, GoogleIcon, WebsiteIcon, FacebookIcon, InstagramIcon, TiktokIcon, SnapchatIcon, PhoneIcon, EmailIcon, TripadvisorIcon, RestaurantGuruIcon, PlaceCheckIcon } from "./icons.jsx";
 import { updatePublicVenue, deletePublicVenue, createPublicVenue, uploadVenuePhoto, uploadVenueMenuPdf, geocodeAddress, saveGeocodeResult, loadPublicVenues, mergeEntities, loadVenueRatingSummary } from "../data/sharedDirectories.js";
 import { CertificationLevelSelector } from "./CertificationLevelSelector.jsx";
+import { AlternateNamesFields } from "./AlternateNamesFields.jsx";
 import { SearchableSelect } from "./SearchableSelect.jsx";
 import { StatusSelector } from "./StatusSelector.jsx";
 import { AdminPhotoField } from "./AdminPhotoField.jsx";
@@ -156,6 +157,8 @@ export function VenueDetailPanel({ venue, onClose, onSaved, drinksDirectory }) {
   const [form, setForm] = useState({
     name: venue?.name || "",
     aliasesText: (venue?.aliases || []).join(", "),
+    alternateName: venue?.alternateName || "",
+    translations: venue?.translations || [],
     subtitle: venue?.subtitle || "",
     streetName: venue?.streetName || "",
     streetNumber: venue?.streetNumber || "",
@@ -287,6 +290,8 @@ export function VenueDetailPanel({ venue, onClose, onSaved, drinksDirectory }) {
   const buildPatch = () => ({
     name: capitalizeWords(form.name.trim()),
     aliases: form.aliasesText.split(",").map((a) => a.trim()).filter(Boolean),
+    alternateName: form.alternateName.trim(),
+    translations: form.translations.filter((t) => t.value.trim()),
     subtitle: capitalizeWords(form.subtitle.trim()),
     streetName: capitalizeWords(form.streetName.trim()),
     streetNumber: form.streetNumber.trim(),
@@ -514,12 +519,13 @@ export function VenueDetailPanel({ venue, onClose, onSaved, drinksDirectory }) {
               <label style={labelStyle}>Nom *</label>
               <input value={form.name} onChange={(e) => set("name", e.target.value)} onBlur={capitalizeOnBlur("name")} style={{ ...requiredFieldStyle, marginBottom: "14px" }} />
 
-              <label style={labelStyle}>Alias / traductions (séparés par une virgule)</label>
-              <input
-                value={form.aliasesText}
-                onChange={(e) => set("aliasesText", e.target.value)}
-                placeholder="Ex. anciens noms, traductions dans une autre langue..."
-                style={{ ...fieldStyle, marginBottom: "14px" }}
+              <AlternateNamesFields
+                aliasesText={form.aliasesText}
+                onAliasesTextChange={(v) => set("aliasesText", v)}
+                alternateName={form.alternateName}
+                onAlternateNameChange={(v) => set("alternateName", v)}
+                translations={form.translations}
+                onTranslationsChange={(v) => set("translations", v)}
               />
 
               <label style={labelStyle}>Sous-titre</label>

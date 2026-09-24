@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { WhatsappIcon, FacebookIcon, InstagramIcon, TiktokIcon, SnapchatIcon, LinkedinIcon, YoutubeIcon, PlaceCheckIcon } from "./icons.jsx";
+import { AlternateNamesFields } from "./AlternateNamesFields.jsx";
 import {
   updateBrewery,
   deleteBrewery,
@@ -154,6 +155,8 @@ export function BreweryDetailPanel({ brewery, onClose, onSaved }) {
   const [form, setForm] = useState({
     name: brewery?.name || "",
     aliasesText: (brewery?.aliases || []).join(", "),
+    alternateName: brewery?.alternateName || "",
+    translations: brewery?.translations || [],
     subtitle: brewery?.subtitle || "",
     streetName: brewery?.streetName || "",
     streetNumber: brewery?.streetNumber || "",
@@ -243,6 +246,8 @@ export function BreweryDetailPanel({ brewery, onClose, onSaved }) {
   const buildPatch = () => ({
     name: capitalizeWords(form.name.trim()),
     aliases: form.aliasesText.split(",").map((a) => a.trim()).filter(Boolean),
+    alternateName: form.alternateName.trim(),
+    translations: form.translations.filter((t) => t.value.trim()),
     subtitle: capitalizeWords(form.subtitle.trim()),
     streetName: capitalizeWords(form.streetName.trim()),
     streetNumber: form.streetNumber.trim(),
@@ -413,12 +418,13 @@ export function BreweryDetailPanel({ brewery, onClose, onSaved }) {
           <label style={labelStyle}>Nom *</label>
           <input value={form.name} onChange={(e) => set("name", e.target.value)} onBlur={capitalizeOnBlur("name")} style={{ ...fieldStyle, marginBottom: "14px" }} />
 
-          <label style={labelStyle}>Alias / traductions (séparés par une virgule)</label>
-          <input
-            value={form.aliasesText}
-            onChange={(e) => set("aliasesText", e.target.value)}
-            placeholder="Ex. anciens noms, traductions dans une autre langue..."
-            style={{ ...fieldStyle, marginBottom: "14px" }}
+          <AlternateNamesFields
+            aliasesText={form.aliasesText}
+            onAliasesTextChange={(v) => set("aliasesText", v)}
+            alternateName={form.alternateName}
+            onAlternateNameChange={(v) => set("alternateName", v)}
+            translations={form.translations}
+            onTranslationsChange={(v) => set("translations", v)}
           />
 
           <label style={labelStyle}>Sous-titre</label>
