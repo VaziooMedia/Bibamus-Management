@@ -1,15 +1,9 @@
 import React, { useState, useEffect } from "react";
-import { loadClaims, loadBusinessAccounts, approveClaim, rejectClaim, createCollaborator } from "../data/sharedDirectories.js";
+import { loadClaims, approveClaim, rejectClaim, createCollaborator } from "../data/sharedDirectories.js";
 import { PageTitle } from "./PageTitle.jsx";
 import { COUNTRIES } from "../constants.js";
 
 const ENTITY_TYPE_LABELS = { venue: "Lieu", drink: "Produit", brand: "Marque", producer: "Producteur" };
-
-const TABS = [
-  { key: "pending", label: "En attente" },
-  { key: "approved", label: "Approuvées" },
-  { key: "rejected", label: "Refusées" },
-];
 
 const LANGUAGE_OPTIONS = [
   { code: "fr", label: "Français" },
@@ -203,34 +197,19 @@ function NewBusinessForm({ claim, onCreated }) {
 }
 
 export function ClaimsScreen({ onOpenVenue }) {
-  const [tab, setTab] = useState("pending");
   const [claims, setClaims] = useState(null);
-  const [businessAccounts, setBusinessAccounts] = useState([]);
-  const [expandedId, setExpandedId] = useState(null);
+  const [typeFilter, setTypeFilter] = useState("all");
   const [creatingNewFor, setCreatingNewFor] = useState(null);
-  const [selectedBusinessFor, setSelectedBusinessFor] = useState({});
   const [busyId, setBusyId] = useState(null);
 
-  const refresh = () => loadClaims(tab).then(setClaims);
+  // Toujours les revendications en attente — un OK/NON les fait sortir de cette vraie liste,
+  // il n'y a donc plus besoin de vrais onglets par statut.
+  const refresh = () => loadClaims("pending").then(setClaims);
   useEffect(() => {
-    setClaims(null);
     refresh();
-    loadBusinessAccounts().then(setBusinessAccounts);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [tab]);
+  }, []);
 
-  const handleLinkExisting = async (claim) => {
-    const businessId = selectedBusinessFor[claim.id];
-    if (!businessId) return;
-    setBusyId(claim.id);
-    const result = await approveClaim(claim.id, claim.entity_type, claim.entity_id, businessId, claim.entity_name);
-    setBusyId(null);
-    if (result.error) {
-      alert("Erreur : " + result.error);
-      return;
-    }
-    refresh();
-  };
+  const filtered = claims ? (typeFilter === "all" ? claims : claims.filter((c) => c.entity_type === typeFilter)) : null;
 
   const handleReject = async (claim) => {
     const reason = prompt("Raison du refus (optionnel) :") || "";
@@ -240,22 +219,33 @@ export function ClaimsScreen({ onOpenVenue }) {
     refresh();
   };
 
+  const TYPE_FILTERS = [
+    { key: "all", label: "Tout" },
+    { key: "venue", label: "Lieux" },
+    { key: "drink", label: "Produits" },
+    { key: "brand", label: "Marques" },
+    { key: "producer", label: "Producteurs" },
+  ];
+
+  const cellStyle = { padding: "10px 8px", fontSize: "12.5px", color: "#F2F2E8", verticalAlign: "top", borderBottom: "1px solid #28405C" };
+  const headerCellStyle = { padding: "0 8px 8px", fontSize: "11px", color: "#8792A6", fontWeight: 700, textTransform: "uppercase", textAlign: "left" };
+
   return (
     <div>
       <PageTitle>Revendications</PageTitle>
       <p style={{ fontSize: "12.5px", color: "#8792A6", marginBottom: "20px" }}>Demandes de propriétaires souhaitant gérer leur propre fiche.</p>
 
       <div style={{ display: "flex", gap: "8px", marginBottom: "20px" }}>
-        {TABS.map((t) => (
+        {TYPE_FILTERS.map((t) => (
           <button
             key={t.key}
-            onClick={() => setTab(t.key)}
+            onClick={() => setTypeFilter(t.key)}
             style={{
               padding: "8px 16px",
               borderRadius: "8px",
-              border: `2px solid ${tab === t.key ? "#39FF66" : "#28405C"}`,
-              background: tab === t.key ? "#39FF66" : "none",
-              color: tab === t.key ? "#0D1B2A" : "#F2F2E8",
+              border: `2px solid ${typeFilter === t.key ? "#39FF66" : "#28405C"}`,
+              background: typeFilter === t.key ? "#39FF66" : "none",
+              color: typeFilter === t.key ? "#0D1B2A" : "#F2F2E8",
               fontWeight: 700,
               fontSize: "13px",
               cursor: "pointer",
@@ -266,109 +256,82 @@ export function ClaimsScreen({ onOpenVenue }) {
         ))}
       </div>
 
-      {!claims ? (
+      {!filtered ? (
         <p style={{ color: "#8792A6" }}>Chargement...</p>
-      ) : claims.length === 0 ? (
-        <p style={{ color: "#8792A6", fontSize: "13px" }}>Aucune revendication dans cette catégorie.</p>
+      ) : filtered.length === 0 ? (
+        <p style={{ color: "#8792A6", fontSize: "13px" }}>Aucune revendication en attente dans cette catégorie.</p>
       ) : (
-        <div style={{ display: "flex", flexDirection: "column", gap: "12px", maxWidth: "440px" }}>
-          {claims.map((c) => {
-            const expanded = expandedId === c.id;
-            return (
-              <div key={c.id} style={{ background: "#16273D", borderRadius: "10px", padding: "16px" }}>
-                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "8px" }}>
-                  <div>
-                    <span style={{ fontSize: "11px", color: "#8792A6", textTransform: "uppercase", fontWeight: 700 }}>{ENTITY_TYPE_LABELS[c.entity_type] || c.entity_type}</span>
+        <table style={{ width: "100%", borderCollapse: "collapse" }}>
+          <thead>
+            <tr>
+              <th style={{ ...headerCellStyle, width: "36px" }}>#</th>
+              <th style={headerCellStyle}>Type de fiche</th>
+              <th style={headerCellStyle}>Nom de la fiche</th>
+              <th style={headerCellStyle}>Nom de l'utilisateur</th>
+              <th style={headerCellStyle}>Adresse email utilisateur</th>
+              <th style={headerCellStyle}>Texte libre</th>
+              <th style={headerCellStyle}>Date de la revendication</th>
+              <th style={{ ...headerCellStyle, width: "110px" }}></th>
+            </tr>
+          </thead>
+          <tbody>
+            {filtered.map((c, i) => (
+              <React.Fragment key={c.id}>
+                <tr>
+                  <td style={cellStyle}>{String(i + 1).padStart(2, "0")}</td>
+                  <td style={cellStyle}>{ENTITY_TYPE_LABELS[c.entity_type] || c.entity_type}</td>
+                  <td style={cellStyle}>
                     {c.entity_type === "venue" && onOpenVenue ? (
                       <button
                         onClick={() => onOpenVenue(c.entity_id)}
-                        style={{
-                          display: "block",
-                          marginTop: "4px",
-                          background: "none",
-                          border: "2px solid #39FF66",
-                          borderRadius: "8px",
-                          padding: "4px 10px",
-                          fontSize: "15px",
-                          color: "#39FF66",
-                          fontWeight: 700,
-                          cursor: "pointer",
-                        }}
+                        style={{ background: "none", border: "2px solid #39FF66", borderRadius: "8px", padding: "4px 10px", fontSize: "12.5px", color: "#39FF66", fontWeight: 700, cursor: "pointer" }}
                       >
                         {c.entity_name}
                       </button>
                     ) : (
-                      <p style={{ fontSize: "15px", color: "#F2F2E8", fontWeight: 700, margin: "2px 0 0" }}>{c.entity_name}</p>
+                      c.entity_name
                     )}
-                  </div>
-                  <span style={{ fontSize: "11px", color: "#8792A6" }}>{c.created_at ? c.created_at.slice(0, 10) : ""}</span>
-                </div>
-
-                {c.officers && <p style={{ fontSize: "12.5px", color: "#8792A6", margin: "0 0 8px" }}>Administrateurs déclarés : {c.officers}</p>}
-                <p style={{ fontSize: "13px", color: "#F2F2E8", fontStyle: "italic", margin: "0 0 8px" }}>"{c.justification}"</p>
-                <p style={{ fontSize: "11px", color: "#8792A6", marginBottom: "12px" }}>
-                  Demandé par : {c.claimant ? `${c.claimant.name || ""} ${c.claimant.last_name || ""}`.trim() : "(compte inconnu)"}
-                  {c.claimant?.email ? ` — ${c.claimant.email}` : ""}
-                </p>
-
-                {c.status === "rejected" && c.rejection_reason && <p style={{ fontSize: "12.5px", color: "#FF3B4E", marginBottom: "10px" }}>Refusée : {c.rejection_reason}</p>}
-
-                {tab === "pending" && (
-                  <>
-                    <div style={{ display: "flex", gap: "8px", marginBottom: "8px" }}>
-                      <select
-                        value={selectedBusinessFor[c.id] || ""}
-                        onChange={(e) => setSelectedBusinessFor((prev) => ({ ...prev, [c.id]: e.target.value }))}
-                        style={{ ...fieldStyle, flex: 1 }}
-                      >
-                        <option value="">— Lier à un compte Business existant —</option>
-                        {businessAccounts.map((b) => (
-                          <option key={b.id} value={b.id}>
-                            {b.company_name || `${b.name} ${b.last_name}`} ({b.email})
-                          </option>
-                        ))}
-                      </select>
-                      <button
-                        onClick={() => handleLinkExisting(c)}
-                        disabled={!selectedBusinessFor[c.id] || busyId === c.id}
-                        style={{ background: "#00C8FF", border: "none", borderRadius: "8px", padding: "9px 14px", fontWeight: 700, fontSize: "12.5px", color: "#0D1B2A", cursor: "pointer", opacity: !selectedBusinessFor[c.id] || busyId === c.id ? 0.5 : 1 }}
-                      >
-                        Lier
-                      </button>
-                    </div>
-
-                    <div style={{ display: "flex", gap: "8px" }}>
+                  </td>
+                  <td style={cellStyle}>{c.claimant ? `${c.claimant.name || ""} ${c.claimant.last_name || ""}`.trim() : "(compte inconnu)"}</td>
+                  <td style={cellStyle}>{c.claimant?.email || "—"}</td>
+                  <td style={{ ...cellStyle, maxWidth: "260px" }}>{c.justification}</td>
+                  <td style={cellStyle}>{c.created_at ? c.created_at.slice(0, 10) : ""}</td>
+                  <td style={cellStyle}>
+                    <div style={{ display: "flex", gap: "6px" }}>
                       <button
                         onClick={() => setCreatingNewFor(creatingNewFor === c.id ? null : c.id)}
-                        style={{ flex: 1, background: "none", border: "2px solid #39FF66", borderRadius: "8px", padding: "9px", fontWeight: 700, fontSize: "12.5px", color: "#39FF66", cursor: "pointer" }}
+                        disabled={busyId === c.id}
+                        style={{ background: creatingNewFor === c.id ? "#39FF66" : "none", border: "2px solid #39FF66", borderRadius: "6px", padding: "5px 10px", fontWeight: 700, fontSize: "11.5px", color: creatingNewFor === c.id ? "#0D1B2A" : "#39FF66", cursor: "pointer" }}
                       >
-                        {creatingNewFor === c.id ? "Annuler" : "Créer un nouveau compte Business"}
+                        OK
                       </button>
                       <button
                         onClick={() => handleReject(c)}
                         disabled={busyId === c.id}
-                        style={{ flex: 1, background: "none", border: "2px solid #FF3B4E", borderRadius: "8px", padding: "9px", fontWeight: 700, fontSize: "12.5px", color: "#FF3B4E", cursor: "pointer" }}
+                        style={{ background: "none", border: "2px solid #FF3B4E", borderRadius: "6px", padding: "5px 10px", fontWeight: 700, fontSize: "11.5px", color: "#FF3B4E", cursor: "pointer" }}
                       >
-                        Refuser
+                        NON
                       </button>
                     </div>
-
-                    {creatingNewFor === c.id && (
+                  </td>
+                </tr>
+                {creatingNewFor === c.id && (
+                  <tr>
+                    <td colSpan={8} style={{ padding: "0 8px 12px", borderBottom: "1px solid #28405C" }}>
                       <NewBusinessForm
                         claim={c}
                         onCreated={() => {
                           setCreatingNewFor(null);
                           refresh();
-                          loadBusinessAccounts().then(setBusinessAccounts);
                         }}
                       />
-                    )}
-                  </>
+                    </td>
+                  </tr>
                 )}
-              </div>
-            );
-          })}
-        </div>
+              </React.Fragment>
+            ))}
+          </tbody>
+        </table>
       )}
     </div>
   );
