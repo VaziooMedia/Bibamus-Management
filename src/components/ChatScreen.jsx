@@ -390,7 +390,7 @@ function MessageBubble({ m, isMe, myUserId, reactionsByMessage, onToggleReaction
 // canal ; resolveInfo construit le vrai nom + sous-titre affichés pour une vraie conversation
 // donnée (différent selon qu'on regarde des collègues, des utilisateurs ou des comptes
 // Business).
-function ChatConversationsPanel({ scope, myUserId, myRole, people, roles, resolveInfo, markerPrefix }) {
+function ChatConversationsPanel({ scope, myUserId, myRole, people, roles, resolveInfo, markerPrefix, initialPersonId }) {
   const [allMessages, setAllMessages] = useState(null);
   const [reactions, setReactions] = useState([]);
   const [archivedKeys, setArchivedKeys] = useState(new Set());
@@ -468,6 +468,19 @@ function ChatConversationsPanel({ scope, myUserId, myRole, people, roles, resolv
     setActiveKey(key);
     setPendingRecipient(recipient);
   };
+
+  // Accès direct depuis une vraie fiche (ex. "Chat Team" cliqué depuis Administrateurs) —
+  // démarre/ouvre tout de suite la vraie conversation avec cette vraie personne précise, sans
+  // passer par le vrai picker manuel. Ne se redéclenche pas si la personne change d'écran et
+  // revient (initialPersonId consommé une vraie seule fois par valeur).
+  const consumedInitialPersonId = useRef(null);
+  useEffect(() => {
+    if (initialPersonId && consumedInitialPersonId.current !== initialPersonId) {
+      consumedInitialPersonId.current = initialPersonId;
+      handleStartConversation({ ids: [initialPersonId] });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [initialPersonId]);
 
   const handleSend = async () => {
     const text = draft.trim();
@@ -607,7 +620,7 @@ function ChatConversationsPanel({ scope, myUserId, myRole, people, roles, resolv
   );
 }
 
-export function ChatTeamScreen({ myUserId, myRole }) {
+export function ChatTeamScreen({ myUserId, myRole, initialPersonId }) {
   const [collaborators, setCollaborators] = useState([]);
 
   useEffect(() => {
@@ -630,7 +643,7 @@ export function ChatTeamScreen({ myUserId, myRole }) {
   return (
     <div>
       <PageTitle>Chat Team</PageTitle>
-      <ChatConversationsPanel scope="team" myUserId={myUserId} myRole={myRole} people={people} roles={ADMIN_ROLES} resolveInfo={resolveInfo} markerPrefix="chat_team" />
+      <ChatConversationsPanel scope="team" myUserId={myUserId} myRole={myRole} people={people} roles={ADMIN_ROLES} resolveInfo={resolveInfo} markerPrefix="chat_team" initialPersonId={initialPersonId} />
     </div>
   );
 }

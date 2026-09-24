@@ -17,11 +17,11 @@ const ROLES = [
 const roleLabel = (key) => ROLES.find((r) => r.key === key)?.label || key;
 
 const STATUS_BLOCKS = [
-  { key: "editor", label: "Éditeur" },
-  { key: "super_editor", label: "Super éditeur" },
-  { key: "moderator", label: "Modérateur" },
+  { key: "super_admin", label: "Super Admin" },
   { key: "admin", label: "Admin" },
-  { key: "super_admin", label: "Super admin" },
+  { key: "super_editor", label: "Super Éditeur" },
+  { key: "editor", label: "Éditeur" },
+  { key: "moderator", label: "Modérateur" },
 ];
 
 const COUNTRY_BLOCKS = ["Belgique", "France", "Pays-Bas", "Allemagne", "Luxembourg", "Espagne"];
@@ -97,7 +97,7 @@ function SortHeader({ label, sortKey, currentSort, onSort, style }) {
   );
 }
 
-export function CollaboratorsScreen() {
+export function CollaboratorsScreen({ onOpenChatWith }) {
   const [administrators, setAdministrators] = useState(null);
   const [selected, setSelected] = useState(null);
   const [creating, setCreating] = useState(false);
@@ -230,7 +230,7 @@ export function CollaboratorsScreen() {
       ) : sorted.length === 0 ? (
         <p style={{ color: "#8792A6", fontSize: "13px" }}>{query ? "Aucun résultat pour cette recherche." : "Aucun administrateur pour l'instant."}</p>
       ) : (
-        <table style={{ width: "100%", maxWidth: "900px", borderCollapse: "collapse" }}>
+        <table style={{ width: "100%", maxWidth: "1050px", borderCollapse: "collapse" }}>
           <thead>
             <tr style={{ borderTop: "2px solid #28405C", borderBottom: "2px solid #28405C" }}>
               <th style={{ ...headerCellStyle, width: "1%" }}>#</th>
@@ -238,7 +238,9 @@ export function CollaboratorsScreen() {
               <SortHeader label="Prénom" sortKey="name" currentSort={sort} onSort={handleSort} />
               <th style={headerCellStyle}>Email</th>
               <SortHeader label="Rôle" sortKey="role" currentSort={sort} onSort={handleSort} />
-              <SortHeader label="Statut" sortKey="active" currentSort={sort} onSort={handleSort} style={{ width: "1%", borderRight: "none" }} />
+              <th style={{ ...headerCellStyle, width: "1%" }}>Pays</th>
+              <SortHeader label="Statut" sortKey="active" currentSort={sort} onSort={handleSort} />
+              <th style={{ ...headerCellStyle, width: "1%", textAlign: "center", borderRight: "none" }}>Chat Team</th>
             </tr>
           </thead>
           <tbody>
@@ -253,13 +255,38 @@ export function CollaboratorsScreen() {
                 <td style={{ ...cellStyle, textAlign: "center", whiteSpace: "nowrap" }}>{String(i + 1).padStart(2, "0")}</td>
                 <td style={cellStyle}>{a.last_name || "—"}</td>
                 <td style={cellStyle}>{a.name || "—"}</td>
-                <td style={cellStyle}>{a.email}</td>
+                <td style={cellStyle}>
+                  <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+                    <a href={`mailto:${a.email}`} onClick={(e) => e.stopPropagation()} title={a.email} style={{ display: "inline-flex", flexShrink: 0 }}>
+                      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#39FF66" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <rect x="2" y="4" width="20" height="16" rx="2" />
+                        <path d="m2 7 10 6 10-6" />
+                      </svg>
+                    </a>
+                    {a.email}
+                  </div>
+                </td>
                 <td style={cellStyle}>{roleLabel(a.role)}</td>
-                <td style={{ ...cellStyle, textAlign: "center", whiteSpace: "nowrap", borderRight: "none" }}>
+                <td style={{ ...cellStyle, textAlign: "center", whiteSpace: "nowrap" }}>{a.country || "—"}</td>
+                <td style={{ ...cellStyle, textAlign: "center", whiteSpace: "nowrap" }}>
                   <span
                     title={a.active !== false ? "Actif" : "Non actif"}
                     style={{ display: "inline-block", width: "10px", height: "10px", borderRadius: "50%", background: a.active !== false ? "#39FF66" : "#FF3B4E" }}
                   />
+                </td>
+                <td style={{ ...cellStyle, textAlign: "center", whiteSpace: "nowrap", borderRight: "none" }}>
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onOpenChatWith?.(a.id);
+                    }}
+                    title="Ouvrir la conversation Chat Team"
+                    style={{ background: "none", border: "none", cursor: "pointer", padding: "4px", display: "inline-flex" }}
+                  >
+                    <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#39FF66" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z" />
+                    </svg>
+                  </button>
                 </td>
               </tr>
             ))}

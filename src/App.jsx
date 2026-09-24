@@ -33,6 +33,7 @@ export default function App() {
   const [authChecked, setAuthChecked] = useState(false);
   const [unlocked, setUnlocked] = useState(false);
   const [myRole, setMyRole] = useState(null);
+  const [chatTeamTargetId, setChatTeamTargetId] = useState(null);
   const [myCanModerate, setMyCanModerate] = useState(false);
   const [myUserId, setMyUserId] = useState(null);
   const [screen, setScreen] = useState("dashboard");
@@ -114,7 +115,7 @@ export default function App() {
       {screen === "brands" && (
         <BrandsScreen initialBrandId={viewedClaimEntity?.type === "brand" ? viewedClaimEntity.id : null} onInitialBrandOpened={() => setViewedClaimEntity(null)} />
       )}
-      {screen === "chatTeam" && <ChatTeamScreen myUserId={myUserId} myRole={myRole} />}
+      {screen === "chatTeam" && <ChatTeamScreen myUserId={myUserId} myRole={myRole} initialPersonId={chatTeamTargetId} />}
       {screen === "chatUsers" && <ChatUsersScreen myUserId={myUserId} myRole={myRole} />}
       {screen === "chatBusiness" && <ChatBusinessScreen myUserId={myUserId} myRole={myRole} />}
       {screen === "stats" && <AnalyticsScreen onNavigate={setScreen} />}
@@ -140,7 +141,14 @@ export default function App() {
         <BusinessAccountDetailScreen accountId={viewedBusinessAccountId} onBack={() => setScreen("businessAccounts")} />
       )}
       {screen === "notifications" && <NotificationsScreen onOpenReports={() => setScreen("reports")} onOpenClaims={() => setScreen("claims")} />}
-      {screen === "admins" && <CollaboratorsScreen />}
+      {screen === "admins" && (
+        <CollaboratorsScreen
+          onOpenChatWith={(id) => {
+            setChatTeamTargetId(id);
+            setScreen("chatTeam");
+          }}
+        />
+      )}
       {screen === "users" && <UsersScreen />}
       {screen === "reports" && <ReportsScreen />}
       {screen === "audit" && <AuditLogScreen />}
