@@ -227,8 +227,8 @@ export function ClaimsScreen({ onOpenVenue }) {
     { key: "producer", label: "Producteurs" },
   ];
 
-  const cellStyle = { padding: "10px 8px", fontSize: "12.5px", color: "#F2F2E8", verticalAlign: "top", borderBottom: "1px solid #28405C" };
-  const headerCellStyle = { padding: "0 8px 8px", fontSize: "11px", color: "#8792A6", fontWeight: 700, textTransform: "uppercase", textAlign: "left" };
+  const cellStyle = { padding: "10px 8px", fontSize: "12.5px", color: "#F2F2E8", verticalAlign: "top", borderBottom: "1px solid #28405C", borderRight: "1px solid #28405C" };
+  const headerCellStyle = { padding: "0 8px 8px", fontSize: "11px", color: "#8792A6", fontWeight: 700, textTransform: "uppercase", textAlign: "left", borderRight: "1px solid #28405C" };
 
   return (
     <div>
@@ -284,7 +284,7 @@ export function ClaimsScreen({ onOpenVenue }) {
                     {c.entity_type === "venue" && onOpenVenue ? (
                       <button
                         onClick={() => onOpenVenue(c.entity_id)}
-                        style={{ background: "none", border: "2px solid #39FF66", borderRadius: "8px", padding: "4px 10px", fontSize: "12.5px", color: "#39FF66", fontWeight: 700, cursor: "pointer" }}
+                        style={{ background: "none", border: "none", padding: 0, fontSize: "12.5px", color: "#39FF66", fontWeight: 700, cursor: "pointer", textDecoration: "underline" }}
                       >
                         {c.entity_name}
                       </button>
