@@ -200,14 +200,49 @@ const ENTITY_TYPE_OPTIONS = [
   { key: "producer", label: "Producteur" },
 ];
 
-function ReadRow({ label, value }) {
+function ReadRow({ label, value, email }) {
   return (
     <div style={{ marginBottom: "12px" }}>
       <p style={{ ...labelStyle, marginBottom: "2px", display: "flex", alignItems: "center", gap: "8px" }}>
         <span style={{ width: "3px", height: "10px", borderRadius: "2px", background: "#39FF66", flexShrink: 0 }} />
         {label}
       </p>
-      <p style={{ margin: 0, fontSize: "14px", color: value ? "#F2F2E8" : "#8792A6" }}>{value || "—"}</p>
+      <p style={{ margin: 0, fontSize: "14px", color: value ? "#F2F2E8" : "#8792A6", display: "flex", alignItems: "center", gap: "8px" }}>
+        {value || "—"}
+        {email && value && (
+          <a href={`mailto:${value}`} title={value} style={{ display: "inline-flex" }}>
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#39FF66" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <rect x="2" y="4" width="20" height="16" rx="2" />
+              <path d="m2 7 10 6 10-6" />
+            </svg>
+          </a>
+        )}
+      </p>
+    </div>
+  );
+}
+
+// Vraie liste (une vraie ligne par élément, vrai tiret blanc devant) plutôt qu'une vraie
+// concaténation par virgules — pour les vraies langues parlées et les vraies fiches liées.
+function ReadRowList({ label, items }) {
+  return (
+    <div style={{ marginBottom: "12px" }}>
+      <p style={{ ...labelStyle, marginBottom: "2px", display: "flex", alignItems: "center", gap: "8px" }}>
+        <span style={{ width: "3px", height: "10px", borderRadius: "2px", background: "#39FF66", flexShrink: 0 }} />
+        {label}
+      </p>
+      {!items || items.length === 0 ? (
+        <p style={{ margin: 0, fontSize: "14px", color: "#8792A6" }}>—</p>
+      ) : (
+        <div style={{ fontSize: "14px", color: "#F2F2E8" }}>
+          {items.map((item, i) => (
+            <p key={i} style={{ margin: 0, display: "flex", gap: "6px" }}>
+              <span style={{ color: "#F2F2E8" }}>-</span>
+              {item}
+            </p>
+          ))}
+        </div>
+      )}
     </div>
   );
 }
@@ -399,14 +434,14 @@ export function BusinessAccountDetailScreen({ accountId, onBack }) {
               <ReadRow label="État" value={account.active !== false ? "Actif" : "Non actif"} />
               <ReadRow label="Email de connexion" value={account.email} />
               <ReadRow label="Plan" value={orgInfo?.subscription ? `${orgInfo.subscription.plan === "pro" ? "Pro" : "Gratuit"} (${orgInfo.subscription.status === "active" ? "actif" : orgInfo.subscription.status})` : null} />
-              <ReadRow label="Fiches liées" value={entities && entities.length > 0 ? entities.map((e) => `${e.name} (${e.entityTypeLabel})`).join(", ") : null} />
+              <ReadRowList label="Fiches liées" items={entities ? entities.map((e) => `${e.name} (${e.entityTypeLabel})`) : []} />
             </div>
 
             <div style={{ borderLeft: "1px solid #28405C", paddingLeft: "32px" }}>
               <SectionTitle first>Société</SectionTitle>
               <ReadRow label="Dénomination" value={account.company_name} />
               <ReadRowWithFlag label="Numéro d'entreprise" countryCode={account.company_country} value={account.vat_number} />
-              <ReadRow label="Email" value={account.company_email} />
+              <ReadRow label="Email" value={account.company_email} email />
               <ReadRowWithFlag label="Téléphone" countryCode={account.company_country} value={account.company_phone} calling />
               <ReadRowAddress account={account} />
             </div>
@@ -415,13 +450,17 @@ export function BusinessAccountDetailScreen({ accountId, onBack }) {
               <SectionTitle first>Personne de contact</SectionTitle>
               <ReadRow label="Prénom / Nom" value={[account.name, account.last_name].filter(Boolean).join(" ")} />
               <ReadRow label="Fonction" value={account.contact_function} />
-              <ReadRow label="Email Pro" value={account.contact_email} />
+              <ReadRow label="Email Pro" value={account.contact_email} email />
               <ReadRowWithFlag label="Téléphone" countryCode={account.company_country} value={account.contact_phone} calling />
-              <ReadRow label="Langue(s) parlée(s)" value={languages.length > 0 ? languages.join(", ") : null} />
+              <ReadRowList label="Langue(s) parlée(s)" items={languages} />
             </div>
           </div>
 
-          <SectionTitle>Fiches liées</SectionTitle>
+          <SectionTitle>
+            Fiches liées <span style={{ color: "#8792A6" }}>(</span>
+            <span style={{ color: "#39FF66" }}>{entities ? entities.length : 0}</span>
+            <span style={{ color: "#8792A6" }}>)</span>
+          </SectionTitle>
           {!entities ? (
             <p style={{ color: "#8792A6", fontSize: "13px" }}>Chargement...</p>
           ) : entities.length === 0 ? (
