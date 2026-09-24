@@ -67,34 +67,53 @@ function RankedList({ title, entries }) {
 // Vraie petite courbe d'évolution en SVG artisanal — pas de vraie bibliothèque de graphiques
 // déjà installée sur cette plateforme, et le vrai besoin reste simple (une vraie série de
 // points reliés).
-function LineChart({ title, points }) {
+function LineChart({ title, series }) {
   const width = 640;
   const height = 160;
   const padding = 24;
-  const max = Math.max(1, ...points.map((p) => p.value));
-  const stepX = points.length > 1 ? (width - padding * 2) / (points.length - 1) : 0;
-  const coords = points.map((p, i) => ({
-    x: padding + i * stepX,
-    y: height - padding - (p.value / max) * (height - padding * 2),
+  const allPoints = series.flatMap((s) => s.points);
+  const max = Math.max(1, ...allPoints.map((p) => p.value));
+  const labels = series[0]?.points || [];
+  const stepX = labels.length > 1 ? (width - padding * 2) / (labels.length - 1) : 0;
+  const showEvery = Math.max(1, Math.ceil(labels.length / 8));
+
+  const seriesCoords = series.map((s) => ({
+    ...s,
+    coords: s.points.map((p, i) => ({
+      x: padding + i * stepX,
+      y: height - padding - (p.value / max) * (height - padding * 2),
+    })),
   }));
-  const linePath = coords.map((c, i) => `${i === 0 ? "M" : "L"} ${c.x} ${c.y}`).join(" ");
-  const showEvery = Math.max(1, Math.ceil(points.length / 8));
 
   return (
     <div style={{ background: "#16273D", borderRadius: "12px", padding: "18px" }}>
-      <p style={{ margin: "0 0 14px", fontSize: "13px", fontWeight: 700, color: "#F2F2E8" }}>{title}</p>
-      {points.length === 0 ? (
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "14px" }}>
+        <p style={{ margin: 0, fontSize: "13px", fontWeight: 700, color: "#F2F2E8" }}>{title}</p>
+        <div style={{ display: "flex", gap: "14px" }}>
+          {series.map((s) => (
+            <span key={s.label} style={{ display: "flex", alignItems: "center", gap: "6px", fontSize: "11.5px", color: "#8792A6" }}>
+              <span style={{ width: "8px", height: "8px", borderRadius: "50%", background: s.color, flexShrink: 0 }} />
+              {s.label}
+            </span>
+          ))}
+        </div>
+      </div>
+      {labels.length === 0 ? (
         <p style={{ fontSize: "12.5px", color: "#8792A6" }}>Pas encore de données.</p>
       ) : (
         <svg viewBox={`0 0 ${width} ${height + 20}`} style={{ width: "100%", height: "auto", display: "block" }}>
-          <path d={linePath} fill="none" stroke="#39FF66" strokeWidth="2" />
-          {coords.map((c, i) => (
-            <circle key={i} cx={c.x} cy={c.y} r="2.5" fill="#39FF66" />
+          {seriesCoords.map((s) => (
+            <React.Fragment key={s.label}>
+              <path d={s.coords.map((c, i) => `${i === 0 ? "M" : "L"} ${c.x} ${c.y}`).join(" ")} fill="none" stroke={s.color} strokeWidth="2" />
+              {s.coords.map((c, i) => (
+                <circle key={i} cx={c.x} cy={c.y} r="2.5" fill={s.color} />
+              ))}
+            </React.Fragment>
           ))}
-          {points.map(
+          {labels.map(
             (p, i) =>
               i % showEvery === 0 && (
-                <text key={i} x={coords[i].x} y={height + 14} fontSize="9" fill="#8792A6" textAnchor="middle">
+                <text key={i} x={padding + i * stepX} y={height + 14} fontSize="9" fill="#8792A6" textAnchor="middle">
                   {p.label}
                 </text>
               )
@@ -154,12 +173,13 @@ export function AnalyticsScreen({ onNavigate }) {
   filtered.forEach((e) => {
     const d = new Date(e.created_at);
     const key = bucketKey(d);
-    if (!buckets[key]) buckets[key] = { date: d, count: 0 };
+    if (!buckets[key]) buckets[key] = { date: d, count: 0, users: new Set() };
     buckets[key].count += 1;
+    if (e.bibro_code) buckets[key].users.add(e.bibro_code);
   });
-  const timeline = Object.values(buckets)
-    .sort((a, b) => a.date - b.date)
-    .map((b) => ({ label: bucketLabel(b.date), value: b.count }));
+  const sortedBuckets = Object.values(buckets).sort((a, b) => a.date - b.date);
+  const eventsTimeline = sortedBuckets.map((b) => ({ label: bucketLabel(b.date), value: b.count }));
+  const usersTimeline = sortedBuckets.map((b) => ({ label: bucketLabel(b.date), value: b.users.size }));
 
   return (
     <div>
@@ -199,7 +219,13 @@ export function AnalyticsScreen({ onNavigate }) {
           </div>
 
           <div style={{ marginBottom: "20px" }}>
-            <LineChart title="Évolution des événements" points={timeline} />
+            <LineChart
+              title="Évolution"
+              series={[
+                { label: "Événements", color: "#39FF66", points: eventsTimeline },
+                { label: "Bibax actifs", color: "#00C8FF", points: usersTimeline },
+              ]}
+            />
           </div>
 
           <div style={{ display: "flex", gap: "12px", flexWrap: "wrap", marginBottom: "12px" }}>
