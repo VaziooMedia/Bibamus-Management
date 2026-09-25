@@ -37,6 +37,7 @@ const SYSTEM_ITEMS = [
   { key: "countryRules", label: "Âge minimum / Pays" },
   { key: "featureFlags", label: "Feature flags" },
   { key: "crashReports", label: "Crash reports" },
+  { key: "integrations", label: "Intégrations externes" },
   { key: "admins", label: "Administrateurs" },
 ];
 
