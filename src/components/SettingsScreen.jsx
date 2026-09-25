@@ -20,6 +20,7 @@ function SectionTitle({ children }) {
 
 export function SettingsScreen({ myUserId, onProfileUpdated }) {
   const [profile, setProfile] = useState(null);
+  const [activeTab, setActiveTab] = useState("profile");
   const [mainLanguage, setMainLanguage] = useState("");
   const [avatarUrl, setAvatarUrl] = useState(null);
   const [uploadingAvatar, setUploadingAvatar] = useState(false);
@@ -174,7 +175,33 @@ export function SettingsScreen({ myUserId, onProfileUpdated }) {
   return (
     <div>
       <PageTitle>Paramètres</PageTitle>
-      <div style={{ maxWidth: "420px", marginTop: "20px" }}>
+      <div style={{ display: "flex", gap: "4px", borderBottom: "2px solid #28405C", marginBottom: "24px", marginTop: "8px" }}>
+        {[
+          { key: "profile", label: "Mon profil" },
+          { key: "security", label: "Sécurité" },
+        ].map((tab) => (
+          <button
+            key={tab.key}
+            onClick={() => setActiveTab(tab.key)}
+            style={{
+              background: "none",
+              border: "none",
+              borderBottom: `2px solid ${activeTab === tab.key ? "#39FF66" : "transparent"}`,
+              marginBottom: "-2px",
+              padding: "8px 12px",
+              fontSize: "13px",
+              fontWeight: 700,
+              color: activeTab === tab.key ? "#39FF66" : "#8792A6",
+              cursor: "pointer",
+            }}
+          >
+            {tab.label}
+          </button>
+        ))}
+      </div>
+      <div style={{ maxWidth: "420px" }}>
+        {activeTab === "profile" && (
+          <>
         <SectionTitle>Mon profil</SectionTitle>
 
         <div style={{ display: "flex", alignItems: "center", gap: "16px", marginBottom: "24px" }}>
@@ -271,9 +298,11 @@ export function SettingsScreen({ myUserId, onProfileUpdated }) {
           {savingPassword ? "Enregistrement..." : "Changer le mot de passe"}
         </button>
         {passwordSaved && <span style={{ marginLeft: "10px", fontSize: "12.5px", color: "#39FF66" }}>Mot de passe changé ✓</span>}
+          </>
+        )}
 
-        <div style={separatorStyle} />
-
+        {activeTab === "security" && (
+          <>
         <SectionTitle>Sécurité</SectionTitle>
         {mfaFactor === undefined ? (
           <p style={{ color: "#8792A6", fontSize: "12.5px" }}>Chargement...</p>
@@ -329,6 +358,8 @@ export function SettingsScreen({ myUserId, onProfileUpdated }) {
             >
               Activer la double authentification
             </button>
+          </>
+        )}
           </>
         )}
       </div>
