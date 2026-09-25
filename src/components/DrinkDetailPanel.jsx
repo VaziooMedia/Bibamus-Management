@@ -590,7 +590,7 @@ export function DrinkDetailPanel({ drink, onClose, onSaved }) {
                 { key: "niveau2", label: "Niveau 2 (expert)" },
                 { key: "gallery", label: "Médias" },
                 { key: "stats", label: "Statistiques", disabled: isNew },
-                { key: "ai", label: <><img src={aiIcon} alt="" style={{ width: "14px", height: "14px", verticalAlign: "-2px", marginRight: "4px" }} />IA</>, disabled: isNew },
+                { key: "ai", label: <img src={aiIcon} alt="IA" style={{ width: "18px", height: "18px", verticalAlign: "-4px" }} />, disabled: isNew },
               ].map((tab) => (
                 <button
                   key={tab.key}
