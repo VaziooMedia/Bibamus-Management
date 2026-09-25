@@ -527,7 +527,7 @@ export function DrinkDetailPanel({ drink, onClose, onSaved }) {
 
   return (
     <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.5)", display: "flex", justifyContent: "flex-end", zIndex: 100 }}>
-      <div style={{ width: "520px", background: "#0D1B2A", height: "100%", overflowY: "auto", padding: "28px", borderLeft: "2px solid #28405C" }}>
+      <div style={{ width: "640px", background: "#0D1B2A", height: "100%", overflowY: "auto", padding: "28px", borderLeft: "2px solid #28405C" }}>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "20px" }}>
           <h2 style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "22px", margin: 0, display: "flex", alignItems: "center", gap: "8px" }}>
             <span style={{ width: "4px", height: "18px", background: "#39FF66", borderRadius: "2px", flexShrink: 0 }} />
@@ -582,7 +582,7 @@ export function DrinkDetailPanel({ drink, onClose, onSaved }) {
 
         {isBeerOrCider || isWine ? (
           <>
-            <div style={{ display: "flex", gap: "4px", marginBottom: "18px", borderBottom: "2px solid #28405C", overflowX: "auto" }}>
+            <div style={{ display: "flex", flexWrap: "wrap", gap: "4px", marginBottom: "18px", borderBottom: "2px solid #28405C" }}>
               {[
                 { key: "quick", label: "Ajout rapide" },
                 { key: "niveau1", label: "Niveau 1" },
