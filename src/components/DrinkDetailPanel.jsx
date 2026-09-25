@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import aiIcon from "../assets/brand/ai_icon.svg";
 import { updateDrink, deleteDrink, createDrink, uploadDrinkMainPhoto, uploadDrinkCoverPhoto, uploadDrinkGalleryPhoto, uploadDrinkAwardBadge, loadBrandsDirectory, loadBreweriesDirectory, loadDrinksDirectory, loadGrapeVarieties, createGrapeVariety, mergeEntities, requestAICompletion, loadPendingAIProposals, resolveAIProposal } from "../data/sharedDirectories.js";
 import { GrapeVarietySelect } from "./GrapeVarietySelect.jsx";
 import { StatusSelector } from "./StatusSelector.jsx";
@@ -589,7 +590,7 @@ export function DrinkDetailPanel({ drink, onClose, onSaved }) {
                 { key: "niveau2", label: "Niveau 2 (expert)" },
                 { key: "gallery", label: "Médias" },
                 { key: "stats", label: "Statistiques", disabled: isNew },
-                { key: "ai", label: "✨ IA", disabled: isNew },
+                { key: "ai", label: <><img src={aiIcon} alt="" style={{ width: "14px", height: "14px", verticalAlign: "-2px", marginRight: "4px" }} />IA</>, disabled: isNew },
               ].map((tab) => (
                 <button
                   key={tab.key}
@@ -1626,7 +1627,14 @@ export function DrinkDetailPanel({ drink, onClose, onSaved }) {
                   disabled={requestingAI}
                   style={{ background: "#39FF66", border: "none", borderRadius: "8px", padding: "9px 16px", fontWeight: 700, fontSize: "12.5px", color: "#0D1B2A", cursor: "pointer", opacity: requestingAI ? 0.6 : 1, marginBottom: "16px" }}
                 >
-                  {requestingAI ? "Recherche en cours..." : "✨ Compléter avec l'IA"}
+                  {requestingAI ? (
+                    "Recherche en cours..."
+                  ) : (
+                    <>
+                      <img src={aiIcon} alt="" style={{ width: "16px", height: "16px", verticalAlign: "-3px", marginRight: "6px" }} />
+                      Compléter avec l'IA
+                    </>
+                  )}
                 </button>
                 {aiError && <p style={{ color: "#FF3B4E", fontSize: "12.5px", marginBottom: "12px" }}>{aiError}</p>}
 
