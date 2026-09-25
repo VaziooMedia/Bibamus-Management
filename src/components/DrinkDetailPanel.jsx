@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import aiIconWhite from "../assets/brand/ai_icon_white.svg";
+import aiIconGrey from "../assets/brand/ai_icon_grey.svg";
 import aiIconGreen from "../assets/brand/ai_icon_green.svg";
 import { updateDrink, deleteDrink, createDrink, uploadDrinkMainPhoto, uploadDrinkCoverPhoto, uploadDrinkGalleryPhoto, uploadDrinkAwardBadge, loadBrandsDirectory, loadBreweriesDirectory, loadDrinksDirectory, loadGrapeVarieties, createGrapeVariety, mergeEntities, requestAICompletion, loadPendingAIProposals, resolveAIProposal } from "../data/sharedDirectories.js";
 import { GrapeVarietySelect } from "./GrapeVarietySelect.jsx";
@@ -612,7 +612,7 @@ export function DrinkDetailPanel({ drink, onClose, onSaved }) {
                   }}
                 >
                   {tab.key === "ai" ? (
-                    <img src={activeTab === "ai" ? aiIconGreen : aiIconWhite} alt="IA" style={{ width: "18px", height: "18px", verticalAlign: "-4px" }} />
+                    <img src={activeTab === "ai" ? aiIconGreen : aiIconGrey} alt="IA" style={{ width: "18px", height: "18px", verticalAlign: "-4px" }} />
                   ) : (
                     tab.label
                   )}
