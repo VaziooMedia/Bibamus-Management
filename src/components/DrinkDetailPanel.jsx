@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
-import aiIcon from "../assets/brand/ai_icon.svg";
+import aiIconWhite from "../assets/brand/ai_icon_white.svg";
+import aiIconGreen from "../assets/brand/ai_icon_green.svg";
 import { updateDrink, deleteDrink, createDrink, uploadDrinkMainPhoto, uploadDrinkCoverPhoto, uploadDrinkGalleryPhoto, uploadDrinkAwardBadge, loadBrandsDirectory, loadBreweriesDirectory, loadDrinksDirectory, loadGrapeVarieties, createGrapeVariety, mergeEntities, requestAICompletion, loadPendingAIProposals, resolveAIProposal } from "../data/sharedDirectories.js";
 import { GrapeVarietySelect } from "./GrapeVarietySelect.jsx";
 import { StatusSelector } from "./StatusSelector.jsx";
@@ -590,7 +591,7 @@ export function DrinkDetailPanel({ drink, onClose, onSaved }) {
                 { key: "niveau2", label: "Niveau 2 (expert)" },
                 { key: "gallery", label: "Médias" },
                 { key: "stats", label: "Statistiques", disabled: isNew },
-                { key: "ai", label: <img src={aiIcon} alt="IA" style={{ width: "18px", height: "18px", verticalAlign: "-4px" }} />, disabled: isNew },
+                { key: "ai", label: null, disabled: isNew },
               ].map((tab) => (
                 <button
                   key={tab.key}
@@ -610,7 +611,11 @@ export function DrinkDetailPanel({ drink, onClose, onSaved }) {
                     cursor: tab.disabled ? "not-allowed" : "pointer",
                   }}
                 >
-                  {tab.label}
+                  {tab.key === "ai" ? (
+                    <img src={activeTab === "ai" ? aiIconGreen : aiIconWhite} alt="IA" style={{ width: "18px", height: "18px", verticalAlign: "-4px" }} />
+                  ) : (
+                    tab.label
+                  )}
                 </button>
               ))}
             </div>
@@ -1630,10 +1635,7 @@ export function DrinkDetailPanel({ drink, onClose, onSaved }) {
                   {requestingAI ? (
                     "Recherche en cours..."
                   ) : (
-                    <>
-                      <img src={aiIcon} alt="" style={{ width: "16px", height: "16px", verticalAlign: "-3px", marginRight: "6px" }} />
-                      Compléter avec l'IA
-                    </>
+                    "Compléter avec l'IA"
                   )}
                 </button>
                 {aiError && <p style={{ color: "#FF3B4E", fontSize: "12.5px", marginBottom: "12px" }}>{aiError}</p>}
