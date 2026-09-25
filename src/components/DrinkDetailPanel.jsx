@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import aiIconGrey from "../assets/brand/ai_icon_grey.svg";
 import aiIconGreen from "../assets/brand/ai_icon_green.svg";
+import aiIconBlack from "../assets/brand/ai_icon_black.svg";
 import { updateDrink, deleteDrink, createDrink, uploadDrinkMainPhoto, uploadDrinkCoverPhoto, uploadDrinkGalleryPhoto, uploadDrinkAwardBadge, loadBrandsDirectory, loadBreweriesDirectory, loadDrinksDirectory, loadGrapeVarieties, createGrapeVariety, mergeEntities, requestAICompletion, loadPendingAIProposals, resolveAIProposal } from "../data/sharedDirectories.js";
 import { GrapeVarietySelect } from "./GrapeVarietySelect.jsx";
 import { StatusSelector } from "./StatusSelector.jsx";
@@ -1624,20 +1625,27 @@ export function DrinkDetailPanel({ drink, onClose, onSaved }) {
 
             {activeTab === "ai" && !isNew && (
               <div>
-                <p style={{ fontSize: "12.5px", color: "#8792A6", margin: "0 0 14px" }}>
-                  L'IA recherche des informations fiables pour compléter les champs manquants de cette fiche. Chaque vraie proposition doit être acceptée ou refusée ici — rien n'est jamais écrit automatiquement.
-                </p>
                 <button
                   onClick={handleRequestAI}
                   disabled={requestingAI}
-                  style={{ background: "#39FF66", border: "none", borderRadius: "8px", padding: "9px 16px", fontWeight: 700, fontSize: "12.5px", color: "#0D1B2A", cursor: "pointer", opacity: requestingAI ? 0.6 : 1, marginBottom: "16px" }}
+                  title="Compléter avec l'IA"
+                  style={{
+                    width: "44px",
+                    height: "44px",
+                    borderRadius: "50%",
+                    background: "#39FF66",
+                    border: "none",
+                    cursor: "pointer",
+                    opacity: requestingAI ? 0.6 : 1,
+                    marginBottom: "16px",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                  }}
                 >
-                  {requestingAI ? (
-                    "Recherche en cours..."
-                  ) : (
-                    "Compléter avec l'IA"
-                  )}
+                  <img src={aiIconBlack} alt="Compléter avec l'IA" style={{ width: "22px", height: "22px" }} />
                 </button>
+                {requestingAI && <p style={{ color: "#8792A6", fontSize: "12.5px", marginTop: "-10px", marginBottom: "12px" }}>Recherche en cours...</p>}
                 {aiError && <p style={{ color: "#FF3B4E", fontSize: "12.5px", marginBottom: "12px" }}>{aiError}</p>}
 
                 {aiProposals === null ? (
@@ -1651,8 +1659,8 @@ export function DrinkDetailPanel({ drink, onClose, onSaved }) {
                         <th style={{ textAlign: "left", padding: "8px", fontSize: "11.5px", color: "#8792A6" }}>Champ</th>
                         <th style={{ textAlign: "left", padding: "8px", fontSize: "11.5px", color: "#8792A6" }}>Actuel</th>
                         <th style={{ textAlign: "left", padding: "8px", fontSize: "11.5px", color: "#8792A6" }}>Proposition</th>
-                        <th style={{ textAlign: "left", padding: "8px", fontSize: "11.5px", color: "#8792A6" }}>Confiance</th>
-                        <th style={{ textAlign: "left", padding: "8px", fontSize: "11.5px", color: "#8792A6" }}>Source</th>
+                        <th style={{ textAlign: "center", padding: "8px", fontSize: "11.5px", color: "#8792A6" }}>Confiance</th>
+                        <th style={{ textAlign: "center", padding: "8px", fontSize: "11.5px", color: "#8792A6" }}>Source</th>
                         <th style={{ padding: "8px" }} />
                       </tr>
                     </thead>
@@ -1662,30 +1670,64 @@ export function DrinkDetailPanel({ drink, onClose, onSaved }) {
                           <td style={{ padding: "8px", fontSize: "13px", color: "#F2F2E8" }}>{p.field}</td>
                           <td style={{ padding: "8px", fontSize: "13px", color: "#8792A6" }}>{p.current_value || "—"}</td>
                           <td style={{ padding: "8px", fontSize: "13px", color: "#F2F2E8", fontWeight: 700 }}>{p.proposed_value}</td>
-                          <td style={{ padding: "8px", fontSize: "12px", color: p.confidence === "high" ? "#39FF66" : p.confidence === "medium" ? "#F2C94C" : "#FF3B4E" }}>{p.confidence}</td>
-                          <td style={{ padding: "8px", fontSize: "12px" }}>
+                          <td style={{ padding: "8px", textAlign: "center" }}>
+                            <span
+                              title={p.confidence}
+                              style={{
+                                display: "inline-block",
+                                width: "10px",
+                                height: "10px",
+                                borderRadius: "50%",
+                                background: p.confidence === "high" ? "#39FF66" : p.confidence === "medium" ? "#FF9500" : "#FF3B4E",
+                              }}
+                            />
+                          </td>
+                          <td style={{ padding: "8px", textAlign: "center" }}>
                             {p.source_url ? (
-                              <a href={p.source_url} target="_blank" rel="noreferrer" style={{ color: "#39FF66" }}>
-                                {p.source_name || "Source"}
+                              <a href={p.source_url} target="_blank" rel="noreferrer" title={p.source_name || "Source"} style={{ fontSize: "14px" }}>
+                                🔗
                               </a>
                             ) : (
-                              p.source_name || "—"
+                              <span style={{ color: "#8792A6" }}>—</span>
                             )}
                           </td>
                           <td style={{ padding: "8px", whiteSpace: "nowrap" }}>
                             <button
                               onClick={() => handleResolveProposal(p, "accepted")}
                               disabled={resolvingId === p.id}
-                              style={{ background: "none", border: "2px solid #39FF66", borderRadius: "6px", padding: "4px 10px", color: "#39FF66", fontSize: "11.5px", fontWeight: 700, cursor: "pointer", marginRight: "6px" }}
+                              title="Accepter"
+                              style={{
+                                width: "26px",
+                                height: "26px",
+                                borderRadius: "50%",
+                                background: "none",
+                                border: "2px solid #39FF66",
+                                color: "#39FF66",
+                                fontSize: "13px",
+                                fontWeight: 700,
+                                cursor: "pointer",
+                                marginRight: "6px",
+                              }}
                             >
-                              Accepter
+                              ✓
                             </button>
                             <button
                               onClick={() => handleResolveProposal(p, "rejected")}
                               disabled={resolvingId === p.id}
-                              style={{ background: "none", border: "2px solid #FF3B4E", borderRadius: "6px", padding: "4px 10px", color: "#FF3B4E", fontSize: "11.5px", fontWeight: 700, cursor: "pointer" }}
+                              title="Refuser"
+                              style={{
+                                width: "26px",
+                                height: "26px",
+                                borderRadius: "50%",
+                                background: "none",
+                                border: "2px solid #FF3B4E",
+                                color: "#FF3B4E",
+                                fontSize: "13px",
+                                fontWeight: 700,
+                                cursor: "pointer",
+                              }}
                             >
-                              Refuser
+                              ✕
                             </button>
                           </td>
                         </tr>
