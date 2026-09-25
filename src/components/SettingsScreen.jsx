@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { supabase } from "../supabaseClient.js";
-import { updateCollaboratorProfile, uploadAdminAvatar, updateOwnPassword, updateNotificationPrefs } from "../data/sharedDirectories.js";
+import { updateCollaboratorProfile, uploadAdminAvatar, updateOwnPassword, updateNotificationPrefs, loadPublicVenues, loadDrinksPage, loadBrandsDirectory, loadBreweriesDirectory, loadAppUsers, loadBusinessAccountsFull, loadCollaborators } from "../data/sharedDirectories.js";
 import { PageTitle } from "./PageTitle.jsx";
 import { NavIcon } from "./icons.jsx";
 import { LANGUAGES } from "./AdministratorDetailPanel.jsx";
@@ -8,6 +8,72 @@ import { LANGUAGES } from "./AdministratorDetailPanel.jsx";
 const fieldStyle = { padding: "10px 12px", borderRadius: "8px", border: "2px solid #28405C", fontSize: "14px", width: "100%", color: "#F2F2E8", background: "#0D1B2A", boxSizing: "border-box" };
 const labelStyle = { fontSize: "12.5px", color: "#8792A6", marginBottom: "4px", display: "block", fontWeight: 600 };
 const separatorStyle = { borderBottom: "1px solid #28405C", margin: "24px 0" };
+
+// Vraie configuration des 7 vraies exportations — un vrai chargeur (déjà existant, ou la vraie
+// boucle dédiée pour Produits) et les vraies colonnes à inclure dans le CSV pour chacune.
+const EXPORTS = [
+  { key: "venues", label: "Lieux", loader: loadPublicVenues, columns: [
+    { key: "id", label: "ID" }, { key: "name", label: "Nom" }, { key: "country", label: "Pays" }, { key: "city", label: "Commune" },
+    { key: "status", label: "Statut" }, { key: "certificationLevel", label: "Certification" },
+  ]},
+  { key: "drinks", label: "Produits", loader: loadAllDrinks, columns: [
+    { key: "id", label: "ID" }, { key: "name", label: "Nom" }, { key: "type", label: "Type" }, { key: "nationality", label: "Origine" },
+    { key: "status", label: "Statut" }, { key: "certificationLevel", label: "Certification" },
+  ]},
+  { key: "brands", label: "Marques", loader: loadBrandsDirectory, columns: [
+    { key: "id", label: "ID" }, { key: "name", label: "Nom" }, { key: "originCountry", label: "Origine" },
+    { key: "status", label: "Statut" }, { key: "certificationLevel", label: "Certification" },
+  ]},
+  { key: "breweries", label: "Producteurs", loader: loadBreweriesDirectory, columns: [
+    { key: "id", label: "ID" }, { key: "name", label: "Nom" }, { key: "country", label: "Pays" },
+    { key: "status", label: "Statut" }, { key: "certificationLevel", label: "Certification" },
+  ]},
+  { key: "users", label: "Utilisateurs", loader: loadAppUsers, columns: [
+    { key: "id", label: "ID" }, { key: "email", label: "Email" }, { key: "name", label: "Prénom" }, { key: "last_name", label: "Nom" },
+    { key: "country", label: "Pays" }, { key: "city", label: "Commune" }, { key: "active", label: "Actif" }, { key: "created_at", label: "Créé le" },
+  ]},
+  { key: "business", label: "Comptes Business", loader: loadBusinessAccountsFull, columns: [
+    { key: "id", label: "ID" }, { key: "company_name", label: "Société" }, { key: "contact_email", label: "Email contact" },
+    { key: "company_country", label: "Pays" }, { key: "active", label: "Actif" },
+  ]},
+  { key: "admins", label: "Administrateurs", loader: loadCollaborators, columns: [
+    { key: "id", label: "ID" }, { key: "email", label: "Email" }, { key: "name", label: "Prénom" }, { key: "last_name", label: "Nom" },
+    { key: "role", label: "Rôle" }, { key: "active", label: "Actif" },
+  ]},
+];
+function toCSV(rows, columns) {
+  const escape = (v) => {
+    const s = v == null ? "" : String(v);
+    return /[",\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
+  };
+  const header = columns.map((c) => escape(c.label)).join(",");
+  const lines = rows.map((row) => columns.map((c) => escape(row[c.key])).join(","));
+  return [header, ...lines].join("\n");
+}
+
+function downloadCSV(filename, csvText) {
+  const blob = new Blob(["\uFEFF" + csvText], { type: "text/csv;charset=utf-8;" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = filename;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+// Produits est paginé côté serveur (jamais chargé en entier ailleurs) — vraie boucle dédiée
+// ici, uniquement pour cette vraie exportation ponctuelle.
+async function loadAllDrinks() {
+  const all = [];
+  let page = 0;
+  while (true) {
+    const { items } = await loadDrinksPage({ page, pageSize: 500 });
+    all.push(...items);
+    if (items.length < 500) break;
+    page += 1;
+  }
+  return all;
+}
 
 function SectionTitle({ children }) {
   return (
@@ -42,6 +108,8 @@ export function SettingsScreen({ myUserId, onProfileUpdated }) {
   const [notificationPrefs, setNotificationPrefs] = useState({ reports: true, claims: true });
   const [savingNotifications, setSavingNotifications] = useState(false);
   const [notificationsSaved, setNotificationsSaved] = useState(false);
+
+  const [exportingKey, setExportingKey] = useState(null);
 
   const refreshMfaFactor = async () => {
     const { data } = await supabase.auth.mfa.listFactors();
@@ -183,6 +251,14 @@ export function SettingsScreen({ myUserId, onProfileUpdated }) {
     setNotificationsSaved(true);
   };
 
+  const handleExport = async (exp) => {
+    setExportingKey(exp.key);
+    const rows = await exp.loader();
+    const csv = toCSV(rows, exp.columns);
+    downloadCSV(`bibamus-${exp.key}-${new Date().toISOString().slice(0, 10)}.csv`, csv);
+    setExportingKey(null);
+  };
+
   if (!profile) return <p style={{ color: "#8792A6" }}>Chargement...</p>;
 
   return (
@@ -194,6 +270,7 @@ export function SettingsScreen({ myUserId, onProfileUpdated }) {
           { key: "security", label: "Sécurité" },
           { key: "notifications", label: "Notifications" },
           { key: "templates", label: "Modèles de texte" },
+          { key: "export", label: "Export / Maintenance" },
         ].map((tab) => (
           <button
             key={tab.key}
@@ -422,6 +499,46 @@ export function SettingsScreen({ myUserId, onProfileUpdated }) {
         <SectionTitle>Modèles de texte</SectionTitle>
         <div style={{ background: "#16273D", borderRadius: "12px", padding: "20px", color: "#8792A6", fontSize: "13px" }}>
           Cette section n'est pas encore construite — on la remplira lors de la construction des vrais emails automatiques.
+        </div>
+          </>
+        )}
+
+        {activeTab === "export" && (
+          <>
+        <SectionTitle>Export</SectionTitle>
+        <p style={{ fontSize: "12.5px", color: "#8792A6", margin: "0 0 14px" }}>Télécharge un vrai fichier CSV du vrai répertoire choisi, tel qu'il est actuellement en base.</p>
+        <div style={{ display: "flex", flexDirection: "column", gap: "8px", marginBottom: "24px" }}>
+          {EXPORTS.map((exp) => (
+            <button
+              key={exp.key}
+              onClick={() => handleExport(exp)}
+              disabled={exportingKey === exp.key}
+              style={{
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "center",
+                background: "#16273D",
+                border: "2px solid #28405C",
+                borderRadius: "8px",
+                padding: "10px 14px",
+                color: "#F2F2E8",
+                fontSize: "13px",
+                fontWeight: 600,
+                cursor: "pointer",
+                opacity: exportingKey === exp.key ? 0.6 : 1,
+              }}
+            >
+              {exp.label}
+              <span style={{ color: "#39FF66", fontSize: "12px", fontWeight: 700 }}>{exportingKey === exp.key ? "Export en cours..." : "Exporter (CSV)"}</span>
+            </button>
+          ))}
+        </div>
+
+        <div style={separatorStyle} />
+
+        <SectionTitle>Maintenance</SectionTitle>
+        <div style={{ background: "#16273D", borderRadius: "12px", padding: "20px", color: "#8792A6", fontSize: "13px" }}>
+          Il n'existe pas de vraie action possible ici, depuis la plateforme elle-même, pour déclencher une vraie sauvegarde à la demande. Selon le vrai plan Supabase du projet, de vraies sauvegardes automatiques existent peut-être déjà — à vérifier directement sur son tableau de bord (Database → Backups).
         </div>
           </>
         )}
