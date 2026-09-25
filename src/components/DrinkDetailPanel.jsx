@@ -836,10 +836,6 @@ export function DrinkDetailPanel({ drink, onClose, onSaved }) {
               </div>
             </div>
 
-            <p style={{ fontSize: "11px", color: "#8792A6", marginTop: "-2px", marginBottom: "14px" }}>
-              Le code-barres se gère depuis le scan dans l'app — pas encore intégré à cette fiche.
-            </p>
-
             <div style={separatorStyle} />
             <SectionTitle>Valeurs par défaut</SectionTitle>
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px", marginBottom: "14px" }}>
