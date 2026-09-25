@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { supabase } from "../supabaseClient.js";
 import { TopBar } from "./TopBar.jsx";
 import { usePendingReportsCount } from "../data/usePendingReportsCount.js";
@@ -152,6 +152,14 @@ const ROLE_LABELS = {
 };
 
 export function Layout({ current, onNavigate, onLogout, myRole, myCanModerate, myUserId, myFirstName, myLastName, myAvatarUrl, onSelectResult, children }) {
+  const contentRef = useRef(null);
+
+  // Le vrai conteneur défile pour son propre contenu — sans ce vrai reset, changer d'écran
+  // depuis un vrai bouton situé bas dans le vrai menu latéral laisse le vrai nouvel écran
+  // affiché à la vraie même hauteur de défilement que le précédent.
+  useEffect(() => {
+    contentRef.current?.scrollTo(0, 0);
+  }, [current]);
   const isDatabaseScreen = DATABASE_ITEMS.some((i) => i.key === current) || current === "database";
   const [databaseOpen, setDatabaseOpen] = useState(isDatabaseScreen);
   const isModerator = myRole === "moderator";
@@ -314,7 +322,7 @@ export function Layout({ current, onNavigate, onLogout, myRole, myCanModerate, m
           unreadMessagesCount={unreadChatCounts.chatTeam + unreadChatCounts.chatUsers + unreadChatCounts.chatBusiness}
           onOpenMessages={() => onNavigate("chatTeam")}
         />
-        <div style={{ flex: 1, padding: "32px 40px", overflowY: "auto" }}>{children}</div>
+        <div ref={contentRef} style={{ flex: 1, padding: "32px 40px", overflowY: "auto" }}>{children}</div>
       </div>
     </div>
   );
