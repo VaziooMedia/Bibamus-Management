@@ -79,7 +79,7 @@ function Stat({ label, value, color = "#39FF66", indicator, border, active, onCl
         flex: 1,
         minWidth: "110px",
         textAlign: "center",
-        border: active ? "2px solid #F2F2E8" : border ? `2px solid ${border}` : "none",
+        border: active ? "2px solid #39FF66" : border ? `2px solid ${border}` : "none",
         cursor: "pointer",
       }}
     >
