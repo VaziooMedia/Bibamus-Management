@@ -2203,3 +2203,12 @@ export async function globalSearch(query) {
     admins: adminsRes.data || [],
   };
 }
+
+// Vrai changement de son propre mot de passe (Paramètres > Mon profil) — vraie session déjà
+// active, pas besoin de connaître l'ancien mot de passe (Supabase Auth le permet tant que la
+// vraie session est valide).
+export async function updateOwnPassword(newPassword) {
+  const { error } = await supabase.auth.updateUser({ password: newPassword });
+  if (error) return { error: error.message };
+  return { ok: true };
+}

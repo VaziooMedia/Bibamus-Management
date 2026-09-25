@@ -18,6 +18,7 @@ import { ClaimsScreen } from "./components/ClaimsScreen.jsx";
 import { BusinessAccountsScreen } from "./components/BusinessAccountsScreen.jsx";
 import { BusinessAccountDetailScreen } from "./components/BusinessAccountDetailScreen.jsx";
 import { MyBusinessEntitiesScreen } from "./components/MyBusinessEntitiesScreen.jsx";
+import { SettingsScreen } from "./components/SettingsScreen.jsx";
 import { CountryRulesScreen } from "./components/CountryRulesScreen.jsx";
 import { OfficialStoriesScreen } from "./components/OfficialStoriesScreen.jsx";
 import { FeatureFlagsScreen } from "./components/FeatureFlagsScreen.jsx";
@@ -199,7 +200,7 @@ export default function App() {
       {screen === "featureFlags" && <FeatureFlagsScreen />}
       {screen === "crashReports" && <CrashReportsScreen />}
       {screen === "myActivity" && <MyActivityScreen />}
-      {screen === "settings" && <ComingSoon title="Paramètres" />}
+      {screen === "settings" && <SettingsScreen myUserId={myUserId} onProfileUpdated={(updates) => updates.avatarUrl && setMyAvatarUrl(updates.avatarUrl)} />}
     </Layout>
   );
 }
