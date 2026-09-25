@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { createCollaborator, approveClaim } from "../data/sharedDirectories.js";
-import { COUNTRIES } from "../constants.js";
+import { CountryPrefix } from "./CountryPrefix.jsx";
 
 const LANGUAGE_OPTIONS = [
   { code: "fr", label: "Français" },
@@ -10,8 +10,18 @@ const LANGUAGE_OPTIONS = [
 ];
 
 const fieldStyle = { padding: "9px 10px", borderRadius: "8px", border: "2px solid #28405C", fontSize: "13px", width: "100%", color: "#F2F2E8", background: "#0D1B2A", boxSizing: "border-box" };
-const labelStyle = { fontSize: "11.5px", color: "#8792A6", marginBottom: "4px", display: "block", fontWeight: 600 };
+const labelStyle = { fontSize: "11.5px", color: "#8792A6", marginBottom: "4px", display: "flex", alignItems: "center", gap: "6px", fontWeight: 600 };
 const sectionTitleStyle = { fontSize: "11px", color: "#39FF66", fontWeight: 700, textTransform: "uppercase", margin: "14px 0 6px", paddingTop: "10px", borderTop: "1px solid #28405C" };
+
+// Petite barre verte fluo devant chaque sous-sous-titre (label de champ).
+function Label({ children }) {
+  return (
+    <label style={labelStyle}>
+      <span style={{ width: "3px", height: "11px", background: "#39FF66", borderRadius: "1px", flexShrink: 0, display: "inline-block" }} />
+      {children}
+    </label>
+  );
+}
 
 function EyeIcon({ crossed }) {
   return (
@@ -97,52 +107,54 @@ export function NewBusinessForm({ claim = null, onCreated }) {
   return (
     <div style={{ marginTop: "10px", padding: "12px", background: "#0D1B2A", borderRadius: "8px", display: "flex", flexDirection: "column", gap: "8px", maxWidth: "380px" }}>
       <p style={{ ...sectionTitleStyle, marginTop: 0, paddingTop: 0, borderTop: "none" }}>Société</p>
-      <label style={labelStyle}>Nom de la société *</label>
+      <Label>Dénomination *</Label>
       <input value={companyName} onChange={(e) => setCompanyName(e.target.value)} style={fieldStyle} />
-      <label style={labelStyle}>Numéro d'entreprise</label>
-      <input value={vatNumber} onChange={(e) => setVatNumber(e.target.value)} style={fieldStyle} />
-      <label style={labelStyle}>Email</label>
+      <Label>Numéro d'entreprise</Label>
+      <div style={{ display: "flex", gap: "6px" }}>
+        <CountryPrefix value={companyCountry} onChange={setCompanyCountry} />
+        <input value={vatNumber} onChange={(e) => setVatNumber(e.target.value)} style={{ ...fieldStyle, flex: 1 }} />
+      </div>
+      <Label>Email</Label>
       <input type="email" value={companyEmail} onChange={(e) => setCompanyEmail(e.target.value)} style={fieldStyle} />
-      <label style={labelStyle}>Téléphone</label>
-      <input value={companyPhone} onChange={(e) => setCompanyPhone(e.target.value)} style={fieldStyle} />
+      <Label>Téléphone</Label>
+      <div style={{ display: "flex", gap: "6px" }}>
+        <CountryPrefix value={companyCountry} onChange={setCompanyCountry} calling />
+        <input value={companyPhone} onChange={(e) => setCompanyPhone(e.target.value)} style={{ ...fieldStyle, flex: 1 }} />
+      </div>
 
-      <label style={labelStyle}>Siège social</label>
+      <Label>Siège</Label>
+      <CountryPrefix value={companyCountry} onChange={setCompanyCountry} fullName />
+      <div style={{ display: "flex", gap: "8px" }}>
+        <input value={companyPostalCode} onChange={(e) => setCompanyPostalCode(e.target.value)} placeholder="Code postal" style={{ ...fieldStyle, flex: 1 }} />
+        <input value={companyCity} onChange={(e) => setCompanyCity(e.target.value)} placeholder="Commune" style={{ ...fieldStyle, flex: 2 }} />
+      </div>
       <div style={{ display: "flex", gap: "8px" }}>
         <input value={companyStreet} onChange={(e) => setCompanyStreet(e.target.value)} placeholder="Adresse" style={{ ...fieldStyle, flex: 3 }} />
         <input value={companyStreetNumber} onChange={(e) => setCompanyStreetNumber(e.target.value)} placeholder="Numéro" style={{ ...fieldStyle, flex: 1 }} />
       </div>
       <input value={companyAddressLine2} onChange={(e) => setCompanyAddressLine2(e.target.value)} placeholder="Complément d'adresse" style={fieldStyle} />
-      <div style={{ display: "flex", gap: "8px" }}>
-        <input value={companyPostalCode} onChange={(e) => setCompanyPostalCode(e.target.value)} placeholder="Code postal" style={{ ...fieldStyle, flex: 1 }} />
-        <input value={companyCity} onChange={(e) => setCompanyCity(e.target.value)} placeholder="Ville" style={{ ...fieldStyle, flex: 2 }} />
-      </div>
-      <select value={companyCountry} onChange={(e) => setCompanyCountry(e.target.value)} style={fieldStyle}>
-        <option value="">Pays —</option>
-        {COUNTRIES.map((c) => (
-          <option key={c.code} value={c.code}>
-            {c.fr}
-          </option>
-        ))}
-      </select>
 
       <p style={sectionTitleStyle}>Personne de contact</p>
       <div style={{ display: "flex", gap: "8px" }}>
         <div style={{ flex: 1 }}>
-          <label style={labelStyle}>Prénom *</label>
+          <Label>Prénom *</Label>
           <input value={firstName} onChange={(e) => setFirstName(e.target.value)} style={fieldStyle} />
         </div>
         <div style={{ flex: 1 }}>
-          <label style={labelStyle}>Nom *</label>
+          <Label>Nom *</Label>
           <input value={lastName} onChange={(e) => setLastName(e.target.value)} style={fieldStyle} />
         </div>
       </div>
-      <label style={labelStyle}>Fonction</label>
+      <Label>Fonction</Label>
       <input value={contactFunction} onChange={(e) => setContactFunction(e.target.value)} style={fieldStyle} />
-      <label style={labelStyle}>Email Pro</label>
+      <Label>Email Pro</Label>
       <input type="email" value={contactEmail} onChange={(e) => setContactEmail(e.target.value)} style={fieldStyle} />
-      <label style={labelStyle}>Téléphone</label>
-      <input value={contactPhone} onChange={(e) => setContactPhone(e.target.value)} style={fieldStyle} />
-      <label style={labelStyle}>Langue(s) parlée(s)</label>
+      <Label>Téléphone</Label>
+      <div style={{ display: "flex", gap: "6px" }}>
+        <CountryPrefix value={companyCountry} onChange={setCompanyCountry} calling />
+        <input value={contactPhone} onChange={(e) => setContactPhone(e.target.value)} style={{ ...fieldStyle, flex: 1 }} />
+      </div>
+      <Label>Langue(s) parlée(s)</Label>
       <div style={{ display: "flex", gap: "6px", flexWrap: "wrap", marginBottom: "4px" }}>
         {LANGUAGE_OPTIONS.map((l) => {
           const selected = contactLanguages.includes(l.code);
@@ -173,9 +185,9 @@ export function NewBusinessForm({ claim = null, onCreated }) {
           Doit être différente de l'adresse email du compte personnel ayant fait la revendication. Peut être la même que les emails ci-dessus, ou différente selon la taille de l'entreprise.
         </p>
       )}
-      <label style={labelStyle}>Email de connexion *</label>
+      <Label>Email de connexion *</Label>
       <input type="email" value={loginEmail} onChange={(e) => setLoginEmail(e.target.value)} style={fieldStyle} />
-      <label style={labelStyle}>Mot de passe provisoire *</label>
+      <Label>Mot de passe provisoire *</Label>
       <div style={{ position: "relative" }}>
         <input type={passwordVisible ? "text" : "password"} value={password} onChange={(e) => setPassword(e.target.value)} style={{ ...fieldStyle, paddingRight: "38px" }} />
         <button

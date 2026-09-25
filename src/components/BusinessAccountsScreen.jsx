@@ -224,7 +224,10 @@ export function BusinessAccountsScreen({ onOpenAccount }) {
         <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.5)", display: "flex", alignItems: "flex-start", justifyContent: "center", padding: "40px 20px", zIndex: 50, overflowY: "auto" }}>
           <div style={{ background: "#16273D", borderRadius: "14px", padding: "28px", width: "480px", maxWidth: "100%" }}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "10px" }}>
-              <h2 style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "22px", color: "#F2F2E8", margin: 0 }}>Nouveau compte Business</h2>
+              <h2 style={{ display: "flex", alignItems: "center", gap: "10px", fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "22px", color: "#F2F2E8", margin: 0 }}>
+                <span style={{ width: "4px", height: "20px", borderRadius: "2px", background: "#39FF66", flexShrink: 0 }} />
+                Nouveau compte Business
+              </h2>
               <button onClick={() => setCreating(false)} style={{ background: "none", border: "none", color: "#8792A6", fontSize: "20px", cursor: "pointer" }}>
                 ✕
               </button>
