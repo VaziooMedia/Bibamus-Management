@@ -193,6 +193,7 @@ export function SettingsScreen({ myUserId, onProfileUpdated }) {
           { key: "profile", label: "Mon profil" },
           { key: "security", label: "Sécurité" },
           { key: "notifications", label: "Notifications" },
+          { key: "templates", label: "Modèles de texte" },
         ].map((tab) => (
           <button
             key={tab.key}
@@ -413,6 +414,15 @@ export function SettingsScreen({ myUserId, onProfileUpdated }) {
           {savingNotifications ? "Enregistrement..." : "Enregistrer"}
         </button>
         {notificationsSaved && <span style={{ marginLeft: "10px", fontSize: "12.5px", color: "#39FF66" }}>Enregistré ✓</span>}
+          </>
+        )}
+
+        {activeTab === "templates" && (
+          <>
+        <SectionTitle>Modèles de texte</SectionTitle>
+        <div style={{ background: "#16273D", borderRadius: "12px", padding: "20px", color: "#8792A6", fontSize: "13px" }}>
+          Cette section n'est pas encore construite — on la remplira lors de la construction des vrais emails automatiques.
+        </div>
           </>
         )}
       </div>
