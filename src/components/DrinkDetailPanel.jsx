@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { updateDrink, deleteDrink, createDrink, uploadDrinkMainPhoto, uploadDrinkCoverPhoto, uploadDrinkGalleryPhoto, uploadDrinkAwardBadge, loadBrandsDirectory, loadBreweriesDirectory, loadDrinksDirectory, loadGrapeVarieties, createGrapeVariety, mergeEntities } from "../data/sharedDirectories.js";
+import { updateDrink, deleteDrink, createDrink, uploadDrinkMainPhoto, uploadDrinkCoverPhoto, uploadDrinkGalleryPhoto, uploadDrinkAwardBadge, loadBrandsDirectory, loadBreweriesDirectory, loadDrinksDirectory, loadGrapeVarieties, createGrapeVariety, mergeEntities, requestAICompletion, loadPendingAIProposals, resolveAIProposal } from "../data/sharedDirectories.js";
 import { GrapeVarietySelect } from "./GrapeVarietySelect.jsx";
 import { StatusSelector } from "./StatusSelector.jsx";
 import { AdminPhotoField } from "./AdminPhotoField.jsx";
@@ -236,6 +236,43 @@ export function DrinkDetailPanel({ drink, onClose, onSaved }) {
   }, [status]);
   const [stylesSectionOpen, setStylesSectionOpen] = useState(true);
   const [activeTab, setActiveTab] = useState("quick");
+  const [aiProposals, setAiProposals] = useState(null);
+  const [requestingAI, setRequestingAI] = useState(false);
+  const [aiError, setAiError] = useState(null);
+  const [resolvingId, setResolvingId] = useState(null);
+
+  const refreshAiProposals = () => {
+    if (!drink) return;
+    loadPendingAIProposals("drink", drink.id).then(setAiProposals);
+  };
+
+  useEffect(() => {
+    if (activeTab === "ai" && drink) refreshAiProposals();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activeTab, drink?.id]);
+
+  const handleRequestAI = async () => {
+    setRequestingAI(true);
+    setAiError(null);
+    const result = await requestAICompletion("drink", drink.id);
+    setRequestingAI(false);
+    if (result.error) {
+      setAiError(result.error);
+      return;
+    }
+    refreshAiProposals();
+  };
+
+  const handleResolveProposal = async (proposal, action) => {
+    setResolvingId(proposal.id);
+    const result = await resolveAIProposal(proposal, action);
+    setResolvingId(null);
+    if (result.error) {
+      setAiError(result.error);
+      return;
+    }
+    refreshAiProposals();
+  };
   const [saving, setSaving] = useState(false);
   const [brandOptions, setBrandOptions] = useState([]);
   const [producerOptions, setProducerOptions] = useState([]);
@@ -552,6 +589,7 @@ export function DrinkDetailPanel({ drink, onClose, onSaved }) {
                 { key: "niveau2", label: "Niveau 2 (expert)" },
                 { key: "gallery", label: "Médias" },
                 { key: "stats", label: "Statistiques", disabled: isNew },
+                { key: "ai", label: "✨ IA", disabled: isNew },
               ].map((tab) => (
                 <button
                   key={tab.key}
@@ -1581,6 +1619,76 @@ export function DrinkDetailPanel({ drink, onClose, onSaved }) {
             )}
 
             {activeTab === "stats" && !isNew && <p style={{ fontSize: "13px", color: "#8792A6", fontStyle: "italic" }}>Statistiques à venir.</p>}
+
+            {activeTab === "ai" && !isNew && (
+              <div>
+                <p style={{ fontSize: "12.5px", color: "#8792A6", margin: "0 0 14px" }}>
+                  L'IA recherche des informations fiables pour compléter les champs manquants de cette fiche. Chaque vraie proposition doit être acceptée ou refusée ici — rien n'est jamais écrit automatiquement.
+                </p>
+                <button
+                  onClick={handleRequestAI}
+                  disabled={requestingAI}
+                  style={{ background: "#39FF66", border: "none", borderRadius: "8px", padding: "9px 16px", fontWeight: 700, fontSize: "12.5px", color: "#0D1B2A", cursor: "pointer", opacity: requestingAI ? 0.6 : 1, marginBottom: "16px" }}
+                >
+                  {requestingAI ? "Recherche en cours..." : "✨ Compléter avec l'IA"}
+                </button>
+                {aiError && <p style={{ color: "#FF3B4E", fontSize: "12.5px", marginBottom: "12px" }}>{aiError}</p>}
+
+                {aiProposals === null ? (
+                  <p style={{ color: "#8792A6", fontSize: "13px" }}>Chargement...</p>
+                ) : aiProposals.length === 0 ? (
+                  <p style={{ color: "#8792A6", fontSize: "13px" }}>Aucune proposition en attente.</p>
+                ) : (
+                  <table style={{ width: "100%", borderCollapse: "collapse" }}>
+                    <thead>
+                      <tr style={{ borderBottom: "2px solid #28405C" }}>
+                        <th style={{ textAlign: "left", padding: "8px", fontSize: "11.5px", color: "#8792A6" }}>Champ</th>
+                        <th style={{ textAlign: "left", padding: "8px", fontSize: "11.5px", color: "#8792A6" }}>Actuel</th>
+                        <th style={{ textAlign: "left", padding: "8px", fontSize: "11.5px", color: "#8792A6" }}>Proposition</th>
+                        <th style={{ textAlign: "left", padding: "8px", fontSize: "11.5px", color: "#8792A6" }}>Confiance</th>
+                        <th style={{ textAlign: "left", padding: "8px", fontSize: "11.5px", color: "#8792A6" }}>Source</th>
+                        <th style={{ padding: "8px" }} />
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {aiProposals.map((p) => (
+                        <tr key={p.id} style={{ borderBottom: "1px solid #28405C" }}>
+                          <td style={{ padding: "8px", fontSize: "13px", color: "#F2F2E8" }}>{p.field}</td>
+                          <td style={{ padding: "8px", fontSize: "13px", color: "#8792A6" }}>{p.current_value || "—"}</td>
+                          <td style={{ padding: "8px", fontSize: "13px", color: "#F2F2E8", fontWeight: 700 }}>{p.proposed_value}</td>
+                          <td style={{ padding: "8px", fontSize: "12px", color: p.confidence === "high" ? "#39FF66" : p.confidence === "medium" ? "#F2C94C" : "#FF3B4E" }}>{p.confidence}</td>
+                          <td style={{ padding: "8px", fontSize: "12px" }}>
+                            {p.source_url ? (
+                              <a href={p.source_url} target="_blank" rel="noreferrer" style={{ color: "#39FF66" }}>
+                                {p.source_name || "Source"}
+                              </a>
+                            ) : (
+                              p.source_name || "—"
+                            )}
+                          </td>
+                          <td style={{ padding: "8px", whiteSpace: "nowrap" }}>
+                            <button
+                              onClick={() => handleResolveProposal(p, "accepted")}
+                              disabled={resolvingId === p.id}
+                              style={{ background: "none", border: "2px solid #39FF66", borderRadius: "6px", padding: "4px 10px", color: "#39FF66", fontSize: "11.5px", fontWeight: 700, cursor: "pointer", marginRight: "6px" }}
+                            >
+                              Accepter
+                            </button>
+                            <button
+                              onClick={() => handleResolveProposal(p, "rejected")}
+                              disabled={resolvingId === p.id}
+                              style={{ background: "none", border: "2px solid #FF3B4E", borderRadius: "6px", padding: "4px 10px", color: "#FF3B4E", fontSize: "11.5px", fontWeight: 700, cursor: "pointer" }}
+                            >
+                              Refuser
+                            </button>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                )}
+              </div>
+            )}
           </>
         ) : (
           <p style={{ background: "#16273D", borderRadius: "8px", padding: "12px", fontSize: "12.5px", color: "#8792A6", marginBottom: "14px" }}>

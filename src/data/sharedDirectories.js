@@ -2220,3 +2220,55 @@ export async function updateNotificationPrefs(userId, prefs) {
   if (error) return { error: error.message };
   return { ok: true };
 }
+
+// Vrai service client du MVP "Compléter avec l'IA" — aucune écriture directe dans la vraie
+// table de l'entité elle-même : requestAICompletion se contente de déclencher la vraie
+// fonction serveur (qui écrit dans ai_proposals), et resolveAIProposal n'écrit dans la vraie
+// fiche produit qu'après un vrai clic explicite "Accepter" côté administrateur.
+export async function requestAICompletion(entityType, entityId) {
+  const { data, error } = await supabase.functions.invoke("ai-complete-entity", { body: { entityType, entityId } });
+  if (error) return { error: await extractFunctionError(error) };
+  if (data?.error) return { error: data.error };
+  return { ok: true, proposals: data.proposals || [] };
+}
+
+export async function loadPendingAIProposals(entityType, entityId) {
+  const { data, error } = await supabase
+    .from("ai_proposals")
+    .select("*")
+    .eq("entity_type", entityType)
+    .eq("entity_id", entityId)
+    .eq("status", "pending")
+    .order("created_at");
+  if (error) {
+    console.error("loadPendingAIProposals:", error);
+    return [];
+  }
+  return data;
+}
+
+// action: "accepted" | "rejected". Pour "accepted", écrit aussi la vraie valeur dans la vraie
+// table drinks_directory via updateDrink — jamais l'inverse (jamais drinks_directory modifié
+// sans ce vrai passage explicite). updateDrink attend des vraies clés camelCase (comme le
+// reste de la plateforme), alors que proposal.field est en snake_case (nom de colonne tel
+// qu'utilisé par la fonction serveur) — vraie conversion nécessaire ici.
+const ARRAY_FIELDS = new Set(["styles"]);
+const snakeToCamel = (s) => s.replace(/_([a-z])/g, (_, c) => c.toUpperCase());
+
+export async function resolveAIProposal(proposal, action) {
+  if (action === "accepted") {
+    const camelField = snakeToCamel(proposal.field);
+    const value = ARRAY_FIELDS.has(proposal.field)
+      ? proposal.proposed_value.split(",").map((v) => v.trim()).filter(Boolean)
+      : proposal.proposed_value;
+    const writeResult = await updateDrink(proposal.entity_id, { [camelField]: value });
+    if (writeResult.error) return { error: writeResult.error };
+  }
+  const { data: { user } } = await supabase.auth.getUser();
+  const { error } = await supabase
+    .from("ai_proposals")
+    .update({ status: action, resolved_at: new Date().toISOString(), resolved_by: user?.id || null })
+    .eq("id", proposal.id);
+  if (error) return { error: error.message };
+  return { ok: true };
+}
