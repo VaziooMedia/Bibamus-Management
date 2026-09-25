@@ -86,7 +86,7 @@ function FilterBlock({ label, count, active, onClick }) {
   );
 }
 
-const headerCellStyle = { padding: "10px 12px", fontSize: "12.5px", color: "#8792A6", textAlign: "left", whiteSpace: "nowrap", borderRight: "1px solid #28405C" };
+const headerCellStyle = { padding: "10px 12px", fontSize: "12.5px", color: "#8792A6", textAlign: "center", whiteSpace: "nowrap", borderRight: "1px solid #28405C" };
 const cellStyle = { padding: "10px 12px", fontSize: "14px", color: "#F2F2E8", borderBottom: "1px solid #16273D", borderRight: "1px solid #16273D" };
 
 function SortHeader({ label, sortKey, currentSort, onSort, style }) {
@@ -136,7 +136,7 @@ export function CollaboratorsScreen({ onOpenChatWith, initialAdminId, onInitialA
     setSort((prev) => (prev.key === key ? { key, dir: -prev.dir } : { key, dir: 1 }));
   };
 
-  const relevant = useMemo(() => (administrators ? administrators.filter((a) => a.role !== "user") : null), [administrators]);
+  const relevant = useMemo(() => (administrators ? administrators.filter((a) => a.role !== "user" && a.role !== "business") : null), [administrators]);
 
   const sorted = useMemo(() => {
     if (!relevant) return null;
