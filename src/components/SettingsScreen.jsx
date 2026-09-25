@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { supabase } from "../supabaseClient.js";
-import { updateCollaboratorProfile, uploadAdminAvatar, updateOwnPassword } from "../data/sharedDirectories.js";
+import { updateCollaboratorProfile, uploadAdminAvatar, updateOwnPassword, updateNotificationPrefs } from "../data/sharedDirectories.js";
 import { PageTitle } from "./PageTitle.jsx";
 import { NavIcon } from "./icons.jsx";
 import { LANGUAGES } from "./AdministratorDetailPanel.jsx";
@@ -39,6 +39,10 @@ export function SettingsScreen({ myUserId, onProfileUpdated }) {
   const [mfaSaving, setMfaSaving] = useState(false);
   const [mfaError, setMfaError] = useState(null);
 
+  const [notificationPrefs, setNotificationPrefs] = useState({ reports: true, claims: true });
+  const [savingNotifications, setSavingNotifications] = useState(false);
+  const [notificationsSaved, setNotificationsSaved] = useState(false);
+
   const refreshMfaFactor = async () => {
     const { data } = await supabase.auth.mfa.listFactors();
     setMfaFactor(data?.totp?.find((f) => f.status === "verified") || null);
@@ -52,12 +56,13 @@ export function SettingsScreen({ myUserId, onProfileUpdated }) {
     if (!myUserId) return;
     supabase
       .from("profiles")
-      .select("name, last_name, email, role, main_language, avatar_url")
+      .select("name, last_name, email, role, main_language, avatar_url, notification_prefs")
       .eq("id", myUserId)
       .single()
       .then(({ data }) => {
         if (data) {
           setProfile(data);
+          setNotificationPrefs(data.notification_prefs || { reports: true, claims: true });
           setMainLanguage(data.main_language || "");
           setAvatarUrl(data.avatar_url || null);
         }
@@ -170,6 +175,14 @@ export function SettingsScreen({ myUserId, onProfileUpdated }) {
     await refreshMfaFactor();
   };
 
+  const handleSaveNotifications = async () => {
+    setSavingNotifications(true);
+    setNotificationsSaved(false);
+    await updateNotificationPrefs(myUserId, notificationPrefs);
+    setSavingNotifications(false);
+    setNotificationsSaved(true);
+  };
+
   if (!profile) return <p style={{ color: "#8792A6" }}>Chargement...</p>;
 
   return (
@@ -179,6 +192,7 @@ export function SettingsScreen({ myUserId, onProfileUpdated }) {
         {[
           { key: "profile", label: "Mon profil" },
           { key: "security", label: "Sécurité" },
+          { key: "notifications", label: "Notifications" },
         ].map((tab) => (
           <button
             key={tab.key}
@@ -360,6 +374,45 @@ export function SettingsScreen({ myUserId, onProfileUpdated }) {
             </button>
           </>
         )}
+          </>
+        )}
+
+        {activeTab === "notifications" && (
+          <>
+        <SectionTitle>Notifications</SectionTitle>
+        <p style={{ fontSize: "12.5px", color: "#8792A6", margin: "0 0 16px" }}>
+          Détermine quels vrais événements comptent dans le vrai total affiché sur la cloche, en haut de la plateforme. La plateforme n'envoie pas encore de vrais emails ou de vraies notifications push.
+        </p>
+        <label style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "12px", cursor: "pointer" }}>
+          <input
+            type="checkbox"
+            checked={notificationPrefs.reports}
+            onChange={(e) => {
+              setNotificationPrefs((prev) => ({ ...prev, reports: e.target.checked }));
+              setNotificationsSaved(false);
+            }}
+          />
+          <span style={{ fontSize: "13px", color: "#F2F2E8" }}>Signalements en attente</span>
+        </label>
+        <label style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "16px", cursor: "pointer" }}>
+          <input
+            type="checkbox"
+            checked={notificationPrefs.claims}
+            onChange={(e) => {
+              setNotificationPrefs((prev) => ({ ...prev, claims: e.target.checked }));
+              setNotificationsSaved(false);
+            }}
+          />
+          <span style={{ fontSize: "13px", color: "#F2F2E8" }}>Revendications en attente</span>
+        </label>
+        <button
+          onClick={handleSaveNotifications}
+          disabled={savingNotifications}
+          style={{ background: "#39FF66", border: "none", borderRadius: "8px", padding: "9px 16px", fontWeight: 700, fontSize: "12.5px", color: "#0D1B2A", cursor: "pointer", opacity: savingNotifications ? 0.6 : 1 }}
+        >
+          {savingNotifications ? "Enregistrement..." : "Enregistrer"}
+        </button>
+        {notificationsSaved && <span style={{ marginLeft: "10px", fontSize: "12.5px", color: "#39FF66" }}>Enregistré ✓</span>}
           </>
         )}
       </div>

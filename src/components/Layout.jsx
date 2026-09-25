@@ -1,4 +1,5 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
+import { supabase } from "../supabaseClient.js";
 import { TopBar } from "./TopBar.jsx";
 import { usePendingReportsCount } from "../data/usePendingReportsCount.js";
 import { useOpenClaimsCount } from "../data/useOpenClaimsCount.js";
@@ -157,6 +158,19 @@ export function Layout({ current, onNavigate, onLogout, myRole, myCanModerate, m
   const isBusiness = myRole === "business";
   const pendingReportsCount = usePendingReportsCount();
   const openClaimsCount = useOpenClaimsCount();
+  const [notificationPrefs, setNotificationPrefs] = useState({ reports: true, claims: true });
+
+  useEffect(() => {
+    if (!myUserId) return;
+    supabase
+      .from("profiles")
+      .select("notification_prefs")
+      .eq("id", myUserId)
+      .single()
+      .then(({ data }) => {
+        if (data?.notification_prefs) setNotificationPrefs(data.notification_prefs);
+      });
+  }, [myUserId]);
   const unreadChatCounts = useUnreadChatCounts(myUserId, myRole);
 
   const [communicationOpen, setCommunicationOpen] = useState(true);
@@ -293,6 +307,7 @@ export function Layout({ current, onNavigate, onLogout, myRole, myCanModerate, m
           avatarUrl={myAvatarUrl}
           onSelectResult={onSelectResult}
           pendingReportsCount={pendingReportsCount}
+          notificationPrefs={notificationPrefs}
           openClaimsCount={openClaimsCount}
           onOpenReports={() => onNavigate("notifications")}
           unreadMessagesCount={unreadChatCounts.chatTeam + unreadChatCounts.chatUsers + unreadChatCounts.chatBusiness}

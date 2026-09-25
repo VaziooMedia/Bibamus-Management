@@ -2212,3 +2212,11 @@ export async function updateOwnPassword(newPassword) {
   if (error) return { error: error.message };
   return { ok: true };
 }
+
+// Vraies préférences de notification personnelles (Paramètres > Notifications) — quels vrais
+// événements comptent dans la vraie cloche de cet administrateur.
+export async function updateNotificationPrefs(userId, prefs) {
+  const { error } = await supabase.from("profiles").update({ notification_prefs: prefs }).eq("id", userId);
+  if (error) return { error: error.message };
+  return { ok: true };
+}

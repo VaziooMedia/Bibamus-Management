@@ -50,10 +50,10 @@ function useBusinessCount() {
   return count;
 }
 
-export function TopBar({ adminName, adminRole, avatarUrl, onSelectResult, pendingReportsCount, openClaimsCount, onOpenReports, unreadMessagesCount, onOpenMessages }) {
+export function TopBar({ adminName, adminRole, avatarUrl, onSelectResult, pendingReportsCount, openClaimsCount, notificationPrefs, onOpenReports, unreadMessagesCount, onOpenMessages }) {
   // La cloche regroupe toutes les vraies notifications admin confondues — signalements et
   // revendications en attente, plutôt qu'un badge séparé par type.
-  const bellCount = (pendingReportsCount || 0) + (openClaimsCount || 0);
+  const bellCount = (notificationPrefs?.reports !== false ? pendingReportsCount || 0 : 0) + (notificationPrefs?.claims !== false ? openClaimsCount || 0 : 0);
   const userCount = useUserCount();
   const businessCount = useBusinessCount();
   const [query, setQuery] = useState("");
