@@ -612,7 +612,7 @@ export function DrinkDetailPanel({ drink, onClose, onSaved }) {
                   }}
                 >
                   {tab.key === "ai" ? (
-                    <img src={activeTab === "ai" ? aiIconGreen : aiIconGrey} alt="IA" style={{ width: "18px", height: "18px", verticalAlign: "-2px" }} />
+                    <img src={activeTab === "ai" ? aiIconGreen : aiIconGrey} alt="IA" style={{ width: "18px", height: "18px", verticalAlign: "-6px" }} />
                   ) : (
                     tab.label
                   )}
