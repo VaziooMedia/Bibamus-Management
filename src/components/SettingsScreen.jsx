@@ -32,6 +32,21 @@ export function SettingsScreen({ myUserId, onProfileUpdated }) {
   const [passwordError, setPasswordError] = useState(null);
   const [passwordSaved, setPasswordSaved] = useState(false);
 
+  const [mfaFactor, setMfaFactor] = useState(undefined); // undefined = pas encore chargé, null = aucun, objet = actif
+  const [enrolling, setEnrolling] = useState(null); // { factorId, qrCode, secret } | null
+  const [verifyCode, setVerifyCode] = useState("");
+  const [mfaSaving, setMfaSaving] = useState(false);
+  const [mfaError, setMfaError] = useState(null);
+
+  const refreshMfaFactor = async () => {
+    const { data } = await supabase.auth.mfa.listFactors();
+    setMfaFactor(data?.totp?.find((f) => f.status === "verified") || null);
+  };
+
+  useEffect(() => {
+    refreshMfaFactor();
+  }, []);
+
   useEffect(() => {
     if (!myUserId) return;
     supabase
@@ -103,6 +118,55 @@ export function SettingsScreen({ myUserId, onProfileUpdated }) {
     setNewPassword("");
     setConfirmPassword("");
     setPasswordSaved(true);
+  };
+
+  const handleStartEnroll = async () => {
+    setMfaError(null);
+    const { data, error } = await supabase.auth.mfa.enroll({ factorType: "totp" });
+    if (error) {
+      setMfaError(error.message);
+      return;
+    }
+    setEnrolling({ factorId: data.id, qrCode: data.totp.qr_code, secret: data.totp.secret });
+  };
+
+  const handleVerifyEnroll = async () => {
+    setMfaError(null);
+    setMfaSaving(true);
+    const { data: challenge, error: challengeError } = await supabase.auth.mfa.challenge({ factorId: enrolling.factorId });
+    if (challengeError) {
+      setMfaSaving(false);
+      setMfaError(challengeError.message);
+      return;
+    }
+    const { error: verifyError } = await supabase.auth.mfa.verify({ factorId: enrolling.factorId, challengeId: challenge.id, code: verifyCode.trim() });
+    setMfaSaving(false);
+    if (verifyError) {
+      setMfaError("Code incorrect. Réessayez.");
+      return;
+    }
+    setEnrolling(null);
+    setVerifyCode("");
+    await refreshMfaFactor();
+  };
+
+  const handleCancelEnroll = async () => {
+    if (enrolling) await supabase.auth.mfa.unenroll({ factorId: enrolling.factorId });
+    setEnrolling(null);
+    setVerifyCode("");
+    setMfaError(null);
+  };
+
+  const handleUnenroll = async () => {
+    setMfaSaving(true);
+    setMfaError(null);
+    const { error } = await supabase.auth.mfa.unenroll({ factorId: mfaFactor.id });
+    setMfaSaving(false);
+    if (error) {
+      setMfaError(error.message);
+      return;
+    }
+    await refreshMfaFactor();
   };
 
   if (!profile) return <p style={{ color: "#8792A6" }}>Chargement...</p>;
@@ -207,6 +271,66 @@ export function SettingsScreen({ myUserId, onProfileUpdated }) {
           {savingPassword ? "Enregistrement..." : "Changer le mot de passe"}
         </button>
         {passwordSaved && <span style={{ marginLeft: "10px", fontSize: "12.5px", color: "#39FF66" }}>Mot de passe changé ✓</span>}
+
+        <div style={separatorStyle} />
+
+        <SectionTitle>Sécurité</SectionTitle>
+        {mfaFactor === undefined ? (
+          <p style={{ color: "#8792A6", fontSize: "12.5px" }}>Chargement...</p>
+        ) : mfaFactor ? (
+          <>
+            <p style={{ fontSize: "13px", color: "#F2F2E8", margin: "0 0 12px" }}>
+              <span style={{ color: "#39FF66", fontWeight: 700 }}>✓ Activée</span> — une vraie application d'authentification (Google Authenticator, Authy...) est demandée à chaque connexion.
+            </p>
+            {mfaError && <p style={{ color: "#FF3B4E", fontSize: "12.5px", marginBottom: "10px" }}>{mfaError}</p>}
+            <button
+              onClick={handleUnenroll}
+              disabled={mfaSaving}
+              style={{ background: "none", border: "2px solid #FF3B4E", borderRadius: "8px", padding: "9px 16px", fontWeight: 700, fontSize: "12.5px", color: "#FF3B4E", cursor: "pointer", opacity: mfaSaving ? 0.6 : 1 }}
+            >
+              {mfaSaving ? "Désactivation..." : "Désactiver"}
+            </button>
+          </>
+        ) : enrolling ? (
+          <>
+            <p style={{ fontSize: "12.5px", color: "#8792A6", margin: "0 0 12px" }}>
+              Scannez ce code avec une vraie application d'authentification (Google Authenticator, Authy...), puis entrez le vrai code à 6 chiffres qu'elle affiche.
+            </p>
+            <img src={enrolling.qrCode} alt="QR code" style={{ width: "160px", height: "160px", background: "#fff", borderRadius: "8px", marginBottom: "10px" }} />
+            <p style={{ fontSize: "11px", color: "#8792A6", marginBottom: "12px", wordBreak: "break-all" }}>Ou entrez ce code manuellement : {enrolling.secret}</p>
+            <label style={labelStyle}>Code à 6 chiffres</label>
+            <input
+              value={verifyCode}
+              onChange={(e) => setVerifyCode(e.target.value)}
+              maxLength={6}
+              style={{ ...fieldStyle, marginBottom: "10px", maxWidth: "140px" }}
+            />
+            {mfaError && <p style={{ color: "#FF3B4E", fontSize: "12.5px", marginBottom: "10px" }}>{mfaError}</p>}
+            <div style={{ display: "flex", gap: "8px" }}>
+              <button
+                onClick={handleVerifyEnroll}
+                disabled={mfaSaving || verifyCode.trim().length !== 6}
+                style={{ background: "#39FF66", border: "none", borderRadius: "8px", padding: "9px 16px", fontWeight: 700, fontSize: "12.5px", color: "#0D1B2A", cursor: "pointer", opacity: mfaSaving || verifyCode.trim().length !== 6 ? 0.6 : 1 }}
+              >
+                {mfaSaving ? "Vérification..." : "Valider"}
+              </button>
+              <button onClick={handleCancelEnroll} style={{ background: "none", border: "2px solid #28405C", borderRadius: "8px", padding: "9px 16px", color: "#F2F2E8", cursor: "pointer" }}>
+                Annuler
+              </button>
+            </div>
+          </>
+        ) : (
+          <>
+            <p style={{ fontSize: "13px", color: "#8792A6", margin: "0 0 12px" }}>Non activée — ajoutez une vraie étape de vérification en plus du mot de passe à chaque connexion.</p>
+            {mfaError && <p style={{ color: "#FF3B4E", fontSize: "12.5px", marginBottom: "10px" }}>{mfaError}</p>}
+            <button
+              onClick={handleStartEnroll}
+              style={{ background: "#39FF66", border: "none", borderRadius: "8px", padding: "9px 16px", fontWeight: 700, fontSize: "12.5px", color: "#0D1B2A", cursor: "pointer" }}
+            >
+              Activer la double authentification
+            </button>
+          </>
+        )}
       </div>
     </div>
   );
