@@ -40,6 +40,48 @@ const ENTITY_SELECT_FIELDS = {
   producer: "id, name, country, profile_photo_url, cover_photo_url, status, certification_level",
 };
 
+// Détails des publications / commentaires signalés (auteur, état, objet concerné) — via une
+// fonction serveur réservée aux modérateurs : la lecture directe des tables du Pulse ne leur est
+// pas garantie, surtout pour un contenu déjà masqué.
+async function loadPulseReportDetails(reports) {
+  const eventIds = reports.filter((r) => r.entity_type === "pulse_event").map((r) => r.entity_id);
+  const commentIds = reports.filter((r) => r.entity_type === "pulse_comment").map((r) => r.entity_id);
+  const byKey = {};
+  if (eventIds.length === 0 && commentIds.length === 0) return byKey;
+
+  const { data, error } = await supabase.rpc("get_pulse_moderation_details", { p_event_ids: eventIds, p_comment_ids: commentIds });
+  if (error) {
+    console.error("loadPulseReportDetails:", error);
+    return byKey;
+  }
+  const rows = data || [];
+
+  // Noms des objets concernés par les publications (produit, lieu, producteur, marque).
+  const idsByTable = {};
+  const addObject = (type, id) => {
+    const table = ENTITY_TABLE_BY_TYPE[type];
+    if (!table || !id) return;
+    (idsByTable[table] = idsByTable[table] || new Set()).add(id);
+  };
+  rows.forEach((row) => {
+    if (row.kind !== "event") return;
+    addObject(row.object_type, row.object_id);
+    addObject("venue", row.venue_id);
+  });
+  const nameById = {};
+  await Promise.all(
+    Object.entries(idsByTable).map(async ([table, ids]) => {
+      const { data: named } = await supabase.from(table).select("id, name").in("id", Array.from(ids));
+      (named || []).forEach((n) => (nameById[n.id] = n.name));
+    })
+  );
+
+  rows.forEach((row) => {
+    byKey[row.kind + ":" + row.id] = { ...row, objectName: nameById[row.object_id] || null, venueName: nameById[row.venue_id] || null };
+  });
+  return byKey;
+}
+
 export async function loadReports(status = "pending") {
   const { data: reports, error } = await supabase.from("entity_reports").select("*").eq("status", status).order("created_at", { ascending: false });
   if (error) {
@@ -70,12 +112,23 @@ export async function loadReports(status = "pending") {
     })
   );
 
-  return reports.map((r) => ({
-    ...r,
-    entityName: detailsById[r.entity_id]?.name || "(fiche introuvable)",
-    entityDetails: detailsById[r.entity_id] || null,
-    duplicateDetails: r.duplicate_of_id ? detailsById[r.duplicate_of_id] || null : null,
-  }));
+  const pulseDetails = await loadPulseReportDetails(reports);
+
+  return reports.map((r) => {
+    if (r.entity_type === "pulse_event" || r.entity_type === "pulse_comment") {
+      const isEvent = r.entity_type === "pulse_event";
+      const pd = pulseDetails[(isEvent ? "event" : "comment") + ":" + r.entity_id] || null;
+      const label = isEvent ? "Publication" : "Commentaire";
+      const author = pd ? [pd.author_name, pd.author_last_name].filter(Boolean).join(" ") || "Quelqu'un" : null;
+      return { ...r, entityName: pd ? label + " de " + author : label + " (introuvable)", entityDetails: null, duplicateDetails: null, pulseDetails: pd };
+    }
+    return {
+      ...r,
+      entityName: detailsById[r.entity_id]?.name || "(fiche introuvable)",
+      entityDetails: detailsById[r.entity_id] || null,
+      duplicateDetails: r.duplicate_of_id ? detailsById[r.duplicate_of_id] || null : null,
+    };
+  });
 }
 
 // Vraie source de vérité pour "Modifications suggérées" — juste l'ensemble des identifiants de
@@ -160,6 +213,46 @@ export async function dismissReport(id, resolverId) {
   const { error } = await supabase.from("entity_reports").update({ status: "dismissed", resolved_by: resolverId || null, resolved_at: new Date().toISOString() }).eq("id", id);
   if (error) return { error: error.message };
   return { ok: true };
+}
+
+// --- Modération des publications et commentaires du Pulse ---
+// Toujours via des fonctions serveur qui vérifient le droit de modérer. Ne supprime jamais rien :
+// masquer est réversible. Un contenu masqué par son auteur n'est jamais rétabli par la modération.
+async function moderatePulseContent(entityType, entityId, action) {
+  const { data, error } = await supabase.rpc("moderate_pulse_content", { p_entity_type: entityType, p_entity_id: entityId, p_action: action });
+  if (error) return { error: error.message };
+  if (data === "ok") return { ok: true };
+  if (data === "hidden_by_author") return { error: "Contenu masqué par son auteur : la modération ne le rétablit pas.", code: data };
+  if (data === "not_allowed") return { error: "Vous n'avez pas le droit de modérer.", code: data };
+  return { error: "Action de modération invalide.", code: data };
+}
+
+// Tous les signalements encore en attente sur un même contenu sont traités ensemble.
+async function resolvePendingReportsFor(entityType, entityId, status) {
+  const { error } = await supabase
+    .from("entity_reports")
+    .update({ status, resolved_at: new Date().toISOString() })
+    .eq("entity_type", entityType)
+    .eq("entity_id", entityId)
+    .eq("status", "pending");
+  if (error) return { error: error.message };
+  return { ok: true };
+}
+
+export async function hidePulseContent(entityType, entityId) {
+  const result = await moderatePulseContent(entityType, entityId, "hide");
+  if (result.error) return result;
+  return resolvePendingReportsFor(entityType, entityId, "resolved");
+}
+
+export async function keepPulseContent(entityType, entityId) {
+  const result = await moderatePulseContent(entityType, entityId, "restore");
+  if (result.error && result.code !== "hidden_by_author") return result;
+  const resolved = await resolvePendingReportsFor(entityType, entityId, "dismissed");
+  if (resolved.error) return resolved;
+  return result.code === "hidden_by_author"
+    ? { ok: true, note: "Signalements ignorés. Ce contenu reste masqué : c'est son auteur qui l'avait masqué." }
+    : { ok: true };
 }
 
 // supabase-js masque le vrai message renvoyé par une Edge Function derrière un texte

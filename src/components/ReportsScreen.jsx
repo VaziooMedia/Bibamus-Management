@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { loadReports, resolveReport, dismissReport, archiveReportedEntity, confirmDuplicate, loadEntityDetail } from "../data/sharedDirectories.js";
+import { loadReports, resolveReport, dismissReport, archiveReportedEntity, confirmDuplicate, loadEntityDetail, hidePulseContent, keepPulseContent } from "../data/sharedDirectories.js";
 import { PageTitle } from "./PageTitle.jsx";
 import { STATUSES } from "./StatusSelector.jsx";
 import { DRINK_TYPES } from "./DrinkDetailPanel.jsx";
@@ -17,10 +17,13 @@ const REASON_LABELS = {
   wrong_info: "Information(s) incorrecte(s)",
   duplicate: "Fiche en double",
   inappropriate: "Contenu inapproprié",
+  spam: "Spam ou publicité",
+  harassment: "Harcèlement ou propos blessants",
+  personal_info: "Photo ou information personnelle sans accord",
   other: "Autre raison",
 };
 
-const ENTITY_TYPE_LABELS = { venue: "Établissement", drink: "Produit", brand: "Marque", producer: "Producteur" };
+const ENTITY_TYPE_LABELS = { venue: "Établissement", drink: "Produit", brand: "Marque", producer: "Producteur", pulse_event: "Publication", pulse_comment: "Commentaire" };
 
 // Aperçu compact d'une fiche (photo + nom + détails spécifiques au type) — juste pour situer le
 // signalement d'un coup d'œil. L'action se fait via "Ouvrir la fiche complète" (le vrai
@@ -96,6 +99,45 @@ function EntityPreview({ entityType, details, onOpen, keeperControl }) {
   );
 }
 
+const PULSE_ACTION_LABELS = { drink_checked: "Check", venue_visit: "Visite", product_discovered: "Découverte" };
+const PULSE_VISIBILITY_LABELS = { public: "Publique", relations: "Bibax uniquement", private: "Privée" };
+
+// Aperçu d'une publication ou d'un commentaire signalé : auteur, date, contenu, et surtout son
+// état actuel (visible / masqué, et par qui) — c'est ce qui décide des boutons proposés.
+function PulsePreview({ report }) {
+  const d = report.pulseDetails;
+  if (!d) {
+    return <p style={{ fontSize: "12.5px", color: "#8792A6", fontStyle: "italic", marginBottom: "12px" }}>Contenu introuvable (peut-être déjà supprimé).</p>;
+  }
+  const author = [d.author_name, d.author_last_name].filter(Boolean).join(" ") || "Quelqu'un";
+  const state = !d.is_hidden ? "Visible" : d.hidden_by === "moderation" ? "Masqué par la modération" : d.hidden_by === "author" ? "Masqué par son auteur" : "Masqué";
+  return (
+    <div style={{ display: "flex", flexDirection: "column", gap: "8px", padding: "10px", background: "#0D1B2A", borderRadius: "8px", marginBottom: "12px" }}>
+      <div style={{ display: "flex", gap: "10px", alignItems: "center" }}>
+        <div style={{ width: "32px", height: "32px", borderRadius: "50%", background: "#28405C", flexShrink: 0, overflow: "hidden", display: "flex", alignItems: "center", justifyContent: "center" }}>
+          {d.author_avatar_url ? <img src={d.author_avatar_url} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} /> : <span style={{ color: "#8792A6", fontSize: "14px" }}>—</span>}
+        </div>
+        <div style={{ minWidth: 0, flex: 1 }}>
+          <p style={{ fontWeight: 700, color: "#F2F2E8", margin: 0, fontSize: "13px" }}>{author}</p>
+          <p style={{ fontSize: "11px", color: "#8792A6", margin: "4px 0 0" }}>{d.created_at ? d.created_at.slice(0, 10) : ""}</p>
+        </div>
+      </div>
+      {report.entity_type === "pulse_event" ? (
+        <>
+          <p style={{ fontSize: "12.5px", color: "#F2F2E8", margin: 0 }}>
+            {PULSE_ACTION_LABELS[d.event_type] || "Activité"} @ <strong style={{ color: "#39FF66" }}>{d.objectName || "(fiche introuvable)"}</strong>
+            {d.venueName && d.object_type !== "venue" ? " — " + d.venueName : ""}
+          </p>
+          <p style={{ fontSize: "11px", color: "#8792A6", margin: 0 }}>Visibilité : {PULSE_VISIBILITY_LABELS[d.visibility] || d.visibility}</p>
+        </>
+      ) : (
+        <p style={{ fontSize: "12px", color: "#F2F2E8", margin: 0, fontStyle: "italic" }}>"{d.body}"</p>
+      )}
+      <p style={{ fontSize: "11px", color: d.is_hidden ? "#FF3B4E" : "#8792A6", margin: 0, fontWeight: 700 }}>{state}</p>
+    </div>
+  );
+}
+
 const TABS = [
   { key: "pending", label: "À traiter" },
   { key: "archived", label: "Archivés" },
@@ -164,6 +206,29 @@ export function ReportsScreen() {
     refresh();
   };
 
+  const handlePulseHide = async (report) => {
+    setBusyId(report.id);
+    const result = await hidePulseContent(report.entity_type, report.entity_id);
+    setBusyId(null);
+    if (result.error) {
+      alert("Erreur : " + result.error);
+      return;
+    }
+    refresh();
+  };
+
+  const handlePulseKeep = async (report) => {
+    setBusyId(report.id);
+    const result = await keepPulseContent(report.entity_type, report.entity_id);
+    setBusyId(null);
+    if (result.error) {
+      alert("Erreur : " + result.error);
+      return;
+    }
+    if (result.note) alert(result.note);
+    refresh();
+  };
+
   const handleOpenEntity = async (entityType, entityId) => {
     const data = await loadEntityDetail(entityType, entityId);
     if (!data) {
@@ -211,6 +276,7 @@ export function ReportsScreen() {
         <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-start", gap: "12px" }}>
           {reports.map((r) => {
             const expanded = expandedId === r.id;
+            const isPulse = r.entity_type === "pulse_event" || r.entity_type === "pulse_comment";
             return (
               <div key={r.id} style={{ background: "#16273D", borderRadius: "8px", padding: "10px 12px", width: "320px" }}>
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: "8px" }}>
@@ -231,10 +297,12 @@ export function ReportsScreen() {
                   onClick={() => setExpandedId(expanded ? null : r.id)}
                   style={{ background: "none", border: "none", color: "#39FF66", fontSize: "11.5px", fontWeight: 700, cursor: "pointer", padding: 0, marginTop: "18px", marginBottom: "14px" }}
                 >
-                  {expanded ? "▼ Masquer la fiche" : "▶ Voir la fiche"}
+                  {expanded ? (isPulse ? "▼ Réduire" : "▼ Masquer la fiche") : isPulse ? "▶ Voir le contenu" : "▶ Voir la fiche"}
                 </button>
 
-                {expanded && (
+                {expanded && isPulse && <PulsePreview report={r} />}
+
+                {expanded && !isPulse && (
                   <div style={{ display: "flex", flexDirection: "column", gap: "8px", marginBottom: "12px" }}>
                     <EntityPreview
                       entityType={r.entity_type}
@@ -264,7 +332,24 @@ export function ReportsScreen() {
                   </div>
                 )}
 
-                {tab === "pending" ? (
+                {tab === "pending" && isPulse ? (
+                  <div style={{ display: "flex", gap: "6px" }}>
+                    <button
+                      onClick={() => handlePulseHide(r)}
+                      disabled={busyId === r.id}
+                      style={{ flex: 1, background: "#800020", border: "none", borderRadius: "6px", padding: "6px", fontWeight: 700, color: "#fff", cursor: "pointer", opacity: busyId === r.id ? 0.6 : 1, fontSize: "11px" }}
+                    >
+                      {r.pulseDetails?.is_hidden ? "Confirmer le masquage" : "Masquer"}
+                    </button>
+                    <button
+                      onClick={() => handlePulseKeep(r)}
+                      disabled={busyId === r.id}
+                      style={{ flex: 1, background: "none", border: "2px solid #28405C", borderRadius: "6px", padding: "6px", fontWeight: 700, color: "#F2F2E8", cursor: "pointer", opacity: busyId === r.id ? 0.6 : 1, fontSize: "11px" }}
+                    >
+                      {r.pulseDetails?.is_hidden ? "Rétablir" : "Ignorer"}
+                    </button>
+                  </div>
+                ) : tab === "pending" ? (
                   <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
                     {r.reason === "duplicate" && r.duplicate_of_id && !keeperChoice[r.id] && (
                       <p style={{ fontSize: "11.5px", color: "#8792A6", margin: 0 }}>▶ Dépliez la fiche ci-dessus et choisissez laquelle conserver avant de confirmer le doublon.</p>
