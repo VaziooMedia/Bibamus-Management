@@ -24,13 +24,16 @@ function VintageRow({ vintage, onSave, onDelete }) {
     });
     setDirty(false);
   };
-  // Quitter un champ (y compris pour cliquer sur "Enregistrer" tout en bas, qui ferme toute la
-  // fiche) sauvegarde déjà cette ligne — le petit ✓ reste utilisable, mais n'est plus le SEUL
-  // moyen de ne pas perdre ce qui vient d'être tapé ici.
-  const onBlur = () => dirty && save();
+  // Ne sauvegarde QUE quand le focus quitte TOUTE LA LIGNE (ex. pour cliquer sur "Enregistrer"
+  // tout en bas, qui ferme la fiche) — jamais en passant d'un champ à un autre DE CETTE MÊME
+  // ligne, pour ne pas trier la liste avant d'avoir fini de la remplir. Le petit ✓ reste
+  // utilisable pour sauvegarder à volonté, mais n'est plus le SEUL moyen de ne rien perdre.
+  const onRowBlur = (e) => {
+    if (dirty && !e.currentTarget.contains(e.relatedTarget)) save();
+  };
 
   return (
-    <div style={{ padding: "8px", background: "#16273D", borderRadius: "8px", marginBottom: "6px" }}>
+    <div onBlur={onRowBlur} style={{ padding: "8px", background: "#16273D", borderRadius: "8px", marginBottom: "6px" }}>
       <div style={{ display: "flex", gap: "6px", alignItems: "center", marginBottom: "6px" }}>
         <input
           type="number"
@@ -42,7 +45,6 @@ function VintageRow({ vintage, onSave, onDelete }) {
             setYear(e.target.value);
             setDirty(true);
           }}
-          onBlur={onBlur}
           placeholder={nonMillesime ? "—" : "Année"}
           style={{ ...fieldStyle, width: "70px", flexShrink: 0, opacity: nonMillesime ? 0.5 : 1 }}
         />
@@ -54,7 +56,6 @@ function VintageRow({ vintage, onSave, onDelete }) {
               setNonMillesime(e.target.checked);
               setDirty(true);
             }}
-            onBlur={onBlur}
           />
           Non millésimé
         </label>
@@ -67,7 +68,6 @@ function VintageRow({ vintage, onSave, onDelete }) {
             setAbv(e.target.value);
             setDirty(true);
           }}
-          onBlur={onBlur}
           placeholder="Taux d'alcool (%)"
           style={{ ...fieldStyle, width: "100px", flexShrink: 0 }}
         />
@@ -89,7 +89,6 @@ function VintageRow({ vintage, onSave, onDelete }) {
             setContainer(e.target.value);
             setDirty(true);
           }}
-          onBlur={onBlur}
           style={{ ...fieldStyle, flex: 1 }}
         >
           {CONTAINER_TYPES.map((c) => (
@@ -109,7 +108,6 @@ function VintageRow({ vintage, onSave, onDelete }) {
             setVolumeCl(e.target.value);
             setDirty(true);
           }}
-          onBlur={onBlur}
           title="Volume (cl)"
           style={{ ...fieldStyle, width: "56px", padding: "8px 4px", textAlign: "center", flexShrink: 0 }}
         />
@@ -119,7 +117,6 @@ function VintageRow({ vintage, onSave, onDelete }) {
             setBarcode(e.target.value);
             setDirty(true);
           }}
-          onBlur={onBlur}
           placeholder="Code-barres"
           style={{ ...fieldStyle, flex: 1 }}
         />

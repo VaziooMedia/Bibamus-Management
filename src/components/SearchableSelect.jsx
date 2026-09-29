@@ -1,4 +1,5 @@
 import React, { useState, useRef, useEffect } from "react";
+import { normalizeSearchText } from "../utils.js";
 
 // Menu déroulant avec barre de recherche — plus simple à utiliser qu'une liste déroulante
 // classique dès que le répertoire (marques, producteurs) devient long.
@@ -16,7 +17,7 @@ export function SearchableSelect({ options, value, onChange, placeholder = "Rech
   }, []);
 
   const selectedLabel = options.find((o) => o.id === value)?.name || "";
-  const filtered = query.trim() ? options.filter((o) => o.name.toLowerCase().includes(query.trim().toLowerCase())) : options;
+  const filtered = query.trim() ? options.filter((o) => normalizeSearchText(o.name).includes(normalizeSearchText(query))) : options;
 
   return (
     <div ref={ref} style={{ position: "relative" }}>
@@ -122,7 +123,7 @@ export function SearchableMultiSelect({ options, values, onChange, placeholder =
   }, []);
 
   const selected = options.filter((o) => values.includes(o.id));
-  const filtered = query.trim() ? options.filter((o) => o.name.toLowerCase().includes(query.trim().toLowerCase())) : options;
+  const filtered = query.trim() ? options.filter((o) => normalizeSearchText(o.name).includes(normalizeSearchText(query))) : options;
 
   const toggle = (id) => onChange(values.includes(id) ? values.filter((v) => v !== id) : [...values, id]);
 

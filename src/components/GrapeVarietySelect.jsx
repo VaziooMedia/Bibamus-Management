@@ -94,7 +94,7 @@ export function GrapeVarietySelect({ selected, onChange, options, onCreateOption
                     fontSize: "12px",
                     fontWeight: 700,
                     background: "transparent",
-                    color: "#F2F2E8",
+                    color: "#0D1B2A",
                   }}
                 />
               )}
