@@ -451,9 +451,13 @@ export function DrinkDetailPanel({ drink, onClose, onSaved }) {
     setSaving(true);
     if (isNew) {
       const id = `drink-${Date.now()}-${Math.floor(Math.random() * 10000)}`;
-      const created = await createDrink({ id, ...buildPatch() });
+      const result = await createDrink({ id, ...buildPatch() });
       setSaving(false);
-      onSaved(created);
+      if (result.error) {
+        alert("La création a échoué : " + result.error);
+        return;
+      }
+      onSaved(result.created);
     } else if (status === "duplicate" && duplicateOfId) {
       const result = await mergeEntities("drink", drink.id, duplicateOfId);
       setSaving(false);

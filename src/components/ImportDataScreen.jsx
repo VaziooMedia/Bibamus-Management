@@ -51,8 +51,8 @@ export function ImportDataScreen({ onBack }) {
       setCounts((c) => ({ ...c, venues: vCount }));
 
       for (const d of drinks) {
-        const created = await createDrink(d);
-        if (created) dCount++;
+        const result = await createDrink(d);
+        if (result.created) dCount++;
         else errs.push(`Produit "${d.name}" : échec`);
       }
       appendLog(`Produits importés : ${dCount} / ${drinks.length}`);

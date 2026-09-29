@@ -1506,9 +1506,9 @@ export async function createDrink(drink) {
   const { data, error } = await supabase.from("drinks_directory").insert(drinkToRow(drink)).select().single();
   if (error) {
     console.error("createDrink:", error);
-    return null;
+    return { error: error.message };
   }
-  return rowToDrink(data);
+  return { created: rowToDrink(data) };
 }
 
 export async function updateDrink(id, patch) {
