@@ -2,7 +2,7 @@ import React, { useState, useEffect, useCallback } from "react";
 import { loadDrinksPage, countDrinks, countDrinksByType, loadPendingReportEntityIds, loadDrinkById } from "../data/sharedDirectories.js";
 import { ServerDataTable } from "./ServerDataTable.jsx";
 import { StatusBadge, VisibilityDot } from "./DataTable.jsx";
-import { DrinkDetailPanel, DRINK_TYPES, BEER_CIDER_SUBTYPES } from "./DrinkDetailPanel.jsx";
+import { DrinkDetailPanel, DRINK_TYPES, BEER_CIDER_SUBTYPES, WINE_SUBTYPES } from "./DrinkDetailPanel.jsx";
 import { DetailedStatsCounterBar, applyStatFilter, COUNTRY_BLOCKS, CONTINENT_BLOCKS, COUNTRY_TO_CONTINENT } from "./DetailedStatsCounterBar.jsx";
 import { STATUSES } from "./StatusSelector.jsx";
 import { ProductCategoryBar } from "./ProductCategoryBar.jsx";
@@ -19,7 +19,9 @@ const labelFromList = (list) => {
   return (code) => map[code] || code || "—";
 };
 const typeLabel = labelFromList(DRINK_TYPES);
-const subtypeLabel = labelFromList(BEER_CIDER_SUBTYPES);
+// "Bière/Cidre" ET "Vin/Vin effervescent" partagent la même colonne du tableau — le repli sur
+// BEER_CIDER_SUBTYPES seul affichait le code brut ("vin", "vin_effervescent") pour un vin.
+const subtypeLabel = labelFromList([...BEER_CIDER_SUBTYPES, ...WINE_SUBTYPES]);
 const countryLabel = labelFromList(COUNTRIES);
 const productStatusLabel = labelFromList(BEER_CIDER_COMMERCIAL_STATUSES);
 
