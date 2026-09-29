@@ -60,6 +60,21 @@ export const WINE_SUBTYPES = [
   { code: "vin", fr: "Vin" },
   { code: "vin_effervescent", fr: "Vin effervescent" },
 ];
+export const SPIRIT_SUBTYPES = [
+  { code: "whisky", fr: "Whisky / Whiskey" },
+  { code: "rhum", fr: "Rhum" },
+  { code: "gin_genievre", fr: "Gin & Genièvre" },
+  { code: "vodka", fr: "Vodka" },
+  { code: "agave", fr: "Agave" },
+  { code: "brandy_eaux_de_vie_de_vin", fr: "Brandy & Eaux-de-vie de vin" },
+  { code: "eaux_de_vie_de_fruits", fr: "Eaux-de-vie de fruits" },
+  { code: "eaux_de_vie_de_marc", fr: "Eaux-de-vie de marc" },
+  { code: "liqueurs_cremes", fr: "Liqueurs & Crèmes" },
+  { code: "anises", fr: "Anisés" },
+  { code: "amers_bitters_amaros", fr: "Amers / Bitters / Amaros" },
+  { code: "spiritueux_de_canne", fr: "Spiritueux de canne spécifiques" },
+  { code: "autres_spiritueux", fr: "Autres spiritueux" },
+];
 export const CONTAINER_TYPES = [
   { code: "bouteille_verre", fr: "Bouteille verre" },
   { code: "bouteille_pet", fr: "Bouteille PET" },
@@ -90,7 +105,9 @@ export function DrinkDetailPanel({ drink, onClose, onSaved }) {
     name: drink?.name || "",
     aliasesText: (drink?.aliases || []).join(", "),
     type: drink?.type || DRINK_TYPES[0].code,
-    beverageSubtype: drink?.beverageSubtype || (drink?.type === "vins_bulles" ? WINE_SUBTYPES[0].code : BEER_CIDER_SUBTYPES[0].code),
+    beverageSubtype:
+      drink?.beverageSubtype ||
+      (drink?.type === "vins_bulles" ? WINE_SUBTYPES[0].code : drink?.type === "spiritueux" ? SPIRIT_SUBTYPES[0].code : BEER_CIDER_SUBTYPES[0].code),
     defaultVolumeCl: drink?.defaultVolumeCl ?? "",
     defaultServingMode: drink?.defaultServingMode || "",
     defaultPriceEuro: drink?.defaultPriceEuro ?? "",
@@ -284,11 +301,12 @@ export function DrinkDetailPanel({ drink, onClose, onSaved }) {
 
   const isBeerOrCider = form.type === "bieres_cidres";
   const isWine = form.type === "vins_bulles";
+  const isSpirit = form.type === "spiritueux";
   const isBeer = form.beverageSubtype === "biere";
   const visibleGrapeVarietyOptions = grapeVarietyOptions.filter((v) => !v.sparklingOnly || form.beverageSubtype === "vin_effervescent");
 
   useEffect(() => {
-    const validSubtypes = isBeerOrCider ? BEER_CIDER_SUBTYPES : isWine ? WINE_SUBTYPES : null;
+    const validSubtypes = isBeerOrCider ? BEER_CIDER_SUBTYPES : isWine ? WINE_SUBTYPES : isSpirit ? SPIRIT_SUBTYPES : null;
     if (validSubtypes && !validSubtypes.some((s) => s.code === form.beverageSubtype)) {
       set("beverageSubtype", validSubtypes[0].code);
     }
@@ -327,7 +345,7 @@ export function DrinkDetailPanel({ drink, onClose, onSaved }) {
     // isBeerOrCider ne couvrait QUE les bières/cidres — les vins tombaient dans le "base" minimal
     // ci-dessus, sans jamais envoyer couleur, pays, appellation, cépage, ni même la photo. C'est
     // la cause du vrai défaut : rien de tout cela n'était jamais enregistré pour un vin.
-    if (!isBeerOrCider && !isWine) return base;
+    if (!isBeerOrCider && !isWine && !isSpirit) return base;
     return {
       ...base,
       beverageSubtype: form.beverageSubtype,
@@ -574,11 +592,11 @@ export function DrinkDetailPanel({ drink, onClose, onSaved }) {
           ))}
         </select>
 
-        {(isBeerOrCider || isWine) && (
+        {(isBeerOrCider || isWine || isSpirit) && (
           <>
             <label style={labelStyle}>Sous-catégorie</label>
             <select value={form.beverageSubtype} onChange={(e) => set("beverageSubtype", e.target.value)} style={{ ...fieldStyle, width: "220px", marginBottom: "14px" }}>
-              {(isBeerOrCider ? BEER_CIDER_SUBTYPES : WINE_SUBTYPES).map((t) => (
+              {(isBeerOrCider ? BEER_CIDER_SUBTYPES : isWine ? WINE_SUBTYPES : SPIRIT_SUBTYPES).map((t) => (
                 <option key={t.code} value={t.code}>
                   {t.fr}
                 </option>
