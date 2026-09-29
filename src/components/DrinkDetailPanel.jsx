@@ -13,6 +13,7 @@ import { CertificationLevelSelector } from "./CertificationLevelSelector.jsx";
 import { StyleTagAccordion } from "./StyleTagAccordion.jsx";
 import { TasteScale } from "./TasteScale.jsx";
 import { VariantManager } from "./VariantManager.jsx";
+import { VintageManager } from "./VintageManager.jsx";
 import { FreeTagInput } from "./FreeTagInput.jsx";
 import { CollapsibleSection } from "./CollapsibleSection.jsx";
 import { COUNTRIES } from "../constants.js";
@@ -969,6 +970,13 @@ export function DrinkDetailPanel({ drink, onClose, onSaved }) {
                         style={{ ...fieldStyle, width: "120px" }}
                       />
                     )}
+
+                    <div style={separatorStyle} />
+                    <SectionTitle>Millésimes & taux d'alcool</SectionTitle>
+                    <p style={{ fontSize: "11.5px", color: "#8792A6", marginTop: "-6px", marginBottom: "10px" }}>
+                      Pour un même vin, le taux d'alcool peut varier d'une année à l'autre — une ligne par millésime connu, avec son propre taux (facultatif tant qu'il n'est pas connu).
+                    </p>
+                    <VintageManager drinkId={drink?.id || null} />
                   </>
                 )}
                 </div>
