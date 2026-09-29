@@ -1393,6 +1393,16 @@ function applyStatusFilter(query, status) {
   return query.eq("status", status);
 }
 
+// Un produit garde son producteur direct (colonne producer_ids, indépendante de toute marque) —
+// le seul cas qui manquait : un « produit unique » sans marque affichait « aucun producteur »,
+// alors que rien n'empêche de le renseigner directement. On ne retombe sur le producteur déduit
+// de la marque que si le produit n'a lui-même AUCUN producteur direct renseigné.
+function resolveProducerName(row, producerNameById) {
+  const direct = (row.producer_ids || []).map((id) => producerNameById[id]).filter(Boolean);
+  if (direct.length > 0) return direct.join(", ");
+  return row.brands_directory?.producer_id ? producerNameById[row.brands_directory.producer_id] || null : null;
+}
+
 const KNOWN_DRINK_TYPES = ["bieres_cidres", "vins_bulles", "spiritueux", "cocktails_mocktails", "softs_eaux", "boissons_chaudes", "snacks", "generiques"];
 
 function applyTypeFilter(query, type) {
@@ -1418,7 +1428,7 @@ export async function loadDrinkById(id) {
   return {
     ...rowToDrink(data),
     brandName: data.brands_directory?.name || null,
-    producerName: data.brands_directory?.producer_id ? producerNameById[data.brands_directory.producer_id] || null : null,
+    producerName: resolveProducerName(data, producerNameById),
   };
 }
 
@@ -1456,7 +1466,7 @@ export async function loadDrinksPage({ type, status, certificationLevel, hasPend
     items: data.map((row) => ({
       ...rowToDrink(row),
       brandName: row.brands_directory?.name || null,
-      producerName: row.brands_directory?.producer_id ? producerNameById[row.brands_directory.producer_id] || null : null,
+      producerName: resolveProducerName(row, producerNameById),
     })),
     total: count || 0,
   };
