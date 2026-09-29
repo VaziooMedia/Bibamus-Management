@@ -33,11 +33,24 @@ export function AlternateNamesFields({ aliasesText, onAliasesTextChange, alterna
         value={aliasesText}
         onChange={(e) => onAliasesTextChange(e.target.value)}
         placeholder="Ex. surnoms, abréviations courantes..."
+        autoCorrect="off"
+        autoCapitalize="off"
+        autoComplete="off"
+        spellCheck="false"
         style={{ ...fieldStyle, marginBottom: "14px" }}
       />
 
       <label style={labelStyle}>Ancienne appellation</label>
-      <input value={alternateName} onChange={(e) => onAlternateNameChange(e.target.value)} placeholder="Ex. nom porté avant un changement" style={{ ...fieldStyle, marginBottom: "14px" }} />
+      <input
+        value={alternateName}
+        onChange={(e) => onAlternateNameChange(e.target.value)}
+        placeholder="Ex. nom porté avant un changement"
+        autoCorrect="off"
+        autoCapitalize="off"
+        autoComplete="off"
+        spellCheck="false"
+        style={{ ...fieldStyle, marginBottom: "14px" }}
+      />
 
       <label style={labelStyle}>Traduction</label>
       <div style={{ display: "flex", flexDirection: "column", gap: "8px", marginBottom: "8px" }}>

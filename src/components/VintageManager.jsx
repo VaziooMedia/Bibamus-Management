@@ -69,7 +69,7 @@ function VintageRow({ vintage, onSave, onDelete }) {
           }}
           onBlur={onBlur}
           placeholder="Taux d'alcool (%)"
-          style={{ ...fieldStyle, flex: 1 }}
+          style={{ ...fieldStyle, width: "100px", flexShrink: 0 }}
         />
         <div style={{ display: "flex", gap: "4px", flexShrink: 0 }}>
           {dirty && (
@@ -132,6 +132,18 @@ function VintageRow({ vintage, onSave, onDelete }) {
 // VariantManager) : une année (ou "Non millésimé") + son propre taux d'alcool et son propre
 // code-barre, qui peuvent différer d'un millésime à l'autre pour un même vin. Remplace
 // l'ancien champ "Millésime" unique du produit (retiré de l'écran, devenu redondant).
+// Trie toujours par année — "Non millésimé" (sans année) en dernier. Appliqué après chaque
+// chargement ou sauvegarde (le petit ✓ d'une ligne, notamment), pour qu'une année modifiée
+// retrouve tout de suite sa vraie place plutôt que de rester où elle était affichée avant.
+function sortVintages(list) {
+  return [...list].sort((a, b) => {
+    if (a.year == null && b.year == null) return 0;
+    if (a.year == null) return 1;
+    if (b.year == null) return -1;
+    return a.year - b.year;
+  });
+}
+
 export function VintageManager({ drinkId }) {
   const [vintages, setVintages] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -139,7 +151,7 @@ export function VintageManager({ drinkId }) {
   const refresh = () => {
     setLoading(true);
     loadDrinkVintages(drinkId).then((list) => {
-      setVintages(list);
+      setVintages(sortVintages(list));
       setLoading(false);
     });
   };
@@ -156,7 +168,7 @@ export function VintageManager({ drinkId }) {
 
   const addVintage = async () => {
     const created = await createDrinkVintage({ drinkId, year: currentYear, abv: null, container: CONTAINER_TYPES[0].code, volumeMl: 750, barcode: null });
-    if (created) setVintages((prev) => [...prev, created]);
+    if (created) setVintages((prev) => sortVintages([...prev, created]));
   };
 
   const saveVintage = async (id, patch) => {

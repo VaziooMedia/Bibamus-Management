@@ -61,6 +61,10 @@ export function SearchableSelect({ options, value, onChange, placeholder = "Rech
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             placeholder={placeholder}
+            autoCorrect="off"
+            autoCapitalize="off"
+            autoComplete="off"
+            spellCheck="false"
             style={{ width: "100%", padding: "10px 12px", border: "none", borderBottom: "2px solid #28405C", background: "none", color: "#F2F2E8", fontSize: "13px" }}
           />
           <button
@@ -180,6 +184,10 @@ export function SearchableMultiSelect({ options, values, onChange, placeholder =
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             placeholder={placeholder}
+            autoCorrect="off"
+            autoCapitalize="off"
+            autoComplete="off"
+            spellCheck="false"
             style={{ width: "100%", padding: "10px 12px", border: "none", borderBottom: "2px solid #28405C", background: "none", color: "#F2F2E8", fontSize: "13px" }}
           />
           {filtered.map((o) => (

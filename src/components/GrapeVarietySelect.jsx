@@ -93,7 +93,8 @@ export function GrapeVarietySelect({ selected, onChange, options, onCreateOption
                     border: "none",
                     fontSize: "12px",
                     fontWeight: 700,
-                    color: "#0D1B2A",
+                    background: "transparent",
+                    color: "#F2F2E8",
                   }}
                 />
               )}
@@ -122,6 +123,10 @@ export function GrapeVarietySelect({ selected, onChange, options, onCreateOption
             }}
             onFocus={() => setOpen(true)}
             placeholder={placeholder}
+            autoCorrect="off"
+            autoCapitalize="off"
+            autoComplete="off"
+            spellCheck="false"
             style={{ padding: "9px 12px", borderRadius: "8px", border: "2px solid #28405C", fontSize: "13px", width: "100%", boxSizing: "border-box", background: "#0D1B2A", color: "#F2F2E8" }}
           />
           {open && (
