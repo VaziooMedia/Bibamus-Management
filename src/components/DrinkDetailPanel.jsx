@@ -721,9 +721,6 @@ export function DrinkDetailPanel({ drink, onClose, onSaved }) {
                     <div style={separatorStyle} />
 
                     <CollapsibleSection title="Millésimes & Taux d'alcool" defaultOpen>
-                      <p style={{ fontSize: "11.5px", color: "#8792A6", marginTop: "-6px", marginBottom: "10px" }}>
-                        Pour un même vin, le taux d'alcool peut varier d'une année à l'autre — une ligne par millésime connu, avec son propre taux (facultatif tant qu'il n'est pas connu).
-                      </p>
                       <VintageManager drinkId={drink?.id || null} />
                     </CollapsibleSection>
 

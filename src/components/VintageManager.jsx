@@ -24,6 +24,10 @@ function VintageRow({ vintage, onSave, onDelete }) {
     });
     setDirty(false);
   };
+  // Quitter un champ (y compris pour cliquer sur "Enregistrer" tout en bas, qui ferme toute la
+  // fiche) sauvegarde déjà cette ligne — le petit ✓ reste utilisable, mais n'est plus le SEUL
+  // moyen de ne pas perdre ce qui vient d'être tapé ici.
+  const onBlur = () => dirty && save();
 
   return (
     <div style={{ padding: "8px", background: "#16273D", borderRadius: "8px", marginBottom: "6px" }}>
@@ -38,6 +42,7 @@ function VintageRow({ vintage, onSave, onDelete }) {
             setYear(e.target.value);
             setDirty(true);
           }}
+          onBlur={onBlur}
           placeholder={nonMillesime ? "—" : "Année"}
           style={{ ...fieldStyle, width: "70px", flexShrink: 0, opacity: nonMillesime ? 0.5 : 1 }}
         />
@@ -49,15 +54,42 @@ function VintageRow({ vintage, onSave, onDelete }) {
               setNonMillesime(e.target.checked);
               setDirty(true);
             }}
+            onBlur={onBlur}
           />
           Non millésimé
         </label>
+        <input
+          type="number"
+          step="0.1"
+          min="0"
+          value={abv}
+          onChange={(e) => {
+            setAbv(e.target.value);
+            setDirty(true);
+          }}
+          onBlur={onBlur}
+          placeholder="Taux d'alcool (%)"
+          style={{ ...fieldStyle, flex: 1 }}
+        />
+        <div style={{ display: "flex", gap: "4px", flexShrink: 0 }}>
+          {dirty && (
+            <button onClick={save} title="Enregistrer" style={{ background: "#39FF66", border: "none", borderRadius: "6px", width: "30px", height: "30px", cursor: "pointer", fontWeight: 800, fontSize: "14px" }}>
+              ✓
+            </button>
+          )}
+          <button onClick={() => onDelete(vintage.id)} title="Supprimer" style={{ background: "none", border: "none", color: "#FF3B4E", cursor: "pointer", fontSize: "14px", width: "30px" }}>
+            ✕
+          </button>
+        </div>
+      </div>
+      <div style={{ display: "flex", gap: "6px" }}>
         <select
           value={container}
           onChange={(e) => {
             setContainer(e.target.value);
             setDirty(true);
           }}
+          onBlur={onBlur}
           style={{ ...fieldStyle, flex: 1 }}
         >
           {CONTAINER_TYPES.map((c) => (
@@ -77,32 +109,9 @@ function VintageRow({ vintage, onSave, onDelete }) {
             setVolumeCl(e.target.value);
             setDirty(true);
           }}
+          onBlur={onBlur}
           title="Volume (cl)"
           style={{ ...fieldStyle, width: "56px", padding: "8px 4px", textAlign: "center", flexShrink: 0 }}
-        />
-        <div style={{ display: "flex", gap: "4px", flexShrink: 0 }}>
-          {dirty && (
-            <button onClick={save} title="Enregistrer" style={{ background: "#39FF66", border: "none", borderRadius: "6px", width: "30px", height: "30px", cursor: "pointer", fontWeight: 800, fontSize: "14px" }}>
-              ✓
-            </button>
-          )}
-          <button onClick={() => onDelete(vintage.id)} title="Supprimer" style={{ background: "none", border: "none", color: "#FF3B4E", cursor: "pointer", fontSize: "14px", width: "30px" }}>
-            ✕
-          </button>
-        </div>
-      </div>
-      <div style={{ display: "flex", gap: "6px" }}>
-        <input
-          type="number"
-          step="0.1"
-          min="0"
-          value={abv}
-          onChange={(e) => {
-            setAbv(e.target.value);
-            setDirty(true);
-          }}
-          placeholder="Taux d'alcool (%)"
-          style={{ ...fieldStyle, width: "110px", flexShrink: 0 }}
         />
         <input
           value={barcode}
@@ -110,7 +119,8 @@ function VintageRow({ vintage, onSave, onDelete }) {
             setBarcode(e.target.value);
             setDirty(true);
           }}
-          placeholder="Code-barre de ce conditionnement (facultatif)"
+          onBlur={onBlur}
+          placeholder="Code-barres"
           style={{ ...fieldStyle, flex: 1 }}
         />
       </div>
