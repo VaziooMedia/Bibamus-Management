@@ -14,6 +14,7 @@ import flagDe from "../assets/flags/de.svg";
 import flagLu from "../assets/flags/lu.svg";
 import flagDz from "../assets/flags/dz.svg";
 import flagAt from "../assets/flags/at.svg";
+import flagBm from "../assets/flags/bm.svg";
 import flagBg from "../assets/flags/bg.svg";
 import flagCa from "../assets/flags/ca.svg";
 import flagCy from "../assets/flags/cy.svg";
@@ -57,6 +58,7 @@ const FLAG_URLS_BY_CODE = {
   lu: flagLu,
   dz: flagDz,
   at: flagAt,
+  bm: flagBm,
   bg: flagBg,
   ca: flagCa,
   cy: flagCy,
