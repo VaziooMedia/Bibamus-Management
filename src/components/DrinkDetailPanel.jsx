@@ -40,6 +40,7 @@ import {
   VERIFICATION_STATUSES,
 } from "../data/beerCiderStyles.js";
 import { WINE_STYLE_GROUPS, WINE_EFFERVESCENT_STYLE_GROUPS, WINE_COLORS_BY_SUBTYPE, WINE_APPELLATIONS_BY_COUNTRY, WINE_EFFERVESCENT_APPELLATIONS_BY_COUNTRY } from "../data/wineStyles.js";
+import { SPIRIT_STYLE_GROUPS_BY_SUBTYPE } from "../data/spiritStyles.js";
 
 export const DRINK_TYPES = [
   { code: "bieres_cidres", fr: "Bières & Cidres" },
@@ -71,8 +72,8 @@ export const SPIRIT_SUBTYPES = [
   { code: "eaux_de_vie_de_marc", fr: "Eaux-de-vie de marc" },
   { code: "liqueurs_cremes", fr: "Liqueurs & Crèmes" },
   { code: "anises", fr: "Anisés" },
-  { code: "amers_bitters_amaros", fr: "Amers / Bitters / Amaros" },
-  { code: "spiritueux_de_canne", fr: "Spiritueux de canne spécifiques" },
+  { code: "amers_bitters_amaros", fr: "Amers & spiritueux aux plantes" },
+  { code: "spiritueux_de_canne", fr: "Spiritueux de canne hors rhum" },
   { code: "autres_spiritueux", fr: "Autres spiritueux" },
 ];
 export const CONTAINER_TYPES = [
@@ -932,7 +933,17 @@ export function DrinkDetailPanel({ drink, onClose, onSaved }) {
                 </p>
                 <div style={{ border: "2px solid #28405C", borderRadius: "8px", padding: "12px" }}>
                   <StyleTagAccordion
-                    groups={isBeerOrCider ? BEER_CIDER_STYLE_GROUPS : form.beverageSubtype === "vin_effervescent" ? WINE_EFFERVESCENT_STYLE_GROUPS : WINE_STYLE_GROUPS}
+                    groups={
+                      isBeerOrCider
+                        ? BEER_CIDER_STYLE_GROUPS
+                        : isWine
+                        ? form.beverageSubtype === "vin_effervescent"
+                          ? WINE_EFFERVESCENT_STYLE_GROUPS
+                          : WINE_STYLE_GROUPS
+                        : isSpirit
+                        ? SPIRIT_STYLE_GROUPS_BY_SUBTYPE[form.beverageSubtype] || []
+                        : []
+                    }
                     selected={form.styles}
                     onToggle={toggleStyle}
                     hideControls={isWine}
