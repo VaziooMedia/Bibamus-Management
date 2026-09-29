@@ -19,7 +19,7 @@ const labelFromList = (list) => {
   return (code) => map[code] || code || "—";
 };
 const typeLabel = labelFromList(DRINK_TYPES);
-// "Bière/Cidre" ET "Vin/Vin effervescent" partagent la même colonne du tableau — le repli sur
+// "Sous-Catégorie" affiche à la fois "Bière/Cidre" ET "Vin/Vin effervescent" — le repli sur
 // BEER_CIDER_SUBTYPES seul affichait le code brut ("vin", "vin_effervescent") pour un vin.
 const subtypeLabel = labelFromList([...BEER_CIDER_SUBTYPES, ...WINE_SUBTYPES]);
 const countryLabel = labelFromList(COUNTRIES);
@@ -38,8 +38,8 @@ const codesForContinent = (continent) =>
 
 const allColumns = [
   { key: "name", label: "Nom" },
-  { key: "type", label: "Type", render: (d) => typeLabel(d.type) },
-  { key: "beverageSubtype", label: "Bière/Cidre", render: (d) => subtypeLabel(d.beverageSubtype) },
+  { key: "type", label: "Catégorie", render: (d) => typeLabel(d.type) },
+  { key: "beverageSubtype", label: "Sous-Catégorie", render: (d) => subtypeLabel(d.beverageSubtype) },
   { key: "brandName", label: "Marque" },
   { key: "producerName", label: "Producteur" },
   { key: "nationality", label: "Origine", render: (d) => countryLabel(d.nationality) },
