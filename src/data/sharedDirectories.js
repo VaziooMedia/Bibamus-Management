@@ -1911,7 +1911,7 @@ export async function deleteDrinkVariant(id) {
    peut différer d'un millésime à l'autre pour un même vin). N'affecte pas le champ "Millésime"
    existant sur le produit lui-même. */
 function rowToVintage(row) {
-  return { id: row.id, productId: row.product_id, year: row.year, abv: row.abv != null ? Number(row.abv) : null };
+  return { id: row.id, productId: row.product_id, year: row.year, abv: row.abv != null ? Number(row.abv) : null, barcode: row.barcode || null };
 }
 
 export async function loadDrinkVintages(drinkId) {
@@ -1923,12 +1923,13 @@ export async function loadDrinkVintages(drinkId) {
   return data.map(rowToVintage);
 }
 
-export async function createDrinkVintage({ drinkId, year, abv }) {
+export async function createDrinkVintage({ drinkId, year, abv, barcode }) {
   const row = {
     id: `vintage-${Date.now()}-${Math.floor(Math.random() * 10000)}`,
     product_id: drinkId,
     year,
     abv: abv != null && abv !== "" ? abv : null,
+    barcode: barcode ? barcode.trim() || null : null,
   };
   const { data, error } = await supabase.from("drink_vintages").insert(row).select().single();
   if (error) {
@@ -1938,8 +1939,8 @@ export async function createDrinkVintage({ drinkId, year, abv }) {
   return rowToVintage(data);
 }
 
-export async function updateDrinkVintage(id, { year, abv }) {
-  const patch = { year, abv: abv != null && abv !== "" ? abv : null };
+export async function updateDrinkVintage(id, { year, abv, barcode }) {
+  const patch = { year, abv: abv != null && abv !== "" ? abv : null, barcode: barcode ? barcode.trim() || null : null };
   const { error } = await supabase.from("drink_vintages").update(patch).eq("id", id);
   if (error) console.error("updateDrinkVintage:", error);
 }

@@ -723,6 +723,7 @@ export function DrinkDetailPanel({ drink, onClose, onSaved }) {
                   </>
                 )}
 
+                {!isWine && (
                 <CollapsibleSection title="Codes-barres" defaultOpen>
                   <div style={{ display: "flex", flexDirection: "column", gap: "8px", marginBottom: "10px" }}>
                     {form.barcodes.map((b, i) => (
@@ -769,6 +770,7 @@ export function DrinkDetailPanel({ drink, onClose, onSaved }) {
                     +
                   </button>
                 </CollapsibleSection>
+                )}
               </div>
             )}
 

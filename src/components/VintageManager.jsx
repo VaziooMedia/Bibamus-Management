@@ -7,49 +7,61 @@ const currentYear = new Date().getFullYear();
 function VintageRow({ vintage, onSave, onDelete }) {
   const [year, setYear] = useState(vintage.year ?? currentYear);
   const [abv, setAbv] = useState(vintage.abv ?? "");
+  const [barcode, setBarcode] = useState(vintage.barcode || "");
   const [dirty, setDirty] = useState(false);
 
   const save = () => {
-    onSave(vintage.id, { year: year === "" ? null : parseInt(year, 10), abv: abv === "" ? null : parseFloat(abv) });
+    onSave(vintage.id, { year: year === "" ? null : parseInt(year, 10), abv: abv === "" ? null : parseFloat(abv), barcode });
     setDirty(false);
   };
 
   return (
-    <div style={{ display: "flex", gap: "6px", alignItems: "center", padding: "8px", background: "#16273D", borderRadius: "8px", marginBottom: "6px" }}>
-      <input
-        type="number"
-        min="1900"
-        max="2100"
-        value={year}
-        onChange={(e) => {
-          setYear(e.target.value);
-          setDirty(true);
-        }}
-        placeholder="Année"
-        style={{ ...fieldStyle, width: "80px", flexShrink: 0 }}
-      />
-      <input
-        type="number"
-        step="0.1"
-        min="0"
-        value={abv}
-        onChange={(e) => {
-          setAbv(e.target.value);
-          setDirty(true);
-        }}
-        placeholder="Taux d'alcool (%)"
-        style={{ ...fieldStyle, flex: 1 }}
-      />
-      <div style={{ display: "flex", gap: "4px", flexShrink: 0 }}>
-        {dirty && (
-          <button onClick={save} title="Enregistrer" style={{ background: "#39FF66", border: "none", borderRadius: "6px", width: "30px", height: "30px", cursor: "pointer", fontWeight: 800, fontSize: "14px" }}>
-            ✓
+    <div style={{ padding: "8px", background: "#16273D", borderRadius: "8px", marginBottom: "6px" }}>
+      <div style={{ display: "flex", gap: "6px", alignItems: "center", marginBottom: "6px" }}>
+        <input
+          type="number"
+          min="1900"
+          max="2100"
+          value={year}
+          onChange={(e) => {
+            setYear(e.target.value);
+            setDirty(true);
+          }}
+          placeholder="Année"
+          style={{ ...fieldStyle, width: "80px", flexShrink: 0 }}
+        />
+        <input
+          type="number"
+          step="0.1"
+          min="0"
+          value={abv}
+          onChange={(e) => {
+            setAbv(e.target.value);
+            setDirty(true);
+          }}
+          placeholder="Taux d'alcool (%)"
+          style={{ ...fieldStyle, flex: 1 }}
+        />
+        <div style={{ display: "flex", gap: "4px", flexShrink: 0 }}>
+          {dirty && (
+            <button onClick={save} title="Enregistrer" style={{ background: "#39FF66", border: "none", borderRadius: "6px", width: "30px", height: "30px", cursor: "pointer", fontWeight: 800, fontSize: "14px" }}>
+              ✓
+            </button>
+          )}
+          <button onClick={() => onDelete(vintage.id)} title="Supprimer" style={{ background: "none", border: "none", color: "#FF3B4E", cursor: "pointer", fontSize: "14px", width: "30px" }}>
+            ✕
           </button>
-        )}
-        <button onClick={() => onDelete(vintage.id)} title="Supprimer" style={{ background: "none", border: "none", color: "#FF3B4E", cursor: "pointer", fontSize: "14px", width: "30px" }}>
-          ✕
-        </button>
+        </div>
       </div>
+      <input
+        value={barcode}
+        onChange={(e) => {
+          setBarcode(e.target.value);
+          setDirty(true);
+        }}
+        placeholder="Code-barre de ce millésime (facultatif)"
+        style={{ ...fieldStyle, width: "100%", boxSizing: "border-box" }}
+      />
     </div>
   );
 }
