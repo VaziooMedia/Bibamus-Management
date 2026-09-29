@@ -281,7 +281,6 @@ export function DrinkDetailPanel({ drink, onClose, onSaved }) {
   const [brandOptions, setBrandOptions] = useState([]);
   const [producerOptions, setProducerOptions] = useState([]);
   const [grapeVarietyOptions, setGrapeVarietyOptions] = useState([]);
-  const [vintageMode, setVintageMode] = useState(form.vintage === "non_millesime" ? "non_millesime" : form.vintage ? "annee" : null);
 
   const isBeerOrCider = form.type === "bieres_cidres";
   const isWine = form.type === "vins_bulles";
@@ -720,6 +719,15 @@ export function DrinkDetailPanel({ drink, onClose, onSaved }) {
                     </CollapsibleSection>
 
                     <div style={separatorStyle} />
+
+                    <CollapsibleSection title="Millésimes & Taux d'alcool" defaultOpen>
+                      <p style={{ fontSize: "11.5px", color: "#8792A6", marginTop: "-6px", marginBottom: "10px" }}>
+                        Pour un même vin, le taux d'alcool peut varier d'une année à l'autre — une ligne par millésime connu, avec son propre taux (facultatif tant qu'il n'est pas connu).
+                      </p>
+                      <VintageManager drinkId={drink?.id || null} />
+                    </CollapsibleSection>
+
+                    <div style={separatorStyle} />
                   </>
                 )}
 
@@ -921,64 +929,6 @@ export function DrinkDetailPanel({ drink, onClose, onSaved }) {
                       showPercentage
                     />
 
-                    <div style={separatorStyle} />
-                    <SectionTitle>Millésime</SectionTitle>
-                    <div style={{ display: "flex", gap: "8px", marginBottom: vintageMode === "annee" ? "10px" : 0 }}>
-                      <button
-                        onClick={() => {
-                          setVintageMode("annee");
-                          if (form.vintage === "non_millesime") set("vintage", "");
-                        }}
-                        style={{
-                          background: vintageMode === "annee" ? "#39FF66" : "none",
-                          border: `2px solid ${vintageMode === "annee" ? "#39FF66" : "#28405C"}`,
-                          borderRadius: "999px",
-                          padding: "5px 11px",
-                          fontSize: "11.5px",
-                          fontWeight: 600,
-                          color: vintageMode === "annee" ? "#0D1B2A" : "#F2F2E8",
-                          cursor: "pointer",
-                        }}
-                      >
-                        Année (à encoder)
-                      </button>
-                      <button
-                        onClick={() => {
-                          setVintageMode("non_millesime");
-                          set("vintage", "non_millesime");
-                        }}
-                        style={{
-                          background: vintageMode === "non_millesime" ? "#39FF66" : "none",
-                          border: `2px solid ${vintageMode === "non_millesime" ? "#39FF66" : "#28405C"}`,
-                          borderRadius: "999px",
-                          padding: "5px 11px",
-                          fontSize: "11.5px",
-                          fontWeight: 600,
-                          color: vintageMode === "non_millesime" ? "#0D1B2A" : "#F2F2E8",
-                          cursor: "pointer",
-                        }}
-                      >
-                        Non millésimé
-                      </button>
-                    </div>
-                    {vintageMode === "annee" && (
-                      <input
-                        type="number"
-                        min="1900"
-                        max="2100"
-                        value={form.vintage === "non_millesime" ? "" : form.vintage}
-                        onChange={(e) => set("vintage", e.target.value)}
-                        placeholder="Ex. 2022"
-                        style={{ ...fieldStyle, width: "120px" }}
-                      />
-                    )}
-
-                    <div style={separatorStyle} />
-                    <SectionTitle>Millésimes & taux d'alcool</SectionTitle>
-                    <p style={{ fontSize: "11.5px", color: "#8792A6", marginTop: "-6px", marginBottom: "10px" }}>
-                      Pour un même vin, le taux d'alcool peut varier d'une année à l'autre — une ligne par millésime connu, avec son propre taux (facultatif tant qu'il n'est pas connu).
-                    </p>
-                    <VintageManager drinkId={drink?.id || null} />
                   </>
                 )}
                 </div>

@@ -6,6 +6,7 @@ const fieldStyle = { padding: "8px 10px", borderRadius: "6px", border: "2px soli
 const currentYear = new Date().getFullYear();
 
 function VintageRow({ vintage, onSave, onDelete }) {
+  const [nonMillesime, setNonMillesime] = useState(vintage.year == null);
   const [year, setYear] = useState(vintage.year ?? currentYear);
   const [container, setContainer] = useState(vintage.container || CONTAINER_TYPES[0].code);
   const [volumeCl, setVolumeCl] = useState(vintage.volumeMl ? vintage.volumeMl / 10 : "");
@@ -15,7 +16,7 @@ function VintageRow({ vintage, onSave, onDelete }) {
 
   const save = () => {
     onSave(vintage.id, {
-      year: year === "" ? null : parseInt(year, 10),
+      year: nonMillesime ? null : year === "" ? null : parseInt(year, 10),
       container,
       volumeMl: volumeCl === "" ? null : parseFloat(volumeCl) * 10,
       abv: abv === "" ? null : parseFloat(abv),
@@ -26,19 +27,31 @@ function VintageRow({ vintage, onSave, onDelete }) {
 
   return (
     <div style={{ padding: "8px", background: "#16273D", borderRadius: "8px", marginBottom: "6px" }}>
-      <div style={{ display: "flex", gap: "6px", marginBottom: "6px" }}>
+      <div style={{ display: "flex", gap: "6px", alignItems: "center", marginBottom: "6px" }}>
         <input
           type="number"
           min="1900"
           max="2100"
-          value={year}
+          value={nonMillesime ? "" : year}
+          disabled={nonMillesime}
           onChange={(e) => {
             setYear(e.target.value);
             setDirty(true);
           }}
-          placeholder="Année"
-          style={{ ...fieldStyle, width: "70px", flexShrink: 0 }}
+          placeholder={nonMillesime ? "—" : "Année"}
+          style={{ ...fieldStyle, width: "70px", flexShrink: 0, opacity: nonMillesime ? 0.5 : 1 }}
         />
+        <label style={{ display: "flex", alignItems: "center", gap: "4px", fontSize: "11px", color: "#8792A6", flexShrink: 0, cursor: "pointer", whiteSpace: "nowrap" }}>
+          <input
+            type="checkbox"
+            checked={nonMillesime}
+            onChange={(e) => {
+              setNonMillesime(e.target.checked);
+              setDirty(true);
+            }}
+          />
+          Non millésimé
+        </label>
         <select
           value={container}
           onChange={(e) => {
@@ -106,9 +119,9 @@ function VintageRow({ vintage, onSave, onDelete }) {
 }
 
 // Liste des millésimes d'un vin — indépendante des conditionnements/codes-barres (voir
-// VariantManager) : une année + son propre taux d'alcool, qui peut différer d'un millésime à
-// l'autre pour un même vin. Le champ "Millésime" existant sur le produit lui-même n'est pas
-// affecté par cette liste — les deux coexistent.
+// VariantManager) : une année (ou "Non millésimé") + son propre taux d'alcool et son propre
+// code-barre, qui peuvent différer d'un millésime à l'autre pour un même vin. Remplace
+// l'ancien champ "Millésime" unique du produit (retiré de l'écran, devenu redondant).
 export function VintageManager({ drinkId }) {
   const [vintages, setVintages] = useState([]);
   const [loading, setLoading] = useState(true);
