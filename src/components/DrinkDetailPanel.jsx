@@ -324,7 +324,10 @@ export function DrinkDetailPanel({ drink, onClose, onSaved }) {
       certificationLevel,
       duplicateOfId: status === "duplicate" ? duplicateOfId : null,
     };
-    if (!isBeerOrCider) return base;
+    // isBeerOrCider ne couvrait QUE les bières/cidres — les vins tombaient dans le "base" minimal
+    // ci-dessus, sans jamais envoyer couleur, pays, appellation, cépage, ni même la photo. C'est
+    // la cause du vrai défaut : rien de tout cela n'était jamais enregistré pour un vin.
+    if (!isBeerOrCider && !isWine) return base;
     return {
       ...base,
       beverageSubtype: form.beverageSubtype,
