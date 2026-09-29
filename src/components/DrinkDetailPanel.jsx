@@ -609,7 +609,7 @@ export function DrinkDetailPanel({ drink, onClose, onSaved }) {
         <label style={labelStyle}>Nom du produit *</label>
         <input value={form.name} onChange={(e) => set("name", e.target.value)} style={{ ...fieldStyle, marginBottom: "14px" }} />
 
-        {isBeerOrCider || isWine ? (
+        {isBeerOrCider || isWine || isSpirit ? (
           <>
             <div style={{ display: "flex", flexWrap: "wrap", gap: "4px", marginBottom: "18px", borderBottom: "2px solid #28405C" }}>
               {[
