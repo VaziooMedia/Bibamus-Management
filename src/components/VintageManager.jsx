@@ -1,23 +1,32 @@
 import React, { useState, useEffect } from "react";
 import { loadDrinkVintages, createDrinkVintage, updateDrinkVintage, deleteDrinkVintage } from "../data/sharedDirectories.js";
+import { CONTAINER_TYPES, COMMON_VOLUMES_CL } from "../data/beerCiderStyles.js";
 
 const fieldStyle = { padding: "8px 10px", borderRadius: "6px", border: "2px solid #28405C", fontSize: "12.5px" };
 const currentYear = new Date().getFullYear();
 
 function VintageRow({ vintage, onSave, onDelete }) {
   const [year, setYear] = useState(vintage.year ?? currentYear);
+  const [container, setContainer] = useState(vintage.container || CONTAINER_TYPES[0].code);
+  const [volumeCl, setVolumeCl] = useState(vintage.volumeMl ? vintage.volumeMl / 10 : "");
   const [abv, setAbv] = useState(vintage.abv ?? "");
   const [barcode, setBarcode] = useState(vintage.barcode || "");
   const [dirty, setDirty] = useState(false);
 
   const save = () => {
-    onSave(vintage.id, { year: year === "" ? null : parseInt(year, 10), abv: abv === "" ? null : parseFloat(abv), barcode });
+    onSave(vintage.id, {
+      year: year === "" ? null : parseInt(year, 10),
+      container,
+      volumeMl: volumeCl === "" ? null : parseFloat(volumeCl) * 10,
+      abv: abv === "" ? null : parseFloat(abv),
+      barcode,
+    });
     setDirty(false);
   };
 
   return (
     <div style={{ padding: "8px", background: "#16273D", borderRadius: "8px", marginBottom: "6px" }}>
-      <div style={{ display: "flex", gap: "6px", alignItems: "center", marginBottom: "6px" }}>
+      <div style={{ display: "flex", gap: "6px", marginBottom: "6px" }}>
         <input
           type="number"
           min="1900"
@@ -28,19 +37,35 @@ function VintageRow({ vintage, onSave, onDelete }) {
             setDirty(true);
           }}
           placeholder="Année"
-          style={{ ...fieldStyle, width: "80px", flexShrink: 0 }}
+          style={{ ...fieldStyle, width: "70px", flexShrink: 0 }}
         />
-        <input
-          type="number"
-          step="0.1"
-          min="0"
-          value={abv}
+        <select
+          value={container}
           onChange={(e) => {
-            setAbv(e.target.value);
+            setContainer(e.target.value);
             setDirty(true);
           }}
-          placeholder="Taux d'alcool (%)"
           style={{ ...fieldStyle, flex: 1 }}
+        >
+          {CONTAINER_TYPES.map((c) => (
+            <option key={c.code} value={c.code}>
+              {c.fr}
+            </option>
+          ))}
+        </select>
+        <input
+          type="number"
+          step="0.5"
+          min="0"
+          max="999"
+          list="common-volumes-cl-vintage"
+          value={volumeCl}
+          onChange={(e) => {
+            setVolumeCl(e.target.value);
+            setDirty(true);
+          }}
+          title="Volume (cl)"
+          style={{ ...fieldStyle, width: "56px", padding: "8px 4px", textAlign: "center", flexShrink: 0 }}
         />
         <div style={{ display: "flex", gap: "4px", flexShrink: 0 }}>
           {dirty && (
@@ -53,15 +78,29 @@ function VintageRow({ vintage, onSave, onDelete }) {
           </button>
         </div>
       </div>
-      <input
-        value={barcode}
-        onChange={(e) => {
-          setBarcode(e.target.value);
-          setDirty(true);
-        }}
-        placeholder="Code-barre de ce millésime (facultatif)"
-        style={{ ...fieldStyle, width: "100%", boxSizing: "border-box" }}
-      />
+      <div style={{ display: "flex", gap: "6px" }}>
+        <input
+          type="number"
+          step="0.1"
+          min="0"
+          value={abv}
+          onChange={(e) => {
+            setAbv(e.target.value);
+            setDirty(true);
+          }}
+          placeholder="Taux d'alcool (%)"
+          style={{ ...fieldStyle, width: "110px", flexShrink: 0 }}
+        />
+        <input
+          value={barcode}
+          onChange={(e) => {
+            setBarcode(e.target.value);
+            setDirty(true);
+          }}
+          placeholder="Code-barre de ce conditionnement (facultatif)"
+          style={{ ...fieldStyle, flex: 1 }}
+        />
+      </div>
     </div>
   );
 }
@@ -93,7 +132,7 @@ export function VintageManager({ drinkId }) {
   }
 
   const addVintage = async () => {
-    const created = await createDrinkVintage({ drinkId, year: currentYear, abv: null });
+    const created = await createDrinkVintage({ drinkId, year: currentYear, abv: null, container: CONTAINER_TYPES[0].code, volumeMl: 750, barcode: null });
     if (created) setVintages((prev) => [...prev, created]);
   };
 
@@ -109,6 +148,11 @@ export function VintageManager({ drinkId }) {
 
   return (
     <div>
+      <datalist id="common-volumes-cl-vintage">
+        {COMMON_VOLUMES_CL.map((v) => (
+          <option key={v} value={v} />
+        ))}
+      </datalist>
       {loading ? (
         <p style={{ fontSize: "12px", color: "#8792A6" }}>Chargement...</p>
       ) : (

@@ -1911,7 +1911,15 @@ export async function deleteDrinkVariant(id) {
    peut différer d'un millésime à l'autre pour un même vin). N'affecte pas le champ "Millésime"
    existant sur le produit lui-même. */
 function rowToVintage(row) {
-  return { id: row.id, productId: row.product_id, year: row.year, abv: row.abv != null ? Number(row.abv) : null, barcode: row.barcode || null };
+  return {
+    id: row.id,
+    productId: row.product_id,
+    year: row.year,
+    abv: row.abv != null ? Number(row.abv) : null,
+    container: row.container || null,
+    volumeMl: row.volume_ml != null ? Number(row.volume_ml) : null,
+    barcode: row.barcode || null,
+  };
 }
 
 export async function loadDrinkVintages(drinkId) {
@@ -1923,12 +1931,14 @@ export async function loadDrinkVintages(drinkId) {
   return data.map(rowToVintage);
 }
 
-export async function createDrinkVintage({ drinkId, year, abv, barcode }) {
+export async function createDrinkVintage({ drinkId, year, abv, container, volumeMl, barcode }) {
   const row = {
     id: `vintage-${Date.now()}-${Math.floor(Math.random() * 10000)}`,
     product_id: drinkId,
     year,
     abv: abv != null && abv !== "" ? abv : null,
+    container: container || null,
+    volume_ml: volumeMl || null,
     barcode: barcode ? barcode.trim() || null : null,
   };
   const { data, error } = await supabase.from("drink_vintages").insert(row).select().single();
@@ -1939,8 +1949,14 @@ export async function createDrinkVintage({ drinkId, year, abv, barcode }) {
   return rowToVintage(data);
 }
 
-export async function updateDrinkVintage(id, { year, abv, barcode }) {
-  const patch = { year, abv: abv != null && abv !== "" ? abv : null, barcode: barcode ? barcode.trim() || null : null };
+export async function updateDrinkVintage(id, { year, abv, container, volumeMl, barcode }) {
+  const patch = {
+    year,
+    abv: abv != null && abv !== "" ? abv : null,
+    container: container || null,
+    volume_ml: volumeMl || null,
+    barcode: barcode ? barcode.trim() || null : null,
+  };
   const { error } = await supabase.from("drink_vintages").update(patch).eq("id", id);
   if (error) console.error("updateDrinkVintage:", error);
 }
