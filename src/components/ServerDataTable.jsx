@@ -237,7 +237,7 @@ export function ServerDataTable({ allColumns, forcedKeys = [], defaultVisibleKey
             title="Produits par page"
             style={{ background: "none", border: "2px solid #28405C", borderRadius: "8px", padding: "10px 10px", color: "#F2F2E8", cursor: "pointer", fontSize: "13px" }}
           >
-            {[100, 150, 200, 250, 300].map((n) => (
+            {[50, 100, 150, 200, 250, 300].map((n) => (
               <option key={n} value={n}>
                 {n} / page
               </option>
