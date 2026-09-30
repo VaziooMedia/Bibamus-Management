@@ -105,6 +105,7 @@ export function BreweriesScreen({ initialBreweryId, onInitialBreweryOpened } = {
             onAdd={() => setCreating(true)}
             searchPlaceholder="Rechercher Producteurs"
             extraSearchFields={alternateNameSearchFields}
+            filterKey={activeFilter}
           />
         </>
       )}
@@ -186,6 +187,7 @@ export function BrandsScreen({ initialBrandId, onInitialBrandOpened } = {}) {
             onAdd={() => setCreating(true)}
             searchPlaceholder="Rechercher Marques"
             extraSearchFields={alternateNameSearchFields}
+            filterKey={activeFilter}
           />
         </>
       )}

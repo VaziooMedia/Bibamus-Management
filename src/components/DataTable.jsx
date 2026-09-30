@@ -13,8 +13,10 @@ import { normalizeSearchText } from "../utils.js";
 // gagné sur les colonnes à contenu variable (Nom, Pays, Commune).
 const COMPACT_COLUMN_KEYS = ["status", "visible", "certificationLevel"];
 
-export function DataTable({ items, allColumns, forcedKeys = [], defaultVisibleKeys, onRowClick, onAdd, searchPlaceholder = "Rechercher...", storageKey, extraSearchFields }) {
+export function DataTable({ items, allColumns, forcedKeys = [], defaultVisibleKeys, onRowClick, onAdd, searchPlaceholder = "Rechercher...", storageKey, extraSearchFields, filterKey }) {
   const [query, setQuery] = useState("");
+  const [page, setPage] = useState(0);
+  const [pageSize, setPageSize] = useState(100);
   const [visibleKeys, setVisibleKeysState] = useState(() => {
     if (storageKey) {
       try {
@@ -103,6 +105,62 @@ export function DataTable({ items, allColumns, forcedKeys = [], defaultVisibleKe
       return String(av).localeCompare(String(bv)) * sortDir;
     });
   }, [items, query, sortKey, sortDir, columns]);
+
+  // La recherche ou un vrai changement de filtre repart bien à la première page — un simple
+  // rafraîchissement de "items" après un enregistrement (même liste, juste rechargée) ne doit
+  // PAS en faire autant : c'est exactement le piège déjà corrigé sur le tableau des Produits.
+  useEffect(() => {
+    setPage(0);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [query, filterKey]);
+
+  const changePageSize = (n) => {
+    setPageSize(n);
+    setPage(0);
+  };
+
+  const totalPages = Math.max(1, Math.ceil(filtered.length / pageSize));
+  const fromIdx = filtered.length === 0 ? 0 : page * pageSize + 1;
+  const toIdx = Math.min(filtered.length, (page + 1) * pageSize);
+  const paginated = filtered.slice(page * pageSize, page * pageSize + pageSize);
+
+  // Un seul bloc, réutilisé au-dessus ET en dessous du tableau — pas besoin de descendre toute
+  // la page pour changer de page.
+  const pagination = filtered.length > pageSize && (
+    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+      <span style={{ fontSize: "12.5px", color: "#8792A6" }}>
+        {fromIdx}–{toIdx} sur {filtered.length}
+      </span>
+      <div style={{ display: "flex", gap: "8px" }}>
+        <button
+          onClick={() => setPage((p) => Math.max(0, p - 1))}
+          disabled={page === 0}
+          style={{ background: "none", border: "2px solid #28405C", borderRadius: "8px", padding: "7px 12px", color: "#F2F2E8", cursor: page === 0 ? "default" : "pointer", opacity: page === 0 ? 0.4 : 1, fontSize: "13px" }}
+        >
+          ← Précédent
+        </button>
+        <span style={{ fontSize: "12.5px", color: "#8792A6", padding: "7px 4px" }}>
+          Page {page + 1} / {totalPages}
+        </span>
+        <button
+          onClick={() => setPage((p) => Math.min(totalPages - 1, p + 1))}
+          disabled={page >= totalPages - 1}
+          style={{
+            background: "none",
+            border: "2px solid #28405C",
+            borderRadius: "8px",
+            padding: "7px 12px",
+            color: "#F2F2E8",
+            cursor: page >= totalPages - 1 ? "default" : "pointer",
+            opacity: page >= totalPages - 1 ? 0.4 : 1,
+            fontSize: "13px",
+          }}
+        >
+          Suivant →
+        </button>
+      </div>
+    </div>
+  );
 
   const toggleSort = (key) => {
     if (sortKey === key) {
@@ -196,6 +254,18 @@ export function DataTable({ items, allColumns, forcedKeys = [], defaultVisibleKe
               </div>
             )}
           </div>
+          <select
+            value={pageSize}
+            onChange={(e) => changePageSize(Number(e.target.value))}
+            title="Éléments par page"
+            style={{ background: "none", border: "2px solid #28405C", borderRadius: "8px", padding: "10px 10px", color: "#F2F2E8", cursor: "pointer", fontSize: "13px" }}
+          >
+            {[50, 100, 150, 200, 250, 300].map((n) => (
+              <option key={n} value={n}>
+                {n} / page
+              </option>
+            ))}
+          </select>
         </div>
         <div style={{ fontSize: "13px", color: "#8792A6" }}>{filtered.length} résultat{filtered.length > 1 ? "s" : ""}</div>
         {onAdd && (
@@ -216,6 +286,7 @@ export function DataTable({ items, allColumns, forcedKeys = [], defaultVisibleKe
           </button>
         )}
       </div>
+      {pagination && <div style={{ marginBottom: "14px" }}>{pagination}</div>}
       <table>
         <thead>
           <tr style={{ borderTop: "2px solid #28405C", borderBottom: "2px solid #28405C" }}>
@@ -241,7 +312,7 @@ export function DataTable({ items, allColumns, forcedKeys = [], defaultVisibleKe
           </tr>
         </thead>
         <tbody>
-          {filtered.map((item) => (
+          {paginated.map((item) => (
             <tr
               key={item.id}
               onClick={() => onRowClick(item)}
@@ -275,6 +346,7 @@ export function DataTable({ items, allColumns, forcedKeys = [], defaultVisibleKe
           )}
         </tbody>
       </table>
+      {pagination && <div style={{ marginTop: "14px" }}>{pagination}</div>}
     </div>
   );
 }

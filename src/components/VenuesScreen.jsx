@@ -86,6 +86,7 @@ export function VenuesScreen({ initialVenueId, onInitialVenueOpened } = {}) {
             onAdd={() => setCreating(true)}
             searchPlaceholder="Rechercher Lieux"
             extraSearchFields={alternateNameSearchFields}
+            filterKey={activeFilter}
           />
         </>
       )}
