@@ -11,7 +11,7 @@ const COMPACT_COLUMN_KEYS = ["status", "visible", "certificationLevel"];
 // refreshKey: changez cette valeur pour forcer un rechargement (ex. après une catégorie changée ailleurs)
 // storageKey: si fourni, le choix de colonnes est mémorisé (localStorage) et retrouvé après un
 // rafraîchissement de la page — propre à chaque tableau, pas partagé entre eux.
-export function ServerDataTable({ allColumns, forcedKeys = [], defaultVisibleKeys, fetchPage, onRowClick, onAdd, searchPlaceholder = "Rechercher...", pageSize = 50, refreshKey, storageKey }) {
+export function ServerDataTable({ allColumns, forcedKeys = [], defaultVisibleKeys, fetchPage, onRowClick, onAdd, searchPlaceholder = "Rechercher...", pageSize: initialPageSize = 100, refreshKey, filterKey, storageKey }) {
   const [query, setQuery] = useState("");
   const [debouncedQuery, setDebouncedQuery] = useState("");
   const [visibleKeys, setVisibleKeysState] = useState(() => {
@@ -43,6 +43,7 @@ export function ServerDataTable({ allColumns, forcedKeys = [], defaultVisibleKey
   const [sortKey, setSortKey] = useState(allColumns[0]?.key);
   const [sortDir, setSortDir] = useState(1);
   const [page, setPage] = useState(0);
+  const [pageSize, setPageSize] = useState(initialPageSize);
   const [items, setItems] = useState([]);
   const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(true);
@@ -58,10 +59,13 @@ export function ServerDataTable({ allColumns, forcedKeys = [], defaultVisibleKey
     return () => clearTimeout(t);
   }, [query]);
 
+  // Un vrai changement de filtre/catégorie repart bien à la première page — un simple
+  // rafraîchissement après un enregistrement (refreshKey seul) ne doit PAS en faire autant :
+  // c'était la cause du retour systématique à la page 1 après avoir enregistré un produit.
   useEffect(() => {
     setPage(0);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [refreshKey]);
+  }, [filterKey]);
 
   useEffect(() => {
     let cancelled = false;
@@ -76,7 +80,7 @@ export function ServerDataTable({ allColumns, forcedKeys = [], defaultVisibleKey
       cancelled = true;
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [debouncedQuery, sortKey, sortDir, page, refreshKey]);
+  }, [debouncedQuery, sortKey, sortDir, page, pageSize, refreshKey, filterKey]);
 
   useEffect(() => {
     const onClickOutside = (e) => {
@@ -100,9 +104,52 @@ export function ServerDataTable({ allColumns, forcedKeys = [], defaultVisibleKey
     }
   };
 
+  const changePageSize = (n) => {
+    setPageSize(n);
+    setPage(0);
+  };
+
   const totalPages = Math.max(1, Math.ceil(total / pageSize));
   const fromIdx = total === 0 ? 0 : page * pageSize + 1;
   const toIdx = Math.min(total, (page + 1) * pageSize);
+
+  // Un seul bloc, réutilisé au-dessus ET en dessous du tableau — pas besoin de descendre toute
+  // la page pour changer de page.
+  const pagination = total > pageSize && (
+    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+      <span style={{ fontSize: "12.5px", color: "#8792A6" }}>
+        {fromIdx}–{toIdx} sur {total}
+      </span>
+      <div style={{ display: "flex", gap: "8px" }}>
+        <button
+          onClick={() => setPage((p) => Math.max(0, p - 1))}
+          disabled={page === 0}
+          style={{ background: "none", border: "2px solid #28405C", borderRadius: "8px", padding: "7px 12px", color: "#F2F2E8", cursor: page === 0 ? "default" : "pointer", opacity: page === 0 ? 0.4 : 1, fontSize: "13px" }}
+        >
+          ← Précédent
+        </button>
+        <span style={{ fontSize: "12.5px", color: "#8792A6", padding: "7px 4px" }}>
+          Page {page + 1} / {totalPages}
+        </span>
+        <button
+          onClick={() => setPage((p) => Math.min(totalPages - 1, p + 1))}
+          disabled={page >= totalPages - 1}
+          style={{
+            background: "none",
+            border: "2px solid #28405C",
+            borderRadius: "8px",
+            padding: "7px 12px",
+            color: "#F2F2E8",
+            cursor: page >= totalPages - 1 ? "default" : "pointer",
+            opacity: page >= totalPages - 1 ? 0.4 : 1,
+            fontSize: "13px",
+          }}
+        >
+          Suivant →
+        </button>
+      </div>
+    </div>
+  );
 
   return (
     <div>
@@ -184,6 +231,18 @@ export function ServerDataTable({ allColumns, forcedKeys = [], defaultVisibleKey
               </div>
             )}
           </div>
+          <select
+            value={pageSize}
+            onChange={(e) => changePageSize(Number(e.target.value))}
+            title="Produits par page"
+            style={{ background: "none", border: "2px solid #28405C", borderRadius: "8px", padding: "10px 10px", color: "#F2F2E8", cursor: "pointer", fontSize: "13px" }}
+          >
+            {[100, 150, 200, 250, 300].map((n) => (
+              <option key={n} value={n}>
+                {n} / page
+              </option>
+            ))}
+          </select>
         </div>
         <div style={{ fontSize: "13px", color: "#8792A6" }}>
           {total} résultat{total > 1 ? "s" : ""}
@@ -197,6 +256,8 @@ export function ServerDataTable({ allColumns, forcedKeys = [], defaultVisibleKey
           </button>
         )}
       </div>
+
+      {pagination && <div style={{ marginBottom: "14px" }}>{pagination}</div>}
 
       <table>
         <thead>
@@ -265,41 +326,7 @@ export function ServerDataTable({ allColumns, forcedKeys = [], defaultVisibleKey
         </tbody>
       </table>
 
-      {total > pageSize && (
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: "14px" }}>
-          <span style={{ fontSize: "12.5px", color: "#8792A6" }}>
-            {fromIdx}–{toIdx} sur {total}
-          </span>
-          <div style={{ display: "flex", gap: "8px" }}>
-            <button
-              onClick={() => setPage((p) => Math.max(0, p - 1))}
-              disabled={page === 0}
-              style={{ background: "none", border: "2px solid #28405C", borderRadius: "8px", padding: "7px 12px", color: "#F2F2E8", cursor: page === 0 ? "default" : "pointer", opacity: page === 0 ? 0.4 : 1, fontSize: "13px" }}
-            >
-              ← Précédent
-            </button>
-            <span style={{ fontSize: "12.5px", color: "#8792A6", padding: "7px 4px" }}>
-              Page {page + 1} / {totalPages}
-            </span>
-            <button
-              onClick={() => setPage((p) => Math.min(totalPages - 1, p + 1))}
-              disabled={page >= totalPages - 1}
-              style={{
-                background: "none",
-                border: "2px solid #28405C",
-                borderRadius: "8px",
-                padding: "7px 12px",
-                color: "#F2F2E8",
-                cursor: page >= totalPages - 1 ? "default" : "pointer",
-                opacity: page >= totalPages - 1 ? 0.4 : 1,
-                fontSize: "13px",
-              }}
-            >
-              Suivant →
-            </button>
-          </div>
-        </div>
-      )}
+      {pagination && <div style={{ marginTop: "14px" }}>{pagination}</div>}
     </div>
   );
 }

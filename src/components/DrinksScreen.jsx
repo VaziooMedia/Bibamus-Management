@@ -153,7 +153,8 @@ export function DrinksScreen({ initialDrinkId, onInitialDrinkOpened } = {}) {
         onRowClick={setSelected}
         onAdd={() => setCreating(true)}
         searchPlaceholder="Rechercher Produits"
-        refreshKey={`${refreshKey}-${selectedType}-${activeFilter}`}
+        refreshKey={refreshKey}
+        filterKey={`${selectedType}-${activeFilter}`}
       />
 
       {(selected || creating) && (
