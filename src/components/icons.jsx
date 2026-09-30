@@ -31,6 +31,7 @@ import flagHu from "../assets/flags/hu.svg";
 import flagIe from "../assets/flags/ie.svg";
 import flagIs from "../assets/flags/is.svg";
 import flagIt from "../assets/flags/it.svg";
+import flagJp from "../assets/flags/jp.svg";
 import flagLv from "../assets/flags/lv.svg";
 import flagLt from "../assets/flags/lt.svg";
 import flagMt from "../assets/flags/mt.svg";
@@ -75,6 +76,7 @@ const FLAG_URLS_BY_CODE = {
   ie: flagIe,
   is: flagIs,
   it: flagIt,
+  jp: flagJp,
   lv: flagLv,
   lt: flagLt,
   mt: flagMt,
