@@ -145,7 +145,7 @@ export default function App() {
         />
       )}
       {screen === "drinks" && (
-        <DrinksScreen initialDrinkId={viewedClaimEntity?.type === "drink" ? viewedClaimEntity.id : null} onInitialDrinkOpened={() => setViewedClaimEntity(null)} />
+        <DrinksScreen initialDrinkId={viewedClaimEntity?.type === "drink" ? viewedClaimEntity.id : null} onInitialDrinkOpened={() => setViewedClaimEntity(null)} myUserId={myUserId} />
       )}
       {screen === "breweries" && (
         <BreweriesScreen

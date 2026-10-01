@@ -65,7 +65,7 @@ function filterKeyToParams(filterKey, reportedIds) {
   return {};
 }
 
-export function DrinksScreen({ initialDrinkId, onInitialDrinkOpened } = {}) {
+export function DrinksScreen({ initialDrinkId, onInitialDrinkOpened, myUserId } = {}) {
   const [selected, setSelected] = useState(null);
   const [creating, setCreating] = useState(false);
   const [selectedType, setSelectedType] = useState(null);
@@ -160,6 +160,7 @@ export function DrinksScreen({ initialDrinkId, onInitialDrinkOpened } = {}) {
       {(selected || creating) && (
         <DrinkDetailPanel
           drink={selected}
+          myUserId={myUserId}
           onClose={() => {
             setSelected(null);
             setCreating(false);

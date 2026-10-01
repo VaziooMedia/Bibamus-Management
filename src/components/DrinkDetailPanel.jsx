@@ -14,6 +14,7 @@ import { StyleTagAccordion } from "./StyleTagAccordion.jsx";
 import { TasteScale } from "./TasteScale.jsx";
 import { VariantManager } from "./VariantManager.jsx";
 import { VintageManager } from "./VintageManager.jsx";
+import { PendingContributionsSection } from "./PendingContributionsSection.jsx";
 import { FreeTagInput } from "./FreeTagInput.jsx";
 import { CollapsibleSection } from "./CollapsibleSection.jsx";
 import { COUNTRIES } from "../constants.js";
@@ -100,7 +101,7 @@ function SectionTitle({ children }) {
 }
 
 // drink === null → mode création (nouvelle fiche vierge)
-export function DrinkDetailPanel({ drink, onClose, onSaved }) {
+export function DrinkDetailPanel({ drink, onClose, onSaved, myUserId }) {
   const isNew = !drink;
   const [form, setForm] = useState({
     name: drink?.name || "",
@@ -321,6 +322,11 @@ export function DrinkDetailPanel({ drink, onClose, onSaved }) {
   }, []);
 
   const set = (field, value) => setForm((f) => ({ ...f, [field]: value }));
+  // Reflète dans le formulaire déjà ouvert la valeur qui vient d'être acceptée (sinon appliquée
+  // en base, mais invisible ici tant que la fiche n'est pas rouverte). Ne fonctionne que pour un
+  // champ dont le nom est identique en base et dans le formulaire (ex. "abv", "nationality") —
+  // pour un champ au nom différent, la fiche doit être rouverte pour voir le changement.
+  const refreshAfterContribution = (contribution) => set(contribution.fieldPath, contribution.proposedValue);
   const toggleStyle = (tag) => setForm((f) => ({ ...f, styles: f.styles.includes(tag) ? f.styles.filter((t) => t !== tag) : [...f.styles, tag] }));
   const toggleArrayField = (field, value) => setForm((f) => ({ ...f, [field]: f[field].includes(value) ? f[field].filter((v) => v !== value) : [...f[field], value] }));
 
@@ -566,6 +572,8 @@ export function DrinkDetailPanel({ drink, onClose, onSaved }) {
             ✕
           </button>
         </div>
+
+        <PendingContributionsSection entityType="drink" entityId={drink?.id || null} reviewerId={myUserId} onApplied={refreshAfterContribution} />
 
         <label style={labelStyle}>Statut de vérification</label>
         <div style={{ marginBottom: "14px", maxWidth: "220px" }}>
