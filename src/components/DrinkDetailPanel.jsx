@@ -1361,15 +1361,6 @@ export function DrinkDetailPanel({ drink, onClose, onSaved }) {
 
                 <div style={separatorStyle} />
 
-                <CollapsibleSection title="Conditionnements & variantes">
-                <p style={{ fontSize: "11.5px", color: "#8792A6", marginTop: "-6px", marginBottom: "10px" }}>
-                  Une même bière peut exister en plusieurs bouteilles, canettes ou fûts — chacun avec son propre code-barres si connu.
-                </p>
-                <VariantManager drinkId={drink?.id || null} />
-                </CollapsibleSection>
-
-                <div style={separatorStyle} />
-
                 <div style={{ background: "#2A1F0D", border: "2px solid #FF9500", borderRadius: "8px", padding: "12px", marginBottom: "16px", fontSize: "12px", color: "#F2F2E8" }}>
                   🔒 Réservé aux producteurs "Business" (accord B2B) et aux administrateurs. L'accès depuis cette plateforme n'est pas encore restreint techniquement — un vrai verrouillage par compte producteur reste à construire.
                 </div>
@@ -1563,6 +1554,15 @@ export function DrinkDetailPanel({ drink, onClose, onSaved }) {
                 ) : (
                   <p style={{ fontSize: "13px", color: "#8792A6", fontStyle: "italic" }}>Cette section sera complétée prochainement.</p>
                 )}
+
+                <div style={separatorStyle} />
+
+                <CollapsibleSection title="Conditionnements & variantes">
+                  <p style={{ fontSize: "11.5px", color: "#8792A6", marginTop: "-6px", marginBottom: "10px" }}>
+                    Un même produit peut exister en plusieurs bouteilles, canettes ou fûts — chacun avec son propre code-barres si connu.
+                  </p>
+                  <VariantManager drinkId={drink?.id || null} />
+                </CollapsibleSection>
               </>
             )}
 
