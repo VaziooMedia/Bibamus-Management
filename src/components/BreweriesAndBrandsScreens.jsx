@@ -34,13 +34,16 @@ const breweryColumns = [
 ];
 
 const getBrandColumns = (breweriesDirectory) => {
-  const producerName = (id) => breweriesDirectory.find((b) => b.id === id)?.name || "—";
   return [
     { key: "name", label: "Nom" },
     { key: "originCountry", label: "Origine", render: (b) => countryLabel(b.originCountry) },
     { key: "classifications", label: "Classification", render: (b) => (b.classifications || []).map(classificationLabel).join(", ") },
     { key: "brandTypes", label: "Type de marque", render: (b) => (b.brandTypes || []).map(brandTypeLabel).join(", ") },
-    { key: "producerId", label: "Producteur actuel", render: (b) => (b.producerId ? producerName(b.producerId) : "—") },
+    {
+      key: "producerIds",
+      label: "Producteur(s)",
+      render: (b) => ((b.producerIds || []).length > 0 ? b.producerIds.map((id) => breweriesDirectory.find((br) => br.id === id)?.name).filter(Boolean).join(", ") : "—"),
+    },
     { key: "status", label: "Statut", render: (b) => <StatusBadge status={b.status} /> },
     { key: "visible", label: "Visible", render: (b) => <VisibilityDot status={b.status} /> },
     { key: "certificationLevel", label: "Certification", render: (b) => <CertificationIcon level={b.certificationLevel} /> },
@@ -181,7 +184,7 @@ export function BrandsScreen({ initialBrandId, onInitialBrandOpened } = {}) {
             items={applyStatFilter(itemsWithReports, activeFilter, (b) => countryLabel(b.originCountry))}
             allColumns={getBrandColumns(breweriesDirectory)}
             forcedKeys={["name", "status"]}
-            defaultVisibleKeys={["name", "originCountry", "brandTypes", "producerId", "status", "visible", "certificationLevel"]}
+            defaultVisibleKeys={["name", "originCountry", "brandTypes", "producerIds", "status", "visible", "certificationLevel"]}
             storageKey="marques"
             onRowClick={setSelected}
             onAdd={() => setCreating(true)}

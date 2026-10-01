@@ -5,7 +5,7 @@ import { StatusSelector } from "./StatusSelector.jsx";
 import { AdminPhotoField } from "./AdminPhotoField.jsx";
 import { AlternateNamesFields } from "./AlternateNamesFields.jsx";
 import { GalleryManager } from "./GalleryManager.jsx";
-import { SearchableSelect } from "./SearchableSelect.jsx";
+import { SearchableSelect, SearchableMultiSelect } from "./SearchableSelect.jsx";
 import { CertificationLevelSelector } from "./CertificationLevelSelector.jsx";
 import { CollapsibleSection } from "./CollapsibleSection.jsx";
 import { FacebookIcon, InstagramIcon, TiktokIcon, SnapchatIcon, YoutubeIcon } from "./icons.jsx";
@@ -131,7 +131,7 @@ export function BrandDetailPanel({ brand, onClose, onSaved }) {
     tiktokUrl: brand?.tiktokUrl || "",
     snapchatUrl: brand?.snapchatUrl || "",
     youtubeUrl: brand?.youtubeUrl || "",
-    producerId: brand?.producerId || null,
+    producerIds: brand?.producerIds || [],
     brandOwner: brand?.brandOwner || "",
     videoLinks: brand?.videoLinks && brand.videoLinks.length > 0 ? brand.videoLinks : [""],
   });
@@ -183,7 +183,7 @@ export function BrandDetailPanel({ brand, onClose, onSaved }) {
     tiktokUrl: form.tiktokUrl.trim(),
     snapchatUrl: form.snapchatUrl.trim(),
     youtubeUrl: form.youtubeUrl.trim(),
-    producerId: form.producerId,
+    producerIds: form.producerIds,
     brandOwner: form.brandOwner.trim(),
     videoLinks: form.videoLinks.map((v) => v.trim()).filter(Boolean),
     logoUrl,
@@ -396,9 +396,9 @@ export function BrandDetailPanel({ brand, onClose, onSaved }) {
             <div style={separatorStyle} />
 
             <CollapsibleSection title="Producteur / Propriétaire">
-              <label style={labelStyle}>Producteur actuel</label>
+              <label style={labelStyle}>Producteur(s) — plusieurs possibles</label>
               <div style={{ marginBottom: "12px" }}>
-                <SearchableSelect options={producerOptions} value={form.producerId} onChange={(id) => set("producerId", id)} placeholder="Chercher un producteur..." />
+                <SearchableMultiSelect options={producerOptions} values={form.producerIds} onChange={(ids) => set("producerIds", ids)} placeholder="Chercher un producteur..." />
               </div>
               <label style={labelStyle}>Propriétaire de la marque</label>
               <input value={form.brandOwner} onChange={(e) => set("brandOwner", e.target.value)} onBlur={capitalizeOnBlur("brandOwner")} style={fieldStyle} />

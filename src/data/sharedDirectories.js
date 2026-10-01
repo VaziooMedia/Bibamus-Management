@@ -1395,12 +1395,14 @@ function applyStatusFilter(query, status) {
 
 // Un produit garde son producteur direct (colonne producer_ids, indépendante de toute marque) —
 // le seul cas qui manquait : un « produit unique » sans marque affichait « aucun producteur »,
-// alors que rien n'empêche de le renseigner directement. On ne retombe sur le producteur déduit
-// de la marque que si le produit n'a lui-même AUCUN producteur direct renseigné.
+// alors que rien n'empêche de le renseigner directement. On ne retombe sur le ou les producteurs
+// déduits de la marque (elle aussi désormais multiple, comme un produit) que si le produit n'a
+// lui-même AUCUN producteur direct renseigné.
 function resolveProducerName(row, producerNameById) {
   const direct = (row.producer_ids || []).map((id) => producerNameById[id]).filter(Boolean);
   if (direct.length > 0) return direct.join(", ");
-  return row.brands_directory?.producer_id ? producerNameById[row.brands_directory.producer_id] || null : null;
+  const viaBrand = (row.brands_directory?.producer_ids || []).map((id) => producerNameById[id]).filter(Boolean);
+  return viaBrand.length > 0 ? viaBrand.join(", ") : null;
 }
 
 const KNOWN_DRINK_TYPES = ["bieres_cidres", "vins_bulles", "spiritueux", "cocktails_mocktails", "softs_eaux", "boissons_chaudes", "snacks", "generiques"];
@@ -1417,7 +1419,7 @@ function applyTypeFilter(query, type) {
 // Un vrai seul produit complet par id — nécessaire pour l'ouvrir directement (ex. depuis une
 // revendication) sans dépendre de la vraie page actuellement chargée côté ServerDataTable.
 export async function loadDrinkById(id) {
-  const { data, error } = await supabase.from("drinks_directory").select("*, brands_directory(name, producer_id)").eq("id", id).single();
+  const { data, error } = await supabase.from("drinks_directory").select("*, brands_directory(name, producer_ids)").eq("id", id).single();
   if (error) {
     console.error("loadDrinkById:", error);
     return null;
@@ -1436,7 +1438,7 @@ export async function loadDrinksPage({ type, status, certificationLevel, hasPend
   // Jointure sur une seule profondeur seulement — une double jointure imbriquée (produit → marque
   // → producteur) s'est révélée trop fragile : si Supabase n'arrive pas à résoudre sans ambiguïté
   // l'une des deux relations, la requête ENTIÈRE échoue et plus aucun produit ne s'affiche.
-  let query = supabase.from("drinks_directory").select("*, brands_directory(name, producer_id)", { count: "exact" });
+  let query = supabase.from("drinks_directory").select("*, brands_directory(name, producer_ids)", { count: "exact" });
   query = applyTypeFilter(query, type);
   if (status) query = applyStatusFilter(query, status);
   if (certificationLevel) query = query.eq("certification_level", certificationLevel);
@@ -2224,7 +2226,7 @@ function rowToBrand(row) {
     tiktokUrl: row.tiktok_url,
     youtubeUrl: row.youtube_url,
     snapchatUrl: row.snapchat_url,
-    producerId: row.producer_id,
+    producerIds: row.producer_ids || [],
     brandOwner: row.brand_owner,
     status: row.status,
     aliases: row.aliases || [],
@@ -2261,7 +2263,11 @@ function brandToRow(b, partial = false) {
     tiktok_url: b.tiktokUrl,
     snapchat_url: b.snapchatUrl,
     youtube_url: b.youtubeUrl,
-    producer_id: b.producerId,
+    producer_ids: b.producerIds,
+    // L'app (bibamus-web) ne lit encore que l'ancien champ à un seul producteur — tant qu'elle
+    // n'est pas mise à jour elle aussi, on le maintient au premier producteur de la liste pour
+    // qu'elle reste à peu près à jour plutôt que figée sur une très vieille valeur.
+    producer_id: b.producerIds?.[0] || null,
     brand_owner: b.brandOwner,
     status: b.status,
     aliases: b.aliases,
