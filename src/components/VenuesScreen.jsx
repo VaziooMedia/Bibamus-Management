@@ -23,7 +23,7 @@ const allColumns = [
   { key: "certificationLevel", label: "Certification", render: (v) => <CertificationIcon level={v.certificationLevel} /> },
 ];
 
-export function VenuesScreen({ initialVenueId, onInitialVenueOpened } = {}) {
+export function VenuesScreen({ initialVenueId, onInitialVenueOpened, myUserId } = {}) {
   const [venues, setVenues] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selected, setSelected] = useState(null);
@@ -94,6 +94,7 @@ export function VenuesScreen({ initialVenueId, onInitialVenueOpened } = {}) {
         <VenueDetailPanel
           venue={selected}
           drinksDirectory={drinksDirectory}
+          myUserId={myUserId}
           onClose={() => {
             setSelected(null);
             setCreating(false);

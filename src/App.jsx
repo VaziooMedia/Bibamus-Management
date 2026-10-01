@@ -142,6 +142,7 @@ export default function App() {
         <VenuesScreen
           initialVenueId={viewedClaimEntity?.type === "venue" ? viewedClaimEntity.id : null}
           onInitialVenueOpened={() => setViewedClaimEntity(null)}
+          myUserId={myUserId}
         />
       )}
       {screen === "drinks" && (
@@ -151,11 +152,12 @@ export default function App() {
         <BreweriesScreen
           initialBreweryId={viewedClaimEntity?.type === "producer" ? viewedClaimEntity.id : null}
           onInitialBreweryOpened={() => setViewedClaimEntity(null)}
+          myUserId={myUserId}
         />
       )}
       {screen === "officialStories" && <OfficialStoriesScreen myUserId={myUserId} />}
       {screen === "brands" && (
-        <BrandsScreen initialBrandId={viewedClaimEntity?.type === "brand" ? viewedClaimEntity.id : null} onInitialBrandOpened={() => setViewedClaimEntity(null)} />
+        <BrandsScreen initialBrandId={viewedClaimEntity?.type === "brand" ? viewedClaimEntity.id : null} onInitialBrandOpened={() => setViewedClaimEntity(null)} myUserId={myUserId} />
       )}
       {screen === "chatTeam" && <ChatTeamScreen myUserId={myUserId} myRole={myRole} initialPersonId={chatTeamTargetId} />}
       {screen === "chatUsers" && <ChatUsersScreen myUserId={myUserId} myRole={myRole} />}

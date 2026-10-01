@@ -50,7 +50,7 @@ const getBrandColumns = (breweriesDirectory) => {
   ];
 };
 
-export function BreweriesScreen({ initialBreweryId, onInitialBreweryOpened } = {}) {
+export function BreweriesScreen({ initialBreweryId, onInitialBreweryOpened, myUserId } = {}) {
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selected, setSelected] = useState(null);
@@ -115,6 +115,7 @@ export function BreweriesScreen({ initialBreweryId, onInitialBreweryOpened } = {
       {(selected || creating) && (
         <BreweryDetailPanel
           brewery={selected}
+          myUserId={myUserId}
           onClose={() => {
             setSelected(null);
             setCreating(false);
@@ -132,7 +133,7 @@ export function BreweriesScreen({ initialBreweryId, onInitialBreweryOpened } = {
   );
 }
 
-export function BrandsScreen({ initialBrandId, onInitialBrandOpened } = {}) {
+export function BrandsScreen({ initialBrandId, onInitialBrandOpened, myUserId } = {}) {
   const [items, setItems] = useState([]);
   const [breweriesDirectory, setBreweriesDirectory] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -197,6 +198,7 @@ export function BrandsScreen({ initialBrandId, onInitialBrandOpened } = {}) {
       {(selected || creating) && (
         <BrandDetailPanel
           brand={selected}
+          myUserId={myUserId}
           onClose={() => {
             setSelected(null);
             setCreating(false);

@@ -10,6 +10,7 @@ import { CertificationLevelSelector } from "./CertificationLevelSelector.jsx";
 import { CollapsibleSection } from "./CollapsibleSection.jsx";
 import { FacebookIcon, InstagramIcon, TiktokIcon, SnapchatIcon, YoutubeIcon } from "./icons.jsx";
 import { COUNTRIES, BRAND_CLASSIFICATIONS, BRAND_TYPES } from "../constants.js";
+import { PendingContributionsSection } from "./PendingContributionsSection.jsx";
 
 const SMALL_WORDS = new Set(["de", "du", "des", "la", "le", "les", "à", "et", "the", "a", "au", "aux"]);
 const SMALL_APOSTROPHE_PREFIXES = new Set(["d", "l"]);
@@ -114,7 +115,7 @@ function TagPicker({ options, selected, onToggle }) {
 }
 
 // brand === null → mode création
-export function BrandDetailPanel({ brand, onClose, onSaved }) {
+export function BrandDetailPanel({ brand, onClose, onSaved, myUserId }) {
   const isNew = !brand;
   const [form, setForm] = useState({
     name: brand?.name || "",
@@ -164,6 +165,7 @@ export function BrandDetailPanel({ brand, onClose, onSaved }) {
   }, []);
 
   const set = (field, value) => setForm((f) => ({ ...f, [field]: value }));
+  const refreshAfterContribution = (contribution) => set(contribution.fieldPath, contribution.proposedValue);
   const capitalizeOnBlur = (field) => () => set(field, capitalizeWords(form[field]));
   const toggleType = (t) => setForm((f) => ({ ...f, brandTypes: f.brandTypes.includes(t) ? f.brandTypes.filter((x) => x !== t) : [...f.brandTypes, t] }));
   const toggleClassification = (c) => setForm((f) => ({ ...f, classifications: f.classifications.includes(c) ? f.classifications.filter((x) => x !== c) : [...f.classifications, c] }));
@@ -276,6 +278,8 @@ export function BrandDetailPanel({ brand, onClose, onSaved }) {
             ✕
           </button>
         </div>
+
+        <PendingContributionsSection entityType="brand" entityId={brand?.id || null} reviewerId={myUserId} onApplied={refreshAfterContribution} />
 
         <label style={labelStyle}>Statut de vérification</label>
         <div style={{ marginBottom: "14px", maxWidth: "220px" }}>

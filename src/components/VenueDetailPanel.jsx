@@ -12,6 +12,7 @@ import { AddressAutocomplete } from "./AddressAutocomplete.jsx";
 import { VenueCategoryMenuScreen } from "./VenueCategoryMenuScreen.jsx";
 import { COUNTRIES, PAYMENT_METHODS, VENUE_TYPES, PHONE_PREFIXES, COUNTRY_ISO_CODES, RATING_LABELS, MENU_CATEGORIES } from "../constants.js";
 import { resolveMenuItem } from "../utils.js";
+import { PendingContributionsSection } from "./PendingContributionsSection.jsx";
 
 const GEOAPIFY_CONFIGURED = !!(typeof import.meta !== "undefined" && import.meta.env && import.meta.env.VITE_GEOAPIFY_API_KEY);
 
@@ -152,7 +153,7 @@ function IconField({ icon, label, children }) {
 }
 
 // venue === null → mode création
-export function VenueDetailPanel({ venue, onClose, onSaved, drinksDirectory }) {
+export function VenueDetailPanel({ venue, onClose, onSaved, drinksDirectory, myUserId }) {
   const isNew = !venue;
   const [form, setForm] = useState({
     name: venue?.name || "",
@@ -277,6 +278,7 @@ export function VenueDetailPanel({ venue, onClose, onSaved, drinksDirectory }) {
   const [saving, setSaving] = useState(false);
 
   const set = (field, value) => setForm((f) => ({ ...f, [field]: value }));
+  const refreshAfterContribution = (contribution) => set(contribution.fieldPath, contribution.proposedValue);
   const capitalizeOnBlur = (field) => () => set(field, capitalizeWords(form[field]));
 
   const togglePaymentMethod = (m) =>
@@ -456,6 +458,8 @@ export function VenueDetailPanel({ venue, onClose, onSaved, drinksDirectory }) {
             ✕
           </button>
         </div>
+
+        <PendingContributionsSection entityType="venue" entityId={venue?.id || null} reviewerId={myUserId} onApplied={refreshAfterContribution} />
 
         <>
           <label style={{ ...labelStyle, marginBottom: "10px" }}>Statut</label>

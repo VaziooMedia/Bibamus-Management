@@ -21,6 +21,7 @@ import { SearchableSelect } from "./SearchableSelect.jsx";
 import { CertificationLevelSelector } from "./CertificationLevelSelector.jsx";
 import { CollapsibleSection } from "./CollapsibleSection.jsx";
 import { COUNTRIES, PHONE_PREFIXES, PRODUCER_TYPES, PRODUCER_PROFILES, COUNTRY_ISO_CODES } from "../constants.js";
+import { PendingContributionsSection } from "./PendingContributionsSection.jsx";
 
 const GEOAPIFY_CONFIGURED = !!(typeof import.meta !== "undefined" && import.meta.env && import.meta.env.VITE_GEOAPIFY_API_KEY);
 
@@ -150,7 +151,7 @@ function TagPicker({ options, selected, onToggle }) {
 }
 
 // brewery === null → mode création
-export function BreweryDetailPanel({ brewery, onClose, onSaved }) {
+export function BreweryDetailPanel({ brewery, onClose, onSaved, myUserId }) {
   const isNew = !brewery;
   const [form, setForm] = useState({
     name: brewery?.name || "",
@@ -213,6 +214,7 @@ export function BreweryDetailPanel({ brewery, onClose, onSaved }) {
   const [saving, setSaving] = useState(false);
 
   const set = (field, value) => setForm((f) => ({ ...f, [field]: value }));
+  const refreshAfterContribution = (contribution) => set(contribution.fieldPath, contribution.proposedValue);
   const capitalizeOnBlur = (field) => () => set(field, capitalizeWords(form[field]));
   const toggleTag = (field, tag) => setForm((f) => ({ ...f, [field]: f[field].includes(tag) ? f[field].filter((x) => x !== tag) : [...f[field], tag] }));
 
@@ -364,6 +366,8 @@ export function BreweryDetailPanel({ brewery, onClose, onSaved }) {
             ✕
           </button>
         </div>
+
+        <PendingContributionsSection entityType="producer" entityId={brewery?.id || null} reviewerId={myUserId} onApplied={refreshAfterContribution} />
 
         <label style={labelStyle}>Statut de vérification</label>
         <div style={{ marginBottom: "14px", maxWidth: "220px" }}>
