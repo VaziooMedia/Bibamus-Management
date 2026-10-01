@@ -381,7 +381,12 @@ const NEW_ITEMS_TABLES = { drink: "drinks_directory", venue: "public_venues", br
 export async function loadNewItems() {
   const entries = await Promise.all(
     Object.entries(NEW_ITEMS_TABLES).map(async ([entityType, table]) => {
-      const { data, error } = await supabase.from(table).select("id, name, created_at").eq("status", "to_process").order("created_at", { ascending: false });
+      const { data, error } = await supabase
+        .from(table)
+        .select("id, name, created_at")
+        .eq("status", "to_process")
+        .eq("created_via", "app")
+        .order("created_at", { ascending: false });
       if (error) {
         console.error("loadNewItems:", table, error);
         return [];

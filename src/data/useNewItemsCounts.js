@@ -6,9 +6,11 @@ import { supabase } from "../supabaseClient.js";
 // avec un vrai rafraîchissement de secours toutes les 15 secondes si la réplication temps réel
 // n'est pas activée sur ces tables.
 //
-// "À traiter" (status = "to_process") est le statut que porte toute nouvelle fiche créée depuis
-// l'app, avant toute relecture — distinct des "Nouvelles contributions" (data_contributions),
-// qui concernent les modifications suggérées sur une fiche déjà existante, pas les nouveaux ajouts.
+// "À traiter" (status = "to_process") est le statut que porte toute nouvelle fiche, qu'elle
+// vienne de l'app ou de la plateforme de gestion elle-même — created_via = "app" restreint donc
+// le compte aux seules fiches venues de l'app, pour ne jamais notifier un ajout fait ici même.
+// Distinct des "Nouvelles contributions" (data_contributions), qui concernent les modifications
+// suggérées sur une fiche déjà existante, pas les nouveaux ajouts.
 const TABLES = {
   drinks: "drinks_directory",
   venues: "public_venues",
@@ -22,7 +24,7 @@ export function useNewItemsCounts() {
   const refresh = useCallback(async () => {
     const entries = await Promise.all(
       Object.entries(TABLES).map(async ([key, table]) => {
-        const { count, error } = await supabase.from(table).select("id", { count: "exact", head: true }).eq("status", "to_process");
+        const { count, error } = await supabase.from(table).select("id", { count: "exact", head: true }).eq("status", "to_process").eq("created_via", "app");
         return [key, error ? 0 : count || 0];
       })
     );
