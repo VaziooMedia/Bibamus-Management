@@ -247,6 +247,7 @@ export function DrinkDetailPanel({ drink, onClose, onSaved, myUserId }) {
   const [uploadingPhoto, setUploadingPhoto] = useState(false);
   const [uploadingCover, setUploadingCover] = useState(false);
   const [status, setStatus] = useState(drink?.status || "draft");
+  const [isGeneric, setIsGeneric] = useState(drink?.isGeneric || false);
   const [certificationLevel, setCertificationLevel] = useState(drink?.certificationLevel || "bibamus");
   const [duplicateOfId, setDuplicateOfId] = useState(drink?.duplicateOfId || null);
   const [otherDrinkOptions, setOtherDrinkOptions] = useState([]);
@@ -348,6 +349,7 @@ export function DrinkDetailPanel({ drink, onClose, onSaved, myUserId }) {
       status,
       certificationLevel,
       duplicateOfId: status === "duplicate" ? duplicateOfId : null,
+      isGeneric,
     };
     // isBeerOrCider ne couvrait QUE les bières/cidres — les vins tombaient dans le "base" minimal
     // ci-dessus, sans jamais envoyer couleur, pays, appellation, cépage, ni même la photo. C'est
@@ -591,6 +593,11 @@ export function DrinkDetailPanel({ drink, onClose, onSaved, myUserId }) {
         <div style={{ marginBottom: "20px" }}>
           <CertificationLevelSelector value={certificationLevel} onChange={setCertificationLevel} />
         </div>
+
+        <label style={{ display: "flex", alignItems: "center", gap: "8px", fontSize: "13px", color: "#F2F2E8", cursor: "pointer", marginBottom: "20px" }}>
+          <input type="checkbox" checked={isGeneric} onChange={(e) => setIsGeneric(e.target.checked)} />
+          Générique (ex. "1 bière au choix" — sans marque précise)
+        </label>
 
         <label style={labelStyle}>Catégorie</label>
         <select value={form.type} onChange={(e) => set("type", e.target.value)} style={{ ...fieldStyle, width: "220px", marginBottom: "14px" }}>
