@@ -372,6 +372,26 @@ export async function loadClaims(status = "pending") {
   return data.map((c) => ({ ...c, claimant: byId[c.claimant_id] || null }));
 }
 
+// Nouvelles fiches "à traiter" (status to_process), tous types confondus — une entrée par fiche
+// fraîchement créée depuis l'app, jamais encore relue. Distinct des Signalements/Revendications
+// ci-dessus, et des "Nouvelles contributions" (data_contributions), qui concernent des
+// modifications suggérées sur une fiche déjà existante, pas les nouveaux ajouts.
+const NEW_ITEMS_TABLES = { drink: "drinks_directory", venue: "public_venues", brand: "brands_directory", producer: "breweries_directory" };
+
+export async function loadNewItems() {
+  const entries = await Promise.all(
+    Object.entries(NEW_ITEMS_TABLES).map(async ([entityType, table]) => {
+      const { data, error } = await supabase.from(table).select("id, name, created_at").eq("status", "to_process").order("created_at", { ascending: false });
+      if (error) {
+        console.error("loadNewItems:", table, error);
+        return [];
+      }
+      return data.map((row) => ({ ...row, entityType }));
+    })
+  );
+  return entries.flat().sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+}
+
 const BUSINESS_FIELDS =
   "id, email, name, last_name, active, company_name, vat_number, company_email, company_phone, company_street, company_street_number, " +
   "company_address_line2, company_postal_code, company_city, company_country, contact_function, contact_email, contact_phone, contact_languages, " +

@@ -182,7 +182,7 @@ export default function App() {
       {screen === "businessAccountDetail" && (
         <BusinessAccountDetailScreen accountId={viewedBusinessAccountId} onBack={() => setScreen("businessAccounts")} />
       )}
-      {screen === "notifications" && <NotificationsScreen onOpenReports={() => setScreen("reports")} onOpenClaims={() => setScreen("claims")} />}
+      {screen === "notifications" && <NotificationsScreen onOpenReports={() => setScreen("reports")} onOpenClaims={() => setScreen("claims")} onOpenEntityList={(s) => setScreen(s)} />}
       {screen === "admins" && (
         <CollaboratorsScreen
           initialAdminId={viewedAdminId}

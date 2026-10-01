@@ -4,6 +4,7 @@ import { TopBar } from "./TopBar.jsx";
 import { usePendingReportsCount } from "../data/usePendingReportsCount.js";
 import { useOpenClaimsCount } from "../data/useOpenClaimsCount.js";
 import { useUnreadChatCounts } from "../data/useUnreadChatCounts.js";
+import { useNewItemsCounts } from "../data/useNewItemsCounts.js";
 
 const COMMUNICATION_ITEMS = [
   { key: "chatTeam", label: "Chat Team" },
@@ -181,6 +182,11 @@ export function Layout({ current, onNavigate, onLogout, myRole, myCanModerate, m
       });
   }, [myUserId]);
   const unreadChatCounts = useUnreadChatCounts(myUserId, myRole);
+  const newItemsCounts = useNewItemsCounts();
+  // Nouvelles fiches "à traiter" (status to_process) pour chacun des 4 types — en plus des
+  // Signalements, déjà comptés ailleurs.
+  const databaseBadge = (item) =>
+    ({ venues: newItemsCounts.venues, drinks: newItemsCounts.drinks, brands: newItemsCounts.brands, breweries: newItemsCounts.breweries, reports: pendingReportsCount }[item.key]);
 
   const [communicationOpen, setCommunicationOpen] = useState(true);
   const [databaseSectionOpen, setDatabaseSectionOpen] = useState(true);
@@ -251,7 +257,7 @@ export function Layout({ current, onNavigate, onLogout, myRole, myCanModerate, m
             {databaseOpen && (
               <div style={{ paddingLeft: "14px" }}>
                 {DATABASE_ITEMS.map((item) => (
-                  <NavButton key={item.key} item={item} current={current} onNavigate={onNavigate} indent />
+                  <NavButton key={item.key} item={item} current={current} onNavigate={onNavigate} indent badge={databaseBadge(item)} />
                 ))}
               </div>
             )}
@@ -267,7 +273,7 @@ export function Layout({ current, onNavigate, onLogout, myRole, myCanModerate, m
               COMMUNICATION_ITEMS.map((item) => {
                 const badge =
                   item.key === "notifications"
-                    ? pendingReportsCount
+                    ? pendingReportsCount + newItemsCounts.drinks + newItemsCounts.venues + newItemsCounts.brands + newItemsCounts.breweries
                     : item.key === "chatTeam"
                     ? unreadChatCounts.chatTeam
                     : item.key === "chatUsers"
@@ -281,7 +287,7 @@ export function Layout({ current, onNavigate, onLogout, myRole, myCanModerate, m
             <SectionHeader title="DataBase" expanded={databaseSectionOpen} onToggle={() => setDatabaseSectionOpen((o) => !o)} />
             {databaseSectionOpen &&
               DATABASE_ITEMS.map((item) => (
-                <NavButton key={item.key} item={item} current={current} onNavigate={onNavigate} badge={item.key === "reports" ? pendingReportsCount : undefined} />
+                <NavButton key={item.key} item={item} current={current} onNavigate={onNavigate} badge={databaseBadge(item)} />
               ))}
 
             <SectionHeader title="Business" expanded={businessSectionOpen} onToggle={() => setBusinessSectionOpen((o) => !o)} />
