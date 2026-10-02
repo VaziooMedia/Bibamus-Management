@@ -53,6 +53,15 @@ export function ProductCategoryBar({ counts, selectedType, onSelect }) {
               {counts ? counts.autres ?? "…" : "…"}
             </div>
           </button>
+          {/* Filtre transitoire : retrouve les produits déjà cochés "Générique" via la nouvelle
+              case, qu'ils aient ou non déjà été reclassés dans leur vraie catégorie. À retirer une
+              fois la migration depuis l'ancienne catégorie "Génériques" terminée. */}
+          <button onClick={() => onSelect(selectedType === "__generic_checked__" ? null : "__generic_checked__")} style={blockStyle(selectedType === "__generic_checked__")}>
+            <div style={{ fontSize: "11px", color: selectedType === "__generic_checked__" ? "#0D1B2A" : "#8792A6", marginBottom: "4px" }}>Generic ✓</div>
+            <div style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "20px", color: selectedType === "__generic_checked__" ? "#0D1B2A" : "#39FF66" }}>
+              {counts ? counts.__generic_checked__ ?? "…" : "…"}
+            </div>
+          </button>
         </div>
       )}
     </div>

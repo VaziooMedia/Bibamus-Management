@@ -51,7 +51,10 @@ export const DRINK_TYPES = [
   { code: "softs_eaux", fr: "Softs & Eaux" },
   { code: "boissons_chaudes", fr: "Boissons chaudes" },
   { code: "snacks", fr: "Snacks" },
-  { code: "generiques", fr: "Génériques" },
+  // Ancienne méthode pour désigner un produit générique, remplacée par la case "Générique" —
+  // gardée ici UNIQUEMENT pour que les fiches pas encore reclassées continuent d'afficher leur
+  // vraie valeur actuelle sans la perdre silencieusement ; le libellé décourage tout nouveau choix.
+  { code: "generiques", fr: "Génériques (ancien — à reclasser)" },
 ];
 export const BEER_CIDER_SUBTYPES = [
   { code: "biere", fr: "Bière" },

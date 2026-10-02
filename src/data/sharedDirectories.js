@@ -1435,6 +1435,9 @@ const KNOWN_DRINK_TYPES = ["bieres_cidres", "vins_bulles", "spiritueux", "cockta
 function applyTypeFilter(query, type) {
   if (!type) return query;
   if (type === "__other__") return query.not("type", "in", `(${KNOWN_DRINK_TYPES.map((t) => `"${t}"`).join(",")})`);
+  // Pas une vraie catégorie — filtre transitoire pour retrouver les produits déjà cochés
+  // "Générique" (is_generic) via la nouvelle case, indépendamment de leur catégorie réelle.
+  if (type === "__generic_checked__") return query.eq("is_generic", true);
   return query.eq("type", type);
 }
 
@@ -1600,10 +1603,15 @@ export async function rejectContribution(contribution, reviewerId) {
 }
 
 export async function countDrinksByType() {
-  const results = await Promise.all([...KNOWN_DRINK_TYPES.map((t) => countDrinks({ type: t })), countDrinks({ type: "__other__" })]);
+  const results = await Promise.all([
+    ...KNOWN_DRINK_TYPES.map((t) => countDrinks({ type: t })),
+    countDrinks({ type: "__other__" }),
+    countDrinks({ type: "__generic_checked__" }),
+  ]);
   const map = {};
   KNOWN_DRINK_TYPES.forEach((t, i) => (map[t] = results[i]));
   map.autres = results[KNOWN_DRINK_TYPES.length];
+  map.__generic_checked__ = results[KNOWN_DRINK_TYPES.length + 1];
   return map;
 }
 
