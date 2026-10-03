@@ -21,8 +21,10 @@ function normalizeVolumes(raw) {
   return [{ id: raw.id, cl: raw.volumeCl ?? null, price: raw.price ?? 0, isDefault: true }];
 }
 const LETTER_BUCKETS = ["0-9", ..."ABCDEFGHIJKLMNOPQRSTUVWXYZ".split("")];
+// normalizeForSearch retire les accents avant qu'on ne regarde la première lettre — sans ça,
+// "École" ou "Écosse" tombaient dans "0-9" (le test ASCII A-Z ne reconnaît pas "É").
 const letterBucketOf = (name) => {
-  const first = (name || "").trim().charAt(0).toUpperCase();
+  const first = normalizeForSearch(name).trim().charAt(0).toUpperCase();
   return /[A-Z]/.test(first) ? first : "0-9";
 };
 
@@ -109,7 +111,7 @@ function CompactProductRow({ drink, volumes, priceStep = 0.1, onChangeVolumeFiel
     <div style={{ background: "#16273D", border: "2px solid #28405C", borderRadius: "8px", padding: "8px 10px" }}>
       <div style={{ display: "flex", alignItems: "flex-start", gap: "8px" }}>
         <div style={{ flex: 1, minWidth: 0 }}>
-          <ProductInfoLines drink={drink} />
+          <ProductInfoLines drink={drink} volumes={volumes} />
         </div>
         {hasSingleVolume ? (
           <PriceStepper price={defaultVolume.price} onChangePrice={(price) => onChangeVolumeField(defaultVolume.id, "price", price)} priceStep={priceStep} />
@@ -260,18 +262,25 @@ export function VenueCategoryMenuScreen({ venue, category, drinksDirectory, onCl
     setMenu((m) => m.map((item) => (item.id === id ? { ...item, ...patch } : item)));
   };
 
+  // Point de passage unique pour toute modification des volumes — une entrée à l'ancien format
+  // (volumeCl/price posés directement dessus, pas de volumes[]) n'a ce tableau que "synthétisé à
+  // la volée" par normalizeVolumes ; dès qu'on le réécrit une première fois, on efface ici les
+  // deux anciens champs du même coup, sinon ils restent sur l'entrée à côté du nouveau tableau —
+  // periment mais jamais nettoyés, pouvant induire en erreur tout code qui les lirait encore.
+  const setVolumes = (rawId, newVolumes) => updateRaw(rawId, { volumes: newVolumes, volumeCl: undefined, price: undefined });
+
   const updateVolume = (rawId, volumeId, patch) =>
-    updateRaw(rawId, { volumes: normalizeVolumes(menu.find((r) => r.id === rawId)).map((v) => (v.id === volumeId ? { ...v, ...patch } : v)) });
+    setVolumes(rawId, normalizeVolumes(menu.find((r) => r.id === rawId)).map((v) => (v.id === volumeId ? { ...v, ...patch } : v)));
 
   const addVolume = (rawId) => {
     const current = normalizeVolumes(menu.find((r) => r.id === rawId));
-    updateRaw(rawId, { volumes: [...current, { id: nextId(), cl: null, price: 0, isDefault: false }] });
+    setVolumes(rawId, [...current, { id: nextId(), cl: null, price: 0, isDefault: false }]);
   };
 
   // Un seul volume peut être "par défaut" à la fois — en cocher un décoche automatiquement tous
   // les autres de cette même entrée.
   const setDefaultVolume = (rawId, volumeId) =>
-    updateRaw(rawId, { volumes: normalizeVolumes(menu.find((r) => r.id === rawId)).map((v) => ({ ...v, isDefault: v.id === volumeId })) });
+    setVolumes(rawId, normalizeVolumes(menu.find((r) => r.id === rawId)).map((v) => ({ ...v, isDefault: v.id === volumeId })));
 
   const removeVolume = (rawId, volumeId) => {
     const current = normalizeVolumes(menu.find((r) => r.id === rawId));
@@ -281,7 +290,7 @@ export function VenueCategoryMenuScreen({ venue, category, drinksDirectory, onCl
     // Si le volume retiré était le volume par défaut, le premier restant en hérite — sinon
     // aucune entrée n'aurait plus de volume par défaut du tout.
     const finalVolumes = wasDefault ? remaining.map((v, i) => (i === 0 ? { ...v, isDefault: true } : v)) : remaining;
-    updateRaw(rawId, { volumes: finalVolumes });
+    setVolumes(rawId, finalVolumes);
   };
 
   // Classement manuel : échange la position réelle de deux produits de CETTE catégorie dans le

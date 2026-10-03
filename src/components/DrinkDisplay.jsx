@@ -131,18 +131,24 @@ export const BobBadge = () => (
 // sélecteur de répertoire...). Séparée en deux pièces (lignes 1-2 / ligne 3) car certains
 // contextes (ex. la ligne prix d'un produit déjà sur la carte) ont besoin de placer la ligne 3
 // sur toute la largeur du bloc, en dehors de la colonne où vivent les lignes 1-2.
-export function ProductInfoLines({ drink }) {
+// volumes : optionnel — la liste des volumes d'une entrée de carte (voir normalizeVolumes côté
+// VenueCategoryMenuScreen), affichée en 2e ligne avant le drapeau. Remplace l'ancien volumeCl
+// unique qui s'affichait jusque-là à côté du nom, devenu incohérent dès qu'une entrée en porte
+// plusieurs : la liste des volumes reste le seul endroit qui les montre.
+export function ProductInfoLines({ drink, volumes }) {
   const size = 9;
   const country = countryBadgeItem(drink, size);
   const specifics = specificsBadgeItems(drink, size);
   const sep = <span style={{ width: "1px", height: "10px", background: COLORS.paperAlt, display: "inline-block", flexShrink: 0 }} />;
+  const volumeLabels = (volumes || []).filter((v) => v.cl != null).map((v) => `${String(v.cl).replace(".", ",")}cl.`);
   return (
     <>
       <div style={{ display: "flex", alignItems: "baseline", gap: "6px", flexWrap: "wrap" }}>
         <span style={{ fontWeight: 700, fontSize: "13px", color: COLORS.ink }}>{drink.name}</span>
-        {drink.volumeCl && <span style={{ fontSize: "12px", color: COLORS.amber, fontWeight: 800 }}>{String(drink.volumeCl).replace(".", ",")}cl.</span>}
       </div>
       <div style={{ display: "flex", alignItems: "center", gap: "6px", flexWrap: "wrap", marginTop: "3px" }}>
+        {volumeLabels.length > 0 && <span style={{ fontSize: "12px", color: COLORS.amber, fontWeight: 800 }}>{volumeLabels.join(" · ")}</span>}
+        {volumeLabels.length > 0 && country && sep}
         {country && renderBadgeItem(country, drink, null, size)}
         {country && (specifics.length > 0 || drink.servingMode) && sep}
         {specifics.map((it) => renderBadgeItem(it, drink, null, size))}
