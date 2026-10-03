@@ -11,6 +11,15 @@ import { ProductInfoLines, ProductDetailLine, ProductSummaryLines } from "./Drin
 import { resolveMenuItem, nextId, normalizeForSearch } from "../utils.js";
 
 const categoryOf = (d) => (MENU_CATEGORIES.includes(d.menuCategory) ? d.menuCategory : MENU_CATEGORIES.includes(d.type) ? d.type : "Non classé");
+
+// Une entrée de carte porte désormais plusieurs volumes (champ volumes), chacun avec son propre
+// prix — à la place de l'ancien volumeCl/price uniques posés directement sur l'entrée. Les
+// entrées déjà enregistrées avant ce changement n'ont que l'ancienne forme : on la retrouve ici
+// sans jamais réécrire silencieusement ces entrées tant que l'admin ne les modifie pas lui-même.
+function normalizeVolumes(raw) {
+  if (raw.volumes) return raw.volumes;
+  return [{ id: raw.id, cl: raw.volumeCl ?? null, price: raw.price ?? 0, isDefault: true }];
+}
 const LETTER_BUCKETS = ["0-9", ..."ABCDEFGHIJKLMNOPQRSTUVWXYZ".split("")];
 const letterBucketOf = (name) => {
   const first = (name || "").trim().charAt(0).toUpperCase();
@@ -40,16 +49,58 @@ function CollapsibleSection({ title, count, expanded, onToggle, children }) {
 // DrinkRow partagé (utilisé aussi par d'autres écrans avec d'autres contraintes) : prix précédé
 // du symbole €, cadre du prix fermé en un seul bloc, actions secondaires (détails, suppression)
 // regroupées en bas à droite.
-function CompactProductRow({ drink, price, onChangePrice, priceStep = 0.1, onChangeVolume, onChangeServingMode, onRemove }) {
+// Une seule ligne de prix éditable, réutilisée pour le raccourci "un seul volume" en en-tête et
+// pour chaque ligne de volume dans la liste dépliée.
+function PriceStepper({ price, onChangePrice, priceStep = 0.1 }) {
   const [priceInput, setPriceInput] = useState(() => String(price ?? "").replace(".", ","));
-  const [expanded, setExpanded] = useState(false);
-  const isBeer = BEER_TYPES.includes(drink.type);
-
   const commit = (next) => {
     const rounded = Math.round(next * 100) / 100;
     setPriceInput(String(rounded).replace(".", ","));
     onChangePrice(rounded);
   };
+  return (
+    <div style={{ display: "flex", alignItems: "stretch", border: "2px solid #28405C", borderRadius: "6px", overflow: "hidden", flexShrink: 0 }}>
+      <span style={{ fontSize: "11.5px", color: "#8792A6", padding: "0 6px", display: "flex", alignItems: "center", background: "#0D1B2A" }}>€</span>
+      <input
+        type="text"
+        inputMode="decimal"
+        value={priceInput}
+        onChange={(e) => {
+          const raw = e.target.value;
+          setPriceInput(raw);
+          const parsed = parseFloat(raw.replace(",", "."));
+          onChangePrice(isNaN(parsed) ? 0 : parsed);
+        }}
+        style={{ width: "44px", padding: "5px 4px", border: "none", borderLeft: "2px solid #28405C", fontSize: "12.5px", textAlign: "right", fontFamily: "'Urbanist', sans-serif", background: "#16273D", color: "#F2F2E8" }}
+      />
+      <div style={{ display: "flex", flexDirection: "column", borderLeft: "2px solid #28405C" }}>
+        <button
+          onClick={() => commit((parseFloat(priceInput.replace(",", ".")) || 0) + priceStep)}
+          style={{ background: "none", border: "none", borderBottom: "1px solid #28405C", cursor: "pointer", padding: "0 5px", fontSize: "8px", lineHeight: 1.3, color: "#8792A6" }}
+          aria-label="Augmenter le prix"
+        >
+          ▲
+        </button>
+        <button
+          onClick={() => commit(Math.max(0, (parseFloat(priceInput.replace(",", ".")) || 0) - priceStep))}
+          style={{ background: "none", border: "none", cursor: "pointer", padding: "0 5px", fontSize: "8px", lineHeight: 1.3, color: "#8792A6" }}
+          aria-label="Diminuer le prix"
+        >
+          ▼
+        </button>
+      </div>
+    </div>
+  );
+}
+
+// volumes : toujours au moins un (voir normalizeVolumes) — un seul volume garde l'ancien
+// raccourci "prix visible sans déplier" ; dès qu'il y en a plusieurs, chaque volume (et son
+// propre prix) ne se gère que dans la liste dépliée, avec sa coche "par défaut".
+function CompactProductRow({ drink, volumes, priceStep = 0.1, onChangeVolumeField, onAddVolume, onRemoveVolume, onSetDefaultVolume, onChangeServingMode, onRemove }) {
+  const [expanded, setExpanded] = useState(false);
+  const isBeer = BEER_TYPES.includes(drink.type);
+  const hasSingleVolume = volumes.length === 1;
+  const defaultVolume = volumes.find((v) => v.isDefault) || volumes[0];
 
   const fieldLabelStyle = { fontSize: "10.5px", fontWeight: 600, color: "#8792A6", marginBottom: "3px", display: "block" };
   const selectStyle = { padding: "6px 8px", borderRadius: "6px", border: "2px solid #28405C", fontSize: "12px", background: "#0D1B2A", color: "#F2F2E8", width: "100%" };
@@ -60,37 +111,11 @@ function CompactProductRow({ drink, price, onChangePrice, priceStep = 0.1, onCha
         <div style={{ flex: 1, minWidth: 0 }}>
           <ProductInfoLines drink={drink} />
         </div>
-        <div style={{ display: "flex", alignItems: "stretch", border: "2px solid #28405C", borderRadius: "6px", overflow: "hidden", flexShrink: 0 }}>
-          <span style={{ fontSize: "11.5px", color: "#8792A6", padding: "0 6px", display: "flex", alignItems: "center", background: "#0D1B2A" }}>€</span>
-          <input
-            type="text"
-            inputMode="decimal"
-            value={priceInput}
-            onChange={(e) => {
-              const raw = e.target.value;
-              setPriceInput(raw);
-              const parsed = parseFloat(raw.replace(",", "."));
-              onChangePrice(isNaN(parsed) ? 0 : parsed);
-            }}
-            style={{ width: "44px", padding: "5px 4px", border: "none", borderLeft: "2px solid #28405C", fontSize: "12.5px", textAlign: "right", fontFamily: "'Urbanist', sans-serif", background: "#16273D", color: "#F2F2E8" }}
-          />
-          <div style={{ display: "flex", flexDirection: "column", borderLeft: "2px solid #28405C" }}>
-            <button
-              onClick={() => commit((parseFloat(priceInput.replace(",", ".")) || 0) + priceStep)}
-              style={{ background: "none", border: "none", borderBottom: "1px solid #28405C", cursor: "pointer", padding: "0 5px", fontSize: "8px", lineHeight: 1.3, color: "#8792A6" }}
-              aria-label="Augmenter le prix"
-            >
-              ▲
-            </button>
-            <button
-              onClick={() => commit(Math.max(0, (parseFloat(priceInput.replace(",", ".")) || 0) - priceStep))}
-              style={{ background: "none", border: "none", cursor: "pointer", padding: "0 5px", fontSize: "8px", lineHeight: 1.3, color: "#8792A6" }}
-              aria-label="Diminuer le prix"
-            >
-              ▼
-            </button>
-          </div>
-        </div>
+        {hasSingleVolume ? (
+          <PriceStepper price={defaultVolume.price} onChangePrice={(price) => onChangeVolumeField(defaultVolume.id, "price", price)} priceStep={priceStep} />
+        ) : (
+          <span style={{ fontSize: "12px", color: "#8792A6", fontWeight: 600, flexShrink: 0, whiteSpace: "nowrap", padding: "6px 0" }}>{volumes.length} volumes</span>
+        )}
       </div>
       <ProductDetailLine
         drink={drink}
@@ -106,33 +131,68 @@ function CompactProductRow({ drink, price, onChangePrice, priceStep = 0.1, onCha
         }
       />
       {expanded && (
-        <div style={{ display: "flex", alignItems: "flex-start", gap: "10px", marginTop: "8px" }}>
-          <div style={{ width: "110px", flexShrink: 0 }}>
-            <label style={fieldLabelStyle}>Volume</label>
-            <select value={drink.volumeCl || ""} onChange={(e) => onChangeVolume(e.target.value ? parseFloat(e.target.value) : null)} style={selectStyle}>
-              <option value="">Non défini</option>
-              {DRINK_VOLUMES_CL.map((v) => (
-                <option key={v} value={v}>
-                  {String(v).replace(".", ",")} cl.
-                </option>
-              ))}
-            </select>
-          </div>
-          {isBeer && (
-            <>
-              <div style={{ width: "1px", alignSelf: "stretch", background: "#28405C", marginTop: "18px" }} />
-              <div style={{ width: "110px", flexShrink: 0 }}>
-                <label style={fieldLabelStyle}>Type de service</label>
-                <select value={drink.servingMode || ""} onChange={(e) => onChangeServingMode(e.target.value)} style={selectStyle}>
+        <div style={{ marginTop: "8px" }}>
+          <label style={fieldLabelStyle}>Volume(s)</label>
+          <div style={{ display: "flex", flexDirection: "column", gap: "6px", marginBottom: "6px" }}>
+            {volumes.map((v) => (
+              <div key={v.id} style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+                <button
+                  onClick={() => onSetDefaultVolume(v.id)}
+                  title={v.isDefault ? "Volume par défaut" : "Définir comme volume par défaut"}
+                  style={{
+                    width: "20px",
+                    height: "20px",
+                    flexShrink: 0,
+                    borderRadius: "50%",
+                    border: `2px solid ${v.isDefault ? "#39FF66" : "#28405C"}`,
+                    background: v.isDefault ? "#39FF66" : "transparent",
+                    color: "#0D1B2A",
+                    fontSize: "11px",
+                    fontWeight: 800,
+                    cursor: "pointer",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    padding: 0,
+                  }}
+                >
+                  {v.isDefault ? "✓" : ""}
+                </button>
+                <select value={v.cl || ""} onChange={(e) => onChangeVolumeField(v.id, "cl", e.target.value ? parseFloat(e.target.value) : null)} style={{ ...selectStyle, flex: 1 }}>
                   <option value="">Non défini</option>
-                  {Object.entries(SERVING_MODE_LABELS).map(([key, label]) => (
-                    <option key={key} value={key}>
-                      {label}
+                  {DRINK_VOLUMES_CL.map((cl) => (
+                    <option key={cl} value={cl}>
+                      {String(cl).replace(".", ",")} cl.
                     </option>
                   ))}
                 </select>
+                <PriceStepper price={v.price} onChangePrice={(price) => onChangeVolumeField(v.id, "price", price)} priceStep={priceStep} />
+                {volumes.length > 1 && (
+                  <button onClick={() => onRemoveVolume(v.id)} title="Retirer ce volume" style={{ background: "none", border: "none", color: "#FF3B4E", fontSize: "15px", cursor: "pointer", padding: "0 2px", lineHeight: 1, flexShrink: 0 }}>
+                    ×
+                  </button>
+                )}
               </div>
-            </>
+            ))}
+          </div>
+          <button
+            onClick={onAddVolume}
+            style={{ background: "none", border: `1.5px dashed #28405C`, borderRadius: "6px", color: "#39FF66", fontSize: "12px", fontWeight: 700, cursor: "pointer", padding: "5px 10px" }}
+          >
+            + Ajouter un volume
+          </button>
+          {isBeer && (
+            <div style={{ width: "140px", marginTop: "10px" }}>
+              <label style={fieldLabelStyle}>Type de service</label>
+              <select value={drink.servingMode || ""} onChange={(e) => onChangeServingMode(e.target.value)} style={selectStyle}>
+                <option value="">Non défini</option>
+                {Object.entries(SERVING_MODE_LABELS).map(([key, label]) => (
+                  <option key={key} value={key}>
+                    {label}
+                  </option>
+                ))}
+              </select>
+            </div>
           )}
         </div>
       )}
@@ -184,9 +244,8 @@ export function VenueCategoryMenuScreen({ venue, category, drinksDirectory, onCl
         fromDirectory: true,
         sourceDrinkId: source.id,
         menuCategory: category,
-        price: 0,
         servingMode: source.servingMode || "",
-        volumeCl: source.volumeCl != null ? source.volumeCl : null,
+        volumes: [{ id: nextId(), cl: source.volumeCl != null ? source.volumeCl : null, price: 0, isDefault: true }],
       },
     ]);
   };
@@ -199,6 +258,30 @@ export function VenueCategoryMenuScreen({ venue, category, drinksDirectory, onCl
   const updateRaw = (id, patch) => {
     setDirty(true);
     setMenu((m) => m.map((item) => (item.id === id ? { ...item, ...patch } : item)));
+  };
+
+  const updateVolume = (rawId, volumeId, patch) =>
+    updateRaw(rawId, { volumes: normalizeVolumes(menu.find((r) => r.id === rawId)).map((v) => (v.id === volumeId ? { ...v, ...patch } : v)) });
+
+  const addVolume = (rawId) => {
+    const current = normalizeVolumes(menu.find((r) => r.id === rawId));
+    updateRaw(rawId, { volumes: [...current, { id: nextId(), cl: null, price: 0, isDefault: false }] });
+  };
+
+  // Un seul volume peut être "par défaut" à la fois — en cocher un décoche automatiquement tous
+  // les autres de cette même entrée.
+  const setDefaultVolume = (rawId, volumeId) =>
+    updateRaw(rawId, { volumes: normalizeVolumes(menu.find((r) => r.id === rawId)).map((v) => ({ ...v, isDefault: v.id === volumeId })) });
+
+  const removeVolume = (rawId, volumeId) => {
+    const current = normalizeVolumes(menu.find((r) => r.id === rawId));
+    if (current.length <= 1) return; // toujours garder au moins un volume
+    const wasDefault = current.find((v) => v.id === volumeId)?.isDefault;
+    const remaining = current.filter((v) => v.id !== volumeId);
+    // Si le volume retiré était le volume par défaut, le premier restant en hérite — sinon
+    // aucune entrée n'aurait plus de volume par défaut du tout.
+    const finalVolumes = wasDefault ? remaining.map((v, i) => (i === 0 ? { ...v, isDefault: true } : v)) : remaining;
+    updateRaw(rawId, { volumes: finalVolumes });
   };
 
   // Classement manuel : échange la position réelle de deux produits de CETTE catégorie dans le
@@ -281,9 +364,11 @@ export function VenueCategoryMenuScreen({ venue, category, drinksDirectory, onCl
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <CompactProductRow
                     drink={resolved}
-                    price={resolved.price}
-                    onChangePrice={(price) => updateRaw(raw.id, { price })}
-                    onChangeVolume={(volumeCl) => updateRaw(raw.id, { volumeCl })}
+                    volumes={normalizeVolumes(raw)}
+                    onChangeVolumeField={(volumeId, field, value) => updateVolume(raw.id, volumeId, { [field]: value })}
+                    onAddVolume={() => addVolume(raw.id)}
+                    onRemoveVolume={(volumeId) => removeVolume(raw.id, volumeId)}
+                    onSetDefaultVolume={(volumeId) => setDefaultVolume(raw.id, volumeId)}
                     onChangeServingMode={(servingMode) => updateRaw(raw.id, { servingMode })}
                     onRemove={() => removeItem(raw.id)}
                   />
