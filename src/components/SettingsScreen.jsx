@@ -105,7 +105,7 @@ export function SettingsScreen({ myUserId, onProfileUpdated }) {
   const [mfaSaving, setMfaSaving] = useState(false);
   const [mfaError, setMfaError] = useState(null);
 
-  const [notificationPrefs, setNotificationPrefs] = useState({ reports: true, claims: true });
+  const [notificationPrefs, setNotificationPrefs] = useState({ reports: true, claims: true, newItems: true });
   const [savingNotifications, setSavingNotifications] = useState(false);
   const [notificationsSaved, setNotificationsSaved] = useState(false);
 
@@ -130,7 +130,7 @@ export function SettingsScreen({ myUserId, onProfileUpdated }) {
       .then(({ data }) => {
         if (data) {
           setProfile(data);
-          setNotificationPrefs(data.notification_prefs || { reports: true, claims: true });
+          setNotificationPrefs({ reports: true, claims: true, newItems: true, ...(data.notification_prefs || {}) });
           setMainLanguage(data.main_language || "");
           setAvatarUrl(data.avatar_url || null);
         }
@@ -472,7 +472,7 @@ export function SettingsScreen({ myUserId, onProfileUpdated }) {
           />
           <span style={{ fontSize: "13px", color: "#F2F2E8" }}>Signalements en attente</span>
         </label>
-        <label style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "16px", cursor: "pointer" }}>
+        <label style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "12px", cursor: "pointer" }}>
           <input
             type="checkbox"
             checked={notificationPrefs.claims}
@@ -482,6 +482,17 @@ export function SettingsScreen({ myUserId, onProfileUpdated }) {
             }}
           />
           <span style={{ fontSize: "13px", color: "#F2F2E8" }}>Revendications en attente</span>
+        </label>
+        <label style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "16px", cursor: "pointer" }}>
+          <input
+            type="checkbox"
+            checked={notificationPrefs.newItems !== false}
+            onChange={(e) => {
+              setNotificationPrefs((prev) => ({ ...prev, newItems: e.target.checked }));
+              setNotificationsSaved(false);
+            }}
+          />
+          <span style={{ fontSize: "13px", color: "#F2F2E8" }}>Nouveaux ajouts depuis l'app (fiches à traiter)</span>
         </label>
         <button
           onClick={handleSaveNotifications}

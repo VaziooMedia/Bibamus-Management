@@ -324,6 +324,7 @@ export function Layout({ current, onNavigate, onLogout, myRole, myCanModerate, m
           pendingReportsCount={pendingReportsCount}
           notificationPrefs={notificationPrefs}
           openClaimsCount={openClaimsCount}
+          newItemsCount={newItemsCounts.drinks + newItemsCounts.venues + newItemsCounts.brands + newItemsCounts.breweries}
           onOpenReports={() => onNavigate("notifications")}
           unreadMessagesCount={unreadChatCounts.chatTeam + unreadChatCounts.chatUsers + unreadChatCounts.chatBusiness}
           onOpenMessages={() => onNavigate("chatTeam")}
