@@ -1000,6 +1000,7 @@ function rowToVenue(row) {
     translations: row.translations || [],
     certificationLevel: row.certification_level,
     pendingContributionsCount: row.pending_contributions_count || 0,
+    createdVia: row.created_via,
     duplicateOfId: row.duplicate_of_id,
     openReportsCount: row.open_reports_count || 0,
     likes: row.likes || [],
@@ -1413,6 +1414,13 @@ export async function loadDrinksDirectory() {
 }
 
 // Un statut vide en base ("null") équivaut à "à traiter" — traité comme tel dans les comptages.
+// Une "nouvelle entrée" : fiche créée depuis l'app et jamais encore relue (statut "à traiter") —
+// la même définition que la pastille de la barre latérale (useNewItemsCounts) et que la section
+// "Nouveaux ajouts" de Notifications, pour que les trois affichent toujours le même chiffre.
+function applyNewEntriesFilter(query) {
+  return query.eq("status", "to_process").eq("created_via", "app");
+}
+
 function applyStatusFilter(query, status) {
   if (status === "draft") return query.or("status.is.null,status.eq.draft");
   return query.eq("status", status);
@@ -1462,7 +1470,7 @@ export async function loadDrinkById(id) {
   };
 }
 
-export async function loadDrinksPage({ type, status, certificationLevel, hasPendingContributions, reportedIds, nationalityCodes, search, sortKey = "name", sortDir = 1, page = 0, pageSize = 50 } = {}) {
+export async function loadDrinksPage({ type, status, certificationLevel, hasPendingContributions, newEntries, reportedIds, nationalityCodes, search, sortKey = "name", sortDir = 1, page = 0, pageSize = 50 } = {}) {
   // Jointure sur une seule profondeur seulement — une double jointure imbriquée (produit → marque
   // → producteur) s'est révélée trop fragile : si Supabase n'arrive pas à résoudre sans ambiguïté
   // l'une des deux relations, la requête ENTIÈRE échoue et plus aucun produit ne s'affiche.
@@ -1471,6 +1479,7 @@ export async function loadDrinksPage({ type, status, certificationLevel, hasPend
   if (status) query = applyStatusFilter(query, status);
   if (certificationLevel) query = query.eq("certification_level", certificationLevel);
   if (hasPendingContributions) query = query.gt("pending_contributions_count", 0);
+  if (newEntries) query = applyNewEntriesFilter(query);
   if (reportedIds) query = query.in("id", reportedIds.size > 0 ? Array.from(reportedIds) : ["__none__"]);
   if (nationalityCodes) query = query.in("nationality", nationalityCodes.length > 0 ? nationalityCodes : ["__none__"]);
   if (search && search.trim()) {
@@ -1505,12 +1514,13 @@ export async function loadDrinksPage({ type, status, certificationLevel, hasPend
 // Un seul décompte rapide (via count exact, sans jamais rapatrier les lignes elles-mêmes) —
 // utilisé pour les blocs de statistiques, avec un filtre de catégorie optionnel pour qu'ils
 // restent justes une fois qu'une catégorie est sélectionnée.
-export async function countDrinks({ type, status, certificationLevel, hasPendingContributions, reportedIds, nationalityCodes } = {}) {
+export async function countDrinks({ type, status, certificationLevel, hasPendingContributions, newEntries, reportedIds, nationalityCodes } = {}) {
   let query = supabase.from("drinks_directory").select("id", { count: "exact", head: true });
   query = applyTypeFilter(query, type);
   if (status) query = applyStatusFilter(query, status);
   if (certificationLevel) query = query.eq("certification_level", certificationLevel);
   if (hasPendingContributions) query = query.gt("pending_contributions_count", 0);
+  if (newEntries) query = applyNewEntriesFilter(query);
   if (reportedIds) query = query.in("id", reportedIds.size > 0 ? Array.from(reportedIds) : ["__none__"]);
   if (nationalityCodes) query = query.in("nationality", nationalityCodes.length > 0 ? nationalityCodes : ["__none__"]);
   const { count, error } = await query;
@@ -1668,6 +1678,7 @@ function rowToDrink(row) {
     aliases: row.aliases || [],
     certificationLevel: row.certification_level,
     pendingContributionsCount: row.pending_contributions_count || 0,
+    createdVia: row.created_via,
     pendingEdit: row.pending_edit || null,
     duplicateOfId: row.duplicate_of_id,
     openReportsCount: row.open_reports_count || 0,
@@ -2183,6 +2194,7 @@ function rowToBrewery(row) {
     submittedBy: row.submitted_by,
     submittedAt: row.submitted_at ? new Date(row.submitted_at).getTime() : null,
     pendingContributionsCount: row.pending_contributions_count || 0,
+    createdVia: row.created_via,
     pendingEdit: row.pending_edit || null,
   };
 }
@@ -2348,6 +2360,7 @@ function rowToBrand(row) {
     submittedBy: row.submitted_by,
     submittedAt: row.submitted_at ? new Date(row.submitted_at).getTime() : null,
     pendingContributionsCount: row.pending_contributions_count || 0,
+    createdVia: row.created_via,
     pendingEdit: row.pending_edit || null,
   };
 }

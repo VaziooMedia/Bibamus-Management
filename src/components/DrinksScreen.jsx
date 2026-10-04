@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from "react";
-import { loadDrinksPage, countDrinks, countDrinksByType, loadPendingReportEntityIds, loadDrinkById } from "../data/sharedDirectories.js";
+import { loadDrinksPage, countDrinks, countDrinksByType, loadDrinkById } from "../data/sharedDirectories.js";
 import { ServerDataTable } from "./ServerDataTable.jsx";
 import { StatusBadge, VisibilityDot } from "./DataTable.jsx";
 import { DrinkDetailPanel, DRINK_TYPES, BEER_CIDER_SUBTYPES, WINE_SUBTYPES, SPIRIT_SUBTYPES } from "./DrinkDetailPanel.jsx";
@@ -54,10 +54,10 @@ const allColumns = [
 // Traduit la clé de filtre générique (partagée avec les répertoires chargés entièrement) vers
 // les paramètres attendus par countDrinks/loadDrinksPage, qui filtrent côté serveur — le
 // répertoire produits est trop volumineux pour être chargé entièrement puis filtré en mémoire.
-function filterKeyToParams(filterKey, reportedIds) {
+function filterKeyToParams(filterKey) {
   if (!filterKey || filterKey === "total") return {};
-  if (filterKey === "newContributions") return { hasPendingContributions: true };
-  if (filterKey === "suggestedEdits") return { reportedIds };
+  if (filterKey === "newContributions") return { newEntries: true };
+  if (filterKey === "suggestedEdits") return { hasPendingContributions: true };
   if (filterKey.startsWith("status:")) return { status: filterKey.slice("status:".length) };
   if (filterKey.startsWith("cert:")) return { certificationLevel: filterKey.slice("cert:".length) };
   if (filterKey.startsWith("country:")) return { nationalityCodes: [countryCodeByLabel[filterKey.slice("country:".length)]].filter(Boolean) };
@@ -72,7 +72,6 @@ export function DrinksScreen({ initialDrinkId, onInitialDrinkOpened, myUserId } 
   const [activeFilter, setActiveFilter] = useState("total");
   const [statCounts, setStatCounts] = useState(null);
   const [categoryCounts, setCategoryCounts] = useState(null);
-  const [pendingReportIds, setPendingReportIds] = useState(new Set());
   const [refreshKey, setRefreshKey] = useState(0);
 
   // Ouvre directement la vraie fiche visée (ex. depuis une revendication cliquée) — chargée
@@ -94,17 +93,16 @@ export function DrinksScreen({ initialDrinkId, onInitialDrinkOpened, myUserId } 
   // répertoire, qui pourrait représenter des dizaines ou centaines de milliers de lignes.
   const refreshCounts = useCallback(async () => {
     const type = selectedType === "__other__" ? "__other__" : selectedType;
-    const [total, newContributions, reportIds, statusResults, certResults, byType, countryResults, continentResults] = await Promise.all([
+    const [total, newContributions, suggestedEdits, statusResults, certResults, byType, countryResults, continentResults] = await Promise.all([
       countDrinks({ type }),
+      countDrinks({ type, newEntries: true }),
       countDrinks({ type, hasPendingContributions: true }),
-      loadPendingReportEntityIds("drink"),
       Promise.all(STATUSES.map((s) => countDrinks({ type, status: s.key }))),
       Promise.all(["utilisateur", "bibamus", "producteur"].map((c) => countDrinks({ type, certificationLevel: c }))),
       countDrinksByType(),
       Promise.all(COUNTRY_BLOCKS.map((c) => countDrinks({ type, nationalityCodes: [countryCodeByLabel[c]].filter(Boolean) }))),
       Promise.all(CONTINENT_BLOCKS.map((c) => countDrinks({ type, nationalityCodes: codesForContinent(c) }))),
     ]);
-    const suggestedEdits = await countDrinks({ type, reportedIds: reportIds });
     const byStatus = {};
     STATUSES.forEach((s, i) => (byStatus[s.key] = statusResults[i]));
     const byCertification = { utilisateur: certResults[0], bibamus: certResults[1], producteur: certResults[2] };
@@ -112,7 +110,6 @@ export function DrinksScreen({ initialDrinkId, onInitialDrinkOpened, myUserId } 
     COUNTRY_BLOCKS.forEach((c, i) => (byCountry[c] = countryResults[i]));
     const byContinent = {};
     CONTINENT_BLOCKS.forEach((c, i) => (byContinent[c] = continentResults[i]));
-    setPendingReportIds(reportIds);
     setStatCounts({ total, newContributions, suggestedEdits, byStatus, byCertification, byCountry, byContinent });
     setCategoryCounts(byType);
   }, [selectedType]);
@@ -122,8 +119,8 @@ export function DrinksScreen({ initialDrinkId, onInitialDrinkOpened, myUserId } 
   }, [refreshCounts, refreshKey]);
 
   const fetchPage = useCallback(
-    (params) => loadDrinksPage({ ...params, type: selectedType === "__other__" ? "__other__" : selectedType, ...filterKeyToParams(activeFilter, pendingReportIds) }),
-    [selectedType, activeFilter, pendingReportIds]
+    (params) => loadDrinksPage({ ...params, type: selectedType === "__other__" ? "__other__" : selectedType, ...filterKeyToParams(activeFilter) }),
+    [selectedType, activeFilter]
   );
 
   const triggerRefresh = () => setRefreshKey((k) => k + 1);

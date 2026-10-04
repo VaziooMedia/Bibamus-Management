@@ -104,6 +104,12 @@ function RowHeader({ title, expanded, onToggle }) {
 const rowStyle = { display: "flex", gap: "12px", flexWrap: "wrap" };
 const separatorStyle = { borderBottom: "1px solid #28405C", margin: "16px 0" };
 
+// Deux notions volontairement distinctes : une toute nouvelle entrée (fiche créée depuis l'app,
+// pas encore relue) ne se confond jamais avec une suggestion de modification sur une fiche
+// qui existe déjà.
+const isNewEntry = (i) => i.status === "to_process" && i.createdVia === "app";
+const hasSuggestedEdit = (i) => (i.pendingContributionsCount || 0) > 0;
+
 // Filtre partagé — chaque bloc a sa propre clé unique, réutilisable par les futurs écrans
 // (produits, producteurs, marques) migrés vers ce même composant. "total" (ou une clé absente)
 // signifie "aucun filtre". Utilisé côté client (items déjà en mémoire) — pour les répertoires
@@ -111,8 +117,8 @@ const separatorStyle = { borderBottom: "1px solid #28405C", margin: "16px 0" };
 // la place, via les mêmes clés passées directement à la fonction de chargement de page.
 export function applyStatFilter(items, filterKey, getCountry = (item) => item.country) {
   if (!filterKey || filterKey === "total") return items;
-  if (filterKey === "newContributions") return items.filter((i) => (i.pendingContributionsCount || 0) > 0);
-  if (filterKey === "suggestedEdits") return items.filter((i) => i.hasPendingReport);
+  if (filterKey === "newContributions") return items.filter(isNewEntry);
+  if (filterKey === "suggestedEdits") return items.filter(hasSuggestedEdit);
   if (filterKey.startsWith("status:")) return items.filter((i) => i.status === filterKey.slice("status:".length));
   if (filterKey.startsWith("cert:")) return items.filter((i) => i.certificationLevel === filterKey.slice("cert:".length));
   if (filterKey.startsWith("country:")) return items.filter((i) => getCountry(i) === filterKey.slice("country:".length));
@@ -121,8 +127,10 @@ export function applyStatFilter(items, filterKey, getCountry = (item) => item.co
 }
 
 // Remplace StatsCounterBar (5 blocs, ancien système de statut) pour les répertoires migrés vers
-// le nouveau modèle à 7 statuts. Ligne 1 : Total + Nouvelles contributions + Modifications
-// suggérées. Ligne 2 (Statut) : les 7 statuts du cycle de vie, chacun dans sa propre couleur
+// le nouveau modèle à 7 statuts. Ligne 1 : Total + Nouvelles contributions (nouvelles fiches
+// créées depuis l'app, encore "à traiter" — même définition que la pastille de la barre latérale)
+// + Modifications suggérées (fiches ayant au moins une modification proposée en attente de
+// décision — ce que traite le panneau ✓/✕ de la fiche). Ligne 2 (Statut) : les 7 statuts du cycle de vie, chacun dans sa propre couleur
 // déjà définie par STATUSES, avec le point visible/non visible en haut à droite. Ligne 3
 // (Niveau de certification) : les 3 niveaux, chacun dans sa propre couleur déjà définie par
 // CERTIFICATION_LEVELS, avec son propre badge en haut à droite.
@@ -147,8 +155,8 @@ export function DetailedStatsCounterBar({ items, counts, activeFilter, onFilterC
   const [expandedGeo, setExpandedGeo] = useState(false);
 
   const total = counts ? counts.total : items.length;
-  const newContributions = counts ? counts.newContributions : items.filter((i) => (i.pendingContributionsCount || 0) > 0).length;
-  const suggestedEdits = counts ? counts.suggestedEdits : items.filter((i) => i.hasPendingReport).length;
+  const newContributions = counts ? counts.newContributions : items.filter(isNewEntry).length;
+  const suggestedEdits = counts ? counts.suggestedEdits : items.filter(hasSuggestedEdit).length;
   const statusCount = (key) => (counts ? counts.byStatus?.[key] || 0 : items.filter((i) => i.status === key).length);
   const certCount = (key) => (counts ? counts.byCertification?.[key] || 0 : items.filter((i) => i.certificationLevel === key).length);
   const countryCount = (c) => (counts ? counts.byCountry?.[c] || 0 : items.filter((i) => getCountry(i) === c).length);
