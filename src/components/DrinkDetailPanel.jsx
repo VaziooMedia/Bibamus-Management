@@ -13,6 +13,7 @@ import { CertificationLevelSelector } from "./CertificationLevelSelector.jsx";
 import { StyleTagAccordion } from "./StyleTagAccordion.jsx";
 import { TasteScale } from "./TasteScale.jsx";
 import { VariantManager } from "./VariantManager.jsx";
+import { VariantBarcodesList } from "./VariantBarcodesList.jsx";
 import { VintageManager } from "./VintageManager.jsx";
 import { PendingContributionsSection } from "./PendingContributionsSection.jsx";
 import { FreeTagInput } from "./FreeTagInput.jsx";
@@ -769,11 +770,14 @@ export function DrinkDetailPanel({ drink, onClose, onSaved, myUserId }) {
                     </CollapsibleSection>
 
                     <div style={separatorStyle} />
+
+                    <VariantBarcodesList drinkId={drink?.id || null} asSection />
                   </>
                 )}
 
                 {!isWine && (
                 <CollapsibleSection title="Codes-barres" defaultOpen>
+                  <VariantBarcodesList drinkId={drink?.id || null} />
                   <div style={{ display: "flex", flexDirection: "column", gap: "8px", marginBottom: "10px" }}>
                     {form.barcodes.map((b, i) => (
                       <div key={i} style={{ display: "flex", gap: "8px" }}>
