@@ -2001,7 +2001,10 @@ export async function loadDrinkVariants(drinkId) {
   return data.map(rowToVariant);
 }
 
-export async function createDrinkVariant({ drinkId, container, volumeMl, barcode, marketCountry }) {
+// Écritures "contrôlées" : elles RENDENT l'erreur au lieu de l'avaler (ex. code-barres déjà pris par un
+// autre produit), pour que l'onglet Ajout rapide puisse la montrer. Les versions historiques plus bas
+// gardent leur contrat (null / rien en cas de refus).
+export async function createDrinkVariantChecked({ drinkId, container, volumeMl, barcode, marketCountry }) {
   const row = {
     id: `variant-${Date.now()}-${Math.floor(Math.random() * 10000)}`,
     product_id: drinkId,
@@ -2014,20 +2017,49 @@ export async function createDrinkVariant({ drinkId, container, volumeMl, barcode
   const { data, error } = await supabase.from("drink_barcodes").insert(row).select().single();
   if (error) {
     console.error("createDrinkVariant:", error);
-    return null;
+    return { error };
   }
-  return rowToVariant(data);
+  return { variant: rowToVariant(data) };
 }
 
-export async function updateDrinkVariant(id, { container, volumeMl, barcode, marketCountry }) {
+export async function updateDrinkVariantChecked(id, { container, volumeMl, barcode, marketCountry }) {
   const patch = { container: container || null, volume_ml: volumeMl || null, barcode: barcode || null, market_country: marketCountry || null };
   const { error } = await supabase.from("drink_barcodes").update(patch).eq("id", id);
-  if (error) console.error("updateDrinkVariant:", error);
+  if (error) {
+    console.error("updateDrinkVariant:", error);
+    return { error };
+  }
+  return { ok: true };
+}
+
+export async function deleteDrinkVariantChecked(id) {
+  const { error } = await supabase.from("drink_barcodes").delete().eq("id", id);
+  if (error) {
+    console.error("deleteDrinkVariant:", error);
+    return { error };
+  }
+  return { ok: true };
+}
+
+// Nom du produit qui détient déjà ce code-barres (pour expliquer un refus), ou null.
+export async function findBarcodeOwnerName(barcode) {
+  const { data: row } = await supabase.from("drink_barcodes").select("product_id").eq("barcode", barcode).maybeSingle();
+  if (!row) return null;
+  const { data: drink } = await supabase.from("drinks_directory").select("name").eq("id", row.product_id).maybeSingle();
+  return drink?.name || null;
+}
+
+export async function createDrinkVariant(args) {
+  const { variant } = await createDrinkVariantChecked(args);
+  return variant || null;
+}
+
+export async function updateDrinkVariant(id, fields) {
+  await updateDrinkVariantChecked(id, fields);
 }
 
 export async function deleteDrinkVariant(id) {
-  const { error } = await supabase.from("drink_barcodes").delete().eq("id", id);
-  if (error) console.error("deleteDrinkVariant:", error);
+  await deleteDrinkVariantChecked(id);
 }
 
 /* ---------------- MILLÉSIMES (Vins & Bulles) ----------------

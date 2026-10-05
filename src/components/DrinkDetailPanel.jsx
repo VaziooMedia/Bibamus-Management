@@ -12,13 +12,14 @@ import { SearchableSelect, SearchableMultiSelect } from "./SearchableSelect.jsx"
 import { CertificationLevelSelector } from "./CertificationLevelSelector.jsx";
 import { StyleTagAccordion } from "./StyleTagAccordion.jsx";
 import { TasteScale } from "./TasteScale.jsx";
-import { VariantManager } from "./VariantManager.jsx";
-import { VariantBarcodesList } from "./VariantBarcodesList.jsx";
+import { BarcodeRowsEditor } from "./BarcodeRowsEditor.jsx";
 import { VintageManager } from "./VintageManager.jsx";
 import { PendingContributionsSection } from "./PendingContributionsSection.jsx";
 import { FreeTagInput } from "./FreeTagInput.jsx";
 import { CollapsibleSection } from "./CollapsibleSection.jsx";
 import { COUNTRIES } from "../constants.js";
+import { loadDrinkVariants, createDrinkVariantChecked, updateDrinkVariantChecked, deleteDrinkVariantChecked, findBarcodeOwnerName } from "../data/sharedDirectories.js";
+import { emptyRow, rowsFromVariants, validateRows, syncBarcodeRows, describeBarcodeError } from "../data/barcodeRows.js";
 import {
   BEER_CIDER_STYLE_GROUPS,
   BEER_CIDER_COMMERCIAL_STATUSES,
@@ -40,7 +41,6 @@ import {
   MASHING_PROCESSES,
   APPLE_TYPES,
   VERIFICATION_STATUSES,
-  CONTAINER_TYPES,
 } from "../data/beerCiderStyles.js";
 import { WINE_STYLE_GROUPS, WINE_EFFERVESCENT_STYLE_GROUPS, WINE_COLORS_BY_SUBTYPE, WINE_APPELLATIONS_BY_COUNTRY, WINE_EFFERVESCENT_APPELLATIONS_BY_COUNTRY } from "../data/wineStyles.js";
 import { SPIRIT_STYLE_GROUPS_BY_SUBTYPE } from "../data/spiritStyles.js";
@@ -82,6 +82,9 @@ export const SPIRIT_SUBTYPES = [
   { code: "spiritueux_de_canne", fr: "Spiritueux de canne hors rhum" },
   { code: "autres_spiritueux", fr: "Autres spiritueux" },
 ];
+
+// Les codes-barres (conditionnements) vivent dans la table drink_barcodes, comme pour l'app.
+const barcodeApi = { create: createDrinkVariantChecked, update: updateDrinkVariantChecked, remove: deleteDrinkVariantChecked };
 
 const fieldStyle = { padding: "10px 12px", borderRadius: "8px", border: "2px solid #28405C", fontSize: "14px", width: "100%" };
 const labelStyle = { fontSize: "12.5px", color: "#8792A6", marginBottom: "4px", display: "block", fontWeight: 600 };
@@ -189,7 +192,6 @@ export function DrinkDetailPanel({ drink, onClose, onSaved, myUserId }) {
     productHistory: drink?.productHistory || "",
     officialUrl: drink?.officialUrl || "",
     videoLinks: drink?.videoLinks && drink.videoLinks.length > 0 ? drink.videoLinks : [""],
-    barcodes: drink?.barcodes && drink.barcodes.length > 0 ? drink.barcodes : [{ container: "", volume: "", code: "" }],
     // Niveau 3 — données techniques bière
     ibu: drink?.ibu ?? "",
     colorEbc: drink?.colorEbc ?? "",
@@ -295,6 +297,30 @@ export function DrinkDetailPanel({ drink, onClose, onSaved, myUserId }) {
     refreshAiProposals();
   };
   const [saving, setSaving] = useState(false);
+  // Codes-barres : une ligne par conditionnement, chargées depuis drink_barcodes (produit existant).
+  const [barcodeRows, setBarcodeRows] = useState([emptyRow()]);
+  const [loadedBarcodeRows, setLoadedBarcodeRows] = useState([]);
+  const [barcodesLoaded, setBarcodesLoaded] = useState(!drink?.id);
+  useEffect(() => {
+    if (!drink?.id) {
+      setBarcodeRows([emptyRow()]);
+      setLoadedBarcodeRows([]);
+      setBarcodesLoaded(true);
+      return;
+    }
+    let cancelled = false;
+    setBarcodesLoaded(false);
+    loadDrinkVariants(drink.id).then((variants) => {
+      if (cancelled) return;
+      const rows = rowsFromVariants(variants);
+      setLoadedBarcodeRows(rows);
+      setBarcodeRows(rows.length > 0 ? rows : [emptyRow()]);
+      setBarcodesLoaded(true);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [drink?.id]);
   const [brandOptions, setBrandOptions] = useState([]);
   const [producerOptions, setProducerOptions] = useState([]);
   const [grapeVarietyOptions, setGrapeVarietyOptions] = useState([]);
@@ -425,7 +451,6 @@ export function DrinkDetailPanel({ drink, onClose, onSaved, myUserId }) {
       productHistory: form.productHistory.trim(),
       officialUrl: form.officialUrl.trim(),
       videoLinks: form.videoLinks.map((v) => v.trim()).filter(Boolean),
-      barcodes: form.barcodes.map((b) => ({ container: b.container || "", volume: (b.volume || "").trim(), code: b.code.trim() })).filter((b) => b.container || b.volume || b.code),
       awardBadges,
       ibu: form.ibu === "" ? null : parseFloat(form.ibu),
       colorEbc: form.colorEbc === "" ? null : parseFloat(form.colorEbc),
@@ -473,8 +498,24 @@ export function DrinkDetailPanel({ drink, onClose, onSaved, myUserId }) {
     };
   };
 
+  // Écrit les lignes de codes-barres une fois le produit enregistré (donc avec un identifiant).
+  // Rend un message lisible si certaines ont été refusées, ou null si tout est passé.
+  const saveBarcodes = async (productId) => {
+    const { rows, errors } = await syncBarcodeRows(productId, loadedBarcodeRows, barcodeRows, barcodeApi);
+    setBarcodeRows(rows.length > 0 ? rows : [emptyRow()]);
+    setLoadedBarcodeRows(rows.filter((r) => r.id));
+    if (errors.length === 0) return null;
+    const lines = await Promise.all(errors.map((e) => describeBarcodeError(e, findBarcodeOwnerName)));
+    return "Certains codes-barres n'ont pas pu être enregistrés :\n• " + lines.join("\n• ");
+  };
+
   const save = async () => {
     if (!form.name.trim()) return;
+    const barcodeProblems = validateRows(barcodeRows);
+    if (barcodeProblems.length > 0) {
+      alert("Codes-barres : " + barcodeProblems.join(" ; "));
+      return;
+    }
     setSaving(true);
     if (isNew) {
       const id = `drink-${Date.now()}-${Math.floor(Math.random() * 10000)}`;
@@ -484,6 +525,8 @@ export function DrinkDetailPanel({ drink, onClose, onSaved, myUserId }) {
         alert("La création a échoué : " + result.error);
         return;
       }
+      const barcodeErrors = await saveBarcodes(id);
+      if (barcodeErrors) alert(barcodeErrors + "\n\nLe produit est créé : rouvrez-le pour corriger ces codes-barres.");
       onSaved(result.created);
     } else if (status === "duplicate" && duplicateOfId) {
       const result = await mergeEntities("drink", drink.id, duplicateOfId);
@@ -499,6 +542,11 @@ export function DrinkDetailPanel({ drink, onClose, onSaved, myUserId }) {
       setSaving(false);
       if (result?.error) {
         alert("La sauvegarde a échoué : " + result.error);
+        return;
+      }
+      const barcodeErrors = await saveBarcodes(drink.id);
+      if (barcodeErrors) {
+        alert(barcodeErrors);
         return;
       }
       onSaved({ ...drink, ...patch });
@@ -554,10 +602,6 @@ export function DrinkDetailPanel({ drink, onClose, onSaved, myUserId }) {
   const updateVideoLink = (index, value) => setForm((f) => ({ ...f, videoLinks: f.videoLinks.map((v, i) => (i === index ? value : v)) }));
   const addVideoLink = () => setForm((f) => ({ ...f, videoLinks: [...f.videoLinks, ""] }));
   const removeVideoLink = (index) => setForm((f) => ({ ...f, videoLinks: f.videoLinks.length > 1 ? f.videoLinks.filter((_, i) => i !== index) : [""] }));
-
-  const updateBarcode = (index, field, value) => setForm((f) => ({ ...f, barcodes: f.barcodes.map((b, i) => (i === index ? { ...b, [field]: value } : b)) }));
-  const addBarcode = () => setForm((f) => ({ ...f, barcodes: [...f.barcodes, { container: "", volume: "", code: "" }] }));
-  const removeBarcode = (index) => setForm((f) => ({ ...f, barcodes: f.barcodes.length > 1 ? f.barcodes.filter((_, i) => i !== index) : [{ container: "", volume: "", code: "" }] }));
 
   return (
     <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.5)", display: "flex", justifyContent: "flex-end", zIndex: 100 }}>
@@ -763,60 +807,16 @@ export function DrinkDetailPanel({ drink, onClose, onSaved, myUserId }) {
                     </CollapsibleSection>
 
                     <div style={separatorStyle} />
-
-                    <VariantBarcodesList drinkId={drink?.id || null} asSection />
                   </>
                 )}
 
-                {!isWine && (
                 <CollapsibleSection title="Codes-barres" defaultOpen>
-                  <VariantBarcodesList drinkId={drink?.id || null} />
-                  <div style={{ display: "flex", flexDirection: "column", gap: "8px", marginBottom: "10px" }}>
-                    {form.barcodes.map((b, i) => (
-                      <div key={i} style={{ display: "flex", gap: "8px" }}>
-                        <select
-                          value={b.container || ""}
-                          onChange={(e) => updateBarcode(i, "container", e.target.value)}
-                          style={{ ...fieldStyle, width: "120px", flexShrink: 0 }}
-                        >
-                          <option value="">Contenant</option>
-                          {CONTAINER_TYPES.map((t) => (
-                            <option key={t.code} value={t.code}>
-                              {t.fr}
-                            </option>
-                          ))}
-                        </select>
-                        <input
-                          value={b.volume || ""}
-                          onChange={(e) => updateBarcode(i, "volume", e.target.value)}
-                          placeholder="Vol."
-                          style={{ ...fieldStyle, width: "56px", flexShrink: 0 }}
-                        />
-                        <input
-                          value={b.code}
-                          onChange={(e) => updateBarcode(i, "code", e.target.value)}
-                          placeholder="Code-barres"
-                          style={{ ...fieldStyle, width: "170px", flexShrink: 0 }}
-                        />
-                        <button
-                          onClick={() => removeBarcode(i)}
-                          title="Retirer ce code-barres"
-                          style={{ background: "none", border: "2px solid #28405C", borderRadius: "8px", width: "40px", flexShrink: 0, color: "#FF3B4E", cursor: "pointer", fontSize: "14px" }}
-                        >
-                          ✕
-                        </button>
-                      </div>
-                    ))}
-                  </div>
-                  <button
-                    onClick={addBarcode}
-                    title="Ajouter un code-barres"
-                    style={{ background: "none", border: "2px dashed #28405C", borderRadius: "8px", width: "40px", height: "36px", color: "#39FF66", fontSize: "16px", fontWeight: 700, cursor: "pointer" }}
-                  >
-                    +
-                  </button>
+                  {barcodesLoaded ? (
+                    <BarcodeRowsEditor rows={barcodeRows} onChange={setBarcodeRows} />
+                  ) : (
+                    <p style={{ fontSize: "12px", color: "#8792A6" }}>Chargement…</p>
+                  )}
                 </CollapsibleSection>
-                )}
               </div>
             )}
 
@@ -1569,15 +1569,6 @@ export function DrinkDetailPanel({ drink, onClose, onSaved, myUserId }) {
                 ) : (
                   <p style={{ fontSize: "13px", color: "#8792A6", fontStyle: "italic" }}>Cette section sera complétée prochainement.</p>
                 )}
-
-                <div style={separatorStyle} />
-
-                <CollapsibleSection title="Conditionnements & variantes">
-                  <p style={{ fontSize: "11.5px", color: "#8792A6", marginTop: "-6px", marginBottom: "10px" }}>
-                    Un même produit peut exister en plusieurs bouteilles, canettes ou fûts — chacun avec son propre code-barres si connu.
-                  </p>
-                  <VariantManager drinkId={drink?.id || null} />
-                </CollapsibleSection>
               </>
             )}
 
