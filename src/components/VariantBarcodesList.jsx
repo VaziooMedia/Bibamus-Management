@@ -8,10 +8,9 @@ import { CollapsibleSection } from "./CollapsibleSection.jsx";
 // variantes) — pas dans le champ "Codes-barres" de l'onglet Ajout rapide, qui est un champ
 // distinct stocké sur la fiche. Cette liste, en lecture seule, les rend visibles aussi ici.
 //
-// L'assistant de l'app a son propre vocabulaire de contenants (en plus de ceux de l'admin) :
-// on les libelle tous, et on retombe sur le code brut pour un contenant inconnu.
-const APP_ONLY_CONTAINER_LABELS = { bouteille_verre: "Bouteille verre", bouteille_pet: "Bouteille PET", brique: "Brique" };
-const CONTAINER_LABELS = { ...Object.fromEntries(CONTAINER_TYPES.map((c) => [c.code, c.fr])), ...APP_ONLY_CONTAINER_LABELS };
+// Liste commune des contenants (voir beerCiderStyles.js) ; on retombe sur le code brut pour un
+// contenant inconnu.
+const CONTAINER_LABELS = Object.fromEntries(CONTAINER_TYPES.map((c) => [c.code, c.fr]));
 
 export function VariantBarcodesList({ drinkId, asSection = false }) {
   const [variants, setVariants] = useState([]);

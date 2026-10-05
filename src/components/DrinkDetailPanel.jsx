@@ -40,6 +40,7 @@ import {
   MASHING_PROCESSES,
   APPLE_TYPES,
   VERIFICATION_STATUSES,
+  CONTAINER_TYPES,
 } from "../data/beerCiderStyles.js";
 import { WINE_STYLE_GROUPS, WINE_EFFERVESCENT_STYLE_GROUPS, WINE_COLORS_BY_SUBTYPE, WINE_APPELLATIONS_BY_COUNTRY, WINE_EFFERVESCENT_APPELLATIONS_BY_COUNTRY } from "../data/wineStyles.js";
 import { SPIRIT_STYLE_GROUPS_BY_SUBTYPE } from "../data/spiritStyles.js";
@@ -80,14 +81,6 @@ export const SPIRIT_SUBTYPES = [
   { code: "amers_bitters_amaros", fr: "Amers & spiritueux aux plantes" },
   { code: "spiritueux_de_canne", fr: "Spiritueux de canne hors rhum" },
   { code: "autres_spiritueux", fr: "Autres spiritueux" },
-];
-export const CONTAINER_TYPES = [
-  { code: "bouteille_verre", fr: "Bouteille verre" },
-  { code: "bouteille_pet", fr: "Bouteille PET" },
-  { code: "canette", fr: "Canette" },
-  { code: "fut", fr: "Fût" },
-  { code: "bag_in_box", fr: "Bag-in-Box" },
-  { code: "brique", fr: "Brique" },
 ];
 
 const fieldStyle = { padding: "10px 12px", borderRadius: "8px", border: "2px solid #28405C", fontSize: "14px", width: "100%" };
