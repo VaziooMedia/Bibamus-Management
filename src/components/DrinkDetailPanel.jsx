@@ -14,6 +14,7 @@ import { StyleTagAccordion } from "./StyleTagAccordion.jsx";
 import { TasteScale } from "./TasteScale.jsx";
 import { BarcodeRowsEditor } from "./BarcodeRowsEditor.jsx";
 import { StyleAdder } from "./StyleAdder.jsx";
+import { SelectedStyleChips } from "./SelectedStyleChips.jsx";
 import { VintageManager } from "./VintageManager.jsx";
 import { PendingContributionsSection } from "./PendingContributionsSection.jsx";
 import { FreeTagInput } from "./FreeTagInput.jsx";
@@ -305,18 +306,33 @@ export function DrinkDetailPanel({ drink, onClose, onSaved, myUserId }) {
   // Styles ajoutés à la main (en plus de la liste figée), partagés par tous les produits : chargés
   // seulement quand un produit bière / cidre est ouvert.
   const [customStyles, setCustomStyles] = useState([]);
+  const [customStylesLoaded, setCustomStylesLoaded] = useState(false);
   const isBeerOrCiderType = form.type === "bieres_cidres";
   useEffect(() => {
     if (!isBeerOrCiderType) return;
     let cancelled = false;
     loadCustomBeerCiderStyles().then((list) => {
-      if (!cancelled) setCustomStyles(list);
+      if (!cancelled) {
+        setCustomStyles(list);
+        setCustomStylesLoaded(true);
+      }
     });
     return () => {
       cancelled = true;
     };
   }, [isBeerOrCiderType]);
   const beerCiderStyleGroups = useMemo(() => mergeCustomStyles(BEER_CIDER_STYLE_GROUPS, customStyles), [customStyles]);
+  // Libellé d'un code de style, pour les étiquettes sélectionnées : toutes les listes confondues (un
+  // produit peut porter un code d'une autre sous-catégorie), y compris les styles ajoutés à la main.
+  const styleLabelByCode = useMemo(
+    () =>
+      new Map(
+        [...beerCiderStyleGroups, ...WINE_STYLE_GROUPS, ...WINE_EFFERVESCENT_STYLE_GROUPS, ...Object.values(SPIRIT_STYLE_GROUPS_BY_SUBTYPE).flat()].flatMap((g) => g.tags.map((t) => [t.code, t.fr]))
+      ),
+    [beerCiderStyleGroups]
+  );
+  // Tant que les styles ajoutés à la main se chargent, on n'affiche pas leur code brut.
+  const customStylesReady = !isBeerOrCiderType || customStylesLoaded;
   const [barcodesLoaded, setBarcodesLoaded] = useState(!drink?.id);
   useEffect(() => {
     if (!drink?.id) {
@@ -963,6 +979,12 @@ export function DrinkDetailPanel({ drink, onClose, onSaved, myUserId }) {
                 <p style={{ fontSize: "11.5px", color: "#8792A6", marginTop: "-6px", marginBottom: "10px" }}>
                   {isWine ? "Plusieurs caractéristiques peuvent se cumuler." : "Plusieurs styles peuvent se cumuler (ex. IPA + Hazy + Double IPA)."}
                 </p>
+                <SelectedStyleChips
+                  codes={form.styles}
+                  labelFor={(code) => styleLabelByCode.get(code) || null}
+                  ready={customStylesReady}
+                  ariaLabel={isWine ? "Caractéristiques sélectionnées" : "Styles sélectionnés"}
+                />
                 <div style={{ border: "2px solid #28405C", borderRadius: "8px", padding: "12px" }}>
                   <StyleTagAccordion
                     groups={
