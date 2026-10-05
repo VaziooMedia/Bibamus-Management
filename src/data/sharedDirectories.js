@@ -2142,6 +2142,26 @@ export async function createGrapeVariety(name) {
   return data;
 }
 
+// Styles de bières & cidres ajoutés à la main, en complément de la liste figée. Lus par la gestion
+// ET par l'app publique ; écrits uniquement par les rôles de la gestion (voir le SQL).
+export async function loadCustomBeerCiderStyles() {
+  const { data, error } = await supabase.from("custom_beer_cider_styles").select("code, fr, group_title").order("fr");
+  if (error) {
+    console.error("loadCustomBeerCiderStyles:", error);
+    return [];
+  }
+  return data.map((r) => ({ code: r.code, fr: r.fr, groupTitle: r.group_title }));
+}
+
+export async function createCustomBeerCiderStyle({ code, fr, groupTitle }) {
+  const { data, error } = await supabase.from("custom_beer_cider_styles").insert({ code, fr, group_title: groupTitle }).select("code, fr, group_title").single();
+  if (error) {
+    console.error("createCustomBeerCiderStyle:", error);
+    return { error };
+  }
+  return { style: { code: data.code, fr: data.fr, groupTitle: data.group_title } };
+}
+
 export async function loadBreweriesDirectory() {
   const { data, error } = await supabase.from("breweries_directory").select("*").order("name");
   if (error) {

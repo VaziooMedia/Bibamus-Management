@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import aiIconGrey from "../assets/brand/ai_icon_grey.svg";
 import aiIconGreen from "../assets/brand/ai_icon_green.svg";
 import aiIconBlack from "../assets/brand/ai_icon_black.svg";
@@ -13,12 +13,14 @@ import { CertificationLevelSelector } from "./CertificationLevelSelector.jsx";
 import { StyleTagAccordion } from "./StyleTagAccordion.jsx";
 import { TasteScale } from "./TasteScale.jsx";
 import { BarcodeRowsEditor } from "./BarcodeRowsEditor.jsx";
+import { StyleAdder } from "./StyleAdder.jsx";
 import { VintageManager } from "./VintageManager.jsx";
 import { PendingContributionsSection } from "./PendingContributionsSection.jsx";
 import { FreeTagInput } from "./FreeTagInput.jsx";
 import { CollapsibleSection } from "./CollapsibleSection.jsx";
 import { COUNTRIES } from "../constants.js";
-import { loadDrinkVariants, createDrinkVariantChecked, updateDrinkVariantChecked, deleteDrinkVariantChecked, findBarcodeOwnerName } from "../data/sharedDirectories.js";
+import { loadDrinkVariants, createDrinkVariantChecked, updateDrinkVariantChecked, deleteDrinkVariantChecked, findBarcodeOwnerName, loadCustomBeerCiderStyles, createCustomBeerCiderStyle } from "../data/sharedDirectories.js";
+import { mergeCustomStyles } from "../data/customStyles.js";
 import { emptyRow, rowsFromVariants, validateRows, syncBarcodeRows, describeBarcodeError } from "../data/barcodeRows.js";
 import {
   BEER_CIDER_STYLE_GROUPS,
@@ -300,6 +302,21 @@ export function DrinkDetailPanel({ drink, onClose, onSaved, myUserId }) {
   // Codes-barres : une ligne par conditionnement, chargées depuis drink_barcodes (produit existant).
   const [barcodeRows, setBarcodeRows] = useState([emptyRow()]);
   const [loadedBarcodeRows, setLoadedBarcodeRows] = useState([]);
+  // Styles ajoutés à la main (en plus de la liste figée), partagés par tous les produits : chargés
+  // seulement quand un produit bière / cidre est ouvert.
+  const [customStyles, setCustomStyles] = useState([]);
+  const isBeerOrCiderType = form.type === "bieres_cidres";
+  useEffect(() => {
+    if (!isBeerOrCiderType) return;
+    let cancelled = false;
+    loadCustomBeerCiderStyles().then((list) => {
+      if (!cancelled) setCustomStyles(list);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [isBeerOrCiderType]);
+  const beerCiderStyleGroups = useMemo(() => mergeCustomStyles(BEER_CIDER_STYLE_GROUPS, customStyles), [customStyles]);
   const [barcodesLoaded, setBarcodesLoaded] = useState(!drink?.id);
   useEffect(() => {
     if (!drink?.id) {
@@ -950,7 +967,7 @@ export function DrinkDetailPanel({ drink, onClose, onSaved, myUserId }) {
                   <StyleTagAccordion
                     groups={
                       isBeerOrCider
-                        ? BEER_CIDER_STYLE_GROUPS
+                        ? beerCiderStyleGroups
                         : isWine
                         ? form.beverageSubtype === "vin_effervescent"
                           ? WINE_EFFERVESCENT_STYLE_GROUPS
@@ -963,6 +980,18 @@ export function DrinkDetailPanel({ drink, onClose, onSaved, myUserId }) {
                     onToggle={toggleStyle}
                     hideControls={isWine}
                   />
+
+                  {isBeerOrCider && (
+                    <StyleAdder
+                      groups={BEER_CIDER_STYLE_GROUPS}
+                      custom={customStyles}
+                      onCreate={createCustomBeerCiderStyle}
+                      onCreated={(style) => {
+                        setCustomStyles((prev) => [...prev, style]);
+                        setForm((f) => (f.styles.includes(style.code) ? f : { ...f, styles: [...f.styles, style.code] }));
+                      }}
+                    />
+                  )}
 
                   {isWine && (
                     <>
