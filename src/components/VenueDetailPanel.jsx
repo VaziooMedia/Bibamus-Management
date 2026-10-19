@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { supabase } from "../supabaseClient.js";
 import { WhatsappIcon, NavIcon, GoogleIcon, WebsiteIcon, FacebookIcon, InstagramIcon, TiktokIcon, SnapchatIcon, PhoneIcon, EmailIcon, TripadvisorIcon, RestaurantGuruIcon, PlaceCheckIcon } from "./icons.jsx";
-import { updatePublicVenue, deletePublicVenue, createPublicVenue, uploadVenuePhoto, uploadVenueMenuPdf, geocodeAddress, saveGeocodeResult, loadPublicVenues, mergeEntities, loadVenueRatingSummary } from "../data/sharedDirectories.js";
+import { updatePublicVenue, deletePublicVenue, createPublicVenue, uploadVenuePhoto, uploadVenueMenuPdf, MENU_PDF_MAX_MB, MENU_PDF_MAX_BYTES, geocodeAddress, saveGeocodeResult, loadPublicVenues, mergeEntities, loadVenueRatingSummary } from "../data/sharedDirectories.js";
 import { CertificationLevelSelector } from "./CertificationLevelSelector.jsx";
 import { AlternateNamesFields } from "./AlternateNamesFields.jsx";
 import { SearchableSelect } from "./SearchableSelect.jsx";
@@ -208,6 +208,7 @@ export function VenueDetailPanel({ venue, onClose, onSaved, drinksDirectory, myU
   const [uploadingProfile, setUploadingProfile] = useState(false);
   const [uploadingCover, setUploadingCover] = useState(false);
   const [uploadingMenu, setUploadingMenu] = useState(false);
+  const [menuPdfError, setMenuPdfError] = useState("");
   const [status, setStatus] = useState(venue?.status || "draft");
   const [certificationLevel, setCertificationLevel] = useState(venue?.certificationLevel || "bibamus");
   const [duplicateOfId, setDuplicateOfId] = useState(venue?.duplicateOfId || null);
@@ -428,10 +429,23 @@ export function VenueDetailPanel({ venue, onClose, onSaved, drinksDirectory, myU
   const handleUploadMenuPdf = async (e) => {
     const file = e.target.files[0];
     if (!file) return;
+    setMenuPdfError("");
+    if (file.type !== "application/pdf") {
+      setMenuPdfError("Ce fichier n'est pas un PDF.");
+      e.target.value = "";
+      return;
+    }
+    if (file.size > MENU_PDF_MAX_BYTES) {
+      const sizeMb = (file.size / (1024 * 1024)).toFixed(1).replace(".", ",");
+      setMenuPdfError(`Ce PDF fait ${sizeMb} Mo : la limite est de ${MENU_PDF_MAX_MB} Mo.`);
+      e.target.value = "";
+      return;
+    }
     setUploadingMenu(true);
     const tempId = venue?.id || `pending-${Date.now()}`;
     const url = await uploadVenueMenuPdf(tempId, file);
     if (url) setMenuPdfUrl(url);
+    else setMenuPdfError("L'envoi du PDF a échoué. Réessaie dans un instant.");
     setUploadingMenu(false);
     e.target.value = "";
   };
@@ -901,7 +915,7 @@ export function VenueDetailPanel({ venue, onClose, onSaved, drinksDirectory, myU
         {activeTab === "carte" && (
           <>
             <label style={labelStyle}>Carte (PDF)</label>
-            <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "18px" }}>
+            <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "6px" }}>
               <label
                 style={{
                   background: "#16273D",
@@ -927,6 +941,10 @@ export function VenueDetailPanel({ venue, onClose, onSaved, drinksDirectory, myU
                 </>
               )}
             </div>
+            <p style={{ fontSize: "11px", color: "#8792A6", margin: menuPdfError ? "0 0 6px 0" : "0 0 18px 0" }}>
+              PDF uniquement, {MENU_PDF_MAX_MB} Mo maximum.
+            </p>
+            {menuPdfError && <p style={{ color: "#FF3B4E", fontSize: "12.5px", margin: "0 0 18px 0" }}>{menuPdfError}</p>}
 
             {!isNew && (
               <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
