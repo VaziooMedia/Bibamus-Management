@@ -1293,9 +1293,14 @@ export async function uploadVenuePhoto(venueId, file, kind) {
   return data.url;
 }
 
+// Limite des menus PDF. La même valeur est imposée par le serveur (réglage du dossier « venue-menus »).
+export const MENU_PDF_MAX_MB = 10;
+export const MENU_PDF_MAX_BYTES = MENU_PDF_MAX_MB * 1024 * 1024;
+
 export async function uploadVenueMenuPdf(venueId, file) {
   const path = `${venueId}-menu-${Date.now()}.pdf`;
-  const { error: uploadError } = await supabase.storage.from("venue-menus").upload(path, file, { contentType: "application/pdf", upsert: true });
+  // Chaque envoi crée un nouveau nom de fichier (horodaté) : jamais d'écrasement, donc pas d'« upsert ».
+  const { error: uploadError } = await supabase.storage.from("venue-menus").upload(path, file, { contentType: "application/pdf", upsert: false });
   if (uploadError) {
     console.error("uploadVenueMenuPdf:", uploadError);
     return null;
