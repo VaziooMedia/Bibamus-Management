@@ -20,37 +20,40 @@ const SMALL_APOSTROPHE_PREFIXES = new Set(["d", "l"]);
 // caractère d'un mot/segment, s'il manque. Garde les déterminants (de/du/des/la/le/les/à/et/
 // the/a/au/aux, ainsi que d'/l') en minuscule sauf en tout début de texte — ex. "Café de la
 // Gare", "Côte d'Ivoire", "Rue Henri-Blès".
+// Exception : pour le NOM (keepDeterminersAsTyped), les déterminants hors début de nom restent
+// tels qu'ils ont été saisis — ils peuvent faire partie du nom propre ("Brasserie La Bestiale",
+// "Café L'Abbaye") ; les autres mots reçoivent toujours leur majuscule si elle manque.
 const capFirstOnly = (w) => {
   if (!w) return w;
   if (w.charAt(0) === w.charAt(0).toUpperCase()) return w;
   return w.charAt(0).toUpperCase() + w.slice(1);
 };
 
-const capSegment = (segment, isVeryFirst) => {
+const capSegment = (segment, isVeryFirst, keepDeterminersAsTyped = false) => {
   if (!segment) return segment;
   const apostropheMatch = segment.match(/^([a-zàâäéèêëïîôöùûüÿœæçA-ZÀÂÄÉÈÊËÏÎÔÖÙÛÜŸŒÆÇ]+)(['’])(.*)$/);
   if (apostropheMatch) {
     const [, prefix, apos, rest] = apostropheMatch;
     const isSmallPrefix = SMALL_APOSTROPHE_PREFIXES.has(prefix.toLowerCase());
-    const newPrefix = !isVeryFirst && isSmallPrefix ? prefix.toLowerCase() : capFirstOnly(prefix);
+    const newPrefix = !isVeryFirst && isSmallPrefix ? (keepDeterminersAsTyped ? prefix : prefix.toLowerCase()) : capFirstOnly(prefix);
     // Seule une vraie élision française ("d'", "l'") a un nom propre après l'apostrophe à
     // capitaliser — pour tout le reste (ex. "Lay's"), ce qui suit l'apostrophe n'est pas un
     // nouveau mot et ne doit jamais être forcé en majuscule.
     return newPrefix + apos + (isSmallPrefix ? capFirstOnly(rest) : rest);
   }
   const lower = segment.toLowerCase();
-  if (!isVeryFirst && SMALL_WORDS.has(lower)) return lower;
+  if (!isVeryFirst && SMALL_WORDS.has(lower)) return keepDeterminersAsTyped ? segment : lower;
   return capFirstOnly(segment);
 };
 
-const capitalizeWords = (s) => {
+const capitalizeWords = (s, keepDeterminersAsTyped = false) => {
   if (!s) return s;
   return s
     .split(" ")
     .map((word, wordIndex) =>
       word
         .split("-")
-        .map((segment, segIndex) => capSegment(segment, wordIndex === 0 && segIndex === 0))
+        .map((segment, segIndex) => capSegment(segment, wordIndex === 0 && segIndex === 0, keepDeterminersAsTyped))
         .join("-")
     )
     .join(" ");
@@ -166,12 +169,12 @@ export function BrandDetailPanel({ brand, onClose, onSaved, myUserId }) {
 
   const set = (field, value) => setForm((f) => ({ ...f, [field]: value }));
   const refreshAfterContribution = (contribution) => set(contribution.fieldPath, contribution.proposedValue);
-  const capitalizeOnBlur = (field) => () => set(field, capitalizeWords(form[field]));
+  const capitalizeOnBlur = (field, keepDeterminersAsTyped = false) => () => set(field, capitalizeWords(form[field], keepDeterminersAsTyped));
   const toggleType = (t) => setForm((f) => ({ ...f, brandTypes: f.brandTypes.includes(t) ? f.brandTypes.filter((x) => x !== t) : [...f.brandTypes, t] }));
   const toggleClassification = (c) => setForm((f) => ({ ...f, classifications: f.classifications.includes(c) ? f.classifications.filter((x) => x !== c) : [...f.classifications, c] }));
 
   const buildPatch = () => ({
-    name: capitalizeWords(form.name.trim()),
+    name: capitalizeWords(form.name.trim(), true),
     aliases: form.aliasesText.split(",").map((a) => a.trim()).filter(Boolean),
     alternateName: capitalizeWords(form.alternateName.trim()),
     translations: form.translations.filter((t) => t.value.trim()),
@@ -332,7 +335,7 @@ export function BrandDetailPanel({ brand, onClose, onSaved, myUserId }) {
           <>
             <CollapsibleSection title="Dénomination" defaultOpen>
               <label style={labelStyle}>Nom *</label>
-              <input value={form.name} onChange={(e) => set("name", e.target.value)} onBlur={capitalizeOnBlur("name")} style={{ ...fieldStyle, marginBottom: "14px" }} />
+              <input value={form.name} onChange={(e) => set("name", e.target.value)} onBlur={capitalizeOnBlur("name", true)} style={{ ...fieldStyle, marginBottom: "14px" }} />
 
               <AlternateNamesFields
                 aliasesText={form.aliasesText}

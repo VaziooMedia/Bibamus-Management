@@ -26,34 +26,37 @@ const SMALL_APOSTROPHE_PREFIXES = new Set(["d", "l"]);
 // caractère d'un mot/segment, s'il manque. Garde les déterminants (de/du/des/la/le/les/à/et/
 // the/a/au/aux, ainsi que d'/l') en minuscule sauf en tout début de texte — ex. "Café de la
 // Gare", "Côte d'Ivoire", "Rue Henri-Blès".
+// Exception : pour le NOM (keepDeterminersAsTyped), les déterminants hors début de nom restent
+// tels qu'ils ont été saisis — ils peuvent faire partie du nom propre ("Brasserie La Bestiale",
+// "Café L'Abbaye") ; les autres mots reçoivent toujours leur majuscule si elle manque.
 const capFirstOnly = (w) => {
   if (!w) return w;
   if (w.charAt(0) === w.charAt(0).toUpperCase()) return w;
   return w.charAt(0).toUpperCase() + w.slice(1);
 };
 
-const capSegment = (segment, isVeryFirst) => {
+const capSegment = (segment, isVeryFirst, keepDeterminersAsTyped = false) => {
   if (!segment) return segment;
   const apostropheMatch = segment.match(/^([a-zàâäéèêëïîôöùûüÿœæçA-ZÀÂÄÉÈÊËÏÎÔÖÙÛÜŸŒÆÇ]+)(['’])(.*)$/);
   if (apostropheMatch) {
     const [, prefix, apos, rest] = apostropheMatch;
     const isSmallPrefix = SMALL_APOSTROPHE_PREFIXES.has(prefix.toLowerCase());
-    const newPrefix = !isVeryFirst && isSmallPrefix ? prefix.toLowerCase() : capFirstOnly(prefix);
+    const newPrefix = !isVeryFirst && isSmallPrefix ? (keepDeterminersAsTyped ? prefix : prefix.toLowerCase()) : capFirstOnly(prefix);
     return newPrefix + apos + capFirstOnly(rest);
   }
   const lower = segment.toLowerCase();
-  if (!isVeryFirst && SMALL_WORDS.has(lower)) return lower;
+  if (!isVeryFirst && SMALL_WORDS.has(lower)) return keepDeterminersAsTyped ? segment : lower;
   return capFirstOnly(segment);
 };
 
-const capitalizeWords = (s) => {
+const capitalizeWords = (s, keepDeterminersAsTyped = false) => {
   if (!s) return s;
   return s
     .split(" ")
     .map((word, wordIndex) =>
       word
         .split("-")
-        .map((segment, segIndex) => capSegment(segment, wordIndex === 0 && segIndex === 0))
+        .map((segment, segIndex) => capSegment(segment, wordIndex === 0 && segIndex === 0, keepDeterminersAsTyped))
         .join("-")
     )
     .join(" ");
@@ -280,7 +283,7 @@ export function VenueDetailPanel({ venue, onClose, onSaved, drinksDirectory, myU
 
   const set = (field, value) => setForm((f) => ({ ...f, [field]: value }));
   const refreshAfterContribution = (contribution) => set(contribution.fieldPath, contribution.proposedValue);
-  const capitalizeOnBlur = (field) => () => set(field, capitalizeWords(form[field]));
+  const capitalizeOnBlur = (field, keepDeterminersAsTyped = false) => () => set(field, capitalizeWords(form[field], keepDeterminersAsTyped));
 
   const togglePaymentMethod = (m) =>
     setForm((f) => ({ ...f, acceptedPaymentMethods: f.acceptedPaymentMethods.includes(m) ? f.acceptedPaymentMethods.filter((x) => x !== m) : [...f.acceptedPaymentMethods, m] }));
@@ -291,7 +294,7 @@ export function VenueDetailPanel({ venue, onClose, onSaved, drinksDirectory, myU
   const phonePrefix = PHONE_PREFIXES[form.country] || "";
 
   const buildPatch = () => ({
-    name: capitalizeWords(form.name.trim()),
+    name: capitalizeWords(form.name.trim(), true),
     aliases: form.aliasesText.split(",").map((a) => a.trim()).filter(Boolean),
     alternateName: form.alternateName.trim(),
     translations: form.translations.filter((t) => t.value.trim()),
@@ -535,7 +538,7 @@ export function VenueDetailPanel({ venue, onClose, onSaved, drinksDirectory, myU
           <>
             <CollapsibleSection title="Dénomination" expanded={nameExpanded} onToggle={() => setNameExpanded((e) => !e)}>
               <label style={labelStyle}>Nom *</label>
-              <input value={form.name} onChange={(e) => set("name", e.target.value)} onBlur={capitalizeOnBlur("name")} style={{ ...requiredFieldStyle, marginBottom: "14px" }} />
+              <input value={form.name} onChange={(e) => set("name", e.target.value)} onBlur={capitalizeOnBlur("name", true)} style={{ ...requiredFieldStyle, marginBottom: "14px" }} />
 
               <AlternateNamesFields
                 aliasesText={form.aliasesText}
