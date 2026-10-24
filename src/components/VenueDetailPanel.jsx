@@ -13,6 +13,7 @@ import { VenueCategoryMenuScreen } from "./VenueCategoryMenuScreen.jsx";
 import { COUNTRIES, PAYMENT_METHODS, VENUE_TYPES, PHONE_PREFIXES, COUNTRY_ISO_CODES, RATING_LABELS, MENU_CATEGORIES } from "../constants.js";
 import { resolveMenuItem } from "../utils.js";
 import { PendingContributionsSection } from "./PendingContributionsSection.jsx";
+import { UsernameAdminField } from "./UsernameAdminField.jsx";
 
 const GEOAPIFY_CONFIGURED = !!(typeof import.meta !== "undefined" && import.meta.env && import.meta.env.VITE_GEOAPIFY_API_KEY);
 
@@ -109,6 +110,15 @@ function CollapsibleSection({ title, expanded, onToggle, children, variant = "se
       </button>
       {expanded && children}
     </div>
+  );
+}
+
+// Section « Nom d'utilisateur » : même en-tête repliable que les autres sections de la fiche.
+function UsernameSection({ title, open, onToggle, children }) {
+  return (
+    <CollapsibleSection title={title} expanded={open} onToggle={onToggle}>
+      {children}
+    </CollapsibleSection>
   );
 }
 
@@ -552,6 +562,12 @@ export function VenueDetailPanel({ venue, onClose, onSaved, drinksDirectory, myU
               <label style={labelStyle}>Sous-titre</label>
               <input value={form.subtitle} onChange={(e) => set("subtitle", e.target.value)} onBlur={capitalizeOnBlur("subtitle")} style={fieldStyle} />
             </CollapsibleSection>
+            {!isNew && (
+              <>
+                <div style={separatorStyle} />
+                <UsernameAdminField kind="venue" id={venue.id} Section={UsernameSection} />
+              </>
+            )}
           </>
         )}
 

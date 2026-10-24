@@ -22,6 +22,13 @@ import { CertificationLevelSelector } from "./CertificationLevelSelector.jsx";
 import { CollapsibleSection } from "./CollapsibleSection.jsx";
 import { COUNTRIES, PHONE_PREFIXES, PRODUCER_TYPES, PRODUCER_PROFILES, COUNTRY_ISO_CODES } from "../constants.js";
 import { PendingContributionsSection } from "./PendingContributionsSection.jsx";
+import { UsernameAdminField } from "./UsernameAdminField.jsx";
+
+// Section « Nom d'utilisateur » : même en-tête repliable que les autres sections de la fiche
+// (elle gère elle-même son état déplié/replié, replié au départ).
+function UsernameSection({ title, children }) {
+  return <CollapsibleSection title={title}>{children}</CollapsibleSection>;
+}
 
 const GEOAPIFY_CONFIGURED = !!(typeof import.meta !== "undefined" && import.meta.env && import.meta.env.VITE_GEOAPIFY_API_KEY);
 
@@ -437,6 +444,13 @@ export function BreweryDetailPanel({ brewery, onClose, onSaved, myUserId }) {
           <label style={labelStyle}>Sous-titre</label>
           <input value={form.subtitle} onChange={(e) => set("subtitle", e.target.value)} onBlur={capitalizeOnBlur("subtitle")} style={fieldStyle} />
         </CollapsibleSection>
+
+        {!isNew && (
+          <>
+            <div style={separatorStyle} />
+            <UsernameAdminField kind="brewery" id={brewery.id} Section={UsernameSection} />
+          </>
+        )}
 
         <div style={separatorStyle} />
 

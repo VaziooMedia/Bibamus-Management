@@ -337,6 +337,48 @@ export async function updateAppUserProfile(userId, patch) {
   return { ok: true };
 }
 
+/* ---------------- NOMS D'UTILISATEUR (@nom) — réservé aux administrateurs ---------------- */
+
+// Le nom d'utilisateur d'un compte, d'un lieu, d'une marque ou d'un producteur ne s'écrit jamais
+// directement dans la table (la base le refuse, même à un administrateur) : il passe par deux
+// fonctions du serveur. admin_check_username ne modifie rien et rend NULL si le nom peut être
+// attribué, sinon la phrase qui dit pourquoi ; admin_set_username applique les mêmes contrôles
+// (et refuse tout compte qui n'est pas administrateur) en renvoyant une erreur portant la même phrase.
+// kind : 'user' (compte), 'venue' (lieu), 'brand' (marque) ou 'brewery' (producteur).
+const USERNAME_TABLE_BY_KIND = { user: "profiles", venue: "public_venues", brand: "brands_directory", brewery: "breweries_directory" };
+const USERNAME_UNAVAILABLE = "Impossible pour le moment. Réessaie dans un instant.";
+
+export async function loadUsername(kind, id) {
+  const table = USERNAME_TABLE_BY_KIND[kind];
+  if (!table || !id) return null;
+  const { data, error } = await supabase.from(table).select("username, username_changed_at").eq("id", id).single();
+  if (error || !data) {
+    console.error("loadUsername:", error);
+    return null;
+  }
+  return { username: data.username || "", changedAt: data.username_changed_at || null };
+}
+
+export async function checkUsernameAdmin(kind, id, name) {
+  const { data, error } = await supabase.rpc("admin_check_username", { p_kind: kind, p_id: id, p_username: name });
+  if (error) {
+    console.error("checkUsernameAdmin:", error);
+    return { ok: false, unavailable: true, reason: USERNAME_UNAVAILABLE };
+  }
+  return data ? { ok: false, reason: data } : { ok: true };
+}
+
+export async function setUsernameAdmin(kind, id, name) {
+  const { data, error } = await supabase.rpc("admin_set_username", { p_kind: kind, p_id: id, p_username: name });
+  if (error) {
+    console.error("setUsernameAdmin:", error);
+    // Seules les phrases voulues par le serveur (P0001) sont montrées telles quelles ; toute autre
+    // erreur (réseau, droits…) reste un message neutre.
+    return { error: error.code === "P0001" && error.message ? error.message : USERNAME_UNAVAILABLE };
+  }
+  return { username: data };
+}
+
 const CLAIM_ENTITY_TABLE = { venue: "public_venues", drink: "drinks_directory", brand: "brands_directory", producer: "breweries_directory" };
 
 // Toutes les fiches liées au compte Business actuellement connecté, tous types confondus.

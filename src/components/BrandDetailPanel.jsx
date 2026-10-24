@@ -11,6 +11,13 @@ import { CollapsibleSection } from "./CollapsibleSection.jsx";
 import { FacebookIcon, InstagramIcon, TiktokIcon, SnapchatIcon, YoutubeIcon } from "./icons.jsx";
 import { COUNTRIES, BRAND_CLASSIFICATIONS, BRAND_TYPES } from "../constants.js";
 import { PendingContributionsSection } from "./PendingContributionsSection.jsx";
+import { UsernameAdminField } from "./UsernameAdminField.jsx";
+
+// Section « Nom d'utilisateur » : même en-tête repliable que les autres sections de la fiche
+// (elle gère elle-même son état déplié/replié, replié au départ).
+function UsernameSection({ title, children }) {
+  return <CollapsibleSection title={title}>{children}</CollapsibleSection>;
+}
 
 const SMALL_WORDS = new Set(["de", "du", "des", "la", "le", "les", "à", "et", "the", "a", "au", "aux"]);
 const SMALL_APOSTROPHE_PREFIXES = new Set(["d", "l"]);
@@ -349,6 +356,13 @@ export function BrandDetailPanel({ brand, onClose, onSaved, myUserId }) {
               <label style={labelStyle}>Slogan</label>
               <input value={form.slogan} onChange={(e) => set("slogan", e.target.value)} onBlur={() => set("slogan", capitalizeFirst(form.slogan))} style={fieldStyle} />
             </CollapsibleSection>
+
+            {!isNew && (
+              <>
+                <div style={separatorStyle} />
+                <UsernameAdminField kind="brand" id={brand.id} Section={UsernameSection} />
+              </>
+            )}
 
             <div style={separatorStyle} />
 

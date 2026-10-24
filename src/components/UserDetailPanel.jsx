@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { updateAppUserProfile, createAppUser, deleteAppUser, getMinimumAge } from "../data/sharedDirectories.js";
 import { COUNTRIES } from "../constants.js";
 import { CityAutocomplete } from "./CityAutocomplete.jsx";
+import { UsernameAdminField } from "./UsernameAdminField.jsx";
 import { FacebookIcon, WhatsappIcon, InstagramIcon, TiktokIcon, SnapchatIcon, XIcon, ThreadsIcon, LinkedinIcon, PinterestIcon, TwitchIcon } from "./icons.jsx";
 
 const fieldStyle = { padding: "10px 12px", borderRadius: "8px", border: "2px solid #28405C", fontSize: "14px", width: "100%", color: "#F2F2E8", background: "#0D1B2A", boxSizing: "border-box" };
@@ -89,6 +90,16 @@ function SectionHeader({ title, open, onToggle, indicator }) {
       <div style={{ flex: 1 }} />
       <ChevronIcon open={open} />
     </button>
+  );
+}
+
+// Section « Nom d'utilisateur » : même en-tête repliable que « Informations » et les autres sections.
+function UsernameSection({ title, open, onToggle, children }) {
+  return (
+    <>
+      <SectionHeader title={title} open={open} onToggle={onToggle} />
+      {open && <div style={{ marginBottom: "8px" }}>{children}</div>}
+    </>
   );
 }
 
@@ -328,6 +339,9 @@ export function UserDetailPanel({ user, onClose, onSaved }) {
             </p>
           </div>
         )}
+
+        {/* ---------------- NOM D'UTILISATEUR (@nom) — administrateurs seulement ---------------- */}
+        {!isNew && <UsernameAdminField kind="user" id={user.id} Section={UsernameSection} />}
 
         {/* ---------------- INFORMATIONS ---------------- */}
         <SectionHeader title="Informations" open={openSections.info} onToggle={() => toggleSection("info")} />
