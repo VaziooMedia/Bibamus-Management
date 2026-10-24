@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { supabase } from "./supabaseClient.js";
 import { LoginScreen } from "./components/LoginScreen.jsx";
 import { Layout } from "./components/Layout.jsx";
+import { MyRoleContext } from "./contexts.js";
 import { Dashboard } from "./components/Dashboard.jsx";
 import { VenuesScreen } from "./components/VenuesScreen.jsx";
 import { DrinksScreen } from "./components/DrinksScreen.jsx";
@@ -109,6 +110,7 @@ export default function App() {
   }
 
   return (
+    <MyRoleContext.Provider value={myRole}>
     <Layout
       current={screen}
       onNavigate={setScreen}
@@ -206,5 +208,6 @@ export default function App() {
       {screen === "settings" && <SettingsScreen myUserId={myUserId} onProfileUpdated={(updates) => updates.avatarUrl && setMyAvatarUrl(updates.avatarUrl)} />}
       {screen === "integrations" && <IntegrationsScreen />}
     </Layout>
+    </MyRoleContext.Provider>
   );
 }
