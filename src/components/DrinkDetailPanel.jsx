@@ -872,7 +872,12 @@ export function DrinkDetailPanel({ drink, onClose, onSaved, myUserId }) {
               <SearchableSelect options={brandOptions} value={form.brandId} onChange={(id) => set("brandId", id)} placeholder="Chercher une marque..." />
             </div>
             <label style={labelStyle}>Producteur(s) — plusieurs possibles en cas de collaboration</label>
-            <SearchableMultiSelect options={producerOptions} values={form.producerIds} onChange={(ids) => set("producerIds", ids)} placeholder="Chercher un producteur..." />
+            <SearchableMultiSelect options={producerOptions} values={form.producerIds} onChange={(ids) => set("producerIds", ids)} placeholder="Chercher un producteur..." orderable />
+            {form.producerIds.length > 1 && (
+              <p style={{ fontSize: "11.5px", color: "#8792A6", marginTop: "6px", marginBottom: 0 }}>
+                L'ordre des pastilles est l'ordre d'affichage dans l'app : utilisez {"\u25C0\uFE0E"} {"\u25B6\uFE0E"} pour le changer.
+              </p>
+            )}
 
             <div style={separatorStyle} />
             <SectionTitle>Origine</SectionTitle>
