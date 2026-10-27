@@ -16,6 +16,7 @@ import { BarcodeRowsEditor } from "./BarcodeRowsEditor.jsx";
 import { AlcoholRateField } from "./AlcoholRateField.jsx";
 import { BeerCiderStylePicker } from "./BeerCiderStylePicker.jsx";
 import { SelectedStyleChips } from "./SelectedStyleChips.jsx";
+import { FlavorNotesPicker } from "./FlavorNotesPicker.jsx";
 import { VintageManager } from "./VintageManager.jsx";
 import { PendingContributionsSection } from "./PendingContributionsSection.jsx";
 import { FreeTagInput } from "./FreeTagInput.jsx";
@@ -27,7 +28,6 @@ import { emptyRow, rowsFromVariants, validateRows, syncBarcodeRows, describeBarc
 import {
   BEER_CIDER_STYLE_GROUPS,
   BEER_CIDER_COMMERCIAL_STATUSES,
-  FLAVOR_NOTE_GROUPS,
   FOOD_PAIRINGS,
   OCCASIONS,
   RECOMMENDED_GLASSES,
@@ -1316,7 +1316,12 @@ export function DrinkDetailPanel({ drink, onClose, onSaved, myUserId }) {
                 <div style={separatorStyle} />
 
                 <CollapsibleSection title="Arômes & saveurs">
-                <StyleTagAccordion groups={FLAVOR_NOTE_GROUPS} selected={form.flavorNotes} onToggle={(t) => toggleArrayField("flavorNotes", t)} />
+                <FlavorNotesPicker
+                  selected={form.flavorNotes}
+                  onToggle={(t) => toggleArrayField("flavorNotes", t)}
+                  onAdded={(item) => setForm((f) => (f.flavorNotes.includes(item.code) ? f : { ...f, flavorNotes: [...f.flavorNotes, item.code] }))}
+                  onDeleted={(code) => setForm((f) => (f.flavorNotes.includes(code) ? { ...f, flavorNotes: f.flavorNotes.filter((c) => c !== code) } : f))}
+                />
                 </CollapsibleSection>
 
                 <div style={separatorStyle} />
