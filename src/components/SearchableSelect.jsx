@@ -109,7 +109,9 @@ export function SearchableSelect({ options, value, onChange, placeholder = "Rech
 }
 
 // Variante à choix multiples — pour les producteurs (collaboration possible entre plusieurs).
-export function SearchableMultiSelect({ options, values, onChange, placeholder = "Rechercher..." }) {
+// `orderable` : les pastilles s'affichent dans l'ordre choisi (l'ordre de `values`) et des flèches
+// ◀ ▶ permettent de le changer ; sans cette option, elles suivent l'ordre de la liste de recherche.
+export function SearchableMultiSelect({ options, values, onChange, placeholder = "Rechercher...", orderable = false }) {
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState("");
   const ref = useRef(null);
@@ -122,10 +124,24 @@ export function SearchableMultiSelect({ options, values, onChange, placeholder =
     return () => document.removeEventListener("mousedown", onClickOutside);
   }, []);
 
-  const selected = options.filter((o) => values.includes(o.id));
+  const optionById = new Map(options.map((o) => [o.id, o]));
+  const selected = orderable ? values.map((id) => optionById.get(id)).filter(Boolean) : options.filter((o) => values.includes(o.id));
   const filtered = query.trim() ? options.filter((o) => normalizeSearchText(o.name).includes(normalizeSearchText(query))) : options;
 
   const toggle = (id) => onChange(values.includes(id) ? values.filter((v) => v !== id) : [...values, id]);
+
+  // Échange une pastille avec sa voisine affichée (direction -1 = vers la gauche, +1 = vers la droite).
+  // Les identifiants de `values` qu'aucune option ne reconnaît (liste pas encore chargée) restent à leur place.
+  const move = (id, direction) => {
+    const i = selected.findIndex((o) => o.id === id);
+    const neighbour = selected[i + direction];
+    if (!neighbour) return;
+    const next = [...values];
+    const a = next.indexOf(id);
+    const b = next.indexOf(neighbour.id);
+    [next[a], next[b]] = [next[b], next[a]];
+    onChange(next);
+  };
 
   return (
     <div ref={ref} style={{ position: "relative" }}>
@@ -146,12 +162,14 @@ export function SearchableMultiSelect({ options, values, onChange, placeholder =
         }}
       >
         {selected.length === 0 && <span style={{ color: "#8792A6", fontSize: "14px" }}>Aucun</span>}
-        {selected.map((o) => (
+        {selected.map((o, i) => (
           <span
             key={o.id}
             style={{ background: "#39FF66", color: "#0D1B2A", borderRadius: "999px", padding: "3px 10px", fontSize: "12px", fontWeight: 700, display: "flex", alignItems: "center", gap: "6px" }}
           >
+            {orderable && selected.length > 1 && <MoveButton label={`Avancer « ${o.name} » d'un rang`} symbol="◀" disabled={i === 0} onClick={() => move(o.id, -1)} />}
             {o.name}
+            {orderable && selected.length > 1 && <MoveButton label={`Reculer « ${o.name} » d'un rang`} symbol="▶" disabled={i === selected.length - 1} onClick={() => move(o.id, 1)} />}
             <span
               onClick={(e) => {
                 e.stopPropagation();
@@ -201,5 +219,26 @@ export function SearchableMultiSelect({ options, values, onChange, placeholder =
         </div>
       )}
     </div>
+  );
+}
+
+// Petite flèche d'une pastille ordonnée. Elle ne doit pas ouvrir ni fermer la liste de recherche.
+function MoveButton({ label, symbol, disabled, onClick }) {
+  return (
+    <button
+      type="button"
+      aria-label={label}
+      title={label}
+      disabled={disabled}
+      onClick={(e) => {
+        e.stopPropagation();
+        onClick();
+      }}
+      style={{ background: "none", border: "none", padding: "0 2px", margin: 0, color: "#0D1B2A", fontSize: "11px", lineHeight: 1, cursor: disabled ? "default" : "pointer", opacity: disabled ? 0.25 : 1 }}
+    >
+      {/* \uFE0E : force l'affichage en texte ; sans lui, Safari peut transformer ◀ ▶ en émojis colorés. */}
+      {symbol}
+      {"\uFE0E"}
+    </button>
   );
 }
