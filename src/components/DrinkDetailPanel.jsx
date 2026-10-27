@@ -668,7 +668,7 @@ export function DrinkDetailPanel({ drink, onClose, onSaved, myUserId }) {
 
         <label style={{ display: "flex", alignItems: "center", gap: "8px", fontSize: "13px", color: "#F2F2E8", cursor: "pointer", marginBottom: "20px" }}>
           <input type="checkbox" checked={isGeneric} onChange={(e) => setIsGeneric(e.target.checked)} />
-          Générique (ex. "1 bière au choix" — sans marque précise)
+          Produit générique
         </label>
 
         <label style={labelStyle}>Catégorie</label>
@@ -1033,6 +1033,109 @@ export function DrinkDetailPanel({ drink, onClose, onSaved, myUserId }) {
               <>
                 {isBeerOrCider ? (
                   <>
+                <div style={{ background: "#2A1F0D", border: "2px solid #FF9500", borderRadius: "8px", padding: "12px", marginBottom: "16px", fontSize: "12px", color: "#F2F2E8" }}>
+                  🔒 Réservé aux producteurs "Business" (accord B2B) et aux administrateurs. L'accès depuis cette plateforme n'est pas encore restreint techniquement — un vrai verrouillage par compte producteur reste à construire.
+                </div>
+                {isBeer && (
+                  <>
+                        <CollapsibleSection title="Données techniques (bière)">
+                        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "12px", marginBottom: "12px" }}>
+                          <div>
+                            <label style={labelStyle}>IBU</label>
+                            <input type="number" step="0.1" value={form.ibu} onChange={(e) => set("ibu", e.target.value)} style={fieldStyle} />
+                          </div>
+                          <div>
+                            <label style={labelStyle}>Couleur EBC</label>
+                            <input type="number" step="0.1" value={form.colorEbc} onChange={(e) => set("colorEbc", e.target.value)} style={fieldStyle} />
+                          </div>
+                          <div>
+                            <label style={labelStyle}>Couleur SRM</label>
+                            <input type="number" step="0.1" value={form.colorSrm} onChange={(e) => set("colorSrm", e.target.value)} style={fieldStyle} />
+                          </div>
+                        </div>
+                        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "12px", marginBottom: "12px" }}>
+                          <div>
+                            <label style={labelStyle}>OG (densité initiale)</label>
+                            <input type="number" step="0.001" value={form.originalGravity} onChange={(e) => set("originalGravity", e.target.value)} style={fieldStyle} />
+                          </div>
+                          <div>
+                            <label style={labelStyle}>FG (densité finale)</label>
+                            <input type="number" step="0.001" value={form.finalGravity} onChange={(e) => set("finalGravity", e.target.value)} style={fieldStyle} />
+                          </div>
+                          <div>
+                            <label style={labelStyle}>Degré Plato</label>
+                            <input type="number" step="0.1" value={form.platoDegree} onChange={(e) => set("platoDegree", e.target.value)} style={fieldStyle} />
+                          </div>
+                        </div>
+                        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px", marginBottom: "12px" }}>
+                          <div>
+                            <label style={labelStyle}>Atténuation apparente (%)</label>
+                            <input type="number" step="0.1" value={form.apparentAttenuation} onChange={(e) => set("apparentAttenuation", e.target.value)} style={fieldStyle} />
+                          </div>
+                          <div>
+                            <label style={labelStyle}>pH final</label>
+                            <input type="number" step="0.01" value={form.finalPh} onChange={(e) => set("finalPh", e.target.value)} style={fieldStyle} />
+                          </div>
+                        </div>
+                        <label style={labelStyle}>Carbonatation (volumes CO2 ou g/L)</label>
+                        <input value={form.carbonationTechnical} onChange={(e) => set("carbonationTechnical", e.target.value)} style={{ ...fieldStyle, marginBottom: "12px" }} />
+                        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px" }}>
+                          <div>
+                            <label style={labelStyle}>Amertume relative</label>
+                            <input type="number" step="0.01" value={form.relativeBitterness} onChange={(e) => set("relativeBitterness", e.target.value)} style={fieldStyle} />
+                          </div>
+                          <div>
+                            <label style={labelStyle}>Extrait réel / apparent</label>
+                            <input type="number" step="0.1" value={form.realExtract} onChange={(e) => set("realExtract", e.target.value)} style={fieldStyle} />
+                          </div>
+                        </div>
+                        </CollapsibleSection>
+
+                    <div style={separatorStyle} />
+                  </>
+                )}
+
+                <CollapsibleSection title="Caractéristiques & labels">
+                <div style={{ marginBottom: "12px" }}>
+                  <FlatListField
+                    list={CHARACTERISTIC_LIST}
+                    label="Caractéristiques"
+                    variant="pills"
+                    selected={form.characteristics}
+                    onToggle={(code) => toggleArrayField("characteristics", code)}
+                    onAdded={(item) => setForm((f) => (f.characteristics.includes(item.code) ? f : { ...f, characteristics: [...f.characteristics, item.code] }))}
+                    onDeleted={(code) => setForm((f) => (f.characteristics.includes(code) ? { ...f, characteristics: f.characteristics.filter((c) => c !== code) } : f))}
+                    labelStyle={labelStyle}
+                    fieldStyle={fieldStyle}
+                  />
+                </div>
+                <label style={labelStyle}>Vegan</label>
+                <select value={form.vegan} onChange={(e) => set("vegan", e.target.value)} style={{ ...fieldStyle, marginBottom: "12px" }}>
+                  {YES_NO_UNKNOWN.map((t) => (
+                    <option key={t.code} value={t.code}>
+                      {t.fr}
+                    </option>
+                  ))}
+                </select>
+                <label style={labelStyle}>Labels / certifications</label>
+                <div>
+                  <FreeTagInput tags={form.certifications} onChange={(v) => set("certifications", v)} placeholder="Ex. AB, Ecocert, Demeter..." />
+                </div>
+                </CollapsibleSection>
+
+                <div style={separatorStyle} />
+
+                <CollapsibleSection title="Arômes & saveurs">
+                <FlavorNotesPicker
+                  selected={form.flavorNotes}
+                  onToggle={(t) => toggleArrayField("flavorNotes", t)}
+                  onAdded={(item) => setForm((f) => (f.flavorNotes.includes(item.code) ? f : { ...f, flavorNotes: [...f.flavorNotes, item.code] }))}
+                  onDeleted={(code) => setForm((f) => (f.flavorNotes.includes(code) ? { ...f, flavorNotes: f.flavorNotes.filter((c) => c !== code) } : f))}
+                />
+                </CollapsibleSection>
+
+                <div style={separatorStyle} />
+
                 {isBeer ? (
                   <>
                     <CollapsibleSection title="Composition">
@@ -1309,17 +1412,6 @@ export function DrinkDetailPanel({ drink, onClose, onSaved, myUserId }) {
 
                 <div style={separatorStyle} />
 
-                <CollapsibleSection title="Arômes & saveurs">
-                <FlavorNotesPicker
-                  selected={form.flavorNotes}
-                  onToggle={(t) => toggleArrayField("flavorNotes", t)}
-                  onAdded={(item) => setForm((f) => (f.flavorNotes.includes(item.code) ? f : { ...f, flavorNotes: [...f.flavorNotes, item.code] }))}
-                  onDeleted={(code) => setForm((f) => (f.flavorNotes.includes(code) ? { ...f, flavorNotes: f.flavorNotes.filter((c) => c !== code) } : f))}
-                />
-                </CollapsibleSection>
-
-                <div style={separatorStyle} />
-
                 <CollapsibleSection title="Service & consommation">
                 <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px", marginBottom: "12px" }}>
                   <div>
@@ -1366,36 +1458,6 @@ export function DrinkDetailPanel({ drink, onClose, onSaved, myUserId }) {
 
                 <div style={separatorStyle} />
 
-                <CollapsibleSection title="Caractéristiques & labels">
-                <div style={{ marginBottom: "12px" }}>
-                  <FlatListField
-                    list={CHARACTERISTIC_LIST}
-                    label="Caractéristiques"
-                    variant="pills"
-                    selected={form.characteristics}
-                    onToggle={(code) => toggleArrayField("characteristics", code)}
-                    onAdded={(item) => setForm((f) => (f.characteristics.includes(item.code) ? f : { ...f, characteristics: [...f.characteristics, item.code] }))}
-                    onDeleted={(code) => setForm((f) => (f.characteristics.includes(code) ? { ...f, characteristics: f.characteristics.filter((c) => c !== code) } : f))}
-                    labelStyle={labelStyle}
-                    fieldStyle={fieldStyle}
-                  />
-                </div>
-                <label style={labelStyle}>Vegan</label>
-                <select value={form.vegan} onChange={(e) => set("vegan", e.target.value)} style={{ ...fieldStyle, marginBottom: "12px" }}>
-                  {YES_NO_UNKNOWN.map((t) => (
-                    <option key={t.code} value={t.code}>
-                      {t.fr}
-                    </option>
-                  ))}
-                </select>
-                <label style={labelStyle}>Labels / certifications</label>
-                <div>
-                  <FreeTagInput tags={form.certifications} onChange={(v) => set("certifications", v)} placeholder="Ex. AB, Ecocert, Demeter..." />
-                </div>
-                </CollapsibleSection>
-
-                <div style={separatorStyle} />
-
                 <CollapsibleSection title="Présentation">
                 <label style={labelStyle}>Description courte</label>
                 <textarea value={form.shortDescription} onChange={(e) => set("shortDescription", e.target.value)} rows={2} style={{ ...fieldStyle, marginBottom: "12px", resize: "vertical" }} />
@@ -1409,66 +1471,8 @@ export function DrinkDetailPanel({ drink, onClose, onSaved, myUserId }) {
 
                 <div style={separatorStyle} />
 
-                <div style={{ background: "#2A1F0D", border: "2px solid #FF9500", borderRadius: "8px", padding: "12px", marginBottom: "16px", fontSize: "12px", color: "#F2F2E8" }}>
-                  🔒 Réservé aux producteurs "Business" (accord B2B) et aux administrateurs. L'accès depuis cette plateforme n'est pas encore restreint techniquement — un vrai verrouillage par compte producteur reste à construire.
-                </div>
                 {isBeer ? (
                   <>
-                        <CollapsibleSection title="Données techniques (bière)">
-                        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "12px", marginBottom: "12px" }}>
-                          <div>
-                            <label style={labelStyle}>IBU</label>
-                            <input type="number" step="0.1" value={form.ibu} onChange={(e) => set("ibu", e.target.value)} style={fieldStyle} />
-                          </div>
-                          <div>
-                            <label style={labelStyle}>Couleur EBC</label>
-                            <input type="number" step="0.1" value={form.colorEbc} onChange={(e) => set("colorEbc", e.target.value)} style={fieldStyle} />
-                          </div>
-                          <div>
-                            <label style={labelStyle}>Couleur SRM</label>
-                            <input type="number" step="0.1" value={form.colorSrm} onChange={(e) => set("colorSrm", e.target.value)} style={fieldStyle} />
-                          </div>
-                        </div>
-                        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "12px", marginBottom: "12px" }}>
-                          <div>
-                            <label style={labelStyle}>OG (densité initiale)</label>
-                            <input type="number" step="0.001" value={form.originalGravity} onChange={(e) => set("originalGravity", e.target.value)} style={fieldStyle} />
-                          </div>
-                          <div>
-                            <label style={labelStyle}>FG (densité finale)</label>
-                            <input type="number" step="0.001" value={form.finalGravity} onChange={(e) => set("finalGravity", e.target.value)} style={fieldStyle} />
-                          </div>
-                          <div>
-                            <label style={labelStyle}>Degré Plato</label>
-                            <input type="number" step="0.1" value={form.platoDegree} onChange={(e) => set("platoDegree", e.target.value)} style={fieldStyle} />
-                          </div>
-                        </div>
-                        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px", marginBottom: "12px" }}>
-                          <div>
-                            <label style={labelStyle}>Atténuation apparente (%)</label>
-                            <input type="number" step="0.1" value={form.apparentAttenuation} onChange={(e) => set("apparentAttenuation", e.target.value)} style={fieldStyle} />
-                          </div>
-                          <div>
-                            <label style={labelStyle}>pH final</label>
-                            <input type="number" step="0.01" value={form.finalPh} onChange={(e) => set("finalPh", e.target.value)} style={fieldStyle} />
-                          </div>
-                        </div>
-                        <label style={labelStyle}>Carbonatation (volumes CO2 ou g/L)</label>
-                        <input value={form.carbonationTechnical} onChange={(e) => set("carbonationTechnical", e.target.value)} style={{ ...fieldStyle, marginBottom: "12px" }} />
-                        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px" }}>
-                          <div>
-                            <label style={labelStyle}>Amertume relative</label>
-                            <input type="number" step="0.01" value={form.relativeBitterness} onChange={(e) => set("relativeBitterness", e.target.value)} style={fieldStyle} />
-                          </div>
-                          <div>
-                            <label style={labelStyle}>Extrait réel / apparent</label>
-                            <input type="number" step="0.1" value={form.realExtract} onChange={(e) => set("realExtract", e.target.value)} style={fieldStyle} />
-                          </div>
-                        </div>
-                        </CollapsibleSection>
-
-                        <div style={separatorStyle} />
-
                         <CollapsibleSection title="Procédé brassicole avancé">
                         <label style={labelStyle}>Empâtage</label>
                         <select value={form.mashingProcess} onChange={(e) => set("mashingProcess", e.target.value)} style={{ ...fieldStyle, marginBottom: "12px" }}>
@@ -1608,7 +1612,7 @@ export function DrinkDetailPanel({ drink, onClose, onSaved, myUserId }) {
             {activeTab === "gallery" && (
               <div>
                 <SectionTitle>Images</SectionTitle>
-                <AdminPhotoField label="Image de profil (800×800)" photoUrl={mainPhotoUrl} onUpload={handleUploadPhoto} onDelete={() => setMainPhotoUrl(null)} uploading={uploadingPhoto} />
+                <AdminPhotoField label="Image de profil (400×400)" photoUrl={mainPhotoUrl} onUpload={handleUploadPhoto} onDelete={() => setMainPhotoUrl(null)} uploading={uploadingPhoto} />
                 <AdminPhotoField label="Image de couverture (1200×400)" photoUrl={coverPhotoUrl} aspect="banner" onUpload={handleUploadCover} onDelete={() => setCoverPhotoUrl(null)} uploading={uploadingCover} />
 
                 <div style={separatorStyle} />
