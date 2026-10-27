@@ -13,6 +13,7 @@ import { CertificationLevelSelector } from "./CertificationLevelSelector.jsx";
 import { StyleTagAccordion } from "./StyleTagAccordion.jsx";
 import { TasteScale } from "./TasteScale.jsx";
 import { BarcodeRowsEditor } from "./BarcodeRowsEditor.jsx";
+import { AlcoholRateField } from "./AlcoholRateField.jsx";
 import { StyleAdder } from "./StyleAdder.jsx";
 import { SelectedStyleChips } from "./SelectedStyleChips.jsx";
 import { VintageManager } from "./VintageManager.jsx";
@@ -240,6 +241,9 @@ export function DrinkDetailPanel({ drink, onClose, onSaved, myUserId }) {
     contributor: drink?.contributor || "",
     verificationStatus: drink?.verificationStatus || VERIFICATION_STATUSES[0].code,
   });
+  // Case « Sans alcool (0.0%) » de l'onglet Ajout rapide : cochée à l'ouverture si la fiche est déjà à 0 %,
+  // ensuite seulement par un clic (taper « 0 » dans le champ ne la coche pas : voir AlcoholRateField).
+  const [abvSansAlcool, setAbvSansAlcool] = useState(drink?.abv != null && Number(drink.abv) === 0);
   const [mainPhotoUrl, setMainPhotoUrl] = useState(drink?.mainPhotoUrl || null);
   const [coverPhotoUrl, setCoverPhotoUrl] = useState(drink?.coverPhotoUrl || null);
   const [galleryPhotos, setGalleryPhotos] = useState(drink?.galleryPhotos || []);
@@ -739,20 +743,7 @@ export function DrinkDetailPanel({ drink, onClose, onSaved, myUserId }) {
             {activeTab === "quick" && (
               <div>
                 <SectionTitle>Taux d'alcool</SectionTitle>
-                <div style={{ display: "flex", alignItems: "center", gap: "12px", marginBottom: "14px" }}>
-                  <input
-                    type="number"
-                    step="0.1"
-                    value={form.abv}
-                    onChange={(e) => set("abv", e.target.value)}
-                    disabled={form.abv !== "" && Number(form.abv) === 0}
-                    style={{ ...fieldStyle, width: "80px", opacity: form.abv !== "" && Number(form.abv) === 0 ? 0.5 : 1 }}
-                  />
-                  <label style={{ display: "flex", alignItems: "center", gap: "6px", fontSize: "12.5px", color: "#F2F2E8", cursor: "pointer" }}>
-                    <input type="checkbox" checked={form.abv !== "" && Number(form.abv) === 0} onChange={(e) => set("abv", e.target.checked ? "0" : "")} />
-                    Sans alcool (0.0%)
-                  </label>
-                </div>
+                <AlcoholRateField value={form.abv} onChange={(v) => set("abv", v)} ticked={abvSansAlcool} onTickedChange={setAbvSansAlcool} fieldStyle={fieldStyle} />
 
                 {isWine && (
                   <>
