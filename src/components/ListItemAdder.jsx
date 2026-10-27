@@ -4,7 +4,7 @@ import { validateItemFields, uniqueItemCode, allItemCodes, describeItemError, ca
 // Ajout manuel d'un élément à une liste de la fiche produit (un arôme, par exemple). L'élément est enregistré une
 // fois pour toutes (table custom_list_items) : il rejoint son groupe pour TOUS les produits, puis est sélectionné
 // pour celui en cours d'édition.
-//   list     : la description de la liste (voir customLists.js : groupes de départ, mots)
+//   list     : la description de la liste (voir customLists.js : groupes de départ, mots) ; une liste « plate » n'a pas de choix de groupe
 //   custom   : les modifications déjà enregistrées (éléments ajoutés, renommés, déplacés, supprimés)
 //   onCreate : async ({ code, fr, groupTitle }) -> { item } ou { error }
 //   onCreated: (item) -> void
@@ -44,7 +44,7 @@ export function ListItemAdder({ list, custom, onCreate, onCreated }) {
     }
     onCreated(res.item);
     close();
-    setMessage({ kind: "ok", text: `« ${res.item.fr} » ajouté au groupe « ${res.item.groupTitle} » et sélectionné pour ce produit.` });
+    setMessage({ kind: "ok", text: list.flat ? `« ${res.item.fr} » ajouté et sélectionné pour ce produit.` : `« ${res.item.fr} » ajouté au groupe « ${res.item.groupTitle} » et sélectionné pour ce produit.` });
   };
 
   return (
@@ -72,14 +72,16 @@ export function ListItemAdder({ list, custom, onCreate, onCreated }) {
               placeholder={w.namePlaceholder}
               style={{ ...fieldStyle, flex: 1, minWidth: "200px" }}
             />
-            <select value={groupTitle} onChange={(e) => setGroupTitle(e.target.value)} style={{ ...fieldStyle, flex: 1, minWidth: "200px" }}>
-              <option value="">Groupe…</option>
-              {list.builtinGroups.map((g) => (
-                <option key={g.title} value={g.title}>
-                  {g.title}
-                </option>
-              ))}
-            </select>
+            {!list.flat && (
+              <select value={groupTitle} onChange={(e) => setGroupTitle(e.target.value)} style={{ ...fieldStyle, flex: 1, minWidth: "200px" }}>
+                <option value="">Groupe…</option>
+                {list.builtinGroups.map((g) => (
+                  <option key={g.title} value={g.title}>
+                    {g.title}
+                  </option>
+                ))}
+              </select>
+            )}
           </div>
           <div style={{ display: "flex", gap: "8px", marginTop: "10px" }}>
             <button onClick={submit} disabled={busy} style={outlineButton("#39FF66")}>

@@ -4,11 +4,12 @@
 //   - une MODIFICATION d'un élément de la liste figée (même code que lui) : nouveau nom, nouveau groupe,
 //     ou masqué (« supprimé » : la liste figée est dans le code, on ne peut pas l'effacer).
 // C'est le même modèle que les styles de bières & cidres (customStyles.js), en générique : une « liste »
-// est décrite par un objet (voir FLAVOR_NOTES) qui donne sa clé, ses groupes de départ et ses mots.
+// est décrite par un objet (voir FLAVOR_NOTES) qui donne sa clé, ses groupes de départ et ses mots. Une liste
+// « plate » (`flat: true` : accords alimentaires, moment, verre) n'a pas de groupes : un seul groupe sans titre.
 // Ce module ne contient que de la logique pure : génération du code, détection des doublons, fusion avec
 // les groupes de départ, mise à jour de la liste en mémoire, contrôles et messages d'erreur.
 
-import { FLAVOR_NOTE_GROUPS } from "./beerCiderStyles.js";
+import { FLAVOR_NOTE_GROUPS, FOOD_PAIRINGS, OCCASIONS, RECOMMENDED_GLASSES } from "./beerCiderStyles.js";
 
 // Un code ne peut avoir qu'une place dans une liste modifiable (une modification d'un élément vise son code, et
 // un code ne se range que dans un groupe). On garde donc la première place de chaque code. Dans la liste des
@@ -41,6 +42,30 @@ export const FLAVOR_NOTES = {
     namePlaceholder: "Nom de l'arôme (ex. Fleur de sureau)",
     searchPlaceholder: "Chercher un arôme (ex. agrumes, caramel, vanille...)",
   },
+};
+
+// Listes plates de « Service & consommation » (Niveau 2) : un seul groupe, sans titre ; les éléments ajoutés ou
+// déplacés par erreur dans un autre groupe rejoignent ce groupe.
+export const FOOD_PAIRING_LIST = {
+  key: "food_pairing",
+  flat: true,
+  builtinGroups: [{ title: "", tags: FOOD_PAIRINGS }],
+  orphanTitle: "",
+  words: { noun: "accord", one: "un accord", this: "cet accord", the: "l'accord", ofThe: "de l'accord", ofAll: "des accords", namePlaceholder: "Nom de l'accord (ex. Frites)" },
+};
+export const OCCASION_LIST = {
+  key: "occasion",
+  flat: true,
+  builtinGroups: [{ title: "", tags: OCCASIONS }],
+  orphanTitle: "",
+  words: { noun: "moment", one: "un moment", this: "ce moment", the: "le moment", ofThe: "du moment", ofAll: "des moments", namePlaceholder: "Nom du moment (ex. Barbecue)" },
+};
+export const GLASS_LIST = {
+  key: "recommended_glass",
+  flat: true,
+  builtinGroups: [{ title: "", tags: RECOMMENDED_GLASSES }],
+  orphanTitle: "",
+  words: { noun: "verre", one: "un verre", this: "ce verre", the: "le verre", ofThe: "du verre", ofAll: "des verres", namePlaceholder: "Nom du verre (ex. Gobelet)" },
 };
 
 export const capitalize = (s) => (s ? s.charAt(0).toUpperCase() + s.slice(1) : s);
@@ -112,7 +137,8 @@ export function mergeCustomItems(list, custom) {
   const orphans = [];
   [...toPlace].sort((a, b) => a.fr.localeCompare(b.fr)).forEach((c) => {
     const tag = { code: c.code, fr: c.fr };
-    if (byTitle.has(c.groupTitle)) byTitle.get(c.groupTitle).push(tag);
+    const home = list.flat ? byTitle.get(groups[0].title) : byTitle.get(c.groupTitle);
+    if (home) home.push(tag);
     else orphans.push(tag);
   });
   const merged = kept.map((g) => ({ ...g, tags: [...g.tags, ...byTitle.get(g.title)] }));
@@ -155,9 +181,9 @@ export function validateItemFields(list, name, groupTitle, custom, exceptCode = 
   if (!trimmed) return `Saisissez le nom ${w.ofThe}.`;
   if (trimmed.length > MAX_ITEM_NAME_LENGTH) return `Le nom est trop long (${MAX_ITEM_NAME_LENGTH} caractères maximum).`;
   if (!itemCodeFromName(trimmed)) return "Le nom doit contenir au moins une lettre ou un chiffre.";
-  if (!groupTitle) return `Choisissez le groupe dans lequel ranger ${w.this}.`;
+  if (!list.flat && !groupTitle) return `Choisissez le groupe dans lequel ranger ${w.this}.`;
   const dup = findDuplicateItem(list, trimmed, custom, exceptCode);
-  if (dup) return `« ${dup.fr} » existe déjà, dans le groupe « ${dup.groupTitle} ».`;
+  if (dup) return dup.groupTitle ? `« ${dup.fr} » existe déjà, dans le groupe « ${dup.groupTitle} ».` : `« ${dup.fr} » existe déjà.`;
   return null;
 }
 
