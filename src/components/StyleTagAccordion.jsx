@@ -10,7 +10,18 @@ import React, { useState, useMemo } from "react";
 //   manage.activeCode  : le code de l'étiquette ouverte (ou null)
 //   manage.onPick      : (code) -> void
 //   manage.renderPanel : (tag, group) -> élément affiché sous les étiquettes du groupe qui contient l'étiquette ouverte
-export function StyleTagAccordion({ groups, selected, onToggle, hideControls = false, manage = null }) {
+//
+// Les mots de la recherche (`searchPlaceholder`, `noMatchText(requête)`) sont ceux des styles par défaut ; une autre
+// liste (les arômes) donne les siens.
+export function StyleTagAccordion({
+  groups,
+  selected,
+  onToggle,
+  hideControls = false,
+  manage = null,
+  searchPlaceholder = "Chercher un style (ex. IPA, Sour, Normand...)",
+  noMatchText = (query) => `Aucun style ne correspond à "${query}".`,
+}) {
   const [query, setQuery] = useState("");
   const [openIndices, setOpenIndices] = useState(new Set());
 
@@ -42,7 +53,7 @@ export function StyleTagAccordion({ groups, selected, onToggle, hideControls = f
           <input
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            placeholder="Chercher un style (ex. IPA, Sour, Normand...)"
+            placeholder={searchPlaceholder}
             style={{ flex: 1, padding: "9px 12px", borderRadius: "8px", border: "2px solid #28405C", fontSize: "13px" }}
           />
           {!q && (
@@ -57,7 +68,7 @@ export function StyleTagAccordion({ groups, selected, onToggle, hideControls = f
       )}
 
       <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
-        {filteredGroups.length === 0 && <p style={{ fontSize: "12.5px", color: "#8792A6", fontStyle: "italic" }}>Aucun style ne correspond à "{query}".</p>}
+        {filteredGroups.length === 0 && <p style={{ fontSize: "12.5px", color: "#8792A6", fontStyle: "italic" }}>{noMatchText(query)}</p>}
         {filteredGroups.map((group) => {
           const open = isOpen(group.index);
           const selectedInGroup = group.tags.filter((t) => selected.includes(t.code)).length;

@@ -2250,6 +2250,67 @@ export async function deleteCustomBeerCiderStyle({ code, fr, groupTitle }) {
   return { removedFrom: Number(data) || 0 };
 }
 
+// Listes de la fiche produit modifiables depuis la gestion (arômes & saveurs, puis accords, moment, verre) :
+// éléments ajoutés à la main (code « perso_… ») et modifications d'un élément de la liste figée (même code :
+// nouveau nom, nouveau groupe, ou masqué = supprimé). Une seule table pour toutes ces listes
+// (custom_list_items), distinguées par list_key. Lue par la gestion ; écrite uniquement par les rôles de la
+// gestion (voir le SQL). Un échec de lecture rend une liste vide : on retombe sur la liste figée.
+const rowToCustomListItem = (r) => ({ code: r.code, fr: r.fr, groupTitle: r.group_title ?? "", hidden: !!r.hidden });
+
+export async function loadCustomListItems(listKey) {
+  const { data, error } = await supabase.from("custom_list_items").select("*").eq("list_key", listKey).order("fr");
+  if (error) {
+    console.error("loadCustomListItems:", error);
+    return [];
+  }
+  return data.map(rowToCustomListItem);
+}
+
+export async function createCustomListItem(listKey, { code, fr, groupTitle }) {
+  const { data, error } = await supabase.from("custom_list_items").insert({ list_key: listKey, code, fr, group_title: groupTitle }).select("*").single();
+  if (error) {
+    console.error("createCustomListItem:", error);
+    return { error };
+  }
+  return { item: rowToCustomListItem(data) };
+}
+
+// Modifier un élément (nom et/ou groupe) : met à jour sa ligne, ou la crée s'il vient de la liste figée
+// (pas encore de ligne). Un élément masqué qu'on enregistre redevient visible.
+export async function saveCustomListItem(listKey, { code, fr, groupTitle }) {
+  const { data, error } = await supabase
+    .from("custom_list_items")
+    .upsert({ list_key: listKey, code, fr, group_title: groupTitle, hidden: false }, { onConflict: "list_key,code" })
+    .select("*")
+    .single();
+  if (error) {
+    console.error("saveCustomListItem:", error);
+    return { error };
+  }
+  return { item: rowToCustomListItem(data) };
+}
+
+// Combien de produits portent cet élément (pour prévenir avant de le supprimer).
+export async function countDrinksWithListItem(listKey, code) {
+  const { data, error } = await supabase.rpc("count_drinks_with_list_item", { p_list: listKey, p_code: code });
+  if (error) {
+    console.error("countDrinksWithListItem:", error);
+    return { error };
+  }
+  return { count: Number(data) || 0 };
+}
+
+// Supprimer un élément : le retire de tous les produits qui le portent, puis le supprime (ou le masque, s'il
+// vient de la liste figée) — en une seule opération côté base. Rend le nombre de produits modifiés.
+export async function deleteCustomListItem(listKey, { code, fr, groupTitle }) {
+  const { data, error } = await supabase.rpc("delete_list_item", { p_list: listKey, p_code: code, p_fr: fr, p_group_title: groupTitle });
+  if (error) {
+    console.error("deleteCustomListItem:", error);
+    return { error };
+  }
+  return { removedFrom: Number(data) || 0 };
+}
+
 export async function loadBreweriesDirectory() {
   const { data, error } = await supabase.from("breweries_directory").select("*").order("name");
   if (error) {
