@@ -4,7 +4,8 @@ import { validateItemFields, describeItemError } from "../data/customLists.js";
 // Panneau de modification d'un élément d'une liste de la fiche produit (un arôme, par exemple), affiché sous les
 // étiquettes de son groupe quand on le touche en mode « Modifier la liste ». On y renomme l'élément, on le range
 // dans un autre groupe, ou on le supprime. Tout vaut pour TOUS les produits (la liste est commune).
-//   list     : la description de la liste (voir customLists.js : groupes de départ, mots) ; une liste « plate » n'a pas de choix de groupe
+//   list     : la description de la liste (voir customLists.js : groupes de départ, mots) ; une liste « plate » n'a pas de choix de groupe ;
+//              `list.deleteNotices` (facultatif) : un avertissement, par code, affiché à la confirmation d'une suppression
 //   item     : { code, fr, groupTitle } — l'élément ouvert, tel qu'il s'affiche
 //   custom   : les modifications déjà enregistrées (détection des doublons)
 //   onSave   : async ({ code, fr, groupTitle }) -> { item } ou { error }
@@ -124,6 +125,11 @@ export function ListItemManagePanel({ list, item, custom, onSave, onCount, onDel
               </>
             )}
           </p>
+          {list.deleteNotices?.[item.code] && (
+            <p role="note" style={{ fontSize: "12.5px", color: "#FF9500", marginTop: 0, marginBottom: "10px", lineHeight: 1.5 }}>
+              {list.deleteNotices[item.code]}
+            </p>
+          )}
           <div style={{ display: "flex", flexWrap: "wrap", gap: "8px" }}>
             <button onClick={confirmDelete} disabled={busy} style={outlineButton("#FF3B4E")}>
               {busy ? "Suppression…" : confirm.count > 0 ? `Supprimer et retirer de ${produits(confirm.count)}` : "Supprimer"}

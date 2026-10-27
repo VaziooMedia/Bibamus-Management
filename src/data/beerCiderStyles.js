@@ -549,6 +549,19 @@ export const RECOMMENDED_GLASSES = [
   { code: "autre", fr: "Autre" },
 ];
 
+// Caractéristiques & labels (Niveau 2). Les codes sont les noms des anciennes cases à cocher de la base
+// (colonnes alcohol_free, low_alcohol, gluten_free…) : le déclencheur de synchronisation (voir
+// docs/DATABASE.md de bibamus-web) s'appuie dessus. L'ordre est celui de la reprise des cases.
+export const PRODUCT_CHARACTERISTICS = [
+  { code: "alcohol_free", fr: "Sans alcool" },
+  { code: "low_alcohol", fr: "Faible en alcool" },
+  { code: "gluten_free", fr: "Sans gluten" },
+  { code: "gluten_reduced", fr: "Gluten réduit" },
+  { code: "bio", fr: "Bio" },
+  { code: "sugar_free", fr: "Sans sucres ajoutés" },
+  { code: "lactose_free", fr: "Sans lactose" },
+];
+
 export const YES_NO_UNKNOWN = [
   { code: "oui", fr: "Oui" },
   { code: "non", fr: "Non" },

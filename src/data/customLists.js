@@ -9,7 +9,7 @@
 // Ce module ne contient que de la logique pure : génération du code, détection des doublons, fusion avec
 // les groupes de départ, mise à jour de la liste en mémoire, contrôles et messages d'erreur.
 
-import { FLAVOR_NOTE_GROUPS, FOOD_PAIRINGS, OCCASIONS, RECOMMENDED_GLASSES } from "./beerCiderStyles.js";
+import { FLAVOR_NOTE_GROUPS, FOOD_PAIRINGS, OCCASIONS, PRODUCT_CHARACTERISTICS, RECOMMENDED_GLASSES } from "./beerCiderStyles.js";
 
 // Un code ne peut avoir qu'une place dans une liste modifiable (une modification d'un élément vise son code, et
 // un code ne se range que dans un groupe). On garde donc la première place de chaque code. Dans la liste des
@@ -66,6 +66,27 @@ export const GLASS_LIST = {
   builtinGroups: [{ title: "", tags: RECOMMENDED_GLASSES }],
   orphanTitle: "",
   words: { noun: "verre", one: "un verre", this: "ce verre", the: "le verre", ofThe: "du verre", ofAll: "des verres", namePlaceholder: "Nom du verre (ex. Gobelet)" },
+};
+
+// Caractéristiques & labels (Niveau 2) : une liste plate à plusieurs choix, comme les accords. « Sans gluten » et « Bio »
+// sont aussi lus par l'application Bibamus (icône et filtre) : `deleteNotices` en avertit à la confirmation d'une suppression.
+const APP_NOTICE = (name) =>
+  `Attention : « ${name} » est aussi affiché par l'application Bibamus (icône et filtre). Une fois supprimé, il disparaîtra de tous les produits dans l'application.`;
+export const CHARACTERISTIC_LIST = {
+  key: "characteristic",
+  flat: true,
+  builtinGroups: [{ title: "", tags: PRODUCT_CHARACTERISTICS }],
+  orphanTitle: "",
+  words: {
+    noun: "caractéristique",
+    one: "une caractéristique",
+    this: "cette caractéristique",
+    the: "la caractéristique",
+    ofThe: "de la caractéristique",
+    ofAll: "des caractéristiques",
+    namePlaceholder: "Nom de la caractéristique (ex. Végétarien)",
+  },
+  deleteNotices: { gluten_free: APP_NOTICE("Sans gluten"), bio: APP_NOTICE("Bio") },
 };
 
 export const capitalize = (s) => (s ? s.charAt(0).toUpperCase() + s.slice(1) : s);
