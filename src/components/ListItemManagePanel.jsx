@@ -4,7 +4,7 @@ import { validateItemFields, describeItemError } from "../data/customLists.js";
 // Panneau de modification d'un élément d'une liste de la fiche produit (un arôme, par exemple), affiché sous les
 // étiquettes de son groupe quand on le touche en mode « Modifier la liste ». On y renomme l'élément, on le range
 // dans un autre groupe, ou on le supprime. Tout vaut pour TOUS les produits (la liste est commune).
-//   list     : la description de la liste (voir customLists.js : groupes de départ, mots)
+//   list     : la description de la liste (voir customLists.js : groupes de départ, mots) ; une liste « plate » n'a pas de choix de groupe
 //   item     : { code, fr, groupTitle } — l'élément ouvert, tel qu'il s'affiche
 //   custom   : les modifications déjà enregistrées (détection des doublons)
 //   onSave   : async ({ code, fr, groupTitle }) -> { item } ou { error }
@@ -88,14 +88,16 @@ export function ListItemManagePanel({ list, item, custom, onSave, onCount, onDel
               onKeyDown={(e) => e.key === "Enter" && save()}
               style={{ ...fieldStyle, flex: 1, minWidth: "200px" }}
             />
-            <select aria-label={`Groupe ${w.ofThe}`} value={groupTitle} onChange={(e) => setGroupTitle(e.target.value)} style={{ ...fieldStyle, flex: 1, minWidth: "200px" }}>
-              {list.builtinGroups.map((g) => (
-                <option key={g.title} value={g.title}>
-                  {g.title}
-                </option>
-              ))}
-              {!list.builtinGroups.some((g) => g.title === groupTitle) && <option value={groupTitle}>{groupTitle}</option>}
-            </select>
+            {!list.flat && (
+              <select aria-label={`Groupe ${w.ofThe}`} value={groupTitle} onChange={(e) => setGroupTitle(e.target.value)} style={{ ...fieldStyle, flex: 1, minWidth: "200px" }}>
+                {list.builtinGroups.map((g) => (
+                  <option key={g.title} value={g.title}>
+                    {g.title}
+                  </option>
+                ))}
+                {!list.builtinGroups.some((g) => g.title === groupTitle) && <option value={groupTitle}>{groupTitle}</option>}
+              </select>
+            )}
           </div>
           <div style={{ display: "flex", flexWrap: "wrap", gap: "8px", marginTop: "10px" }}>
             <button onClick={save} disabled={busy} style={outlineButton("#39FF66")}>

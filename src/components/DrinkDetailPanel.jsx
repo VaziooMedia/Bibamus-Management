@@ -17,6 +17,8 @@ import { AlcoholRateField } from "./AlcoholRateField.jsx";
 import { BeerCiderStylePicker } from "./BeerCiderStylePicker.jsx";
 import { SelectedStyleChips } from "./SelectedStyleChips.jsx";
 import { FlavorNotesPicker } from "./FlavorNotesPicker.jsx";
+import { FlatListField } from "./FlatListField.jsx";
+import { FOOD_PAIRING_LIST, OCCASION_LIST, GLASS_LIST } from "../data/customLists.js";
 import { VintageManager } from "./VintageManager.jsx";
 import { PendingContributionsSection } from "./PendingContributionsSection.jsx";
 import { FreeTagInput } from "./FreeTagInput.jsx";
@@ -28,8 +30,6 @@ import { emptyRow, rowsFromVariants, validateRows, syncBarcodeRows, describeBarc
 import {
   BEER_CIDER_STYLE_GROUPS,
   BEER_CIDER_COMMERCIAL_STATUSES,
-  FOOD_PAIRINGS,
-  OCCASIONS,
   RECOMMENDED_GLASSES,
   YES_NO_UNKNOWN,
   FERMENTATION_TYPES,
@@ -177,7 +177,8 @@ export function DrinkDetailPanel({ drink, onClose, onSaved, myUserId }) {
     flavorNotes: drink?.flavorNotes || [],
     // Niveau 2 — service & consommation
     servingTemperature: drink?.servingTemperature || "",
-    recommendedGlass: drink?.recommendedGlass || RECOMMENDED_GLASSES[0].code,
+    // « ?? » : un verre vide (« — ») est un choix, par exemple quand son verre a été supprimé ; seul un verre jamais renseigné (absent) prend le premier de la liste.
+    recommendedGlass: drink?.recommendedGlass ?? RECOMMENDED_GLASSES[0].code,
     foodPairings: drink?.foodPairings || [],
     occasion: drink?.occasion || "",
     // Niveau 2 — caractéristiques & labels
@@ -1332,41 +1333,42 @@ export function DrinkDetailPanel({ drink, onClose, onSaved, myUserId }) {
                     <label style={labelStyle}>Température de service</label>
                     <input value={form.servingTemperature} onChange={(e) => set("servingTemperature", e.target.value)} placeholder="Ex. 4-6°C" style={fieldStyle} />
                   </div>
-                  <div>
-                    <label style={labelStyle}>Verre recommandé</label>
-                    <select value={form.recommendedGlass} onChange={(e) => set("recommendedGlass", e.target.value)} style={fieldStyle}>
-                      {RECOMMENDED_GLASSES.map((g) => (
-                        <option key={g.code} value={g.code}>
-                      {g.fr}
-                    </option>
-                      ))}
-                    </select>
-                  </div>
+                  <FlatListField
+                    list={GLASS_LIST}
+                    label="Verre recommandé"
+                    variant="select"
+                    value={form.recommendedGlass}
+                    onChange={(v) => set("recommendedGlass", v)}
+                    onAdded={(item) => set("recommendedGlass", item.code)}
+                    onDeleted={(code) => setForm((f) => (f.recommendedGlass === code ? { ...f, recommendedGlass: "" } : f))}
+                    labelStyle={labelStyle}
+                    fieldStyle={fieldStyle}
+                  />
                 </div>
-                <label style={labelStyle}>Accords alimentaires</label>
-                <div style={{ display: "flex", flexWrap: "wrap", gap: "8px", marginBottom: "12px" }}>
-                  {FOOD_PAIRINGS.map((f) => {
-                    const checked = form.foodPairings.includes(f.code);
-                    return (
-                      <button
-                        key={f.code}
-                        onClick={() => toggleArrayField("foodPairings", f.code)}
-                        style={{ background: checked ? "#39FF66" : "none", border: `2px solid ${checked ? "#39FF66" : "#28405C"}`, borderRadius: "999px", padding: "5px 11px", fontSize: "11.5px", fontWeight: 600, color: checked ? "#0D1B2A" : "#F2F2E8", cursor: "pointer" }}
-                      >
-                        {f.fr}
-                      </button>
-                    );
-                  })}
+                <div style={{ marginBottom: "12px" }}>
+                  <FlatListField
+                    list={FOOD_PAIRING_LIST}
+                    label="Accords alimentaires"
+                    variant="pills"
+                    selected={form.foodPairings}
+                    onToggle={(code) => toggleArrayField("foodPairings", code)}
+                    onAdded={(item) => setForm((f) => (f.foodPairings.includes(item.code) ? f : { ...f, foodPairings: [...f.foodPairings, item.code] }))}
+                    onDeleted={(code) => setForm((f) => (f.foodPairings.includes(code) ? { ...f, foodPairings: f.foodPairings.filter((c) => c !== code) } : f))}
+                    labelStyle={labelStyle}
+                    fieldStyle={fieldStyle}
+                  />
                 </div>
-                <label style={labelStyle}>Moment / occasion</label>
-                <select value={form.occasion} onChange={(e) => set("occasion", e.target.value)} style={fieldStyle}>
-                  <option value="">—</option>
-                  {OCCASIONS.map((o) => (
-                    <option key={o.code} value={o.code}>
-                      {o.fr}
-                    </option>
-                  ))}
-                </select>
+                <FlatListField
+                  list={OCCASION_LIST}
+                  label="Moment / occasion"
+                  variant="select"
+                  value={form.occasion}
+                  onChange={(v) => set("occasion", v)}
+                  onAdded={(item) => set("occasion", item.code)}
+                  onDeleted={(code) => setForm((f) => (f.occasion === code ? { ...f, occasion: "" } : f))}
+                  labelStyle={labelStyle}
+                  fieldStyle={fieldStyle}
+                />
                 </CollapsibleSection>
 
                 <div style={separatorStyle} />
