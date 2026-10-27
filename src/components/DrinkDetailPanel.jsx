@@ -18,7 +18,7 @@ import { BeerCiderStylePicker } from "./BeerCiderStylePicker.jsx";
 import { SelectedStyleChips } from "./SelectedStyleChips.jsx";
 import { FlavorNotesPicker } from "./FlavorNotesPicker.jsx";
 import { FlatListField } from "./FlatListField.jsx";
-import { FOOD_PAIRING_LIST, OCCASION_LIST, GLASS_LIST } from "../data/customLists.js";
+import { FOOD_PAIRING_LIST, OCCASION_LIST, GLASS_LIST, CHARACTERISTIC_LIST } from "../data/customLists.js";
 import { VintageManager } from "./VintageManager.jsx";
 import { PendingContributionsSection } from "./PendingContributionsSection.jsx";
 import { FreeTagInput } from "./FreeTagInput.jsx";
@@ -182,14 +182,9 @@ export function DrinkDetailPanel({ drink, onClose, onSaved, myUserId }) {
     foodPairings: drink?.foodPairings || [],
     occasion: drink?.occasion || "",
     // Niveau 2 — caractéristiques & labels
-    alcoholFree: !!drink?.alcoholFree,
-    lowAlcohol: !!drink?.lowAlcohol,
-    glutenFree: !!drink?.glutenFree,
-    glutenReduced: !!drink?.glutenReduced,
-    bio: !!drink?.bio,
+    // La liste des caractéristiques du produit (codes) : voir CHARACTERISTIC_LIST (customLists.js).
+    characteristics: drink?.characteristics || [],
     vegan: drink?.vegan || "inconnu",
-    sugarFree: !!drink?.sugarFree,
-    lactoseFree: !!drink?.lactoseFree,
     certifications: drink?.certifications || [],
     // Niveau 2 — présentation
     shortDescription: drink?.shortDescription || "",
@@ -475,14 +470,12 @@ export function DrinkDetailPanel({ drink, onClose, onSaved, myUserId }) {
       recommendedGlass: form.recommendedGlass,
       foodPairings: form.foodPairings,
       occasion: form.occasion,
-      alcoholFree: form.alcoholFree,
-      lowAlcohol: form.lowAlcohol,
-      glutenFree: form.glutenFree,
-      glutenReduced: form.glutenReduced,
-      bio: form.bio,
+      characteristics: form.characteristics,
+      // L'application Bibamus (annuaire, icônes, filtres) lit encore ces deux cases : la base les tient d'accord avec la liste,
+      // et on les garde d'accord ici aussi pour que l'écran soit juste avant le prochain chargement.
+      glutenFree: form.characteristics.includes("gluten_free"),
+      bio: form.characteristics.includes("bio"),
       vegan: form.vegan,
-      sugarFree: form.sugarFree,
-      lactoseFree: form.lactoseFree,
       certifications: form.certifications,
       shortDescription: form.shortDescription.trim(),
       fullDescription: form.fullDescription.trim(),
@@ -1374,35 +1367,18 @@ export function DrinkDetailPanel({ drink, onClose, onSaved, myUserId }) {
                 <div style={separatorStyle} />
 
                 <CollapsibleSection title="Caractéristiques & labels">
-                <div style={{ display: "flex", flexDirection: "column", gap: "8px", marginBottom: "12px" }}>
-                  <label style={{ display: "flex", alignItems: "center", gap: "6px", fontSize: "13px", cursor: "pointer" }}>
-                    <input type="checkbox" checked={form.alcoholFree} onChange={(e) => set("alcoholFree", e.target.checked)} />
-                    Sans alcool
-                  </label>
-                  <label style={{ display: "flex", alignItems: "center", gap: "6px", fontSize: "13px", cursor: "pointer" }}>
-                    <input type="checkbox" checked={form.lowAlcohol} onChange={(e) => set("lowAlcohol", e.target.checked)} />
-                    Faible en alcool
-                  </label>
-                  <label style={{ display: "flex", alignItems: "center", gap: "6px", fontSize: "13px", cursor: "pointer" }}>
-                    <input type="checkbox" checked={form.glutenFree} onChange={(e) => set("glutenFree", e.target.checked)} />
-                    Sans gluten
-                  </label>
-                  <label style={{ display: "flex", alignItems: "center", gap: "6px", fontSize: "13px", cursor: "pointer" }}>
-                    <input type="checkbox" checked={form.glutenReduced} onChange={(e) => set("glutenReduced", e.target.checked)} />
-                    Gluten réduit
-                  </label>
-                  <label style={{ display: "flex", alignItems: "center", gap: "6px", fontSize: "13px", cursor: "pointer" }}>
-                    <input type="checkbox" checked={form.bio} onChange={(e) => set("bio", e.target.checked)} />
-                    Bio
-                  </label>
-                  <label style={{ display: "flex", alignItems: "center", gap: "6px", fontSize: "13px", cursor: "pointer" }}>
-                    <input type="checkbox" checked={form.sugarFree} onChange={(e) => set("sugarFree", e.target.checked)} />
-                    Sans sucres ajoutés
-                  </label>
-                  <label style={{ display: "flex", alignItems: "center", gap: "6px", fontSize: "13px", cursor: "pointer" }}>
-                    <input type="checkbox" checked={form.lactoseFree} onChange={(e) => set("lactoseFree", e.target.checked)} />
-                    Sans lactose
-                  </label>
+                <div style={{ marginBottom: "12px" }}>
+                  <FlatListField
+                    list={CHARACTERISTIC_LIST}
+                    label="Caractéristiques"
+                    variant="pills"
+                    selected={form.characteristics}
+                    onToggle={(code) => toggleArrayField("characteristics", code)}
+                    onAdded={(item) => setForm((f) => (f.characteristics.includes(item.code) ? f : { ...f, characteristics: [...f.characteristics, item.code] }))}
+                    onDeleted={(code) => setForm((f) => (f.characteristics.includes(code) ? { ...f, characteristics: f.characteristics.filter((c) => c !== code) } : f))}
+                    labelStyle={labelStyle}
+                    fieldStyle={fieldStyle}
+                  />
                 </div>
                 <label style={labelStyle}>Vegan</label>
                 <select value={form.vegan} onChange={(e) => set("vegan", e.target.value)} style={{ ...fieldStyle, marginBottom: "12px" }}>

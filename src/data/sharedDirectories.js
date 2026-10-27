@@ -1797,12 +1797,10 @@ function rowToDrink(row) {
     foodPairings: row.food_pairings || [],
     occasion: row.occasion,
     // Niveau 2 — caractéristiques & labels
-    alcoholFree: !!row.alcohol_free,
-    lowAlcohol: !!row.low_alcohol,
-    glutenReduced: !!row.gluten_reduced,
+    // La liste des caractéristiques (codes) remplace les sept cases ; « glutenFree » et « bio » restent lus plus haut
+    // (l'annuaire et les icônes les utilisent) : un déclencheur de la base les garde d'accord avec la liste.
+    characteristics: row.characteristics || [],
     vegan: row.vegan,
-    sugarFree: !!row.sugar_free,
-    lactoseFree: !!row.lactose_free,
     certifications: row.certifications || [],
     // Niveau 2 — présentation
     shortDescription: row.short_description,
@@ -1952,12 +1950,8 @@ function drinkToRow(d, partial = false) {
     recommended_glass: d.recommendedGlass,
     food_pairings: d.foodPairings,
     occasion: d.occasion,
-    alcohol_free: d.alcoholFree,
-    low_alcohol: d.lowAlcohol,
-    gluten_reduced: d.glutenReduced,
+    characteristics: d.characteristics,
     vegan: d.vegan,
-    sugar_free: d.sugarFree,
-    lactose_free: d.lactoseFree,
     certifications: d.certifications,
     short_description: d.shortDescription,
     full_description: d.fullDescription,
