@@ -2189,24 +2189,65 @@ export async function createGrapeVariety(name) {
   return data;
 }
 
-// Styles de bières & cidres ajoutés à la main, en complément de la liste figée. Lus par la gestion
-// ET par l'app publique ; écrits uniquement par les rôles de la gestion (voir le SQL).
+// Styles de bières & cidres modifiés depuis la gestion, par-dessus la liste figée : styles ajoutés à la main
+// (code « perso_… »), et modifications d'un style de la liste figée (même code que lui : nouveau nom,
+// nouveau groupe, ou masqué = supprimé). Lus par la gestion ET par l'app publique ; écrits uniquement par
+// les rôles de la gestion (voir le SQL). `select("*")` : la colonne « hidden » vient d'un script SQL
+// qui peut ne pas être encore passé, et son absence ne doit pas casser la lecture.
+const rowToCustomStyle = (r) => ({ code: r.code, fr: r.fr, groupTitle: r.group_title, hidden: !!r.hidden });
+
 export async function loadCustomBeerCiderStyles() {
-  const { data, error } = await supabase.from("custom_beer_cider_styles").select("code, fr, group_title").order("fr");
+  const { data, error } = await supabase.from("custom_beer_cider_styles").select("*").order("fr");
   if (error) {
     console.error("loadCustomBeerCiderStyles:", error);
     return [];
   }
-  return data.map((r) => ({ code: r.code, fr: r.fr, groupTitle: r.group_title }));
+  return data.map(rowToCustomStyle);
 }
 
 export async function createCustomBeerCiderStyle({ code, fr, groupTitle }) {
-  const { data, error } = await supabase.from("custom_beer_cider_styles").insert({ code, fr, group_title: groupTitle }).select("code, fr, group_title").single();
+  const { data, error } = await supabase.from("custom_beer_cider_styles").insert({ code, fr, group_title: groupTitle }).select("*").single();
   if (error) {
     console.error("createCustomBeerCiderStyle:", error);
     return { error };
   }
-  return { style: { code: data.code, fr: data.fr, groupTitle: data.group_title } };
+  return { style: rowToCustomStyle(data) };
+}
+
+// Modifier un style (nom et/ou groupe) : met à jour sa ligne, ou la crée s'il vient de la liste figée
+// (pas encore de ligne). Un style masqué qu'on enregistre redevient visible.
+export async function saveCustomBeerCiderStyle({ code, fr, groupTitle }) {
+  const { data, error } = await supabase
+    .from("custom_beer_cider_styles")
+    .upsert({ code, fr, group_title: groupTitle, hidden: false }, { onConflict: "code" })
+    .select("*")
+    .single();
+  if (error) {
+    console.error("saveCustomBeerCiderStyle:", error);
+    return { error };
+  }
+  return { style: rowToCustomStyle(data) };
+}
+
+// Combien de produits portent ce style (pour prévenir avant de le supprimer).
+export async function countDrinksWithBeerCiderStyle(code) {
+  const { data, error } = await supabase.rpc("count_drinks_with_beer_cider_style", { p_code: code });
+  if (error) {
+    console.error("countDrinksWithBeerCiderStyle:", error);
+    return { error };
+  }
+  return { count: Number(data) || 0 };
+}
+
+// Supprimer un style : le retire de tous les produits qui le portent, puis le supprime (ou le masque, s'il
+// vient de la liste figée) — en une seule opération côté base. Rend le nombre de produits modifiés.
+export async function deleteCustomBeerCiderStyle({ code, fr, groupTitle }) {
+  const { data, error } = await supabase.rpc("delete_beer_cider_style", { p_code: code, p_fr: fr, p_group_title: groupTitle });
+  if (error) {
+    console.error("deleteCustomBeerCiderStyle:", error);
+    return { error };
+  }
+  return { removedFrom: Number(data) || 0 };
 }
 
 export async function loadBreweriesDirectory() {

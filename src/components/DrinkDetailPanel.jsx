@@ -14,14 +14,14 @@ import { StyleTagAccordion } from "./StyleTagAccordion.jsx";
 import { TasteScale } from "./TasteScale.jsx";
 import { BarcodeRowsEditor } from "./BarcodeRowsEditor.jsx";
 import { AlcoholRateField } from "./AlcoholRateField.jsx";
-import { StyleAdder } from "./StyleAdder.jsx";
+import { BeerCiderStylePicker } from "./BeerCiderStylePicker.jsx";
 import { SelectedStyleChips } from "./SelectedStyleChips.jsx";
 import { VintageManager } from "./VintageManager.jsx";
 import { PendingContributionsSection } from "./PendingContributionsSection.jsx";
 import { FreeTagInput } from "./FreeTagInput.jsx";
 import { CollapsibleSection } from "./CollapsibleSection.jsx";
 import { COUNTRIES } from "../constants.js";
-import { loadDrinkVariants, createDrinkVariantChecked, updateDrinkVariantChecked, deleteDrinkVariantChecked, findBarcodeOwnerName, loadCustomBeerCiderStyles, createCustomBeerCiderStyle } from "../data/sharedDirectories.js";
+import { loadDrinkVariants, createDrinkVariantChecked, updateDrinkVariantChecked, deleteDrinkVariantChecked, findBarcodeOwnerName, loadCustomBeerCiderStyles, createCustomBeerCiderStyle, saveCustomBeerCiderStyle, countDrinksWithBeerCiderStyle, deleteCustomBeerCiderStyle } from "../data/sharedDirectories.js";
 import { mergeCustomStyles } from "../data/customStyles.js";
 import { emptyRow, rowsFromVariants, validateRows, syncBarcodeRows, describeBarcodeError } from "../data/barcodeRows.js";
 import {
@@ -307,8 +307,8 @@ export function DrinkDetailPanel({ drink, onClose, onSaved, myUserId }) {
   // Codes-barres : une ligne par conditionnement, chargées depuis drink_barcodes (produit existant).
   const [barcodeRows, setBarcodeRows] = useState([emptyRow()]);
   const [loadedBarcodeRows, setLoadedBarcodeRows] = useState([]);
-  // Styles ajoutés à la main (en plus de la liste figée), partagés par tous les produits : chargés
-  // seulement quand un produit bière / cidre est ouvert.
+  // Styles ajoutés ou modifiés depuis la gestion (par-dessus la liste figée : nouveaux noms, groupes changés,
+  // styles supprimés), partagés par tous les produits : chargés seulement quand un produit bière / cidre est ouvert.
   const [customStyles, setCustomStyles] = useState([]);
   const [customStylesLoaded, setCustomStylesLoaded] = useState(false);
   const isBeerOrCiderType = form.type === "bieres_cidres";
@@ -327,7 +327,7 @@ export function DrinkDetailPanel({ drink, onClose, onSaved, myUserId }) {
   }, [isBeerOrCiderType]);
   const beerCiderStyleGroups = useMemo(() => mergeCustomStyles(BEER_CIDER_STYLE_GROUPS, customStyles), [customStyles]);
   // Libellé d'un code de style, pour les étiquettes sélectionnées : toutes les listes confondues (un
-  // produit peut porter un code d'une autre sous-catégorie), y compris les styles ajoutés à la main.
+  // produit peut porter un code d'une autre sous-catégorie), avec les noms modifiés et les styles ajoutés.
   const styleLabelByCode = useMemo(
     () =>
       new Map(
@@ -982,32 +982,35 @@ export function DrinkDetailPanel({ drink, onClose, onSaved, myUserId }) {
                   ariaLabel={isWine ? "Caractéristiques sélectionnées" : "Styles sélectionnés"}
                 />
                 <div style={{ border: "2px solid #28405C", borderRadius: "8px", padding: "12px" }}>
-                  <StyleTagAccordion
-                    groups={
-                      isBeerOrCider
-                        ? beerCiderStyleGroups
-                        : isWine
-                        ? form.beverageSubtype === "vin_effervescent"
-                          ? WINE_EFFERVESCENT_STYLE_GROUPS
-                          : WINE_STYLE_GROUPS
-                        : isSpirit
-                        ? SPIRIT_STYLE_GROUPS_BY_SUBTYPE[form.beverageSubtype] || []
-                        : []
-                    }
-                    selected={form.styles}
-                    onToggle={toggleStyle}
-                    hideControls={isWine}
-                  />
-
-                  {isBeerOrCider && (
-                    <StyleAdder
-                      groups={BEER_CIDER_STYLE_GROUPS}
+                  {isBeerOrCider ? (
+                    <BeerCiderStylePicker
+                      groups={beerCiderStyleGroups}
+                      builtinGroups={BEER_CIDER_STYLE_GROUPS}
                       custom={customStyles}
+                      onCustomChange={setCustomStyles}
+                      selected={form.styles}
+                      onToggle={toggleStyle}
+                      onAdded={(style) => setForm((f) => (f.styles.includes(style.code) ? f : { ...f, styles: [...f.styles, style.code] }))}
+                      onDeleted={(code) => setForm((f) => (f.styles.includes(code) ? { ...f, styles: f.styles.filter((c) => c !== code) } : f))}
                       onCreate={createCustomBeerCiderStyle}
-                      onCreated={(style) => {
-                        setCustomStyles((prev) => [...prev, style]);
-                        setForm((f) => (f.styles.includes(style.code) ? f : { ...f, styles: [...f.styles, style.code] }));
-                      }}
+                      onSave={saveCustomBeerCiderStyle}
+                      onCount={countDrinksWithBeerCiderStyle}
+                      onDelete={deleteCustomBeerCiderStyle}
+                    />
+                  ) : (
+                    <StyleTagAccordion
+                      groups={
+                        isWine
+                          ? form.beverageSubtype === "vin_effervescent"
+                            ? WINE_EFFERVESCENT_STYLE_GROUPS
+                            : WINE_STYLE_GROUPS
+                          : isSpirit
+                          ? SPIRIT_STYLE_GROUPS_BY_SUBTYPE[form.beverageSubtype] || []
+                          : []
+                      }
+                      selected={form.styles}
+                      onToggle={toggleStyle}
+                      hideControls={isWine}
                     />
                   )}
 
