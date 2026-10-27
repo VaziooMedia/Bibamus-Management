@@ -5,7 +5,7 @@ import { validateNewStyle, uniqueStyleCode, allStyleCodes, describeStyleError } 
 // pour toutes (table custom_beer_cider_styles) : il rejoint son groupe pour TOUS les produits, puis
 // est sélectionné pour celui en cours d'édition.
 //   groups   : les groupes de la liste figée (pour le choix du groupe et la détection des doublons)
-//   custom   : les styles déjà ajoutés à la main
+//   custom   : les modifications déjà enregistrées (styles ajoutés, renommés, déplacés, supprimés)
 //   onCreate : async ({ code, fr, groupTitle }) -> { style } ou { error }
 //   onCreated: (style) -> void
 

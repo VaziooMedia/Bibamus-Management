@@ -4,7 +4,13 @@ import React, { useState, useMemo } from "react";
 // Barre de recherche en haut (avec des centaines de tags, s'y retrouver autrement serait
 // pénible) — tape un mot, seuls les groupes contenant une correspondance restent visibles,
 // dépliés automatiquement. Bouton "Tout déplier / Tout replier" pour parcourir librement.
-export function StyleTagAccordion({ groups, selected, onToggle, hideControls = false }) {
+//
+// Mode modification (`manage`, facultatif) : toucher une étiquette ne la (dé)sélectionne plus, cela l'ouvre
+// pour la modifier. Les étiquettes passent en pointillés pour qu'on voie qu'on n'est plus en train de choisir.
+//   manage.activeCode  : le code de l'étiquette ouverte (ou null)
+//   manage.onPick      : (code) -> void
+//   manage.renderPanel : (tag, group) -> élément affiché sous les étiquettes du groupe qui contient l'étiquette ouverte
+export function StyleTagAccordion({ groups, selected, onToggle, hideControls = false, manage = null }) {
   const [query, setQuery] = useState("");
   const [openIndices, setOpenIndices] = useState(new Set());
 
@@ -14,6 +20,7 @@ export function StyleTagAccordion({ groups, selected, onToggle, hideControls = f
     return groups.map((g, i) => ({ ...g, index: i, tags: g.tags.filter((t) => t.fr.toLowerCase().includes(q)) })).filter((g) => g.tags.length > 0);
   }, [groups, q]);
 
+  const activeCode = manage?.activeCode ?? null;
   const isOpen = (i) => (q ? true : openIndices.has(i));
 
   const toggleGroup = (i) => {
@@ -80,13 +87,16 @@ export function StyleTagAccordion({ groups, selected, onToggle, hideControls = f
                 <div style={{ padding: "12px", display: "flex", flexWrap: "wrap", gap: "8px" }}>
                   {group.tags.map((tag) => {
                     const checked = selected.includes(tag.code);
+                    const active = manage != null && tag.code === activeCode;
                     return (
                       <button
                         key={tag.code}
-                        onClick={() => onToggle(tag.code)}
+                        onClick={() => (manage ? manage.onPick(tag.code) : onToggle(tag.code))}
+                        title={manage ? `Modifier « ${tag.fr} »` : undefined}
                         style={{
                           background: checked ? "#39FF66" : "none",
-                          border: `2px solid ${checked ? "#39FF66" : "#28405C"}`,
+                          border: `2px ${manage && !active ? "dashed" : "solid"} ${active ? "#F2F2E8" : checked ? "#39FF66" : "#28405C"}`,
+                          boxShadow: active ? "0 0 0 2px #F2F2E8" : "none",
                           borderRadius: "999px",
                           padding: "5px 11px",
                           fontSize: "11.5px",
@@ -99,6 +109,9 @@ export function StyleTagAccordion({ groups, selected, onToggle, hideControls = f
                       </button>
                     );
                   })}
+                  {manage && activeCode != null && group.tags.some((t) => t.code === activeCode) && (
+                    <div style={{ flexBasis: "100%" }}>{manage.renderPanel(group.tags.find((t) => t.code === activeCode), group)}</div>
+                  )}
                 </div>
               )}
             </div>
