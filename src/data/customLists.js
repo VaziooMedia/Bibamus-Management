@@ -6,14 +6,15 @@
 // C'est le même modèle que les styles de bières & cidres (customStyles.js), en générique : une « liste »
 // est décrite par un objet (voir FLAVOR_NOTES) qui donne sa clé, ses groupes de départ et ses mots. Une liste
 // « plate » (`flat: true` : accords alimentaires, moment, verre) n'a pas de groupes : un seul groupe sans titre.
-// Les mêmes listes servent aussi à la fiche Lieu (moyens de paiement, types d'établissement, aménités) : `entity`
-// dit alors ce que la liste décrit (des lieux, et non des produits) et `orderable` autorise à changer l'ordre
+// Les mêmes listes servent aussi à la fiche Lieu (moyens de paiement, types d'établissement, aménités) et à la fiche
+// Producteur (type et profil du producteur) : `entity` dit alors ce que la liste décrit (des lieux ou des producteurs, et
+// non des produits), `source` d'où viennent ses éléments comptés et supprimés, et `orderable` autorise à changer l'ordre
 // d'affichage (table custom_list_order). Sans `entity`, la liste décrit des produits.
 // Ce module ne contient que de la logique pure : génération du code, détection des doublons, fusion avec
 // les groupes de départ, mise à jour de la liste en mémoire, contrôles et messages d'erreur.
 
 import { FLAVOR_NOTE_GROUPS, FOOD_PAIRINGS, OCCASIONS, PRODUCT_CHARACTERISTICS, RECOMMENDED_GLASSES } from "./beerCiderStyles.js";
-import { PAYMENT_METHODS, VENUE_TYPES } from "../constants.js";
+import { PAYMENT_METHODS, VENUE_TYPES, PRODUCER_TYPES, PRODUCER_PROFILES } from "../constants.js";
 
 // Un code ne peut avoir qu'une place dans une liste modifiable (une modification d'un élément vise son code, et
 // un code ne se range que dans un groupe). On garde donc la première place de chaque code. Dans la liste des
@@ -114,6 +115,16 @@ export const VENUE_ENTITY = {
   all: "tous les lieux",
   none: "aucun lieu",
 };
+export const PRODUCER_ENTITY = {
+  one: "producteur",
+  many: "producteurs",
+  this: "ce producteur",
+  ofThis: "de ce producteur",
+  ofThese: "de ces producteurs",
+  forThis: "pour ce producteur",
+  all: "tous les producteurs",
+  none: "aucun producteur",
+};
 export const entityOf = (list) => list.entity || PRODUCT_ENTITY;
 export const countLabel = (list, n) => `${n} ${n > 1 ? entityOf(list).many : entityOf(list).one}`;
 
@@ -208,6 +219,49 @@ export const AMENITY_LIST = {
     has_wifi: venueAppNotice("WiFi gratuit"),
     wheelchair_accessible: venueAppNotice("Accessible PMR"),
     can_dance: venueAppNotice("Possibilité de danser (en soirée)"),
+  },
+};
+
+// Fiche Producteur : type de producteur (plusieurs choix, étiquettes). Colonne producer_types. L'application Bibamus
+// affiche le type sur les cartes publiques des producteurs : la suppression d'un type de départ en avertit.
+export const PRODUCER_TYPE_LIST = {
+  key: "producer_type",
+  flat: true,
+  orderable: true,
+  source: "producers",
+  entity: PRODUCER_ENTITY,
+  builtinGroups: [{ title: "", tags: PRODUCER_TYPES }],
+  orphanTitle: "",
+  words: {
+    noun: "type de producteur",
+    one: "un type de producteur",
+    this: "ce type de producteur",
+    the: "le type de producteur",
+    ofThe: "du type de producteur",
+    ofAll: "des types de producteur",
+    namePlaceholder: "Nom du type (ex. Vinaigrerie)",
+  },
+  deleteNoticeDefault: (name) =>
+    `Attention : « ${name} » est aussi utilisé par l'application Bibamus (cartes publiques des producteurs). Une fois supprimé, il disparaîtra de tous les producteurs dans l'application.`,
+};
+
+// Fiche Producteur : profil du producteur (plusieurs choix, étiquettes). Colonne producer_profiles.
+export const PRODUCER_PROFILE_LIST = {
+  key: "producer_profile",
+  flat: true,
+  orderable: true,
+  source: "producers",
+  entity: PRODUCER_ENTITY,
+  builtinGroups: [{ title: "", tags: PRODUCER_PROFILES }],
+  orphanTitle: "",
+  words: {
+    noun: "profil",
+    one: "un profil",
+    this: "ce profil",
+    the: "le profil",
+    ofThe: "du profil",
+    ofAll: "des profils",
+    namePlaceholder: "Nom du profil (ex. Familial)",
   },
 };
 
@@ -310,6 +364,13 @@ export function applyOrder(items, order) {
   const placed = items.filter((t) => rank.has(t.code)).sort((a, b) => rank.get(a.code) - rank.get(b.code));
   const rest = items.filter((t) => !rank.has(t.code));
   return [...placed, ...rest];
+}
+
+// Le nom à afficher pour un code de la liste (tableaux, résumés), avec les modifications de la gestion : un élément renommé
+// ou ajouté à la main porte son nom enregistré. Un code inconnu (ou supprimé) s'affiche tel quel, « — » s'il est vide.
+export function itemLabelResolver(list, custom) {
+  const names = new Map(mergeCustomItems(list, custom).flatMap((g) => g.tags).map((t) => [t.code, t.fr]));
+  return (code) => names.get(code) || code || "—";
 }
 
 // Les éléments visibles de la liste, à plat, dans l'ordre d'affichage.

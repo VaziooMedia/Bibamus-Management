@@ -10,14 +10,24 @@ import {
   deleteCustomListItem,
   countVenuesWithListItem,
   deleteVenueListItem,
+  countProducersWithListItem,
+  deleteProducerListItem,
   saveCustomListOrder,
 } from "../data/sharedDirectories.js";
 
+// Où une liste compte et supprime ses éléments : dans les lieux, dans les producteurs, ou (par défaut) dans les produits.
+const SOURCES = {
+  venues: { count: countVenuesWithListItem, remove: deleteVenueListItem },
+  producers: { count: countProducersWithListItem, remove: deleteProducerListItem },
+};
+const PRODUCT_SOURCE = { count: countDrinksWithListItem, remove: deleteCustomListItem };
+
 // Un champ dont la liste se modifie depuis la gestion : accords alimentaires (étiquettes, plusieurs choix), moment /
 // occasion et verre recommandé (liste déroulante, un seul choix) de la fiche produit ; moyens de paiement et types
-// d'établissement (étiquettes), aménités (cases à cocher) de la fiche lieu. Les modifications de la liste et son ordre
-// sont lus à l'ouverture de la section. Une liste de la fiche lieu (`list.source === "venues"`) compte et supprime
-// dans les lieux, une autre dans les produits.
+// d'établissement (étiquettes), aménités (cases à cocher) de la fiche lieu ; type et profil du producteur (étiquettes) de la
+// fiche producteur. Les modifications de la liste et son ordre sont lus à l'ouverture de la section. Une liste de la fiche
+// lieu (`list.source === "venues"`) compte et supprime dans les lieux, une liste de la fiche producteur (`"producers"`) dans les
+// producteurs, une autre dans les produits.
 //   list         : la liste (FOOD_PAIRING_LIST, PAYMENT_LIST, AMENITY_LIST…, voir customLists.js)
 //   label        : le titre du champ (facultatif : la section qui l'entoure peut déjà le porter)
 //   variant      : "pills" (étiquettes, `selected` = tableau de codes, `onToggle`), "checkboxes" (cases à cocher, mêmes
@@ -30,7 +40,7 @@ export function FlatListField({ list, label, variant, compact, value, selected, 
   const [custom, setCustom, loaded] = useCustomListItems(list.key);
   const [order, setOrder] = useCustomListOrder(list.key, !!list.orderable);
   const items = useMemo(() => orderedItems(list, custom, order), [list, custom, order]);
-  const forVenues = list.source === "venues";
+  const source = SOURCES[list.source] || PRODUCT_SOURCE;
   const isSelect = variant === "select";
   const unknownValue = isSelect && value && !items.some((t) => t.code === value);
 
@@ -64,8 +74,8 @@ export function FlatListField({ list, label, variant, compact, value, selected, 
         onDeleted={onDeleted}
         onCreate={(item) => createCustomListItem(list.key, item)}
         onSave={(item) => saveCustomListItem(list.key, item)}
-        onCount={(code) => (forVenues ? countVenuesWithListItem(list.key, code) : countDrinksWithListItem(list.key, code))}
-        onDelete={(item) => (forVenues ? deleteVenueListItem(list.key, item) : deleteCustomListItem(list.key, item))}
+        onCount={(code) => source.count(list.key, code)}
+        onDelete={(item) => source.remove(list.key, item)}
       />
     </div>
   );

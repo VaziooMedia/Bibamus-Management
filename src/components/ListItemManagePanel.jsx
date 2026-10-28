@@ -1,15 +1,16 @@
 import React, { useState } from "react";
 import { validateItemFields, describeItemError, entityOf, countLabel, deleteNoticeFor } from "../data/customLists.js";
 
-// Panneau de modification d'un élément d'une liste de la fiche produit (un arôme, par exemple), affiché sous les
+// Panneau de modification d'un élément d'une liste de la fiche produit (un arôme, par exemple), de la fiche lieu ou de la
+// fiche producteur, affiché sous les
 // étiquettes de son groupe quand on le touche en mode « Modifier la liste ». On y renomme l'élément, on le range
-// dans un autre groupe, ou on le supprime. Tout vaut pour TOUS les produits (la liste est commune).
+// dans un autre groupe, ou on le supprime. Tout vaut pour TOUS les produits (ou tous les lieux, tous les producteurs) : la liste est commune.
 //   list     : la description de la liste (voir customLists.js : groupes de départ, mots) ; une liste « plate » n'a pas de choix de groupe ;
 //              `list.deleteNotices` (facultatif) : un avertissement, par code, affiché à la confirmation d'une suppression
 //   item     : { code, fr, groupTitle } — l'élément ouvert, tel qu'il s'affiche
 //   custom   : les modifications déjà enregistrées (détection des doublons)
 //   onSave   : async ({ code, fr, groupTitle }) -> { item } ou { error }
-//   onCount  : async (code) -> { count } ou { error } — combien de produits portent cet élément
+//   onCount  : async (code) -> { count } ou { error } — combien de produits (lieux, producteurs) portent cet élément
 //   onDelete : async ({ code, fr, groupTitle }) -> { removedFrom } ou { error }
 //   onClose  : () -> void
 //   position : (facultatif, liste dont l'ordre se modifie) { index, total } — la place de l'élément dans la liste (à partir de 0)

@@ -2354,6 +2354,28 @@ export async function deleteVenueListItem(listKey, { code, fr, groupTitle }) {
   return { removedFrom: Number(data) || 0 };
 }
 
+// Fiche Producteur : mêmes listes modifiables (type et profil du producteur), avec l'ordre d'affichage.
+// Combien de producteurs portent cet élément (pour prévenir avant de le supprimer).
+export async function countProducersWithListItem(listKey, code) {
+  const { data, error } = await supabase.rpc("count_producers_with_list_item", { p_list: listKey, p_code: code });
+  if (error) {
+    console.error("countProducersWithListItem:", error);
+    return { error };
+  }
+  return { count: Number(data) || 0 };
+}
+
+// Supprimer un élément : le retire de tous les producteurs qui le portent et de l'ordre de sa liste, puis le supprime (ou
+// le masque, s'il vient de la liste figée) — en une seule opération côté base. Rend le nombre de producteurs modifiés.
+export async function deleteProducerListItem(listKey, { code, fr, groupTitle }) {
+  const { data, error } = await supabase.rpc("delete_producer_list_item", { p_list: listKey, p_code: code, p_fr: fr, p_group_title: groupTitle });
+  if (error) {
+    console.error("deleteProducerListItem:", error);
+    return { error };
+  }
+  return { removedFrom: Number(data) || 0 };
+}
+
 export async function loadBreweriesDirectory() {
   const { data, error } = await supabase.from("breweries_directory").select("*").order("name");
   if (error) {
