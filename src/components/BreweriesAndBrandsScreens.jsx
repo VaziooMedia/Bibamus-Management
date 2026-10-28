@@ -1,13 +1,13 @@
 import React, { useState, useEffect, useMemo } from "react";
 import { loadBreweriesDirectory, loadBrandsDirectory, loadPendingReportEntityIds, loadCustomListItems } from "../data/sharedDirectories.js";
-import { PRODUCER_TYPE_LIST, PRODUCER_PROFILE_LIST, itemLabelResolver } from "../data/customLists.js";
+import { PRODUCER_TYPE_LIST, PRODUCER_PROFILE_LIST, BRAND_CLASSIFICATION_LIST, BRAND_TYPE_LIST, itemLabelResolver } from "../data/customLists.js";
 import { DataTable, StatusBadge, VisibilityDot } from "./DataTable.jsx";
 import { BreweryDetailPanel } from "./BreweryDetailPanel.jsx";
 import { BrandDetailPanel } from "./BrandDetailPanel.jsx";
 import { alternateNameSearchFields } from "./AlternateNamesFields.jsx";
 import { DetailedStatsCounterBar, applyStatFilter } from "./DetailedStatsCounterBar.jsx";
 import { PageTitle } from "./PageTitle.jsx";
-import { COUNTRIES, BRAND_CLASSIFICATIONS, BRAND_TYPES } from "../constants.js";
+import { COUNTRIES } from "../constants.js";
 import { CertificationIcon } from "./CertificationIcon.jsx";
 
 // Les données stockent désormais des codes techniques — les tableaux doivent résoudre le
@@ -18,8 +18,6 @@ const labelFromList = (list) => {
   return (code) => map[code] || code || "—";
 };
 const countryLabel = labelFromList(COUNTRIES);
-const classificationLabel = labelFromList(BRAND_CLASSIFICATIONS);
-const brandTypeLabel = labelFromList(BRAND_TYPES);
 
 // Les noms du type et du profil viennent de la liste de départ complétée par la gestion (élément renommé ou ajouté à la main).
 const getBreweryColumns = (producerTypeLabel, producerProfileLabel) => [
@@ -33,7 +31,8 @@ const getBreweryColumns = (producerTypeLabel, producerProfileLabel) => [
   { key: "certificationLevel", label: "Certification", render: (b) => <CertificationIcon level={b.certificationLevel} /> },
 ];
 
-const getBrandColumns = (breweriesDirectory) => {
+// Les noms de la classification et du type de marque viennent de la liste de départ complétée par la gestion (élément renommé ou ajouté à la main).
+const getBrandColumns = (breweriesDirectory, classificationLabel, brandTypeLabel) => {
   return [
     { key: "name", label: "Nom" },
     { key: "originCountry", label: "Origine", render: (b) => countryLabel(b.originCountry) },
@@ -155,14 +154,26 @@ export function BrandsScreen({ initialBrandId, onInitialBrandOpened, myUserId } 
   const [creating, setCreating] = useState(false);
   const [activeFilter, setActiveFilter] = useState("total");
   const [pendingReportIds, setPendingReportIds] = useState(new Set());
+  // Les modifications des listes « classification » et « type de marque » (noms renommés, éléments ajoutés), pour afficher les bons noms.
+  const [listChanges, setListChanges] = useState({ classifications: [], types: [] });
+
+  const loadListChanges = async () => {
+    const [classifications, types] = await Promise.all([loadCustomListItems(BRAND_CLASSIFICATION_LIST.key), loadCustomListItems(BRAND_TYPE_LIST.key)]);
+    setListChanges({ classifications, types });
+  };
 
   const refresh = async () => {
     setLoading(true);
-    const [loadedItems, reportIds] = await Promise.all([loadBrandsDirectory(), loadPendingReportEntityIds("brand")]);
+    const [loadedItems, reportIds] = await Promise.all([loadBrandsDirectory(), loadPendingReportEntityIds("brand"), loadListChanges()]);
     setItems(loadedItems);
     setPendingReportIds(reportIds);
     setLoading(false);
   };
+
+  const brandColumns = useMemo(
+    () => getBrandColumns(breweriesDirectory, itemLabelResolver(BRAND_CLASSIFICATION_LIST, listChanges.classifications), itemLabelResolver(BRAND_TYPE_LIST, listChanges.types)),
+    [breweriesDirectory, listChanges]
+  );
 
   useEffect(() => {
     refresh();
@@ -197,7 +208,7 @@ export function BrandsScreen({ initialBrandId, onInitialBrandOpened, myUserId } 
           <DetailedStatsCounterBar items={itemsWithReports} activeFilter={activeFilter} onFilterChange={setActiveFilter} getCountry={(b) => countryLabel(b.originCountry)} />
           <DataTable
             items={applyStatFilter(itemsWithReports, activeFilter, (b) => countryLabel(b.originCountry))}
-            allColumns={getBrandColumns(breweriesDirectory)}
+            allColumns={brandColumns}
             forcedKeys={["name", "status"]}
             defaultVisibleKeys={["name", "originCountry", "brandTypes", "producerIds", "status", "visible", "certificationLevel"]}
             storageKey="marques"
@@ -216,11 +227,13 @@ export function BrandsScreen({ initialBrandId, onInitialBrandOpened, myUserId } 
           onClose={() => {
             setSelected(null);
             setCreating(false);
+            loadListChanges();
           }}
           onSaved={(updated) => {
             const wasCreating = creating;
             setSelected(null);
             setCreating(false);
+            loadListChanges();
             if (updated) setItems((prev) => (wasCreating ? [...prev, updated] : prev.map((i) => (i.id === updated.id ? updated : i))));
             else setItems((prev) => prev.filter((i) => i.id !== selected.id));
           }}

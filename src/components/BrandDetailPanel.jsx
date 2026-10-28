@@ -9,7 +9,9 @@ import { SearchableSelect, SearchableMultiSelect } from "./SearchableSelect.jsx"
 import { CertificationLevelSelector } from "./CertificationLevelSelector.jsx";
 import { CollapsibleSection } from "./CollapsibleSection.jsx";
 import { FacebookIcon, InstagramIcon, TiktokIcon, SnapchatIcon, YoutubeIcon } from "./icons.jsx";
-import { COUNTRIES, BRAND_CLASSIFICATIONS, BRAND_TYPES } from "../constants.js";
+import { COUNTRIES } from "../constants.js";
+import { BRAND_CLASSIFICATION_LIST, BRAND_TYPE_LIST } from "../data/customLists.js";
+import { FlatListField } from "./FlatListField.jsx";
 import { PendingContributionsSection } from "./PendingContributionsSection.jsx";
 import { UsernameAdminField } from "./UsernameAdminField.jsx";
 
@@ -96,34 +98,6 @@ function SocialLinkField({ icon, label, prefix, value, onChange }) {
   );
 }
 
-function TagPicker({ options, selected, onToggle }) {
-  return (
-    <div style={{ display: "flex", flexWrap: "wrap", gap: "8px" }}>
-      {options.map((o) => {
-        const checked = selected.includes(o.code);
-        return (
-          <button
-            key={o.code}
-            onClick={() => onToggle(o.code)}
-            style={{
-              background: checked ? "#39FF66" : "none",
-              border: `2px solid ${checked ? "#39FF66" : "#28405C"}`,
-              borderRadius: "999px",
-              padding: "6px 12px",
-              fontSize: "12px",
-              fontWeight: 600,
-              color: checked ? "#0D1B2A" : "#F2F2E8",
-              cursor: "pointer",
-            }}
-          >
-            {o.fr}
-          </button>
-        );
-      })}
-    </div>
-  );
-}
-
 // brand === null → mode création
 export function BrandDetailPanel({ brand, onClose, onSaved, myUserId }) {
   const isNew = !brand;
@@ -177,8 +151,10 @@ export function BrandDetailPanel({ brand, onClose, onSaved, myUserId }) {
   const set = (field, value) => setForm((f) => ({ ...f, [field]: value }));
   const refreshAfterContribution = (contribution) => set(contribution.fieldPath, contribution.proposedValue);
   const capitalizeOnBlur = (field, keepDeterminersAsTyped = false) => () => set(field, capitalizeWords(form[field], keepDeterminersAsTyped));
-  const toggleType = (t) => setForm((f) => ({ ...f, brandTypes: f.brandTypes.includes(t) ? f.brandTypes.filter((x) => x !== t) : [...f.brandTypes, t] }));
-  const toggleClassification = (c) => setForm((f) => ({ ...f, classifications: f.classifications.includes(c) ? f.classifications.filter((x) => x !== c) : [...f.classifications, c] }));
+  const toggleIn = (field) => (code) =>
+    setForm((f) => ({ ...f, [field]: f[field].includes(code) ? f[field].filter((x) => x !== code) : [...f[field], code] }));
+  const addTo = (field) => (item) => setForm((f) => (f[field].includes(item.code) ? f : { ...f, [field]: [...f[field], item.code] }));
+  const removeFrom = (field) => (code) => setForm((f) => ({ ...f, [field]: f[field].filter((x) => x !== code) }));
 
   const buildPatch = () => ({
     name: capitalizeWords(form.name.trim(), true),
@@ -395,13 +371,29 @@ export function BrandDetailPanel({ brand, onClose, onSaved, myUserId }) {
 
             <CollapsibleSection title="Classification">
               <p style={{ fontSize: "11.5px", color: "#8792A6", marginTop: "-6px", marginBottom: "10px" }}>Plusieurs choix possibles.</p>
-              <TagPicker options={BRAND_CLASSIFICATIONS} selected={form.classifications} onToggle={toggleClassification} />
+              <FlatListField
+                list={BRAND_CLASSIFICATION_LIST}
+                variant="pills"
+                compact={false}
+                selected={form.classifications}
+                onToggle={toggleIn("classifications")}
+                onAdded={addTo("classifications")}
+                onDeleted={removeFrom("classifications")}
+              />
             </CollapsibleSection>
 
             <div style={separatorStyle} />
 
             <CollapsibleSection title="Type de marque">
-              <TagPicker options={BRAND_TYPES} selected={form.brandTypes} onToggle={toggleType} />
+              <FlatListField
+                list={BRAND_TYPE_LIST}
+                variant="pills"
+                compact={false}
+                selected={form.brandTypes}
+                onToggle={toggleIn("brandTypes")}
+                onAdded={addTo("brandTypes")}
+                onDeleted={removeFrom("brandTypes")}
+              />
             </CollapsibleSection>
 
             <div style={separatorStyle} />

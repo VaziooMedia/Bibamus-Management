@@ -2376,6 +2376,28 @@ export async function deleteProducerListItem(listKey, { code, fr, groupTitle }) 
   return { removedFrom: Number(data) || 0 };
 }
 
+// Fiche Marque : mêmes listes modifiables (classification et type de marque), avec l'ordre d'affichage.
+// Combien de marques portent cet élément (pour prévenir avant de le supprimer).
+export async function countBrandsWithListItem(listKey, code) {
+  const { data, error } = await supabase.rpc("count_brands_with_list_item", { p_list: listKey, p_code: code });
+  if (error) {
+    console.error("countBrandsWithListItem:", error);
+    return { error };
+  }
+  return { count: Number(data) || 0 };
+}
+
+// Supprimer un élément : le retire de toutes les marques qui le portent et de l'ordre de sa liste, puis le supprime (ou
+// le masque, s'il vient de la liste figée) — en une seule opération côté base. Rend le nombre de marques modifiées.
+export async function deleteBrandListItem(listKey, { code, fr, groupTitle }) {
+  const { data, error } = await supabase.rpc("delete_brand_list_item", { p_list: listKey, p_code: code, p_fr: fr, p_group_title: groupTitle });
+  if (error) {
+    console.error("deleteBrandListItem:", error);
+    return { error };
+  }
+  return { removedFrom: Number(data) || 0 };
+}
+
 export async function loadBreweriesDirectory() {
   const { data, error } = await supabase.from("breweries_directory").select("*").order("name");
   if (error) {
