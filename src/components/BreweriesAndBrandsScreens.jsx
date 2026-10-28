@@ -1,12 +1,13 @@
-import React, { useState, useEffect } from "react";
-import { loadBreweriesDirectory, loadBrandsDirectory, loadPendingReportEntityIds } from "../data/sharedDirectories.js";
+import React, { useState, useEffect, useMemo } from "react";
+import { loadBreweriesDirectory, loadBrandsDirectory, loadPendingReportEntityIds, loadCustomListItems } from "../data/sharedDirectories.js";
+import { PRODUCER_TYPE_LIST, PRODUCER_PROFILE_LIST, itemLabelResolver } from "../data/customLists.js";
 import { DataTable, StatusBadge, VisibilityDot } from "./DataTable.jsx";
 import { BreweryDetailPanel } from "./BreweryDetailPanel.jsx";
 import { BrandDetailPanel } from "./BrandDetailPanel.jsx";
 import { alternateNameSearchFields } from "./AlternateNamesFields.jsx";
 import { DetailedStatsCounterBar, applyStatFilter } from "./DetailedStatsCounterBar.jsx";
 import { PageTitle } from "./PageTitle.jsx";
-import { COUNTRIES, PRODUCER_TYPES, PRODUCER_PROFILES, BRAND_CLASSIFICATIONS, BRAND_TYPES } from "../constants.js";
+import { COUNTRIES, BRAND_CLASSIFICATIONS, BRAND_TYPES } from "../constants.js";
 import { CertificationIcon } from "./CertificationIcon.jsx";
 
 // Les données stockent désormais des codes techniques — les tableaux doivent résoudre le
@@ -17,12 +18,11 @@ const labelFromList = (list) => {
   return (code) => map[code] || code || "—";
 };
 const countryLabel = labelFromList(COUNTRIES);
-const producerTypeLabel = labelFromList(PRODUCER_TYPES);
-const producerProfileLabel = labelFromList(PRODUCER_PROFILES);
 const classificationLabel = labelFromList(BRAND_CLASSIFICATIONS);
 const brandTypeLabel = labelFromList(BRAND_TYPES);
 
-const breweryColumns = [
+// Les noms du type et du profil viennent de la liste de départ complétée par la gestion (élément renommé ou ajouté à la main).
+const getBreweryColumns = (producerTypeLabel, producerProfileLabel) => [
   { key: "name", label: "Nom" },
   { key: "country", label: "Pays", render: (b) => countryLabel(b.country) },
   { key: "city", label: "Ville" },
@@ -57,14 +57,26 @@ export function BreweriesScreen({ initialBreweryId, onInitialBreweryOpened, myUs
   const [creating, setCreating] = useState(false);
   const [activeFilter, setActiveFilter] = useState("total");
   const [pendingReportIds, setPendingReportIds] = useState(new Set());
+  // Les modifications des listes « type » et « profil » (noms renommés, éléments ajoutés), pour afficher les bons noms.
+  const [listChanges, setListChanges] = useState({ types: [], profiles: [] });
+
+  const loadListChanges = async () => {
+    const [types, profiles] = await Promise.all([loadCustomListItems(PRODUCER_TYPE_LIST.key), loadCustomListItems(PRODUCER_PROFILE_LIST.key)]);
+    setListChanges({ types, profiles });
+  };
 
   const refresh = async () => {
     setLoading(true);
-    const [loadedItems, reportIds] = await Promise.all([loadBreweriesDirectory(), loadPendingReportEntityIds("producer")]);
+    const [loadedItems, reportIds] = await Promise.all([loadBreweriesDirectory(), loadPendingReportEntityIds("producer"), loadListChanges()]);
     setItems(loadedItems);
     setPendingReportIds(reportIds);
     setLoading(false);
   };
+
+  const breweryColumns = useMemo(
+    () => getBreweryColumns(itemLabelResolver(PRODUCER_TYPE_LIST, listChanges.types), itemLabelResolver(PRODUCER_PROFILE_LIST, listChanges.profiles)),
+    [listChanges]
+  );
 
   useEffect(() => {
     refresh();
@@ -119,11 +131,13 @@ export function BreweriesScreen({ initialBreweryId, onInitialBreweryOpened, myUs
           onClose={() => {
             setSelected(null);
             setCreating(false);
+            loadListChanges();
           }}
           onSaved={(updated) => {
             const wasCreating = creating;
             setSelected(null);
             setCreating(false);
+            loadListChanges();
             if (updated) setItems((prev) => (wasCreating ? [...prev, updated] : prev.map((i) => (i.id === updated.id ? updated : i))));
             else setItems((prev) => prev.filter((i) => i.id !== selected.id));
           }}

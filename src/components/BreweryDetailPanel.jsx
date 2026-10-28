@@ -20,7 +20,9 @@ import { AddressAutocomplete } from "./AddressAutocomplete.jsx";
 import { SearchableSelect } from "./SearchableSelect.jsx";
 import { CertificationLevelSelector } from "./CertificationLevelSelector.jsx";
 import { CollapsibleSection } from "./CollapsibleSection.jsx";
-import { COUNTRIES, PHONE_PREFIXES, PRODUCER_TYPES, PRODUCER_PROFILES, COUNTRY_ISO_CODES } from "../constants.js";
+import { COUNTRIES, PHONE_PREFIXES, COUNTRY_ISO_CODES } from "../constants.js";
+import { FlatListField } from "./FlatListField.jsx";
+import { PRODUCER_TYPE_LIST, PRODUCER_PROFILE_LIST } from "../data/customLists.js";
 import { PendingContributionsSection } from "./PendingContributionsSection.jsx";
 import { UsernameAdminField } from "./UsernameAdminField.jsx";
 
@@ -132,34 +134,6 @@ function IconField({ icon, label, children }) {
   );
 }
 
-function TagPicker({ options, selected, onToggle }) {
-  return (
-    <div style={{ display: "flex", flexWrap: "wrap", gap: "8px" }}>
-      {options.map((o) => {
-        const checked = selected.includes(o.code);
-        return (
-          <button
-            key={o.code}
-            onClick={() => onToggle(o.code)}
-            style={{
-              background: checked ? "#39FF66" : "none",
-              border: `2px solid ${checked ? "#39FF66" : "#28405C"}`,
-              borderRadius: "999px",
-              padding: "6px 12px",
-              fontSize: "12px",
-              fontWeight: 600,
-              color: checked ? "#0D1B2A" : "#F2F2E8",
-              cursor: "pointer",
-            }}
-          >
-            {o.fr}
-          </button>
-        );
-      })}
-    </div>
-  );
-}
-
 // brewery === null → mode création
 export function BreweryDetailPanel({ brewery, onClose, onSaved, myUserId }) {
   const isNew = !brewery;
@@ -226,7 +200,10 @@ export function BreweryDetailPanel({ brewery, onClose, onSaved, myUserId }) {
   const set = (field, value) => setForm((f) => ({ ...f, [field]: value }));
   const refreshAfterContribution = (contribution) => set(contribution.fieldPath, contribution.proposedValue);
   const capitalizeOnBlur = (field, keepDeterminersAsTyped = false) => () => set(field, capitalizeWords(form[field], keepDeterminersAsTyped));
-  const toggleTag = (field, tag) => setForm((f) => ({ ...f, [field]: f[field].includes(tag) ? f[field].filter((x) => x !== tag) : [...f[field], tag] }));
+  const toggleIn = (field) => (code) =>
+    setForm((f) => ({ ...f, [field]: f[field].includes(code) ? f[field].filter((x) => x !== code) : [...f[field], code] }));
+  const addTo = (field) => (item) => setForm((f) => (f[field].includes(item.code) ? f : { ...f, [field]: [...f[field], item.code] }));
+  const removeFrom = (field) => (code) => setForm((f) => ({ ...f, [field]: f[field].filter((x) => x !== code) }));
 
   const handleGeocode = async () => {
     setGeocoding(true);
@@ -455,15 +432,15 @@ export function BreweryDetailPanel({ brewery, onClose, onSaved, myUserId }) {
         <div style={separatorStyle} />
 
         <CollapsibleSection title="Adresse">
-          <div style={{ display: "grid", gridTemplateColumns: "2fr 1fr", gap: "12px", marginBottom: "12px" }}>
-            <div>
-              <label style={labelStyle}>Rue / Place / Avenue</label>
-              <input value={form.streetName} onChange={(e) => set("streetName", e.target.value)} onBlur={capitalizeOnBlur("streetName")} style={fieldStyle} />
-            </div>
-            <div>
-              <label style={labelStyle}>N°</label>
-              <input value={form.streetNumber} onChange={(e) => set("streetNumber", e.target.value)} style={fieldStyle} />
-            </div>
+          <div style={{ marginBottom: "12px" }}>
+            <label style={labelStyle}>Pays</label>
+            <select value={form.country} onChange={(e) => set("country", e.target.value)} style={{ ...fieldStyle, maxWidth: "200px" }}>
+              {COUNTRIES.map((c) => (
+                <option key={c.code} value={c.code}>
+                  {c.fr}
+                </option>
+              ))}
+            </select>
           </div>
 
           {GEOAPIFY_CONFIGURED ? (
@@ -483,26 +460,24 @@ export function BreweryDetailPanel({ brewery, onClose, onSaved, myUserId }) {
                 <input value={form.postalCode} onChange={(e) => set("postalCode", e.target.value)} style={fieldStyle} />
               </div>
               <div>
-                <label style={labelStyle}>Ville</label>
+                <label style={labelStyle}>Commune</label>
                 <input value={form.city} onChange={(e) => set("city", e.target.value)} onBlur={capitalizeOnBlur("city")} style={fieldStyle} />
               </div>
             </div>
           )}
 
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px", marginBottom: "12px" }}>
+          <div style={{ display: "grid", gridTemplateColumns: "1.6fr 60px 1.4fr", gap: "12px", marginBottom: "12px" }}>
             <div>
-              <label style={labelStyle}>Village</label>
-              <input value={form.village} onChange={(e) => set("village", e.target.value)} onBlur={capitalizeOnBlur("village")} style={fieldStyle} />
+              <label style={labelStyle}>Rue / Place / Avenue</label>
+              <input value={form.streetName} onChange={(e) => set("streetName", e.target.value)} onBlur={capitalizeOnBlur("streetName")} style={fieldStyle} />
             </div>
             <div>
-              <label style={labelStyle}>Pays</label>
-              <select value={form.country} onChange={(e) => set("country", e.target.value)} style={fieldStyle}>
-                {COUNTRIES.map((c) => (
-                  <option key={c.code} value={c.code}>
-                    {c.fr}
-                  </option>
-                ))}
-              </select>
+              <label style={labelStyle}>N°</label>
+              <input value={form.streetNumber} onChange={(e) => set("streetNumber", e.target.value)} style={fieldStyle} />
+            </div>
+            <div>
+              <label style={labelStyle}>Section / Village</label>
+              <input value={form.village} onChange={(e) => set("village", e.target.value)} onBlur={capitalizeOnBlur("village")} style={fieldStyle} />
             </div>
           </div>
 
@@ -595,13 +570,29 @@ export function BreweryDetailPanel({ brewery, onClose, onSaved, myUserId }) {
         <div style={separatorStyle} />
 
         <CollapsibleSection title="Type de producteur">
-          <TagPicker options={PRODUCER_TYPES} selected={form.producerTypes} onToggle={(t) => toggleTag("producerTypes", t)} />
+          <FlatListField
+            list={PRODUCER_TYPE_LIST}
+            variant="pills"
+            compact={false}
+            selected={form.producerTypes}
+            onToggle={toggleIn("producerTypes")}
+            onAdded={addTo("producerTypes")}
+            onDeleted={removeFrom("producerTypes")}
+          />
         </CollapsibleSection>
 
         <div style={separatorStyle} />
 
         <CollapsibleSection title="Profil du producteur">
-          <TagPicker options={PRODUCER_PROFILES} selected={form.producerProfiles} onToggle={(t) => toggleTag("producerProfiles", t)} />
+          <FlatListField
+            list={PRODUCER_PROFILE_LIST}
+            variant="pills"
+            compact={false}
+            selected={form.producerProfiles}
+            onToggle={toggleIn("producerProfiles")}
+            onAdded={addTo("producerProfiles")}
+            onDeleted={removeFrom("producerProfiles")}
+          />
 
           <div style={{ marginTop: "16px" }}>
             <label style={labelStyle}>Lien avec un établissement</label>

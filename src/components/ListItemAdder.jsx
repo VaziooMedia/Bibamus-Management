@@ -1,9 +1,10 @@
 import React, { useState } from "react";
 import { validateItemFields, uniqueItemCode, allItemCodes, describeItemError, capitalize, entityOf } from "../data/customLists.js";
 
-// Ajout manuel d'un élément à une liste de la fiche produit (un arôme, par exemple) ou de la fiche lieu (une aménité).
+// Ajout manuel d'un élément à une liste de la fiche produit (un arôme, par exemple), de la fiche lieu (une aménité) ou de la
+// fiche producteur (un type).
 // L'élément est enregistré une fois pour toutes (table custom_list_items) : il rejoint son groupe pour TOUS les produits
-// (ou tous les lieux), puis est sélectionné pour celui en cours d'édition.
+// (ou tous les lieux, tous les producteurs), puis est sélectionné pour celui en cours d'édition.
 //   list     : la description de la liste (voir customLists.js : groupes de départ, mots) ; une liste « plate » n'a pas de choix de groupe
 //   custom   : les modifications déjà enregistrées (éléments ajoutés, renommés, déplacés, supprimés)
 //   onCreate : async ({ code, fr, groupTitle }) -> { item } ou { error }

@@ -4,17 +4,17 @@ import { ListItemManagePanel } from "./ListItemManagePanel.jsx";
 import { orderedItems, withItemSaved, withItemDeleted, moveInOrder, entityOf, countLabel } from "../data/customLists.js";
 
 // Ajout, renommage, déplacement et suppression des éléments d'une liste PLATE de la fiche produit (accords
-// alimentaires, moment, verre, caractéristiques) ou de la fiche lieu (moyens de paiement, types d'établissement,
-// aménités) : pas de groupes. Sous le champ : « + Ajouter … », puis « Modifier la liste » qui montre les éléments
+// alimentaires, moment, verre, caractéristiques), de la fiche lieu (moyens de paiement, types d'établissement,
+// aménités) ou de la fiche producteur (type, profil) : pas de groupes. Sous le champ : « + Ajouter … », puis « Modifier la liste » qui montre les éléments
 // en étiquettes en pointillés ; en toucher une ouvre son panneau (renommer, déplacer ou supprimer). Tout vaut
-// pour TOUS les produits (ou tous les lieux) : la liste est commune.
+// pour TOUS les produits (ou tous les lieux, tous les producteurs) : la liste est commune.
 //   list           : la description de la liste (voir customLists.js : groupes de départ, mots)
 //   custom         : les modifications enregistrées ; onCustomChange(prev => liste) pour les mettre à jour (un setState)
 //   pills          : vrai pour une liste à plusieurs choix (accords) : les étiquettes sont toujours affichées et se
 //                    (dé)sélectionnent ; faux pour une liste déroulante : les étiquettes n'apparaissent qu'en mode modification
 //   checkboxes     : vrai pour une liste à plusieurs choix présentée en cases à cocher (aménités) ; hors du mode modification,
 //                    les cases sont affichées, et en mode modification les étiquettes en pointillés (comme pour une liste déroulante)
-//   compact        : faux pour les étiquettes de la fiche lieu (un peu plus grandes, collées au titre) ; vrai par défaut (fiche produit)
+//   compact        : faux pour les étiquettes des fiches lieu et producteur (un peu plus grandes, collées au titre) ; vrai par défaut (fiche produit)
 //   order          : l'ordre enregistré (suite de codes, vide = ordre de départ) ; onOrderChange(codes) pour le mettre à jour
 //   onReorder      : (liste dont l'ordre se modifie) async (codes) -> { codes } ou { error } — enregistre le nouvel ordre
 //   selected       : codes sélectionnés pour ce produit ; onToggle(code) (liste à étiquettes)
