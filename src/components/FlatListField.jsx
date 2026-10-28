@@ -12,22 +12,25 @@ import {
   deleteVenueListItem,
   countProducersWithListItem,
   deleteProducerListItem,
+  countBrandsWithListItem,
+  deleteBrandListItem,
   saveCustomListOrder,
 } from "../data/sharedDirectories.js";
 
-// Où une liste compte et supprime ses éléments : dans les lieux, dans les producteurs, ou (par défaut) dans les produits.
+// Où une liste compte et supprime ses éléments : dans les lieux, dans les producteurs, dans les marques, ou (par défaut) dans les produits.
 const SOURCES = {
   venues: { count: countVenuesWithListItem, remove: deleteVenueListItem },
   producers: { count: countProducersWithListItem, remove: deleteProducerListItem },
+  brands: { count: countBrandsWithListItem, remove: deleteBrandListItem },
 };
 const PRODUCT_SOURCE = { count: countDrinksWithListItem, remove: deleteCustomListItem };
 
 // Un champ dont la liste se modifie depuis la gestion : accords alimentaires (étiquettes, plusieurs choix), moment /
 // occasion et verre recommandé (liste déroulante, un seul choix) de la fiche produit ; moyens de paiement et types
 // d'établissement (étiquettes), aménités (cases à cocher) de la fiche lieu ; type et profil du producteur (étiquettes) de la
-// fiche producteur. Les modifications de la liste et son ordre sont lus à l'ouverture de la section. Une liste de la fiche
+// fiche producteur ; classification et type de marque (étiquettes) de la fiche marque. Les modifications de la liste et son ordre sont lus à l'ouverture de la section. Une liste de la fiche
 // lieu (`list.source === "venues"`) compte et supprime dans les lieux, une liste de la fiche producteur (`"producers"`) dans les
-// producteurs, une autre dans les produits.
+// producteurs, une liste de la fiche marque (`"brands"`) dans les marques, une autre dans les produits.
 //   list         : la liste (FOOD_PAIRING_LIST, PAYMENT_LIST, AMENITY_LIST…, voir customLists.js)
 //   label        : le titre du champ (facultatif : la section qui l'entoure peut déjà le porter)
 //   variant      : "pills" (étiquettes, `selected` = tableau de codes, `onToggle`), "checkboxes" (cases à cocher, mêmes

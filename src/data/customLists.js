@@ -6,15 +6,16 @@
 // C'est le même modèle que les styles de bières & cidres (customStyles.js), en générique : une « liste »
 // est décrite par un objet (voir FLAVOR_NOTES) qui donne sa clé, ses groupes de départ et ses mots. Une liste
 // « plate » (`flat: true` : accords alimentaires, moment, verre) n'a pas de groupes : un seul groupe sans titre.
-// Les mêmes listes servent aussi à la fiche Lieu (moyens de paiement, types d'établissement, aménités) et à la fiche
-// Producteur (type et profil du producteur) : `entity` dit alors ce que la liste décrit (des lieux ou des producteurs, et
-// non des produits), `source` d'où viennent ses éléments comptés et supprimés, et `orderable` autorise à changer l'ordre
+// Les mêmes listes servent aussi à la fiche Lieu (moyens de paiement, types d'établissement, aménités), à la fiche
+// Producteur (type et profil du producteur) et à la fiche Marque (classification et type de marque) : `entity` dit alors
+// ce que la liste décrit (des lieux, des producteurs ou des marques, et non des produits), `source` d'où viennent ses
+// éléments comptés et supprimés, et `orderable` autorise à changer l'ordre
 // d'affichage (table custom_list_order). Sans `entity`, la liste décrit des produits.
 // Ce module ne contient que de la logique pure : génération du code, détection des doublons, fusion avec
 // les groupes de départ, mise à jour de la liste en mémoire, contrôles et messages d'erreur.
 
 import { FLAVOR_NOTE_GROUPS, FOOD_PAIRINGS, OCCASIONS, PRODUCT_CHARACTERISTICS, RECOMMENDED_GLASSES } from "./beerCiderStyles.js";
-import { PAYMENT_METHODS, VENUE_TYPES, PRODUCER_TYPES, PRODUCER_PROFILES } from "../constants.js";
+import { PAYMENT_METHODS, VENUE_TYPES, PRODUCER_TYPES, PRODUCER_PROFILES, BRAND_CLASSIFICATIONS, BRAND_TYPES } from "../constants.js";
 
 // Un code ne peut avoir qu'une place dans une liste modifiable (une modification d'un élément vise son code, et
 // un code ne se range que dans un groupe). On garde donc la première place de chaque code. Dans la liste des
@@ -124,6 +125,16 @@ export const PRODUCER_ENTITY = {
   forThis: "pour ce producteur",
   all: "tous les producteurs",
   none: "aucun producteur",
+};
+export const BRAND_ENTITY = {
+  one: "marque",
+  many: "marques",
+  this: "cette marque",
+  ofThis: "de cette marque",
+  ofThese: "de ces marques",
+  forThis: "pour cette marque",
+  all: "toutes les marques",
+  none: "aucune marque",
 };
 export const entityOf = (list) => list.entity || PRODUCT_ENTITY;
 export const countLabel = (list, n) => `${n} ${n > 1 ? entityOf(list).many : entityOf(list).one}`;
@@ -263,6 +274,50 @@ export const PRODUCER_PROFILE_LIST = {
     ofAll: "des profils",
     namePlaceholder: "Nom du profil (ex. Familial)",
   },
+};
+
+// Fiche Marque : classification de la marque (plusieurs choix, étiquettes). Colonne classifications. L'application
+// Bibamus ne l'affiche pas sur les cartes publiques : elle ne s'en sert que pour proposer le choix à qui crée une marque.
+export const BRAND_CLASSIFICATION_LIST = {
+  key: "brand_classification",
+  flat: true,
+  orderable: true,
+  source: "brands",
+  entity: BRAND_ENTITY,
+  builtinGroups: [{ title: "", tags: BRAND_CLASSIFICATIONS }],
+  orphanTitle: "",
+  words: {
+    noun: "classification",
+    one: "une classification",
+    this: "cette classification",
+    the: "la classification",
+    ofThe: "de la classification",
+    ofAll: "des classifications",
+    namePlaceholder: "Nom de la classification (ex. Sirop)",
+  },
+};
+
+// Fiche Marque : type de marque (plusieurs choix, étiquettes). Colonne brand_types. L'application Bibamus affiche le type
+// sur les cartes publiques des marques : la suppression d'un type de départ en avertit.
+export const BRAND_TYPE_LIST = {
+  key: "brand_type",
+  flat: true,
+  orderable: true,
+  source: "brands",
+  entity: BRAND_ENTITY,
+  builtinGroups: [{ title: "", tags: BRAND_TYPES }],
+  orphanTitle: "",
+  words: {
+    noun: "type de marque",
+    one: "un type de marque",
+    this: "ce type de marque",
+    the: "le type de marque",
+    ofThe: "du type de marque",
+    ofAll: "des types de marque",
+    namePlaceholder: "Nom du type (ex. Familiale)",
+  },
+  deleteNoticeDefault: (name) =>
+    `Attention : « ${name} » est aussi utilisé par l'application Bibamus (cartes publiques des marques). Une fois supprimé, il disparaîtra de toutes les marques dans l'application.`,
 };
 
 // L'avertissement à montrer avant de supprimer cet élément, ou null : celui propre au code, sinon celui de la liste
