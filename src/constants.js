@@ -66,6 +66,7 @@ export const COUNTRIES = [
 export const PAYMENT_METHODS = [
   { code: "especes", fr: "Espèces" },
   { code: "carte_bancaire", fr: "Carte bancaire" },
+  { code: "bancontact", fr: "Bancontact" },
   { code: "visa", fr: "Visa" },
   { code: "mastercard", fr: "Mastercard" },
   { code: "maestro_debit", fr: "Maestro/Debit" },

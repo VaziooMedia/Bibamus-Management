@@ -1007,6 +1007,7 @@ function rowToVenue(row) {
     acceptedPaymentMethods: row.accepted_payment_methods || [],
     venueType: row.venue_type,
     venueTypes: row.venue_types || [],
+    amenities: Array.isArray(row.amenities) ? row.amenities : [],
     hasDogs: !!row.has_dogs,
     canDance: !!row.can_dance,
     reservationPossible: !!row.reservation_possible,
@@ -1090,6 +1091,7 @@ function venueToRow(v, partial = false) {
     accepted_payment_methods: v.acceptedPaymentMethods,
     venue_type: v.venueType,
     venue_types: v.venueTypes,
+    amenities: v.amenities,
     has_dogs: v.hasDogs,
     can_dance: v.canDance,
     reservation_possible: v.reservationPossible,
@@ -2300,6 +2302,53 @@ export async function deleteCustomListItem(listKey, { code, fr, groupTitle }) {
   const { data, error } = await supabase.rpc("delete_list_item", { p_list: listKey, p_code: code, p_fr: fr, p_group_title: groupTitle });
   if (error) {
     console.error("deleteCustomListItem:", error);
+    return { error };
+  }
+  return { removedFrom: Number(data) || 0 };
+}
+
+// Fiche Lieu : les mêmes listes modifiables (moyens de paiement, types d'établissement, aménités), avec en plus un
+// ordre d'affichage (table custom_list_order : une ligne par liste, la suite des codes dans l'ordre voulu, lisible
+// par tous, écrite par la gestion). Un échec de lecture rend un ordre vide : la liste garde son ordre de départ.
+export async function loadCustomListOrder(listKey) {
+  const { data, error } = await supabase.from("custom_list_order").select("codes").eq("list_key", listKey).maybeSingle();
+  if (error) {
+    console.error("loadCustomListOrder:", error);
+    return [];
+  }
+  return Array.isArray(data?.codes) ? data.codes.filter((c) => typeof c === "string") : [];
+}
+
+// Enregistre l'ordre d'une liste (la suite complète des codes, dans l'ordre voulu).
+export async function saveCustomListOrder(listKey, codes) {
+  const { data, error } = await supabase
+    .from("custom_list_order")
+    .upsert({ list_key: listKey, codes, updated_at: new Date().toISOString() }, { onConflict: "list_key" })
+    .select("codes")
+    .single();
+  if (error) {
+    console.error("saveCustomListOrder:", error);
+    return { error };
+  }
+  return { codes: Array.isArray(data?.codes) ? data.codes : codes };
+}
+
+// Combien de lieux portent cet élément (pour prévenir avant de le supprimer).
+export async function countVenuesWithListItem(listKey, code) {
+  const { data, error } = await supabase.rpc("count_venues_with_list_item", { p_list: listKey, p_code: code });
+  if (error) {
+    console.error("countVenuesWithListItem:", error);
+    return { error };
+  }
+  return { count: Number(data) || 0 };
+}
+
+// Supprimer un élément : le retire de tous les lieux qui le portent et de l'ordre de sa liste, puis le supprime (ou
+// le masque, s'il vient de la liste figée) — en une seule opération côté base. Rend le nombre de lieux modifiés.
+export async function deleteVenueListItem(listKey, { code, fr, groupTitle }) {
+  const { data, error } = await supabase.rpc("delete_venue_list_item", { p_list: listKey, p_code: code, p_fr: fr, p_group_title: groupTitle });
+  if (error) {
+    console.error("deleteVenueListItem:", error);
     return { error };
   }
   return { removedFrom: Number(data) || 0 };

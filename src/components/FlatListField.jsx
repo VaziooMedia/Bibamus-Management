@@ -1,27 +1,42 @@
 import React, { useMemo } from "react";
 import { FlatListEditor } from "./FlatListEditor.jsx";
 import { useCustomListItems } from "./useCustomListItems.js";
-import { mergeCustomItems } from "../data/customLists.js";
-import { createCustomListItem, saveCustomListItem, countDrinksWithListItem, deleteCustomListItem } from "../data/sharedDirectories.js";
+import { useCustomListOrder } from "./useCustomListOrder.js";
+import { orderedItems } from "../data/customLists.js";
+import {
+  createCustomListItem,
+  saveCustomListItem,
+  countDrinksWithListItem,
+  deleteCustomListItem,
+  countVenuesWithListItem,
+  deleteVenueListItem,
+  saveCustomListOrder,
+} from "../data/sharedDirectories.js";
 
-// Un champ de « Service & consommation » (Niveau 2) dont la liste se modifie depuis la gestion : accords
-// alimentaires (étiquettes, plusieurs choix), moment / occasion et verre recommandé (liste déroulante, un
-// seul choix). Les modifications de la liste sont lues à l'ouverture de la section.
-//   list         : la liste (FOOD_PAIRING_LIST, OCCASION_LIST ou GLASS_LIST, voir customLists.js)
-//   label        : le titre du champ
-//   variant      : "pills" (étiquettes, `selected` = tableau de codes, `onToggle`) ou "select" (`value` = un code, `onChange`)
+// Un champ dont la liste se modifie depuis la gestion : accords alimentaires (étiquettes, plusieurs choix), moment /
+// occasion et verre recommandé (liste déroulante, un seul choix) de la fiche produit ; moyens de paiement et types
+// d'établissement (étiquettes), aménités (cases à cocher) de la fiche lieu. Les modifications de la liste et son ordre
+// sont lus à l'ouverture de la section. Une liste de la fiche lieu (`list.source === "venues"`) compte et supprime
+// dans les lieux, une autre dans les produits.
+//   list         : la liste (FOOD_PAIRING_LIST, PAYMENT_LIST, AMENITY_LIST…, voir customLists.js)
+//   label        : le titre du champ (facultatif : la section qui l'entoure peut déjà le porter)
+//   variant      : "pills" (étiquettes, `selected` = tableau de codes, `onToggle`), "checkboxes" (cases à cocher, mêmes
+//                  propriétés) ou "select" (`value` = un code, `onChange`)
+//   compact      : faux pour les étiquettes de la fiche lieu (voir FlatListEditor)
 //   onAdded(item): un élément vient d'être ajouté (le parent le sélectionne pour ce produit)
 //   onDeleted(code): un élément vient d'être supprimé (le parent le retire de ce produit)
 //   labelStyle, fieldStyle : styles de la fiche
-export function FlatListField({ list, label, variant, value, selected, onChange, onToggle, onAdded, onDeleted, labelStyle, fieldStyle }) {
+export function FlatListField({ list, label, variant, compact, value, selected, onChange, onToggle, onAdded, onDeleted, labelStyle, fieldStyle }) {
   const [custom, setCustom, loaded] = useCustomListItems(list.key);
-  const items = useMemo(() => mergeCustomItems(list, custom).flatMap((g) => g.tags), [list, custom]);
+  const [order, setOrder] = useCustomListOrder(list.key, !!list.orderable);
+  const items = useMemo(() => orderedItems(list, custom, order), [list, custom, order]);
+  const forVenues = list.source === "venues";
   const isSelect = variant === "select";
   const unknownValue = isSelect && value && !items.some((t) => t.code === value);
 
   return (
     <div>
-      <label style={labelStyle}>{label}</label>
+      {label && <label style={labelStyle}>{label}</label>}
       {isSelect && (
         <select value={value} onChange={(e) => onChange(e.target.value)} style={fieldStyle}>
           <option value="">—</option>
@@ -37,15 +52,20 @@ export function FlatListField({ list, label, variant, value, selected, onChange,
         list={list}
         custom={custom}
         onCustomChange={setCustom}
-        pills={!isSelect}
+        order={order}
+        onOrderChange={setOrder}
+        onReorder={list.orderable ? (codes) => saveCustomListOrder(list.key, codes) : undefined}
+        pills={variant === "pills"}
+        checkboxes={variant === "checkboxes"}
+        compact={compact}
         selected={isSelect ? (value ? [value] : []) : selected}
         onToggle={onToggle}
         onAdded={onAdded}
         onDeleted={onDeleted}
         onCreate={(item) => createCustomListItem(list.key, item)}
         onSave={(item) => saveCustomListItem(list.key, item)}
-        onCount={(code) => countDrinksWithListItem(list.key, code)}
-        onDelete={(item) => deleteCustomListItem(list.key, item)}
+        onCount={(code) => (forVenues ? countVenuesWithListItem(list.key, code) : countDrinksWithListItem(list.key, code))}
+        onDelete={(item) => (forVenues ? deleteVenueListItem(list.key, item) : deleteCustomListItem(list.key, item))}
       />
     </div>
   );
