@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { validateItemFields, describeItemError } from "../data/customLists.js";
+import { validateItemFields, describeItemError, entityOf, countLabel, deleteNoticeFor } from "../data/customLists.js";
 
 // Panneau de modification d'un élément d'une liste de la fiche produit (un arôme, par exemple), affiché sous les
 // étiquettes de son groupe quand on le touche en mode « Modifier la liste ». On y renomme l'élément, on le range
@@ -12,6 +12,8 @@ import { validateItemFields, describeItemError } from "../data/customLists.js";
 //   onCount  : async (code) -> { count } ou { error } — combien de produits portent cet élément
 //   onDelete : async ({ code, fr, groupTitle }) -> { removedFrom } ou { error }
 //   onClose  : () -> void
+//   position : (facultatif, liste dont l'ordre se modifie) { index, total } — la place de l'élément dans la liste (à partir de 0)
+//   onMove   : (facultatif) async (direction) -> {} ou { error } — déplace l'élément d'un cran (-1 : vers le haut, +1 : vers le bas)
 // Quand l'enregistrement ou la suppression réussit, le parent referme le panneau (et affiche le résultat) :
 // ce panneau n'a donc pas de message de succès à lui.
 
@@ -19,10 +21,11 @@ const fieldStyle = { padding: "10px 12px", borderRadius: "8px", border: "2px sol
 const outlineButton = (color) => ({ background: "none", border: `2px solid ${color}`, borderRadius: "8px", padding: "0 14px", height: "40px", color, cursor: "pointer", fontSize: "12.5px", fontWeight: 700 });
 
 const cleanName = (s) => String(s ?? "").trim().replace(/\s+/g, " ");
-const produits = (n) => `${n} produit${n > 1 ? "s" : ""}`;
 
-export function ListItemManagePanel({ list, item, custom, onSave, onCount, onDelete, onClose }) {
+export function ListItemManagePanel({ list, item, custom, onSave, onCount, onDelete, onClose, position, onMove }) {
   const w = list.words;
+  const e = entityOf(list);
+  const produits = (n) => countLabel(list, n);
   const [name, setName] = useState(item.fr);
   const [groupTitle, setGroupTitle] = useState(item.groupTitle);
   const [busy, setBusy] = useState(false);
@@ -62,6 +65,15 @@ export function ListItemManagePanel({ list, item, custom, onSave, onCount, onDel
     setConfirm({ count: res.count });
   };
 
+  const move = async (direction) => {
+    if (busy) return;
+    setError(null);
+    setBusy(true);
+    const res = await onMove(direction);
+    setBusy(false);
+    if (res?.error) setError(describeItemError(list, res.error));
+  };
+
   const confirmDelete = async () => {
     if (busy) return;
     setError(null);
@@ -79,7 +91,7 @@ export function ListItemManagePanel({ list, item, custom, onSave, onCount, onDel
       {confirm == null ? (
         <>
           <p style={{ fontSize: "11.5px", color: "#8792A6", fontStyle: "italic", marginTop: 0, marginBottom: "10px" }}>
-            Les changements valent pour tous les produits qui portent {w.this}.
+            Les changements valent pour {e.all} qui portent {w.this}.
           </p>
           <div style={{ display: "flex", flexWrap: "wrap", gap: "8px", alignItems: "center" }}>
             <input
@@ -100,6 +112,19 @@ export function ListItemManagePanel({ list, item, custom, onSave, onCount, onDel
               </select>
             )}
           </div>
+          {position && onMove && (
+            <div style={{ display: "flex", flexWrap: "wrap", gap: "8px", alignItems: "center", marginTop: "10px" }}>
+              <span style={{ fontSize: "12px", color: "#F2F2E8" }}>
+                Place dans la liste : <strong>{position.index + 1}</strong> sur {position.total}
+              </span>
+              <button onClick={() => move(-1)} disabled={busy || position.index <= 0} aria-label={`Monter ${w.the} ${item.fr}`} style={{ ...outlineButton("#F2F2E8"), height: "34px", opacity: busy || position.index <= 0 ? 0.4 : 1 }}>
+                ↑ Monter
+              </button>
+              <button onClick={() => move(1)} disabled={busy || position.index >= position.total - 1} aria-label={`Descendre ${w.the} ${item.fr}`} style={{ ...outlineButton("#F2F2E8"), height: "34px", opacity: busy || position.index >= position.total - 1 ? 0.4 : 1 }}>
+                ↓ Descendre
+              </button>
+            </div>
+          )}
           <div style={{ display: "flex", flexWrap: "wrap", gap: "8px", marginTop: "10px" }}>
             <button onClick={save} disabled={busy} style={outlineButton("#39FF66")}>
               {busy ? "…" : "Enregistrer"}
@@ -117,17 +142,17 @@ export function ListItemManagePanel({ list, item, custom, onSave, onCount, onDel
           <p style={{ fontSize: "13px", color: "#F2F2E8", marginTop: 0, marginBottom: "10px", lineHeight: 1.5 }}>
             {confirm.count > 0 ? (
               <>
-                « {item.fr} » est utilisé par <strong>{produits(confirm.count)}</strong>. Si vous le supprimez, il sera retiré {confirm.count > 1 ? "de ces produits" : "de ce produit"} et de la liste, pour tout le monde. Cette action est définitive.
+                « {item.fr} » est utilisé par <strong>{produits(confirm.count)}</strong>. Si vous le supprimez, il sera retiré {confirm.count > 1 ? e.ofThese : e.ofThis} et de la liste, pour tout le monde. Cette action est définitive.
               </>
             ) : (
               <>
-                « {item.fr} » n'est utilisé par aucun produit. Il sera retiré de la liste, pour tout le monde. Cette action est définitive.
+                « {item.fr} » n'est utilisé par {e.none}. Il sera retiré de la liste, pour tout le monde. Cette action est définitive.
               </>
             )}
           </p>
-          {list.deleteNotices?.[item.code] && (
+          {deleteNoticeFor(list, item) && (
             <p role="note" style={{ fontSize: "12.5px", color: "#FF9500", marginTop: 0, marginBottom: "10px", lineHeight: 1.5 }}>
-              {list.deleteNotices[item.code]}
+              {deleteNoticeFor(list, item)}
             </p>
           )}
           <div style={{ display: "flex", flexWrap: "wrap", gap: "8px" }}>

@@ -10,7 +10,9 @@ import { AdminPhotoField } from "./AdminPhotoField.jsx";
 import { GooglePlaceLinker } from "./GooglePlaceLinker.jsx";
 import { AddressAutocomplete } from "./AddressAutocomplete.jsx";
 import { VenueCategoryMenuScreen } from "./VenueCategoryMenuScreen.jsx";
-import { COUNTRIES, PAYMENT_METHODS, VENUE_TYPES, PHONE_PREFIXES, COUNTRY_ISO_CODES, RATING_LABELS, MENU_CATEGORIES } from "../constants.js";
+import { COUNTRIES, PHONE_PREFIXES, COUNTRY_ISO_CODES, RATING_LABELS, MENU_CATEGORIES } from "../constants.js";
+import { FlatListField } from "./FlatListField.jsx";
+import { PAYMENT_LIST, VENUE_TYPE_LIST, AMENITY_LIST } from "../data/customLists.js";
 import { resolveMenuItem } from "../utils.js";
 import { PendingContributionsSection } from "./PendingContributionsSection.jsx";
 import { UsernameAdminField } from "./UsernameAdminField.jsx";
@@ -195,25 +197,8 @@ export function VenueDetailPanel({ venue, onClose, onSaved, drinksDirectory, myU
     tripadvisorUrl: venue?.tripadvisorUrl || "",
     acceptedPaymentMethods: venue?.acceptedPaymentMethods || [],
     venueTypes: venue?.venueTypes || [],
-    hasFood: !!venue?.hasFood,
+    amenities: Array.isArray(venue?.amenities) ? venue.amenities : [],
     defaultCurrency: venue?.defaultCurrency || "euro",
-    hasTerrace: !!venue?.hasTerrace,
-    wheelchairAccessible: !!venue?.wheelchairAccessible,
-    hasWifi: !!venue?.hasWifi,
-    hasDogs: !!venue?.hasDogs,
-    canDance: !!venue?.canDance,
-    reservationPossible: !!venue?.reservationPossible,
-    goodForGroups: !!venue?.goodForGroups,
-    privatizationPossible: !!venue?.privatizationPossible,
-    hasPrivateRoom: !!venue?.hasPrivateRoom,
-    smokingArea: !!venue?.smokingArea,
-    hasSnacks: !!venue?.hasSnacks,
-    hasOccasionalKaraoke: !!venue?.hasOccasionalKaraoke,
-    hasOccasionalConcerts: !!venue?.hasOccasionalConcerts,
-    hasBilliards: !!venue?.hasBilliards,
-    hasFoosball: !!venue?.hasFoosball,
-    hasDarts: !!venue?.hasDarts,
-    hasBingo: !!venue?.hasBingo,
   });
   const [profilePhotoUrl, setProfilePhotoUrl] = useState(venue?.profilePhotoUrl || null);
   const [coverPhotoUrl, setCoverPhotoUrl] = useState(venue?.coverPhotoUrl || null);
@@ -295,11 +280,12 @@ export function VenueDetailPanel({ venue, onClose, onSaved, drinksDirectory, myU
   const refreshAfterContribution = (contribution) => set(contribution.fieldPath, contribution.proposedValue);
   const capitalizeOnBlur = (field, keepDeterminersAsTyped = false) => () => set(field, capitalizeWords(form[field], keepDeterminersAsTyped));
 
-  const togglePaymentMethod = (m) =>
-    setForm((f) => ({ ...f, acceptedPaymentMethods: f.acceptedPaymentMethods.includes(m) ? f.acceptedPaymentMethods.filter((x) => x !== m) : [...f.acceptedPaymentMethods, m] }));
-
-  const toggleVenueType = (t) =>
-    setForm((f) => ({ ...f, venueTypes: f.venueTypes.includes(t) ? f.venueTypes.filter((x) => x !== t) : [...f.venueTypes, t] }));
+  // Les trois listes du lieu (moyens de paiement, types, aménités) : (dé)sélectionner un élément, le sélectionner
+  // quand il vient d'être ajouté à la liste, le retirer quand il vient d'être supprimé de la liste.
+  const toggleIn = (field) => (code) =>
+    setForm((f) => ({ ...f, [field]: f[field].includes(code) ? f[field].filter((x) => x !== code) : [...f[field], code] }));
+  const addTo = (field) => (item) => setForm((f) => (f[field].includes(item.code) ? f : { ...f, [field]: [...f[field], item.code] }));
+  const removeFrom = (field) => (code) => setForm((f) => ({ ...f, [field]: f[field].filter((x) => x !== code) }));
 
   const phonePrefix = PHONE_PREFIXES[form.country] || "";
 
@@ -333,25 +319,8 @@ export function VenueDetailPanel({ venue, onClose, onSaved, drinksDirectory, myU
     tripadvisorUrl: form.tripadvisorUrl.trim(),
     acceptedPaymentMethods: form.acceptedPaymentMethods,
     venueTypes: form.venueTypes,
-    hasFood: form.hasFood,
+    amenities: form.amenities,
     defaultCurrency: form.defaultCurrency,
-    hasTerrace: form.hasTerrace,
-    wheelchairAccessible: form.wheelchairAccessible,
-    hasWifi: form.hasWifi,
-    hasDogs: form.hasDogs,
-    canDance: form.canDance,
-    reservationPossible: form.reservationPossible,
-    goodForGroups: form.goodForGroups,
-    privatizationPossible: form.privatizationPossible,
-    hasPrivateRoom: form.hasPrivateRoom,
-    smokingArea: form.smokingArea,
-    hasSnacks: form.hasSnacks,
-    hasOccasionalKaraoke: form.hasOccasionalKaraoke,
-    hasOccasionalConcerts: form.hasOccasionalConcerts,
-    hasBilliards: form.hasBilliards,
-    hasFoosball: form.hasFoosball,
-    hasDarts: form.hasDarts,
-    hasBingo: form.hasBingo,
     menuPdfUrl,
     profilePhotoUrl,
     coverPhotoUrl,
@@ -755,29 +724,18 @@ export function VenueDetailPanel({ venue, onClose, onSaved, drinksDirectory, myU
 
         <div style={separatorStyle} />
         <CollapsibleSection title="Paiement" expanded={paymentExpanded} onToggle={() => setPaymentExpanded((e) => !e)}>
-          <label style={{ ...labelStyle, marginBottom: "10px" }}>Moyens de paiement acceptés</label>
-          <div style={{ display: "flex", flexWrap: "wrap", gap: "8px", marginBottom: "14px" }}>
-            {PAYMENT_METHODS.map((m) => {
-              const checked = form.acceptedPaymentMethods.includes(m.code);
-              return (
-                <button
-                  key={m.code}
-                  onClick={() => togglePaymentMethod(m.code)}
-                  style={{
-                    background: checked ? "#39FF66" : "none",
-                    border: `2px solid ${checked ? "#39FF66" : "#28405C"}`,
-                    borderRadius: "999px",
-                    padding: "6px 12px",
-                    fontSize: "12px",
-                    fontWeight: 600,
-                    color: checked ? "#0D1B2A" : "#F2F2E8",
-                    cursor: "pointer",
-                  }}
-                >
-                  {m.fr}
-                </button>
-              );
-            })}
+          <div style={{ marginBottom: "14px" }}>
+            <FlatListField
+              list={PAYMENT_LIST}
+              label="Moyens de paiement acceptés"
+              labelStyle={{ ...labelStyle, marginBottom: "10px" }}
+              variant="pills"
+              compact={false}
+              selected={form.acceptedPaymentMethods}
+              onToggle={toggleIn("acceptedPaymentMethods")}
+              onAdded={addTo("acceptedPaymentMethods")}
+              onDeleted={removeFrom("acceptedPaymentMethods")}
+            />
           </div>
 
           <label style={{ ...labelStyle, marginBottom: "10px" }}>Moyen de paiement par défaut</label>
@@ -810,106 +768,28 @@ export function VenueDetailPanel({ venue, onClose, onSaved, drinksDirectory, myU
         <CollapsibleSection title="Établissement" expanded={establishmentExpanded} onToggle={() => setEstablishmentExpanded((e) => !e)}>
         <CollapsibleSection title="Type" variant="subtitle" expanded={typeExpanded} onToggle={() => setTypeExpanded((e) => !e)}>
           <p style={{ fontSize: "11.5px", color: "#8792A6", margin: "0 0 8px 0" }}>Plusieurs choix possibles</p>
-          <div style={{ display: "flex", flexWrap: "wrap", gap: "8px", marginBottom: "14px" }}>
-            {VENUE_TYPES.map((t) => {
-              const checked = form.venueTypes.includes(t.code);
-              return (
-                <button
-                  key={t.code}
-                  onClick={() => toggleVenueType(t.code)}
-                  style={{
-                    background: checked ? "#39FF66" : "none",
-                    border: `2px solid ${checked ? "#39FF66" : "#28405C"}`,
-                    borderRadius: "999px",
-                    padding: "6px 12px",
-                    fontSize: "12px",
-                    fontWeight: 600,
-                    color: checked ? "#0D1B2A" : "#F2F2E8",
-                    cursor: "pointer",
-                  }}
-                >
-                  {t.fr}
-                </button>
-              );
-            })}
+          <div style={{ marginBottom: "14px" }}>
+            <FlatListField
+              list={VENUE_TYPE_LIST}
+              variant="pills"
+              compact={false}
+              selected={form.venueTypes}
+              onToggle={toggleIn("venueTypes")}
+              onAdded={addTo("venueTypes")}
+              onDeleted={removeFrom("venueTypes")}
+            />
           </div>
         </CollapsibleSection>
 
         <CollapsibleSection title="Aménités" variant="subtitle" expanded={amenitiesExpanded} onToggle={() => setAmenitiesExpanded((e) => !e)}>
-          <div style={{ display: "flex", flexDirection: "column", gap: "8px", marginBottom: "6px" }}>
-            <label style={{ display: "flex", alignItems: "center", gap: "6px", fontSize: "13px", cursor: "pointer" }}>
-              <input type="checkbox" checked={form.hasOccasionalKaraoke} onChange={(e) => set("hasOccasionalKaraoke", e.target.checked)} />
-              Karaokés occasionnels
-            </label>
-            <label style={{ display: "flex", alignItems: "center", gap: "6px", fontSize: "13px", cursor: "pointer" }}>
-              <input type="checkbox" checked={form.hasOccasionalConcerts} onChange={(e) => set("hasOccasionalConcerts", e.target.checked)} />
-              Concerts occasionnels
-            </label>
-            <label style={{ display: "flex", alignItems: "center", gap: "6px", fontSize: "13px", cursor: "pointer" }}>
-              <input type="checkbox" checked={form.hasBilliards} onChange={(e) => set("hasBilliards", e.target.checked)} />
-              Billard
-            </label>
-            <label style={{ display: "flex", alignItems: "center", gap: "6px", fontSize: "13px", cursor: "pointer" }}>
-              <input type="checkbox" checked={form.hasFoosball} onChange={(e) => set("hasFoosball", e.target.checked)} />
-              Babyfoot - Kicker
-            </label>
-            <label style={{ display: "flex", alignItems: "center", gap: "6px", fontSize: "13px", cursor: "pointer" }}>
-              <input type="checkbox" checked={form.hasDarts} onChange={(e) => set("hasDarts", e.target.checked)} />
-              Jeu de fléchettes
-            </label>
-            <label style={{ display: "flex", alignItems: "center", gap: "6px", fontSize: "13px", cursor: "pointer" }}>
-              <input type="checkbox" checked={form.hasBingo} onChange={(e) => set("hasBingo", e.target.checked)} />
-              Bingo
-            </label>
-            <label style={{ display: "flex", alignItems: "center", gap: "6px", fontSize: "13px", cursor: "pointer" }}>
-              <input type="checkbox" checked={form.hasFood} onChange={(e) => set("hasFood", e.target.checked)} />
-              Restauration
-            </label>
-            <label style={{ display: "flex", alignItems: "center", gap: "6px", fontSize: "13px", cursor: "pointer" }}>
-              <input type="checkbox" checked={form.hasSnacks} onChange={(e) => set("hasSnacks", e.target.checked)} />
-              Petite restauration
-            </label>
-            <label style={{ display: "flex", alignItems: "center", gap: "6px", fontSize: "13px", cursor: "pointer" }}>
-              <input type="checkbox" checked={form.hasTerrace} onChange={(e) => set("hasTerrace", e.target.checked)} />
-              Terrasse
-            </label>
-            <label style={{ display: "flex", alignItems: "center", gap: "6px", fontSize: "13px", cursor: "pointer" }}>
-              <input type="checkbox" checked={form.wheelchairAccessible} onChange={(e) => set("wheelchairAccessible", e.target.checked)} />
-              Accessible PMR
-            </label>
-            <label style={{ display: "flex", alignItems: "center", gap: "6px", fontSize: "13px", cursor: "pointer" }}>
-              <input type="checkbox" checked={form.hasWifi} onChange={(e) => set("hasWifi", e.target.checked)} />
-              WiFi gratuit
-            </label>
-            <label style={{ display: "flex", alignItems: "center", gap: "6px", fontSize: "13px", cursor: "pointer" }}>
-              <input type="checkbox" checked={form.hasDogs} onChange={(e) => set("hasDogs", e.target.checked)} />
-              Chiens acceptés
-            </label>
-            <label style={{ display: "flex", alignItems: "center", gap: "6px", fontSize: "13px", cursor: "pointer" }}>
-              <input type="checkbox" checked={form.canDance} onChange={(e) => set("canDance", e.target.checked)} />
-              Possibilité de danser (en soirée)
-            </label>
-            <label style={{ display: "flex", alignItems: "center", gap: "6px", fontSize: "13px", cursor: "pointer" }}>
-              <input type="checkbox" checked={form.reservationPossible} onChange={(e) => set("reservationPossible", e.target.checked)} />
-              Réservation possible
-            </label>
-            <label style={{ display: "flex", alignItems: "center", gap: "6px", fontSize: "13px", cursor: "pointer" }}>
-              <input type="checkbox" checked={form.goodForGroups} onChange={(e) => set("goodForGroups", e.target.checked)} />
-              Idéal pour des grands groupes
-            </label>
-            <label style={{ display: "flex", alignItems: "center", gap: "6px", fontSize: "13px", cursor: "pointer" }}>
-              <input type="checkbox" checked={form.privatizationPossible} onChange={(e) => set("privatizationPossible", e.target.checked)} />
-              Privatisation possible
-            </label>
-            <label style={{ display: "flex", alignItems: "center", gap: "6px", fontSize: "13px", cursor: "pointer" }}>
-              <input type="checkbox" checked={form.hasPrivateRoom} onChange={(e) => set("hasPrivateRoom", e.target.checked)} />
-              Salle annexe privée disponible
-            </label>
-            <label style={{ display: "flex", alignItems: "center", gap: "6px", fontSize: "13px", cursor: "pointer" }}>
-              <input type="checkbox" checked={form.smokingArea} onChange={(e) => set("smokingArea", e.target.checked)} />
-              Espace fumeurs
-            </label>
-          </div>
+          <FlatListField
+            list={AMENITY_LIST}
+            variant="checkboxes"
+            selected={form.amenities}
+            onToggle={toggleIn("amenities")}
+            onAdded={addTo("amenities")}
+            onDeleted={removeFrom("amenities")}
+          />
         </CollapsibleSection>
 
         <div style={subTitleStyle}>Horaires d'ouverture</div>

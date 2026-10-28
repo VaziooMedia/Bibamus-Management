@@ -6,10 +6,14 @@
 // C'est le même modèle que les styles de bières & cidres (customStyles.js), en générique : une « liste »
 // est décrite par un objet (voir FLAVOR_NOTES) qui donne sa clé, ses groupes de départ et ses mots. Une liste
 // « plate » (`flat: true` : accords alimentaires, moment, verre) n'a pas de groupes : un seul groupe sans titre.
+// Les mêmes listes servent aussi à la fiche Lieu (moyens de paiement, types d'établissement, aménités) : `entity`
+// dit alors ce que la liste décrit (des lieux, et non des produits) et `orderable` autorise à changer l'ordre
+// d'affichage (table custom_list_order). Sans `entity`, la liste décrit des produits.
 // Ce module ne contient que de la logique pure : génération du code, détection des doublons, fusion avec
 // les groupes de départ, mise à jour de la liste en mémoire, contrôles et messages d'erreur.
 
 import { FLAVOR_NOTE_GROUPS, FOOD_PAIRINGS, OCCASIONS, PRODUCT_CHARACTERISTICS, RECOMMENDED_GLASSES } from "./beerCiderStyles.js";
+import { PAYMENT_METHODS, VENUE_TYPES } from "../constants.js";
 
 // Un code ne peut avoir qu'une place dans une liste modifiable (une modification d'un élément vise son code, et
 // un code ne se range que dans un groupe). On garde donc la première place de chaque code. Dans la liste des
@@ -89,6 +93,133 @@ export const CHARACTERISTIC_LIST = {
   deleteNotices: { gluten_free: APP_NOTICE("Sans gluten"), bio: APP_NOTICE("Bio") },
 };
 
+// Ce que décrit une liste : des produits (par défaut) ou des lieux. Sert aux messages (« utilisé par 3 lieux »).
+export const PRODUCT_ENTITY = {
+  one: "produit",
+  many: "produits",
+  this: "ce produit",
+  ofThis: "de ce produit",
+  ofThese: "de ces produits",
+  forThis: "pour ce produit",
+  all: "tous les produits",
+  none: "aucun produit",
+};
+export const VENUE_ENTITY = {
+  one: "lieu",
+  many: "lieux",
+  this: "ce lieu",
+  ofThis: "de ce lieu",
+  ofThese: "de ces lieux",
+  forThis: "pour ce lieu",
+  all: "tous les lieux",
+  none: "aucun lieu",
+};
+export const entityOf = (list) => list.entity || PRODUCT_ENTITY;
+export const countLabel = (list, n) => `${n} ${n > 1 ? entityOf(list).many : entityOf(list).one}`;
+
+// Avertissement quand l'application Bibamus affiche aussi l'élément qu'on supprime.
+const venueAppNotice = (name) =>
+  `Attention : « ${name} » est aussi affiché par l'application Bibamus. Une fois supprimé, il disparaîtra de tous les lieux dans l'application.`;
+
+// Fiche Lieu : moyens de paiement acceptés (plusieurs choix, étiquettes). Les codes sont ceux de la colonne
+// accepted_payment_methods ; « bancontact » est déjà porté par des lieux.
+export const PAYMENT_LIST = {
+  key: "payment_method",
+  flat: true,
+  orderable: true,
+  source: "venues",
+  entity: VENUE_ENTITY,
+  builtinGroups: [{ title: "", tags: PAYMENT_METHODS }],
+  orphanTitle: "",
+  words: {
+    noun: "moyen de paiement",
+    one: "un moyen de paiement",
+    this: "ce moyen de paiement",
+    the: "le moyen de paiement",
+    ofThe: "du moyen de paiement",
+    ofAll: "des moyens de paiement",
+    namePlaceholder: "Nom du moyen de paiement (ex. Twint)",
+  },
+};
+
+// Fiche Lieu : types d'établissement (plusieurs choix, étiquettes). Colonne venue_types. L'application Bibamus les
+// affiche sur les fiches et les cartes publiques, et en tire des statistiques : la suppression d'un type de départ en avertit.
+export const VENUE_TYPE_LIST = {
+  key: "venue_type",
+  flat: true,
+  orderable: true,
+  source: "venues",
+  entity: VENUE_ENTITY,
+  builtinGroups: [{ title: "", tags: VENUE_TYPES }],
+  orphanTitle: "",
+  words: {
+    noun: "type d'établissement",
+    one: "un type d'établissement",
+    this: "ce type d'établissement",
+    the: "le type d'établissement",
+    ofThe: "du type d'établissement",
+    ofAll: "des types d'établissement",
+    namePlaceholder: "Nom du type (ex. Bar à chicha)",
+  },
+  deleteNoticeDefault: (name) =>
+    `Attention : « ${name} » est aussi utilisé par l'application Bibamus (fiches et cartes publiques, statistiques). Une fois supprimé, il disparaîtra de tous les lieux dans l'application.`,
+};
+
+// Fiche Lieu : aménités (plusieurs choix, cases à cocher). Colonne amenities ; les dix-huit cases historiques
+// (has_wifi…) sont tenues à jour par la base. L'application affiche « WiFi », « Accessible PMR » et « Danser ».
+export const AMENITIES = [
+  { code: "has_occasional_karaoke", fr: "Karaokés occasionnels" },
+  { code: "has_occasional_concerts", fr: "Concerts occasionnels" },
+  { code: "has_billiards", fr: "Billard" },
+  { code: "has_foosball", fr: "Babyfoot - Kicker" },
+  { code: "has_darts", fr: "Jeu de fléchettes" },
+  { code: "has_bingo", fr: "Bingo" },
+  { code: "has_food", fr: "Restauration" },
+  { code: "has_snacks", fr: "Petite restauration" },
+  { code: "has_terrace", fr: "Terrasse" },
+  { code: "wheelchair_accessible", fr: "Accessible PMR" },
+  { code: "has_wifi", fr: "WiFi gratuit" },
+  { code: "has_dogs", fr: "Chiens acceptés" },
+  { code: "can_dance", fr: "Possibilité de danser (en soirée)" },
+  { code: "reservation_possible", fr: "Réservation possible" },
+  { code: "good_for_groups", fr: "Idéal pour des grands groupes" },
+  { code: "privatization_possible", fr: "Privatisation possible" },
+  { code: "has_private_room", fr: "Salle annexe privée disponible" },
+  { code: "smoking_area", fr: "Espace fumeurs" },
+];
+export const AMENITY_LIST = {
+  key: "amenity",
+  flat: true,
+  orderable: true,
+  source: "venues",
+  entity: VENUE_ENTITY,
+  builtinGroups: [{ title: "", tags: AMENITIES }],
+  orphanTitle: "",
+  words: {
+    noun: "aménité",
+    one: "une aménité",
+    this: "cette aménité",
+    the: "l'aménité",
+    ofThe: "de l'aménité",
+    ofAll: "des aménités",
+    namePlaceholder: "Nom de l'aménité (ex. Piscine)",
+  },
+  deleteNotices: {
+    has_wifi: venueAppNotice("WiFi gratuit"),
+    wheelchair_accessible: venueAppNotice("Accessible PMR"),
+    can_dance: venueAppNotice("Possibilité de danser (en soirée)"),
+  },
+};
+
+// L'avertissement à montrer avant de supprimer cet élément, ou null : celui propre au code, sinon celui de la liste
+// (qui ne vaut que pour un élément de départ : un élément ajouté à la main n'existait pas dans l'application).
+export function deleteNoticeFor(list, item) {
+  const own = list.deleteNotices?.[item.code];
+  if (own) return own;
+  if (list.deleteNoticeDefault && !isAddedItemCode(item.code)) return list.deleteNoticeDefault(item.fr);
+  return null;
+}
+
 export const capitalize = (s) => (s ? s.charAt(0).toUpperCase() + s.slice(1) : s);
 export const MAX_ITEM_NAME_LENGTH = 60;
 
@@ -165,6 +296,34 @@ export function mergeCustomItems(list, custom) {
   const merged = kept.map((g) => ({ ...g, tags: [...g.tags, ...byTitle.get(g.title)] }));
   if (orphans.length > 0) merged.push({ title: list.orphanTitle, tags: orphans });
   return merged;
+}
+
+// L'ordre d'affichage. `order` est la suite des codes enregistrée pour la liste (table custom_list_order) ; sans
+// ordre enregistré, la liste garde son ordre de départ. Les éléments qui n'y figurent pas (ajoutés depuis) viennent
+// à la fin, dans leur ordre d'origine ; les codes de l'ordre qui n'existent plus sont ignorés.
+export function applyOrder(items, order) {
+  if (!Array.isArray(order) || order.length === 0) return items;
+  const rank = new Map();
+  order.forEach((code, i) => {
+    if (!rank.has(code)) rank.set(code, i);
+  });
+  const placed = items.filter((t) => rank.has(t.code)).sort((a, b) => rank.get(a.code) - rank.get(b.code));
+  const rest = items.filter((t) => !rank.has(t.code));
+  return [...placed, ...rest];
+}
+
+// Les éléments visibles de la liste, à plat, dans l'ordre d'affichage.
+export const orderedItems = (list, custom, order) => applyOrder(mergeCustomItems(list, custom).flatMap((g) => g.tags), order);
+
+// La suite des codes après avoir déplacé `code` d'un cran (direction -1 : vers le haut, +1 : vers le bas) ;
+// null si le déplacement est impossible (déjà au bout, ou code inconnu).
+export function moveInOrder(codes, code, direction) {
+  const i = codes.indexOf(code);
+  const j = i + direction;
+  if (i < 0 || j < 0 || j >= codes.length) return null;
+  const next = [...codes];
+  [next[i], next[j]] = [next[j], next[i]];
+  return next;
 }
 
 // L'élément visible qui porte déjà ce nom, ou null. On compare avec les noms tels qu'ils s'affichent (les

@@ -1,9 +1,9 @@
 import React, { useState } from "react";
-import { validateItemFields, uniqueItemCode, allItemCodes, describeItemError, capitalize } from "../data/customLists.js";
+import { validateItemFields, uniqueItemCode, allItemCodes, describeItemError, capitalize, entityOf } from "../data/customLists.js";
 
-// Ajout manuel d'un élément à une liste de la fiche produit (un arôme, par exemple). L'élément est enregistré une
-// fois pour toutes (table custom_list_items) : il rejoint son groupe pour TOUS les produits, puis est sélectionné
-// pour celui en cours d'édition.
+// Ajout manuel d'un élément à une liste de la fiche produit (un arôme, par exemple) ou de la fiche lieu (une aménité).
+// L'élément est enregistré une fois pour toutes (table custom_list_items) : il rejoint son groupe pour TOUS les produits
+// (ou tous les lieux), puis est sélectionné pour celui en cours d'édition.
 //   list     : la description de la liste (voir customLists.js : groupes de départ, mots) ; une liste « plate » n'a pas de choix de groupe
 //   custom   : les modifications déjà enregistrées (éléments ajoutés, renommés, déplacés, supprimés)
 //   onCreate : async ({ code, fr, groupTitle }) -> { item } ou { error }
@@ -14,6 +14,7 @@ const outlineButton = (color) => ({ background: "none", border: `2px solid ${col
 
 export function ListItemAdder({ list, custom, onCreate, onCreated }) {
   const w = list.words;
+  const e = entityOf(list);
   const [open, setOpen] = useState(false);
   const [name, setName] = useState("");
   const [groupTitle, setGroupTitle] = useState("");
@@ -44,7 +45,7 @@ export function ListItemAdder({ list, custom, onCreate, onCreated }) {
     }
     onCreated(res.item);
     close();
-    setMessage({ kind: "ok", text: list.flat ? `« ${res.item.fr} » ajouté et sélectionné pour ce produit.` : `« ${res.item.fr} » ajouté au groupe « ${res.item.groupTitle} » et sélectionné pour ce produit.` });
+    setMessage({ kind: "ok", text: list.flat ? `« ${res.item.fr} » ajouté et sélectionné ${e.forThis}.` : `« ${res.item.fr} » ajouté au groupe « ${res.item.groupTitle} » et sélectionné ${e.forThis}.` });
   };
 
   return (
@@ -62,7 +63,7 @@ export function ListItemAdder({ list, custom, onCreate, onCreated }) {
       ) : (
         <div style={{ border: "2px solid #28405C", borderRadius: "8px", padding: "12px", background: "#16273D" }}>
           <p style={{ fontSize: "11.5px", color: "#8792A6", fontStyle: "italic", marginTop: 0, marginBottom: "10px" }}>
-            {capitalize(w.this)} rejoindra la liste pour tous les produits : vérifiez l'orthographe avant d'ajouter.
+            {capitalize(w.this)} rejoindra la liste pour {e.all} : vérifiez l'orthographe avant d'ajouter.
           </p>
           <div style={{ display: "flex", flexWrap: "wrap", gap: "8px", alignItems: "center" }}>
             <input
