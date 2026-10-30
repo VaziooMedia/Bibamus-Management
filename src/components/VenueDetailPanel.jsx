@@ -45,7 +45,10 @@ const capSegment = (segment, isVeryFirst, keepDeterminersAsTyped = false) => {
     const [, prefix, apos, rest] = apostropheMatch;
     const isSmallPrefix = SMALL_APOSTROPHE_PREFIXES.has(prefix.toLowerCase());
     const newPrefix = !isVeryFirst && isSmallPrefix ? (keepDeterminersAsTyped ? prefix : prefix.toLowerCase()) : capFirstOnly(prefix);
-    return newPrefix + apos + capFirstOnly(rest);
+    // Seule une vraie élision française ("d'", "l'") a un nom propre après l'apostrophe à
+    // capitaliser — pour tout le reste (ex. "Lou's Bar"), ce qui suit l'apostrophe n'est pas un
+    // nouveau mot et ne doit jamais être forcé en majuscule.
+    return newPrefix + apos + (isSmallPrefix ? capFirstOnly(rest) : rest);
   }
   const lower = segment.toLowerCase();
   if (!isVeryFirst && SMALL_WORDS.has(lower)) return keepDeterminersAsTyped ? segment : lower;
