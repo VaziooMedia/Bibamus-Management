@@ -15,7 +15,7 @@
 // les groupes de départ, mise à jour de la liste en mémoire, contrôles et messages d'erreur.
 
 import { FLAVOR_NOTE_GROUPS, FOOD_PAIRINGS, OCCASIONS, PRODUCT_CHARACTERISTICS, RECOMMENDED_GLASSES } from "./beerCiderStyles.js";
-import { WATER_STYLES } from "./softStyles.js";
+import { WATER_STYLES, SODA_STYLE_GROUPS } from "./softStyles.js";
 import { PAYMENT_METHODS, VENUE_TYPES, PRODUCER_TYPES, PRODUCER_PROFILES, BRAND_CLASSIFICATIONS, BRAND_TYPES } from "../constants.js";
 
 // Un code ne peut avoir qu'une place dans une liste modifiable (une modification d'un élément vise son code, et
@@ -350,8 +350,31 @@ export const WATER_STYLE_LIST = {
     namePlaceholder: "Nom du style (ex. Mineral)",
   },
 };
+
+// Fiche Softs & Eaux : styles du Soda — trois classifications (Gazéification, Types, Saveurs), donc une liste à groupes comme
+// les arômes : plusieurs choix, étiquettes rangées en groupes dépliables, avec recherche. Même colonne styles, d'où `codePrefix`
+// (« perso_soda_… ») ; seuls les produits Softs & Eaux sont comptés et modifiés. Les styles de départ sont dans softStyles.js.
+export const SODA_ENTITY = { ...PRODUCT_ENTITY, all: "tous les sodas", none: "aucun soda" };
+export const SODA_STYLE_LIST = {
+  key: "soda_style",
+  source: "soft_styles",
+  codePrefix: "perso_soda_",
+  entity: SODA_ENTITY,
+  builtinGroups: SODA_STYLE_GROUPS,
+  orphanTitle: "Autres styles",
+  words: {
+    noun: "style",
+    one: "un style",
+    this: "ce style",
+    the: "le style",
+    ofThe: "du style",
+    ofAll: "des styles",
+    namePlaceholder: "Nom du style (ex. Dandelion)",
+    searchPlaceholder: "Chercher un style (ex. Cola, Lemon, Sparkling...)",
+  },
+};
 // La liste de styles de chaque sous-catégorie de Softs & Eaux qui en a une (clé : code de la sous-catégorie).
-export const SOFT_STYLE_LISTS = { eau: WATER_STYLE_LIST };
+export const SOFT_STYLE_LISTS = { eau: WATER_STYLE_LIST, soda: SODA_STYLE_LIST };
 
 // L'avertissement à montrer avant de supprimer cet élément, ou null : celui propre au code, sinon celui de la liste
 // (qui ne vaut que pour un élément de départ : un élément ajouté à la main n'existait pas dans l'application).

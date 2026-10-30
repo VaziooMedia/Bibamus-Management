@@ -18,6 +18,7 @@ import { BeerCiderStylePicker } from "./BeerCiderStylePicker.jsx";
 import { SelectedStyleChips } from "./SelectedStyleChips.jsx";
 import { FlavorNotesPicker } from "./FlavorNotesPicker.jsx";
 import { FlatListField } from "./FlatListField.jsx";
+import { GroupedListField } from "./GroupedListField.jsx";
 import { FOOD_PAIRING_LIST, OCCASION_LIST, GLASS_LIST, CHARACTERISTIC_LIST, SOFT_STYLE_LISTS } from "../data/customLists.js";
 import { softStyleOwner, stylesForSoftSubtype } from "../data/softStyles.js";
 import { VintageManager } from "./VintageManager.jsx";
@@ -419,6 +420,9 @@ export function DrinkDetailPanel({ drink, onClose, onSaved, myUserId }) {
   // pour un champ au nom différent, la fiche doit être rouverte pour voir le changement.
   const refreshAfterContribution = (contribution) => set(contribution.fieldPath, contribution.proposedValue);
   const toggleStyle = (tag) => setForm((f) => ({ ...f, styles: f.styles.includes(tag) ? f.styles.filter((t) => t !== tag) : [...f.styles, tag] }));
+  // Les styles d'un Softs & Eaux : un style ajouté depuis la liste est coché pour ce produit, un style supprimé en est retiré.
+  const softStyleAdded = (item) => setForm((f) => (f.styles.includes(item.code) ? f : { ...f, styles: [...f.styles, item.code] }));
+  const softStyleDeleted = (code) => setForm((f) => (f.styles.includes(code) ? { ...f, styles: f.styles.filter((c) => c !== code) } : f));
   const toggleArrayField = (field, value) => setForm((f) => ({ ...f, [field]: f[field].includes(value) ? f[field].filter((v) => v !== value) : [...f[field], value] }));
 
   const handleCreateGrapeVariety = async (name) => {
@@ -1053,19 +1057,30 @@ export function DrinkDetailPanel({ drink, onClose, onSaved, myUserId }) {
             {stylesSectionOpen && isSoft && SOFT_STYLE_LISTS[form.beverageSubtype] && (
               <>
                 <p style={{ fontSize: "11.5px", color: "#8792A6", marginTop: "-6px", marginBottom: "10px" }}>Plusieurs styles peuvent se cumuler.</p>
-                <div style={{ border: "2px solid #28405C", borderRadius: "8px", padding: "12px" }}>
-                  <FlatListField
+                {SOFT_STYLE_LISTS[form.beverageSubtype].flat ? (
+                  <div style={{ border: "2px solid #28405C", borderRadius: "8px", padding: "12px" }}>
+                    <FlatListField
+                      key={form.beverageSubtype}
+                      list={SOFT_STYLE_LISTS[form.beverageSubtype]}
+                      variant="pills"
+                      selected={form.styles}
+                      onToggle={toggleStyle}
+                      onAdded={softStyleAdded}
+                      onDeleted={softStyleDeleted}
+                      labelStyle={labelStyle}
+                      fieldStyle={fieldStyle}
+                    />
+                  </div>
+                ) : (
+                  <GroupedListField
                     key={form.beverageSubtype}
                     list={SOFT_STYLE_LISTS[form.beverageSubtype]}
-                    variant="pills"
                     selected={form.styles}
                     onToggle={toggleStyle}
-                    onAdded={(item) => setForm((f) => (f.styles.includes(item.code) ? f : { ...f, styles: [...f.styles, item.code] }))}
-                    onDeleted={(code) => setForm((f) => (f.styles.includes(code) ? { ...f, styles: f.styles.filter((c) => c !== code) } : f))}
-                    labelStyle={labelStyle}
-                    fieldStyle={fieldStyle}
+                    onAdded={softStyleAdded}
+                    onDeleted={softStyleDeleted}
                   />
-                </div>
+                )}
               </>
             )}
             {stylesSectionOpen && isSoft && !SOFT_STYLE_LISTS[form.beverageSubtype] && (

@@ -27,6 +27,8 @@ const SOURCES = {
   soft_styles: { count: countDrinksWithSoftStyle, remove: deleteSoftStyle },
 };
 const PRODUCT_SOURCE = { count: countDrinksWithListItem, remove: deleteCustomListItem };
+// La source d'une liste (aussi lue par GroupedListField, pour les listes à groupes).
+export const listSource = (list) => SOURCES[list.source] || PRODUCT_SOURCE;
 
 // Un champ dont la liste se modifie depuis la gestion : accords alimentaires (étiquettes, plusieurs choix), moment /
 // occasion et verre recommandé (liste déroulante, un seul choix) de la fiche produit ; moyens de paiement et types
@@ -46,7 +48,7 @@ export function FlatListField({ list, label, variant, compact, value, selected, 
   const [custom, setCustom, loaded] = useCustomListItems(list.key);
   const [order, setOrder] = useCustomListOrder(list.key, !!list.orderable);
   const items = useMemo(() => orderedItems(list, custom, order), [list, custom, order]);
-  const source = SOURCES[list.source] || PRODUCT_SOURCE;
+  const source = listSource(list);
   const isSelect = variant === "select";
   const unknownValue = isSelect && value && !items.some((t) => t.code === value);
 
