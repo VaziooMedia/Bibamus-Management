@@ -75,9 +75,10 @@ export const GLASS_LIST = {
 };
 
 // Caractéristiques & labels (Niveau 2) : une liste plate à plusieurs choix, comme les accords. « Sans gluten » et « Bio »
-// sont aussi lus par l'application Bibamus (icône et filtre) : `deleteNotices` en avertit à la confirmation d'une suppression.
-const APP_NOTICE = (name) =>
-  `Attention : « ${name} » est aussi affiché par l'application Bibamus (icône et filtre). Une fois supprimé, il disparaîtra de tous les produits dans l'application.`;
+// (icône et filtre), ainsi que le label « Authentic Trappist Product (ATP) » (grande icône sur la fiche produit), sont aussi
+// lus par l'application Bibamus : `deleteNotices` en avertit à la confirmation d'une suppression.
+const APP_NOTICE = (name, shownAs = "icône et filtre") =>
+  `Attention : « ${name} » est aussi affiché par l'application Bibamus (${shownAs}). Une fois supprimé, il disparaîtra de tous les produits dans l'application.`;
 export const CHARACTERISTIC_LIST = {
   key: "characteristic",
   flat: true,
@@ -92,7 +93,12 @@ export const CHARACTERISTIC_LIST = {
     ofAll: "des caractéristiques",
     namePlaceholder: "Nom de la caractéristique (ex. Végétarien)",
   },
-  deleteNotices: { gluten_free: APP_NOTICE("Sans gluten"), bio: APP_NOTICE("Bio") },
+  deleteNotices: {
+    gluten_free: APP_NOTICE("Sans gluten"),
+    bio: APP_NOTICE("Bio"),
+    // Code créé par la gestion le 2026-10-30 ; l'application le reconnaît (ATP_CHARACTERISTIC_CODE) et le garde même si le nom change.
+    perso_authentic_trappist_product_atp: APP_NOTICE("Authentic Trappist Product (ATP)", "grande icône sur la fiche produit"),
+  },
 };
 
 // Ce que décrit une liste : des produits (par défaut) ou des lieux. Sert aux messages (« utilisé par 3 lieux »).
