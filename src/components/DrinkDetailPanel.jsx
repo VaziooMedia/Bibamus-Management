@@ -93,7 +93,7 @@ export const SPIRIT_SUBTYPES = [
 export const SOFT_SUBTYPES = [
   { code: "soda", fr: "Soda" },
   { code: "eau", fr: "Eau" },
-  { code: "jus_de_fruits", fr: "Jus de fruits" },
+  { code: "jus_de_fruits", fr: "Jus" },
   { code: "energy", fr: "Energy" },
   { code: "sport", fr: "Sport" },
   { code: "lactee", fr: "Lactée" },
