@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from "react";
-import { capitalizeFirst } from "../utils.js";
 import { updateBrand, deleteBrand, createBrand, uploadBrandLogo, uploadBrandCoverPhoto, uploadBrandGalleryPhoto, loadBreweriesDirectory, loadBrandsDirectory, mergeEntities } from "../data/sharedDirectories.js";
 import { StatusSelector } from "./StatusSelector.jsx";
 import { AdminPhotoField } from "./AdminPhotoField.jsx";
@@ -20,53 +19,6 @@ import { UsernameAdminField } from "./UsernameAdminField.jsx";
 function UsernameSection({ title, children }) {
   return <CollapsibleSection title={title}>{children}</CollapsibleSection>;
 }
-
-const SMALL_WORDS = new Set(["de", "du", "des", "la", "le", "les", "à", "et", "the", "a", "au", "aux"]);
-const SMALL_APOSTROPHE_PREFIXES = new Set(["d", "l"]);
-
-// Ne force jamais la casse d'une lettre déjà en majuscule (préserve les sigles comme "RFC" ou
-// les noms composés comme "BrewTous") — ajoute une majuscule seulement au tout premier
-// caractère d'un mot/segment, s'il manque. Garde les déterminants (de/du/des/la/le/les/à/et/
-// the/a/au/aux, ainsi que d'/l') en minuscule sauf en tout début de texte — ex. "Café de la
-// Gare", "Côte d'Ivoire", "Rue Henri-Blès".
-// Exception : pour le NOM (keepDeterminersAsTyped), les déterminants hors début de nom restent
-// tels qu'ils ont été saisis — ils peuvent faire partie du nom propre ("Brasserie La Bestiale",
-// "Café L'Abbaye") ; les autres mots reçoivent toujours leur majuscule si elle manque.
-const capFirstOnly = (w) => {
-  if (!w) return w;
-  if (w.charAt(0) === w.charAt(0).toUpperCase()) return w;
-  return w.charAt(0).toUpperCase() + w.slice(1);
-};
-
-const capSegment = (segment, isVeryFirst, keepDeterminersAsTyped = false) => {
-  if (!segment) return segment;
-  const apostropheMatch = segment.match(/^([a-zàâäéèêëïîôöùûüÿœæçA-ZÀÂÄÉÈÊËÏÎÔÖÙÛÜŸŒÆÇ]+)(['’])(.*)$/);
-  if (apostropheMatch) {
-    const [, prefix, apos, rest] = apostropheMatch;
-    const isSmallPrefix = SMALL_APOSTROPHE_PREFIXES.has(prefix.toLowerCase());
-    const newPrefix = !isVeryFirst && isSmallPrefix ? (keepDeterminersAsTyped ? prefix : prefix.toLowerCase()) : capFirstOnly(prefix);
-    // Seule une vraie élision française ("d'", "l'") a un nom propre après l'apostrophe à
-    // capitaliser — pour tout le reste (ex. "Lay's"), ce qui suit l'apostrophe n'est pas un
-    // nouveau mot et ne doit jamais être forcé en majuscule.
-    return newPrefix + apos + (isSmallPrefix ? capFirstOnly(rest) : rest);
-  }
-  const lower = segment.toLowerCase();
-  if (!isVeryFirst && SMALL_WORDS.has(lower)) return keepDeterminersAsTyped ? segment : lower;
-  return capFirstOnly(segment);
-};
-
-const capitalizeWords = (s, keepDeterminersAsTyped = false) => {
-  if (!s) return s;
-  return s
-    .split(" ")
-    .map((word, wordIndex) =>
-      word
-        .split("-")
-        .map((segment, segIndex) => capSegment(segment, wordIndex === 0 && segIndex === 0, keepDeterminersAsTyped))
-        .join("-")
-    )
-    .join(" ");
-};
 
 const fieldStyle = { padding: "10px 12px", borderRadius: "8px", border: "2px solid #28405C", fontSize: "14px", width: "100%" };
 const labelStyle = { fontSize: "12.5px", color: "#8792A6", marginBottom: "4px", display: "block", fontWeight: 600 };
@@ -150,18 +102,17 @@ export function BrandDetailPanel({ brand, onClose, onSaved, myUserId }) {
 
   const set = (field, value) => setForm((f) => ({ ...f, [field]: value }));
   const refreshAfterContribution = (contribution) => set(contribution.fieldPath, contribution.proposedValue);
-  const capitalizeOnBlur = (field, keepDeterminersAsTyped = false) => () => set(field, capitalizeWords(form[field], keepDeterminersAsTyped));
   const toggleIn = (field) => (code) =>
     setForm((f) => ({ ...f, [field]: f[field].includes(code) ? f[field].filter((x) => x !== code) : [...f[field], code] }));
   const addTo = (field) => (item) => setForm((f) => (f[field].includes(item.code) ? f : { ...f, [field]: [...f[field], item.code] }));
   const removeFrom = (field) => (code) => setForm((f) => ({ ...f, [field]: f[field].filter((x) => x !== code) }));
 
   const buildPatch = () => ({
-    name: capitalizeWords(form.name.trim(), true),
+    name: form.name.trim(),
     aliases: form.aliasesText.split(",").map((a) => a.trim()).filter(Boolean),
-    alternateName: capitalizeWords(form.alternateName.trim()),
+    alternateName: form.alternateName.trim(),
     translations: form.translations.filter((t) => t.value.trim()),
-    slogan: capitalizeFirst(form.slogan.trim()),
+    slogan: form.slogan.trim(),
     foundedYear: form.foundedYear === "" ? null : parseInt(form.foundedYear, 10),
     originCountry: form.originCountry,
     originCity: form.originCity.trim(),
@@ -318,7 +269,7 @@ export function BrandDetailPanel({ brand, onClose, onSaved, myUserId }) {
           <>
             <CollapsibleSection title="Dénomination" defaultOpen>
               <label style={labelStyle}>Nom *</label>
-              <input value={form.name} onChange={(e) => set("name", e.target.value)} onBlur={capitalizeOnBlur("name", true)} style={{ ...fieldStyle, marginBottom: "14px" }} />
+              <input value={form.name} onChange={(e) => set("name", e.target.value)} style={{ ...fieldStyle, marginBottom: "14px" }} />
 
               <AlternateNamesFields
                 aliasesText={form.aliasesText}
@@ -330,7 +281,7 @@ export function BrandDetailPanel({ brand, onClose, onSaved, myUserId }) {
               />
 
               <label style={labelStyle}>Slogan</label>
-              <input value={form.slogan} onChange={(e) => set("slogan", e.target.value)} onBlur={() => set("slogan", capitalizeFirst(form.slogan))} style={fieldStyle} />
+              <input value={form.slogan} onChange={(e) => set("slogan", e.target.value)} style={fieldStyle} />
             </CollapsibleSection>
 
             {!isNew && (
@@ -355,11 +306,11 @@ export function BrandDetailPanel({ brand, onClose, onSaved, myUserId }) {
               <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px", marginBottom: "12px" }}>
                 <div>
                   <label style={labelStyle}>Région d'origine</label>
-                  <input value={form.originRegion} onChange={(e) => set("originRegion", e.target.value)} onBlur={capitalizeOnBlur("originRegion")} style={fieldStyle} />
+                  <input value={form.originRegion} onChange={(e) => set("originRegion", e.target.value)} style={fieldStyle} />
                 </div>
                 <div>
                   <label style={labelStyle}>Ville d'origine</label>
-                  <input value={form.originCity} onChange={(e) => set("originCity", e.target.value)} onBlur={capitalizeOnBlur("originCity")} style={fieldStyle} />
+                  <input value={form.originCity} onChange={(e) => set("originCity", e.target.value)} style={fieldStyle} />
                 </div>
               </div>
 
@@ -417,7 +368,7 @@ export function BrandDetailPanel({ brand, onClose, onSaved, myUserId }) {
                 <SearchableMultiSelect options={producerOptions} values={form.producerIds} onChange={(ids) => set("producerIds", ids)} placeholder="Chercher un producteur..." />
               </div>
               <label style={labelStyle}>Propriétaire de la marque</label>
-              <input value={form.brandOwner} onChange={(e) => set("brandOwner", e.target.value)} onBlur={capitalizeOnBlur("brandOwner")} style={fieldStyle} />
+              <input value={form.brandOwner} onChange={(e) => set("brandOwner", e.target.value)} style={fieldStyle} />
             </CollapsibleSection>
           </>
         )}

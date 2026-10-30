@@ -34,50 +34,6 @@ function UsernameSection({ title, children }) {
 
 const GEOAPIFY_CONFIGURED = !!(typeof import.meta !== "undefined" && import.meta.env && import.meta.env.VITE_GEOAPIFY_API_KEY);
 
-const SMALL_WORDS = new Set(["de", "du", "des", "la", "le", "les", "à", "et", "the", "a", "au", "aux"]);
-const SMALL_APOSTROPHE_PREFIXES = new Set(["d", "l"]);
-
-// Ne force jamais la casse d'une lettre déjà en majuscule (préserve les sigles comme "RFC" ou
-// les noms composés comme "BrewTous") — ajoute une majuscule seulement au tout premier
-// caractère d'un mot/segment, s'il manque. Garde les déterminants (de/du/des/la/le/les/à/et/
-// the/a/au/aux, ainsi que d'/l') en minuscule sauf en tout début de texte — ex. "Café de la
-// Gare", "Côte d'Ivoire", "Rue Henri-Blès".
-// Exception : pour le NOM du producteur (keepDeterminersAsTyped), les déterminants hors début de
-// nom restent tels qu'ils ont été saisis — ils peuvent faire partie du nom propre ("Brasserie La
-// Bestiale", "Brasserie L'Abbaye") ; les autres mots reçoivent toujours leur majuscule si elle manque.
-const capFirstOnly = (w) => {
-  if (!w) return w;
-  if (w.charAt(0) === w.charAt(0).toUpperCase()) return w;
-  return w.charAt(0).toUpperCase() + w.slice(1);
-};
-
-const capSegment = (segment, isVeryFirst, keepDeterminersAsTyped = false) => {
-  if (!segment) return segment;
-  const apostropheMatch = segment.match(/^([a-zàâäéèêëïîôöùûüÿœæçA-ZÀÂÄÉÈÊËÏÎÔÖÙÛÜŸŒÆÇ]+)(['’])(.*)$/);
-  if (apostropheMatch) {
-    const [, prefix, apos, rest] = apostropheMatch;
-    const isSmallPrefix = SMALL_APOSTROPHE_PREFIXES.has(prefix.toLowerCase());
-    const newPrefix = !isVeryFirst && isSmallPrefix ? (keepDeterminersAsTyped ? prefix : prefix.toLowerCase()) : capFirstOnly(prefix);
-    return newPrefix + apos + capFirstOnly(rest);
-  }
-  const lower = segment.toLowerCase();
-  if (!isVeryFirst && SMALL_WORDS.has(lower)) return keepDeterminersAsTyped ? segment : lower;
-  return capFirstOnly(segment);
-};
-
-const capitalizeWords = (s, keepDeterminersAsTyped = false) => {
-  if (!s) return s;
-  return s
-    .split(" ")
-    .map((word, wordIndex) =>
-      word
-        .split("-")
-        .map((segment, segIndex) => capSegment(segment, wordIndex === 0 && segIndex === 0, keepDeterminersAsTyped))
-        .join("-")
-    )
-    .join(" ");
-};
-
 const parseCoordinate = (raw) => {
   if (!raw) return raw;
   const match = String(raw).match(/(-?\d+[.,]?\d*)\s*°?\s*([NSEWnsew])?/);
@@ -199,7 +155,6 @@ export function BreweryDetailPanel({ brewery, onClose, onSaved, myUserId }) {
 
   const set = (field, value) => setForm((f) => ({ ...f, [field]: value }));
   const refreshAfterContribution = (contribution) => set(contribution.fieldPath, contribution.proposedValue);
-  const capitalizeOnBlur = (field, keepDeterminersAsTyped = false) => () => set(field, capitalizeWords(form[field], keepDeterminersAsTyped));
   const toggleIn = (field) => (code) =>
     setForm((f) => ({ ...f, [field]: f[field].includes(code) ? f[field].filter((x) => x !== code) : [...f[field], code] }));
   const addTo = (field) => (item) => setForm((f) => (f[field].includes(item.code) ? f : { ...f, [field]: [...f[field], item.code] }));
@@ -233,16 +188,16 @@ export function BreweryDetailPanel({ brewery, onClose, onSaved, myUserId }) {
   const phonePrefix = PHONE_PREFIXES[form.country] || "";
 
   const buildPatch = () => ({
-    name: capitalizeWords(form.name.trim(), true),
+    name: form.name.trim(),
     aliases: form.aliasesText.split(",").map((a) => a.trim()).filter(Boolean),
     alternateName: form.alternateName.trim(),
     translations: form.translations.filter((t) => t.value.trim()),
-    subtitle: capitalizeWords(form.subtitle.trim()),
-    streetName: capitalizeWords(form.streetName.trim()),
+    subtitle: form.subtitle.trim(),
+    streetName: form.streetName.trim(),
     streetNumber: form.streetNumber.trim(),
     postalCode: form.postalCode.trim(),
-    city: capitalizeWords(form.city.trim()),
-    village: capitalizeWords(form.village.trim()),
+    city: form.city.trim(),
+    village: form.village.trim(),
     country: form.country,
     lat: form.lat === "" ? null : parseFloat(form.lat),
     lng: form.lng === "" ? null : parseFloat(form.lng),
@@ -407,7 +362,7 @@ export function BreweryDetailPanel({ brewery, onClose, onSaved, myUserId }) {
           <>
         <CollapsibleSection title="Dénomination" defaultOpen>
           <label style={labelStyle}>Nom *</label>
-          <input value={form.name} onChange={(e) => set("name", e.target.value)} onBlur={capitalizeOnBlur("name", true)} style={{ ...fieldStyle, marginBottom: "14px" }} />
+          <input value={form.name} onChange={(e) => set("name", e.target.value)} style={{ ...fieldStyle, marginBottom: "14px" }} />
 
           <AlternateNamesFields
             aliasesText={form.aliasesText}
@@ -419,7 +374,7 @@ export function BreweryDetailPanel({ brewery, onClose, onSaved, myUserId }) {
           />
 
           <label style={labelStyle}>Sous-titre</label>
-          <input value={form.subtitle} onChange={(e) => set("subtitle", e.target.value)} onBlur={capitalizeOnBlur("subtitle")} style={fieldStyle} />
+          <input value={form.subtitle} onChange={(e) => set("subtitle", e.target.value)} style={fieldStyle} />
         </CollapsibleSection>
 
         {!isNew && (
@@ -461,7 +416,7 @@ export function BreweryDetailPanel({ brewery, onClose, onSaved, myUserId }) {
               </div>
               <div>
                 <label style={labelStyle}>Commune</label>
-                <input value={form.city} onChange={(e) => set("city", e.target.value)} onBlur={capitalizeOnBlur("city")} style={fieldStyle} />
+                <input value={form.city} onChange={(e) => set("city", e.target.value)} style={fieldStyle} />
               </div>
             </div>
           )}
@@ -469,7 +424,7 @@ export function BreweryDetailPanel({ brewery, onClose, onSaved, myUserId }) {
           <div style={{ display: "grid", gridTemplateColumns: "1.6fr 60px 1.4fr", gap: "12px", marginBottom: "12px" }}>
             <div>
               <label style={labelStyle}>Rue / Place / Avenue</label>
-              <input value={form.streetName} onChange={(e) => set("streetName", e.target.value)} onBlur={capitalizeOnBlur("streetName")} style={fieldStyle} />
+              <input value={form.streetName} onChange={(e) => set("streetName", e.target.value)} style={fieldStyle} />
             </div>
             <div>
               <label style={labelStyle}>N°</label>
@@ -477,7 +432,7 @@ export function BreweryDetailPanel({ brewery, onClose, onSaved, myUserId }) {
             </div>
             <div>
               <label style={labelStyle}>Section / Village</label>
-              <input value={form.village} onChange={(e) => set("village", e.target.value)} onBlur={capitalizeOnBlur("village")} style={fieldStyle} />
+              <input value={form.village} onChange={(e) => set("village", e.target.value)} style={fieldStyle} />
             </div>
           </div>
 
