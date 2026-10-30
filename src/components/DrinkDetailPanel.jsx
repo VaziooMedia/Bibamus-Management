@@ -18,7 +18,8 @@ import { BeerCiderStylePicker } from "./BeerCiderStylePicker.jsx";
 import { SelectedStyleChips } from "./SelectedStyleChips.jsx";
 import { FlavorNotesPicker } from "./FlavorNotesPicker.jsx";
 import { FlatListField } from "./FlatListField.jsx";
-import { FOOD_PAIRING_LIST, OCCASION_LIST, GLASS_LIST, CHARACTERISTIC_LIST } from "../data/customLists.js";
+import { FOOD_PAIRING_LIST, OCCASION_LIST, GLASS_LIST, CHARACTERISTIC_LIST, SOFT_STYLE_LISTS } from "../data/customLists.js";
+import { softStyleOwner, stylesForSoftSubtype } from "../data/softStyles.js";
 import { VintageManager } from "./VintageManager.jsx";
 import { PendingContributionsSection } from "./PendingContributionsSection.jsx";
 import { FreeTagInput } from "./FreeTagInput.jsx";
@@ -446,6 +447,8 @@ export function DrinkDetailPanel({ drink, onClose, onSaved, myUserId }) {
       return {
         ...base,
         beverageSubtype: form.beverageSubtype || null,
+        // Styles : ceux de la sous-catégorie choisie (Eau pour l'instant) ; ceux d'une autre sous-catégorie de Softs & Eaux sont retirés.
+        styles: stylesForSoftSubtype(form.styles, form.beverageSubtype),
         defaultVolumeCl: form.defaultVolumeCl === "" ? null : parseFloat(form.defaultVolumeCl),
         defaultServingMode: form.defaultServingMode || null,
         defaultPriceEuro: form.defaultPriceEuro === "" ? null : parseFloat(form.defaultPriceEuro),
@@ -1038,11 +1041,37 @@ export function DrinkDetailPanel({ drink, onClose, onSaved, myUserId }) {
                 <span style={{ width: "4px", height: "14px", background: "#39FF66", borderRadius: "2px", display: "inline-block" }} />
                 {isWine ? "Caractéristiques" : "Style(s)"}
                 {!isSoft && form.styles.length > 0 && <span style={{ color: "#8792A6", fontWeight: 500 }}> ({form.styles.length} sélectionné{form.styles.length > 1 ? "s" : ""})</span>}
+                {isSoft && SOFT_STYLE_LISTS[form.beverageSubtype] && form.styles.some((c) => softStyleOwner(c) === form.beverageSubtype) && (
+                  <span style={{ color: "#8792A6", fontWeight: 500 }}>
+                    {" "}
+                    ({form.styles.filter((c) => softStyleOwner(c) === form.beverageSubtype).length} sélectionné{form.styles.filter((c) => softStyleOwner(c) === form.beverageSubtype).length > 1 ? "s" : ""})
+                  </span>
+                )}
               </span>
               <span style={{ color: "#39FF66", fontSize: "12px" }}>{stylesSectionOpen ? "▼" : "▶"}</span>
             </button>
-            {stylesSectionOpen && isSoft && (
-              <p style={{ fontSize: "12.5px", color: "#8792A6", fontStyle: "italic", margin: 0 }}>Pas encore de styles pour les Softs & Eaux.</p>
+            {stylesSectionOpen && isSoft && SOFT_STYLE_LISTS[form.beverageSubtype] && (
+              <>
+                <p style={{ fontSize: "11.5px", color: "#8792A6", marginTop: "-6px", marginBottom: "10px" }}>Plusieurs styles peuvent se cumuler.</p>
+                <div style={{ border: "2px solid #28405C", borderRadius: "8px", padding: "12px" }}>
+                  <FlatListField
+                    key={form.beverageSubtype}
+                    list={SOFT_STYLE_LISTS[form.beverageSubtype]}
+                    variant="pills"
+                    selected={form.styles}
+                    onToggle={toggleStyle}
+                    onAdded={(item) => setForm((f) => (f.styles.includes(item.code) ? f : { ...f, styles: [...f.styles, item.code] }))}
+                    onDeleted={(code) => setForm((f) => (f.styles.includes(code) ? { ...f, styles: f.styles.filter((c) => c !== code) } : f))}
+                    labelStyle={labelStyle}
+                    fieldStyle={fieldStyle}
+                  />
+                </div>
+              </>
+            )}
+            {stylesSectionOpen && isSoft && !SOFT_STYLE_LISTS[form.beverageSubtype] && (
+              <p style={{ fontSize: "12.5px", color: "#8792A6", fontStyle: "italic", margin: 0 }}>
+                {form.beverageSubtype ? "Pas encore de styles pour cette sous-catégorie." : "Choisissez d'abord une sous-catégorie."}
+              </p>
             )}
             {stylesSectionOpen && !isSoft && (
               <>
