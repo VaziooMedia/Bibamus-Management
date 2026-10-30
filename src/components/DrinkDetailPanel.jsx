@@ -86,6 +86,20 @@ export const SPIRIT_SUBTYPES = [
   { code: "spiritueux_de_canne", fr: "Spiritueux de canne hors rhum" },
   { code: "autres_spiritueux", fr: "Autres spiritueux" },
 ];
+// Softs & Eaux : une seule sous-catégorie par produit, choisie dans la liste déroulante sous « Catégorie »
+// (comme pour les bières, vins et spiritueux). Au départ, aucune : « — ».
+export const SOFT_SUBTYPES = [
+  { code: "soda", fr: "Soda" },
+  { code: "eau", fr: "Eau" },
+  { code: "jus_de_fruits", fr: "Jus de fruits" },
+  { code: "energy", fr: "Energy" },
+  { code: "sport", fr: "Sport" },
+  { code: "lactee", fr: "Lactée" },
+  { code: "sirop", fr: "Sirop" },
+];
+const SOFT_COMING_SOON_TITLE = "Pas encore disponible pour les Softs & Eaux";
+// Champ grisé (non modifiable pour l'instant) : même teinte que les onglets désactivés.
+const greyedFieldStyle = { opacity: 0.45, cursor: "not-allowed" };
 
 // Les codes-barres (conditionnements) vivent dans la table drink_barcodes, comme pour l'app.
 const barcodeApi = { create: createDrinkVariantChecked, update: updateDrinkVariantChecked, remove: deleteDrinkVariantChecked };
@@ -111,9 +125,14 @@ export function DrinkDetailPanel({ drink, onClose, onSaved, myUserId }) {
     name: drink?.name || "",
     aliasesText: (drink?.aliases || []).join(", "),
     type: drink?.type || DRINK_TYPES[0].code,
+    // Softs & Eaux : pas de sous-catégorie par défaut (« biere » n'aurait aucun sens) — vide tant qu'on n'a pas choisi.
     beverageSubtype:
-      drink?.beverageSubtype ||
-      (drink?.type === "vins_bulles" ? WINE_SUBTYPES[0].code : drink?.type === "spiritueux" ? SPIRIT_SUBTYPES[0].code : BEER_CIDER_SUBTYPES[0].code),
+      drink?.type === "softs_eaux"
+        ? SOFT_SUBTYPES.some((s) => s.code === drink?.beverageSubtype)
+          ? drink.beverageSubtype
+          : ""
+        : drink?.beverageSubtype ||
+          (drink?.type === "vins_bulles" ? WINE_SUBTYPES[0].code : drink?.type === "spiritueux" ? SPIRIT_SUBTYPES[0].code : BEER_CIDER_SUBTYPES[0].code),
     defaultVolumeCl: drink?.defaultVolumeCl ?? "",
     defaultServingMode: drink?.defaultServingMode || "",
     defaultPriceEuro: drink?.defaultPriceEuro ?? "",
@@ -261,7 +280,8 @@ export function DrinkDetailPanel({ drink, onClose, onSaved, myUserId }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [status]);
   const [stylesSectionOpen, setStylesSectionOpen] = useState(true);
-  const [activeTab, setActiveTab] = useState("quick");
+  // Softs & Eaux : pas d'onglet « Ajout rapide », la fiche s'ouvre directement sur le Niveau 1.
+  const [activeTab, setActiveTab] = useState(drink?.type === "softs_eaux" ? "niveau1" : "quick");
   const [aiProposals, setAiProposals] = useState(null);
   const [requestingAI, setRequestingAI] = useState(false);
   const [aiError, setAiError] = useState(null);
@@ -361,14 +381,27 @@ export function DrinkDetailPanel({ drink, onClose, onSaved, myUserId }) {
   const isBeerOrCider = form.type === "bieres_cidres";
   const isWine = form.type === "vins_bulles";
   const isSpirit = form.type === "spiritueux";
+  const isSoft = form.type === "softs_eaux";
   const isBeer = form.beverageSubtype === "biere";
   const visibleGrapeVarietyOptions = grapeVarietyOptions.filter((v) => !v.sparklingOnly || form.beverageSubtype === "vin_effervescent");
 
   useEffect(() => {
+    if (isSoft) {
+      // Softs & Eaux : une sous-catégorie qui n'est pas de cette famille (ex. « biere » en venant des bières) est vidée.
+      if (form.beverageSubtype !== "" && !SOFT_SUBTYPES.some((s) => s.code === form.beverageSubtype)) set("beverageSubtype", "");
+      return;
+    }
     const validSubtypes = isBeerOrCider ? BEER_CIDER_SUBTYPES : isWine ? WINE_SUBTYPES : isSpirit ? SPIRIT_SUBTYPES : null;
     if (validSubtypes && !validSubtypes.some((s) => s.code === form.beverageSubtype)) {
       set("beverageSubtype", validSubtypes[0].code);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [form.type]);
+
+  // Softs & Eaux n'ont pas d'onglet « Ajout rapide », ni de Niveau 2 ou Statistiques utilisables : en passant
+  // un produit dans cette catégorie, on revient sur le Niveau 1 si l'onglet ouvert n'existe pas pour elle.
+  useEffect(() => {
+    if (isSoft && !["niveau1", "gallery", "ai"].includes(activeTab)) setActiveTab("niveau1");
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [form.type]);
 
@@ -407,6 +440,30 @@ export function DrinkDetailPanel({ drink, onClose, onSaved, myUserId }) {
       duplicateOfId: status === "duplicate" ? duplicateOfId : null,
       isGeneric,
     };
+    if (isSoft) {
+      // Softs & Eaux : seulement ce que la fiche propose pour l'instant (Niveau 1 + Médias). Niveau 2 et
+      // Statistiques sont grisés, le degré d'alcool aussi (renvoyé tel quel via « base », sans modification).
+      return {
+        ...base,
+        beverageSubtype: form.beverageSubtype || null,
+        defaultVolumeCl: form.defaultVolumeCl === "" ? null : parseFloat(form.defaultVolumeCl),
+        defaultServingMode: form.defaultServingMode || null,
+        defaultPriceEuro: form.defaultPriceEuro === "" ? null : parseFloat(form.defaultPriceEuro),
+        defaultPriceJeton: form.defaultPriceJeton === "" ? null : parseFloat(form.defaultPriceJeton),
+        brandId: form.brandId,
+        producerIds: form.producerIds,
+        nationality: form.nationality || null,
+        originRegion: form.originRegion.trim(),
+        originCity: form.originCity.trim(),
+        productStatus: form.productStatus,
+        launchYear: form.launchYear === "" ? null : parseInt(form.launchYear, 10),
+        videoLinks: form.videoLinks.map((v) => v.trim()).filter(Boolean),
+        awardBadges,
+        mainPhotoUrl,
+        coverPhotoUrl,
+        galleryPhotos,
+      };
+    }
     // isBeerOrCider ne couvrait QUE les bières/cidres — les vins tombaient dans le "base" minimal
     // ci-dessus, sans jamais envoyer couleur, pays, appellation, cépage, ni même la photo. C'est
     // la cause du vrai défaut : rien de tout cela n'était jamais enregistré pour un vin.
@@ -680,11 +737,12 @@ export function DrinkDetailPanel({ drink, onClose, onSaved, myUserId }) {
           ))}
         </select>
 
-        {(isBeerOrCider || isWine || isSpirit) && (
+        {(isBeerOrCider || isWine || isSpirit || isSoft) && (
           <>
             <label style={labelStyle}>Sous-catégorie</label>
             <select value={form.beverageSubtype} onChange={(e) => set("beverageSubtype", e.target.value)} style={{ ...fieldStyle, width: "220px", marginBottom: "14px" }}>
-              {(isBeerOrCider ? BEER_CIDER_SUBTYPES : isWine ? WINE_SUBTYPES : SPIRIT_SUBTYPES).map((t) => (
+              {isSoft && <option value="">—</option>}
+              {(isBeerOrCider ? BEER_CIDER_SUBTYPES : isWine ? WINE_SUBTYPES : isSpirit ? SPIRIT_SUBTYPES : SOFT_SUBTYPES).map((t) => (
                 <option key={t.code} value={t.code}>
                   {t.fr}
                 </option>
@@ -696,22 +754,32 @@ export function DrinkDetailPanel({ drink, onClose, onSaved, myUserId }) {
         <label style={labelStyle}>Nom du produit *</label>
         <input value={form.name} onChange={(e) => set("name", e.target.value)} style={{ ...fieldStyle, marginBottom: "14px" }} />
 
-        {isBeerOrCider || isWine || isSpirit ? (
+        {isBeerOrCider || isWine || isSpirit || isSoft ? (
           <>
             <div style={{ display: "flex", flexWrap: "wrap", gap: "4px", marginBottom: "18px", borderBottom: "2px solid #28405C" }}>
-              {[
-                { key: "quick", label: "Ajout rapide" },
-                { key: "niveau1", label: "Niveau 1" },
-                { key: "niveau2", label: "Niveau 2 (expert)" },
-                { key: "gallery", label: "Médias" },
-                { key: "stats", label: "Statistiques", disabled: isNew },
-                { key: "ai", label: null, disabled: isNew },
-              ].map((tab) => (
+              {(isSoft
+                ? [
+                    // Softs & Eaux : 5 onglets. Niveau 2 et Statistiques sont déjà là mais grisés, en attendant leur contenu.
+                    { key: "niveau1", label: "Niveau 1" },
+                    { key: "niveau2", label: "Niveau 2 (expert)", disabled: true, disabledTitle: SOFT_COMING_SOON_TITLE },
+                    { key: "gallery", label: "Médias" },
+                    { key: "stats", label: "Statistiques", disabled: true, disabledTitle: SOFT_COMING_SOON_TITLE },
+                    { key: "ai", label: null, disabled: isNew },
+                  ]
+                : [
+                    { key: "quick", label: "Ajout rapide" },
+                    { key: "niveau1", label: "Niveau 1" },
+                    { key: "niveau2", label: "Niveau 2 (expert)" },
+                    { key: "gallery", label: "Médias" },
+                    { key: "stats", label: "Statistiques", disabled: isNew },
+                    { key: "ai", label: null, disabled: isNew },
+                  ]
+              ).map((tab) => (
                 <button
                   key={tab.key}
                   onClick={() => !tab.disabled && setActiveTab(tab.key)}
                   disabled={tab.disabled}
-                  title={tab.disabled ? "Disponible une fois le produit créé" : undefined}
+                  title={tab.disabled ? tab.disabledTitle || "Disponible une fois le produit créé" : undefined}
                   style={{
                     background: "none",
                     border: "none",
@@ -890,8 +958,17 @@ export function DrinkDetailPanel({ drink, onClose, onSaved, myUserId }) {
             <SectionTitle>Caractéristiques</SectionTitle>
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px", marginBottom: "12px" }}>
               <div>
-                <label style={labelStyle}>Taux d'alcool (%)</label>
-                <input type="number" step="0.1" value={form.abv} onChange={(e) => set("abv", e.target.value)} placeholder="Ex. 0.0 pour sans alcool" style={fieldStyle} />
+                <label style={isSoft ? { ...labelStyle, ...greyedFieldStyle } : labelStyle}>Taux d'alcool (%)</label>
+                <input
+                  type="number"
+                  step="0.1"
+                  value={form.abv}
+                  onChange={(e) => set("abv", e.target.value)}
+                  disabled={isSoft}
+                  title={isSoft ? SOFT_COMING_SOON_TITLE : undefined}
+                  placeholder={isSoft ? "—" : "Ex. 0.0 pour sans alcool"}
+                  style={isSoft ? { ...fieldStyle, ...greyedFieldStyle } : fieldStyle}
+                />
               </div>
               <div>
                 <label style={labelStyle}>Énergie (kcal/100ml)</label>
@@ -960,11 +1037,14 @@ export function DrinkDetailPanel({ drink, onClose, onSaved, myUserId }) {
               <span style={{ ...sectionTitleStyle, marginTop: 0, marginBottom: 0 }}>
                 <span style={{ width: "4px", height: "14px", background: "#39FF66", borderRadius: "2px", display: "inline-block" }} />
                 {isWine ? "Caractéristiques" : "Style(s)"}
-                {form.styles.length > 0 && <span style={{ color: "#8792A6", fontWeight: 500 }}> ({form.styles.length} sélectionné{form.styles.length > 1 ? "s" : ""})</span>}
+                {!isSoft && form.styles.length > 0 && <span style={{ color: "#8792A6", fontWeight: 500 }}> ({form.styles.length} sélectionné{form.styles.length > 1 ? "s" : ""})</span>}
               </span>
               <span style={{ color: "#39FF66", fontSize: "12px" }}>{stylesSectionOpen ? "▼" : "▶"}</span>
             </button>
-            {stylesSectionOpen && (
+            {stylesSectionOpen && isSoft && (
+              <p style={{ fontSize: "12.5px", color: "#8792A6", fontStyle: "italic", margin: 0 }}>Pas encore de styles pour les Softs & Eaux.</p>
+            )}
+            {stylesSectionOpen && !isSoft && (
               <>
                 <p style={{ fontSize: "11.5px", color: "#8792A6", marginTop: "-6px", marginBottom: "10px" }}>
                   {isWine ? "Plusieurs caractéristiques peuvent se cumuler." : "Plusieurs styles peuvent se cumuler (ex. IPA + Hazy + Double IPA)."}
