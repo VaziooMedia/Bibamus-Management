@@ -37,7 +37,7 @@ export function ListItemAdder({ list, custom, onCreate, onCreated }) {
     }
     setBusy(true);
     const fr = name.trim().replace(/\s+/g, " ");
-    const code = uniqueItemCode(fr, allItemCodes(list, custom));
+    const code = uniqueItemCode(fr, allItemCodes(list, custom), list.codePrefix);
     const res = await onCreate({ code, fr, groupTitle });
     setBusy(false);
     if (res.error) {

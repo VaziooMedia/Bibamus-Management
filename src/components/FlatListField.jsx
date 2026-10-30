@@ -14,6 +14,8 @@ import {
   deleteProducerListItem,
   countBrandsWithListItem,
   deleteBrandListItem,
+  countDrinksWithSoftStyle,
+  deleteSoftStyle,
   saveCustomListOrder,
 } from "../data/sharedDirectories.js";
 
@@ -22,6 +24,7 @@ const SOURCES = {
   venues: { count: countVenuesWithListItem, remove: deleteVenueListItem },
   producers: { count: countProducersWithListItem, remove: deleteProducerListItem },
   brands: { count: countBrandsWithListItem, remove: deleteBrandListItem },
+  soft_styles: { count: countDrinksWithSoftStyle, remove: deleteSoftStyle },
 };
 const PRODUCT_SOURCE = { count: countDrinksWithListItem, remove: deleteCustomListItem };
 

@@ -2307,6 +2307,29 @@ export async function deleteCustomListItem(listKey, { code, fr, groupTitle }) {
   return { removedFrom: Number(data) || 0 };
 }
 
+// Styles des Softs & Eaux (liste « water_style » de custom_list_items, colonne drinks_directory.styles) : comptés et retirés
+// uniquement parmi les produits Softs & Eaux, car cette colonne est aussi celle des bières et des vins. Fonctions SQL
+// propres (voir le script « eau-styles »), comme celles des lieux, producteurs et marques.
+export async function countDrinksWithSoftStyle(listKey, code) {
+  const { data, error } = await supabase.rpc("count_drinks_with_soft_style", { p_list: listKey, p_code: code });
+  if (error) {
+    console.error("countDrinksWithSoftStyle:", error);
+    return { error };
+  }
+  return { count: Number(data) || 0 };
+}
+
+// Supprimer un style : le retire de tous les produits Softs & Eaux qui le portent, puis le supprime (ou le masque, s'il vient
+// de la liste de départ) — en une seule opération côté base. Rend le nombre de produits modifiés.
+export async function deleteSoftStyle(listKey, { code, fr, groupTitle }) {
+  const { data, error } = await supabase.rpc("delete_soft_style", { p_list: listKey, p_code: code, p_fr: fr, p_group_title: groupTitle });
+  if (error) {
+    console.error("deleteSoftStyle:", error);
+    return { error };
+  }
+  return { removedFrom: Number(data) || 0 };
+}
+
 // Fiche Lieu : les mêmes listes modifiables (moyens de paiement, types d'établissement, aménités), avec en plus un
 // ordre d'affichage (table custom_list_order : une ligne par liste, la suite des codes dans l'ordre voulu, lisible
 // par tous, écrite par la gestion). Un échec de lecture rend un ordre vide : la liste garde son ordre de départ.

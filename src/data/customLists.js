@@ -15,6 +15,7 @@
 // les groupes de départ, mise à jour de la liste en mémoire, contrôles et messages d'erreur.
 
 import { FLAVOR_NOTE_GROUPS, FOOD_PAIRINGS, OCCASIONS, PRODUCT_CHARACTERISTICS, RECOMMENDED_GLASSES } from "./beerCiderStyles.js";
+import { WATER_STYLES } from "./softStyles.js";
 import { PAYMENT_METHODS, VENUE_TYPES, PRODUCER_TYPES, PRODUCER_PROFILES, BRAND_CLASSIFICATIONS, BRAND_TYPES } from "../constants.js";
 
 // Un code ne peut avoir qu'une place dans une liste modifiable (une modification d'un élément vise son code, et
@@ -326,6 +327,32 @@ export const BRAND_TYPE_LIST = {
     `Attention : « ${name} » est aussi utilisé par l'application Bibamus (cartes publiques des marques). Une fois supprimé, il disparaîtra de toutes les marques dans l'application.`,
 };
 
+// Fiche Softs & Eaux : styles de l'Eau (plusieurs choix, étiquettes, sans groupes), colonne styles — la même que celle des
+// bières, d'où `codePrefix` : un style ajouté à la main s'appelle « perso_eau_… », jamais « perso_… » tout court, pour ne pas se
+// confondre avec un style de bière ajouté à la main. Seuls les produits Softs & Eaux sont comptés et modifiés
+// (`source: "soft_styles"`). Les cinq styles de départ sont dans softStyles.js.
+export const WATER_ENTITY = { ...PRODUCT_ENTITY, all: "toutes les eaux", none: "aucune eau" };
+export const WATER_STYLE_LIST = {
+  key: "water_style",
+  flat: true,
+  source: "soft_styles",
+  codePrefix: "perso_eau_",
+  entity: WATER_ENTITY,
+  builtinGroups: [{ title: "", tags: WATER_STYLES }],
+  orphanTitle: "",
+  words: {
+    noun: "style",
+    one: "un style",
+    this: "ce style",
+    the: "le style",
+    ofThe: "du style",
+    ofAll: "des styles",
+    namePlaceholder: "Nom du style (ex. Mineral)",
+  },
+};
+// La liste de styles de chaque sous-catégorie de Softs & Eaux qui en a une (clé : code de la sous-catégorie).
+export const SOFT_STYLE_LISTS = { eau: WATER_STYLE_LIST };
+
 // L'avertissement à montrer avant de supprimer cet élément, ou null : celui propre au code, sinon celui de la liste
 // (qui ne vaut que pour un élément de départ : un élément ajouté à la main n'existait pas dans l'application).
 export function deleteNoticeFor(list, item) {
@@ -350,14 +377,15 @@ export const normalizeItemName = (s) =>
 
 // Le préfixe « perso_ » distingue sans ambiguïté un élément ajouté à la main d'un élément de la liste figée
 // (c'est aussi celui que lit le SQL de suppression).
-export function itemCodeFromName(name) {
+// `prefix` : celui d'une liste dont les codes partagent leur colonne avec d'autres listes (les styles de l'Eau, voir `codePrefix`).
+export function itemCodeFromName(name, prefix = "perso_") {
   const n = normalizeItemName(name);
-  return n ? `perso_${n.replace(/ /g, "_")}` : null;
+  return n ? `${prefix}${n.replace(/ /g, "_")}` : null;
 }
 
 // Un code toujours libre : en cas de collision, on suffixe _2, _3...
-export function uniqueItemCode(name, takenCodes) {
-  const base = itemCodeFromName(name);
+export function uniqueItemCode(name, takenCodes, prefix = "perso_") {
+  const base = itemCodeFromName(name, prefix);
   if (!base) return null;
   const taken = new Set(takenCodes);
   if (!taken.has(base)) return base;
