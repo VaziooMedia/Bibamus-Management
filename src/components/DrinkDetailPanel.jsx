@@ -423,6 +423,10 @@ export function DrinkDetailPanel({ drink, onClose, onSaved, myUserId }) {
   // Les styles d'un Softs & Eaux : un style ajouté depuis la liste est coché pour ce produit, un style supprimé en est retiré.
   const softStyleAdded = (item) => setForm((f) => (f.styles.includes(item.code) ? f : { ...f, styles: [...f.styles, item.code] }));
   const softStyleDeleted = (code) => setForm((f) => (f.styles.includes(code) ? { ...f, styles: f.styles.filter((c) => c !== code) } : f));
+  // Ceux de la sous-catégorie en cours seulement (un style hérité d'une autre liste, ex. « ipa », ne compte pas et ne s'affiche pas),
+  // dans l'ordre de sélection : le compteur de l'en-tête et la ligne d'étiquettes au-dessus du champ.
+  const softOwnedStyles = isSoft ? form.styles.filter((c) => softStyleOwner(c) === form.beverageSubtype) : [];
+  const softStyleChips = { codes: softOwnedStyles, ariaLabel: "Styles sélectionnés" };
   const toggleArrayField = (field, value) => setForm((f) => ({ ...f, [field]: f[field].includes(value) ? f[field].filter((v) => v !== value) : [...f[field], value] }));
 
   const handleCreateGrapeVariety = async (name) => {
@@ -1045,10 +1049,10 @@ export function DrinkDetailPanel({ drink, onClose, onSaved, myUserId }) {
                 <span style={{ width: "4px", height: "14px", background: "#39FF66", borderRadius: "2px", display: "inline-block" }} />
                 {isWine ? "Caractéristiques" : "Style(s)"}
                 {!isSoft && form.styles.length > 0 && <span style={{ color: "#8792A6", fontWeight: 500 }}> ({form.styles.length} sélectionné{form.styles.length > 1 ? "s" : ""})</span>}
-                {isSoft && SOFT_STYLE_LISTS[form.beverageSubtype] && form.styles.some((c) => softStyleOwner(c) === form.beverageSubtype) && (
+                {isSoft && SOFT_STYLE_LISTS[form.beverageSubtype] && softOwnedStyles.length > 0 && (
                   <span style={{ color: "#8792A6", fontWeight: 500 }}>
                     {" "}
-                    ({form.styles.filter((c) => softStyleOwner(c) === form.beverageSubtype).length} sélectionné{form.styles.filter((c) => softStyleOwner(c) === form.beverageSubtype).length > 1 ? "s" : ""})
+                    ({softOwnedStyles.length} sélectionné{softOwnedStyles.length > 1 ? "s" : ""})
                   </span>
                 )}
               </span>
@@ -1058,23 +1062,24 @@ export function DrinkDetailPanel({ drink, onClose, onSaved, myUserId }) {
               <>
                 <p style={{ fontSize: "11.5px", color: "#8792A6", marginTop: "-6px", marginBottom: "10px" }}>Plusieurs styles peuvent se cumuler.</p>
                 {SOFT_STYLE_LISTS[form.beverageSubtype].flat ? (
-                  <div style={{ border: "2px solid #28405C", borderRadius: "8px", padding: "12px" }}>
-                    <FlatListField
-                      key={form.beverageSubtype}
-                      list={SOFT_STYLE_LISTS[form.beverageSubtype]}
-                      variant="pills"
-                      selected={form.styles}
-                      onToggle={toggleStyle}
-                      onAdded={softStyleAdded}
-                      onDeleted={softStyleDeleted}
-                      labelStyle={labelStyle}
-                      fieldStyle={fieldStyle}
-                    />
-                  </div>
+                  <FlatListField
+                    key={form.beverageSubtype}
+                    list={SOFT_STYLE_LISTS[form.beverageSubtype]}
+                    variant="pills"
+                    framed
+                    chips={softStyleChips}
+                    selected={form.styles}
+                    onToggle={toggleStyle}
+                    onAdded={softStyleAdded}
+                    onDeleted={softStyleDeleted}
+                    labelStyle={labelStyle}
+                    fieldStyle={fieldStyle}
+                  />
                 ) : (
                   <GroupedListField
                     key={form.beverageSubtype}
                     list={SOFT_STYLE_LISTS[form.beverageSubtype]}
+                    chips={softStyleChips}
                     selected={form.styles}
                     onToggle={toggleStyle}
                     onAdded={softStyleAdded}
