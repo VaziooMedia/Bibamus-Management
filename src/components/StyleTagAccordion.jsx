@@ -13,6 +13,11 @@ import React, { useState, useMemo } from "react";
 //
 // Les mots de la recherche (`searchPlaceholder`, `noMatchText(requête)`) sont ceux des styles par défaut ; une autre
 // liste (les arômes) donne les siens.
+//
+// La recherche ignore les accents et la casse : « pina » trouve « Piña Colada », « curacao » trouve « Blue Curaçao »,
+// « Kolsch » trouve « Kölsch » (et l'inverse). La ponctuation, elle, compte comme écrite.
+const fold = (s) => s.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
+
 export function StyleTagAccordion({
   groups,
   selected,
@@ -25,10 +30,10 @@ export function StyleTagAccordion({
   const [query, setQuery] = useState("");
   const [openIndices, setOpenIndices] = useState(new Set());
 
-  const q = hideControls ? "" : query.trim().toLowerCase();
+  const q = hideControls ? "" : fold(query.trim());
   const filteredGroups = useMemo(() => {
     if (!q) return groups.map((g, i) => ({ ...g, index: i }));
-    return groups.map((g, i) => ({ ...g, index: i, tags: g.tags.filter((t) => t.fr.toLowerCase().includes(q)) })).filter((g) => g.tags.length > 0);
+    return groups.map((g, i) => ({ ...g, index: i, tags: g.tags.filter((t) => fold(t.fr).includes(q)) })).filter((g) => g.tags.length > 0);
   }, [groups, q]);
 
   const activeCode = manage?.activeCode ?? null;
