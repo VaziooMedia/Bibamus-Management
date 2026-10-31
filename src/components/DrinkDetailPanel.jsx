@@ -99,6 +99,17 @@ export const SOFT_SUBTYPES = [
   { code: "lactee", fr: "Lactée" },
   { code: "sirop", fr: "Sirop" },
 ];
+// Boissons chaudes : une seule sous-catégorie par produit, choisie dans la liste déroulante sous « Catégorie » (comme
+// pour les Softs & Eaux). Au départ, aucune : « — ».
+export const HOT_SUBTYPES = [
+  { code: "cafe", fr: "Café" },
+  { code: "the", fr: "Thé" },
+  { code: "infusion", fr: "Infusion" },
+  { code: "hot_milk", fr: "Hot Milk" },
+  { code: "soupe", fr: "Soupe" },
+  { code: "hot_mix", fr: "Hot Mix" },
+  { code: "cereales_chicoree", fr: "Céréales & Chicorée" },
+];
 const SOFT_COMING_SOON_TITLE = "Pas encore disponible pour les Softs & Eaux";
 // Champ grisé (non modifiable pour l'instant) : même teinte que les onglets désactivés.
 const greyedFieldStyle = { opacity: 0.45, cursor: "not-allowed" };
@@ -128,6 +139,7 @@ export function DrinkDetailPanel({ drink, onClose, onSaved, myUserId }) {
     aliasesText: (drink?.aliases || []).join(", "),
     type: drink?.type || DRINK_TYPES[0].code,
     // Softs & Eaux : pas de sous-catégorie par défaut (« biere » n'aurait aucun sens) — vide tant qu'on n'a pas choisi.
+    // (Boissons chaudes : de même, mais c'est l'effet sur `form.type` plus bas qui vide ce qui n'est pas de sa famille.)
     beverageSubtype:
       drink?.type === "softs_eaux"
         ? SOFT_SUBTYPES.some((s) => s.code === drink?.beverageSubtype)
@@ -384,6 +396,7 @@ export function DrinkDetailPanel({ drink, onClose, onSaved, myUserId }) {
   const isWine = form.type === "vins_bulles";
   const isSpirit = form.type === "spiritueux";
   const isSoft = form.type === "softs_eaux";
+  const isHot = form.type === "boissons_chaudes";
   const isBeer = form.beverageSubtype === "biere";
   const visibleGrapeVarietyOptions = grapeVarietyOptions.filter((v) => !v.sparklingOnly || form.beverageSubtype === "vin_effervescent");
 
@@ -391,6 +404,11 @@ export function DrinkDetailPanel({ drink, onClose, onSaved, myUserId }) {
     if (isSoft) {
       // Softs & Eaux : une sous-catégorie qui n'est pas de cette famille (ex. « biere » en venant des bières) est vidée.
       if (form.beverageSubtype !== "" && !SOFT_SUBTYPES.some((s) => s.code === form.beverageSubtype)) set("beverageSubtype", "");
+      return;
+    }
+    if (isHot) {
+      // Boissons chaudes : de même, une sous-catégorie qui n'est pas de cette famille est vidée.
+      if (form.beverageSubtype !== "" && !HOT_SUBTYPES.some((s) => s.code === form.beverageSubtype)) set("beverageSubtype", "");
       return;
     }
     const validSubtypes = isBeerOrCider ? BEER_CIDER_SUBTYPES : isWine ? WINE_SUBTYPES : isSpirit ? SPIRIT_SUBTYPES : null;
@@ -475,6 +493,8 @@ export function DrinkDetailPanel({ drink, onClose, onSaved, myUserId }) {
         galleryPhotos,
       };
     }
+    // Boissons chaudes : la fiche minimale, plus la sous-catégorie.
+    if (isHot) return { ...base, beverageSubtype: form.beverageSubtype || null };
     // isBeerOrCider ne couvrait QUE les bières/cidres — les vins tombaient dans le "base" minimal
     // ci-dessus, sans jamais envoyer couleur, pays, appellation, cépage, ni même la photo. C'est
     // la cause du vrai défaut : rien de tout cela n'était jamais enregistré pour un vin.
@@ -748,12 +768,12 @@ export function DrinkDetailPanel({ drink, onClose, onSaved, myUserId }) {
           ))}
         </select>
 
-        {(isBeerOrCider || isWine || isSpirit || isSoft) && (
+        {(isBeerOrCider || isWine || isSpirit || isSoft || isHot) && (
           <>
             <label style={labelStyle}>Sous-catégorie</label>
             <select value={form.beverageSubtype} onChange={(e) => set("beverageSubtype", e.target.value)} style={{ ...fieldStyle, width: "220px", marginBottom: "14px" }}>
-              {isSoft && <option value="">—</option>}
-              {(isBeerOrCider ? BEER_CIDER_SUBTYPES : isWine ? WINE_SUBTYPES : isSpirit ? SPIRIT_SUBTYPES : SOFT_SUBTYPES).map((t) => (
+              {(isSoft || isHot) && <option value="">—</option>}
+              {(isBeerOrCider ? BEER_CIDER_SUBTYPES : isWine ? WINE_SUBTYPES : isSpirit ? SPIRIT_SUBTYPES : isSoft ? SOFT_SUBTYPES : HOT_SUBTYPES).map((t) => (
                 <option key={t.code} value={t.code}>
                   {t.fr}
                 </option>
