@@ -112,6 +112,7 @@ export const HOT_SUBTYPES = [
   { code: "cereales_chicoree", fr: "Céréales & Chicorée" },
 ];
 const SOFT_COMING_SOON_TITLE = "Pas encore disponible pour les Softs & Eaux";
+const HOT_COMING_SOON_TITLE = "Pas encore disponible pour les Boissons chaudes";
 // Champ grisé (non modifiable pour l'instant) : même teinte que les onglets désactivés.
 const greyedFieldStyle = { opacity: 0.45, cursor: "not-allowed" };
 
@@ -295,8 +296,8 @@ export function DrinkDetailPanel({ drink, onClose, onSaved, myUserId }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [status]);
   const [stylesSectionOpen, setStylesSectionOpen] = useState(true);
-  // Softs & Eaux : pas d'onglet « Ajout rapide », la fiche s'ouvre directement sur le Niveau 1.
-  const [activeTab, setActiveTab] = useState(drink?.type === "softs_eaux" ? "niveau1" : "quick");
+  // Softs & Eaux et Boissons chaudes : pas d'onglet « Ajout rapide », la fiche s'ouvre directement sur le Niveau 1.
+  const [activeTab, setActiveTab] = useState(drink?.type === "softs_eaux" || drink?.type === "boissons_chaudes" ? "niveau1" : "quick");
   const [aiProposals, setAiProposals] = useState(null);
   const [requestingAI, setRequestingAI] = useState(false);
   const [aiError, setAiError] = useState(null);
@@ -398,6 +399,8 @@ export function DrinkDetailPanel({ drink, onClose, onSaved, myUserId }) {
   const isSpirit = form.type === "spiritueux";
   const isSoft = form.type === "softs_eaux";
   const isHot = form.type === "boissons_chaudes";
+  // Info-bulle des onglets et champs grisés « pas encore disponible », selon la catégorie.
+  const comingSoonTitle = isHot ? HOT_COMING_SOON_TITLE : SOFT_COMING_SOON_TITLE;
   const isBeer = form.beverageSubtype === "biere";
   const visibleGrapeVarietyOptions = grapeVarietyOptions.filter((v) => !v.sparklingOnly || form.beverageSubtype === "vin_effervescent");
 
@@ -419,10 +422,10 @@ export function DrinkDetailPanel({ drink, onClose, onSaved, myUserId }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [form.type]);
 
-  // Softs & Eaux n'ont pas d'onglet « Ajout rapide », ni de Niveau 2 ou Statistiques utilisables : en passant
-  // un produit dans cette catégorie, on revient sur le Niveau 1 si l'onglet ouvert n'existe pas pour elle.
+  // Softs & Eaux et Boissons chaudes n'ont pas d'onglet « Ajout rapide », ni de Niveau 2 ou Statistiques utilisables : en passant
+  // un produit dans l'une de ces catégories, on revient sur le Niveau 1 si l'onglet ouvert n'existe pas pour elle.
   useEffect(() => {
-    if (isSoft && !["niveau1", "gallery", "ai"].includes(activeTab)) setActiveTab("niveau1");
+    if ((isSoft || isHot) && !["niveau1", "gallery", "ai"].includes(activeTab)) setActiveTab("niveau1");
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [form.type]);
 
@@ -446,7 +449,7 @@ export function DrinkDetailPanel({ drink, onClose, onSaved, myUserId }) {
   // dans l'ordre de sélection : le compteur de l'en-tête et la ligne d'étiquettes au-dessus du champ.
   const softOwnedStyles = isSoft ? form.styles.filter((c) => softStyleOwner(c) === form.beverageSubtype) : [];
   const softStyleChips = { codes: softOwnedStyles, ariaLabel: "Styles sélectionnés" };
-  // Pareil pour une boisson chaude (Café pour l'instant) : ses styles seulement, et la même ligne d'étiquettes.
+  // Pareil pour une boisson chaude : les styles de sa sous-catégorie seulement, et la même ligne d'étiquettes.
   const hotOwnedStyles = isHot ? form.styles.filter((c) => hotStyleOwner(c) === form.beverageSubtype) : [];
   const hotStyleChips = { codes: hotOwnedStyles, ariaLabel: "Styles sélectionnés" };
   const toggleArrayField = (field, value) => setForm((f) => ({ ...f, [field]: f[field].includes(value) ? f[field].filter((v) => v !== value) : [...f[field], value] }));
@@ -471,14 +474,16 @@ export function DrinkDetailPanel({ drink, onClose, onSaved, myUserId }) {
       duplicateOfId: status === "duplicate" ? duplicateOfId : null,
       isGeneric,
     };
-    if (isSoft) {
-      // Softs & Eaux : seulement ce que la fiche propose pour l'instant (Niveau 1 + Médias). Niveau 2 et
-      // Statistiques sont grisés, le degré d'alcool aussi (renvoyé tel quel via « base », sans modification).
+    if (isSoft || isHot) {
+      // Softs & Eaux et Boissons chaudes : seulement ce que la fiche propose pour l'instant (Niveau 1 + Médias). Niveau 2 et
+      // Statistiques sont grisés. Le degré d'alcool, lui, passe par « base » : grisé (renvoyé tel quel) pour les Softs & Eaux,
+      // modifiable pour les Boissons chaudes (le Hot Mix a une base alcoolisée).
       return {
         ...base,
         beverageSubtype: form.beverageSubtype || null,
-        // Styles : ceux de la sous-catégorie choisie (Eau pour l'instant) ; ceux d'une autre sous-catégorie de Softs & Eaux sont retirés.
-        styles: stylesForSoftSubtype(form.styles, form.beverageSubtype),
+        // Styles : ceux de la sous-catégorie choisie ; ceux d'une AUTRE sous-catégorie de la même catégorie, restés cochés
+        // après un changement de sous-catégorie, sont retirés.
+        styles: isHot ? stylesForHotSubtype(form.styles, form.beverageSubtype) : stylesForSoftSubtype(form.styles, form.beverageSubtype),
         defaultVolumeCl: form.defaultVolumeCl === "" ? null : parseFloat(form.defaultVolumeCl),
         defaultServingMode: form.defaultServingMode || null,
         defaultPriceEuro: form.defaultPriceEuro === "" ? null : parseFloat(form.defaultPriceEuro),
@@ -497,9 +502,6 @@ export function DrinkDetailPanel({ drink, onClose, onSaved, myUserId }) {
         galleryPhotos,
       };
     }
-    // Boissons chaudes : la fiche minimale, plus la sous-catégorie et ses styles (ceux d'une AUTRE sous-catégorie de Boissons
-    // chaudes, restés cochés après un changement de sous-catégorie, sont retirés).
-    if (isHot) return { ...base, beverageSubtype: form.beverageSubtype || null, styles: stylesForHotSubtype(form.styles, form.beverageSubtype) };
     // isBeerOrCider ne couvrait QUE les bières/cidres — les vins tombaient dans le "base" minimal
     // ci-dessus, sans jamais envoyer couleur, pays, appellation, cépage, ni même la photo. C'est
     // la cause du vrai défaut : rien de tout cela n'était jamais enregistré pour un vin.
@@ -790,16 +792,16 @@ export function DrinkDetailPanel({ drink, onClose, onSaved, myUserId }) {
         <label style={labelStyle}>Nom du produit *</label>
         <input value={form.name} onChange={(e) => set("name", e.target.value)} style={{ ...fieldStyle, marginBottom: "14px" }} />
 
-        {isBeerOrCider || isWine || isSpirit || isSoft ? (
+        {isBeerOrCider || isWine || isSpirit || isSoft || isHot ? (
           <>
             <div style={{ display: "flex", flexWrap: "wrap", gap: "4px", marginBottom: "18px", borderBottom: "2px solid #28405C" }}>
-              {(isSoft
+              {(isSoft || isHot
                 ? [
-                    // Softs & Eaux : 5 onglets. Niveau 2 et Statistiques sont déjà là mais grisés, en attendant leur contenu.
+                    // Softs & Eaux et Boissons chaudes : 5 onglets. Niveau 2 et Statistiques sont déjà là mais grisés, en attendant leur contenu.
                     { key: "niveau1", label: "Niveau 1" },
-                    { key: "niveau2", label: "Niveau 2 (expert)", disabled: true, disabledTitle: SOFT_COMING_SOON_TITLE },
+                    { key: "niveau2", label: "Niveau 2 (expert)", disabled: true, disabledTitle: comingSoonTitle },
                     { key: "gallery", label: "Médias" },
-                    { key: "stats", label: "Statistiques", disabled: true, disabledTitle: SOFT_COMING_SOON_TITLE },
+                    { key: "stats", label: "Statistiques", disabled: true, disabledTitle: comingSoonTitle },
                     { key: "ai", label: null, disabled: isNew },
                   ]
                 : [
@@ -1001,7 +1003,7 @@ export function DrinkDetailPanel({ drink, onClose, onSaved, myUserId }) {
                   value={form.abv}
                   onChange={(e) => set("abv", e.target.value)}
                   disabled={isSoft}
-                  title={isSoft ? SOFT_COMING_SOON_TITLE : undefined}
+                  title={isSoft ? comingSoonTitle : undefined}
                   placeholder={isSoft ? "—" : "Ex. 0.0 pour sans alcool"}
                   style={isSoft ? { ...fieldStyle, ...greyedFieldStyle } : fieldStyle}
                 />
@@ -1073,7 +1075,13 @@ export function DrinkDetailPanel({ drink, onClose, onSaved, myUserId }) {
               <span style={{ ...sectionTitleStyle, marginTop: 0, marginBottom: 0 }}>
                 <span style={{ width: "4px", height: "14px", background: "#39FF66", borderRadius: "2px", display: "inline-block" }} />
                 {isWine ? "Caractéristiques" : "Style(s)"}
-                {!isSoft && form.styles.length > 0 && <span style={{ color: "#8792A6", fontWeight: 500 }}> ({form.styles.length} sélectionné{form.styles.length > 1 ? "s" : ""})</span>}
+                {!isSoft && !isHot && form.styles.length > 0 && <span style={{ color: "#8792A6", fontWeight: 500 }}> ({form.styles.length} sélectionné{form.styles.length > 1 ? "s" : ""})</span>}
+                {isHot && HOT_STYLE_LISTS[form.beverageSubtype] && hotOwnedStyles.length > 0 && (
+                  <span style={{ color: "#8792A6", fontWeight: 500 }}>
+                    {" "}
+                    ({hotOwnedStyles.length} sélectionné{hotOwnedStyles.length > 1 ? "s" : ""})
+                  </span>
+                )}
                 {isSoft && SOFT_STYLE_LISTS[form.beverageSubtype] && softOwnedStyles.length > 0 && (
                   <span style={{ color: "#8792A6", fontWeight: 500 }}>
                     {" "}
@@ -1116,7 +1124,24 @@ export function DrinkDetailPanel({ drink, onClose, onSaved, myUserId }) {
             {stylesSectionOpen && isSoft && !SOFT_STYLE_LISTS[form.beverageSubtype] && (
               <p style={{ fontSize: "12.5px", color: "#8792A6", fontStyle: "italic", margin: 0 }}>Choisissez d'abord une sous-catégorie.</p>
             )}
-            {stylesSectionOpen && !isSoft && (
+            {stylesSectionOpen && isHot && HOT_STYLE_LISTS[form.beverageSubtype] && (
+              <>
+                <p style={{ fontSize: "11.5px", color: "#8792A6", marginTop: "-6px", marginBottom: "10px" }}>Plusieurs styles peuvent se cumuler.</p>
+                <GroupedListField
+                  key={form.beverageSubtype}
+                  list={HOT_STYLE_LISTS[form.beverageSubtype]}
+                  chips={hotStyleChips}
+                  selected={form.styles}
+                  onToggle={toggleStyle}
+                  onAdded={softStyleAdded}
+                  onDeleted={softStyleDeleted}
+                />
+              </>
+            )}
+            {stylesSectionOpen && isHot && !HOT_STYLE_LISTS[form.beverageSubtype] && (
+              <p style={{ fontSize: "12.5px", color: "#8792A6", fontStyle: "italic", margin: 0 }}>Choisissez d'abord une sous-catégorie.</p>
+            )}
+            {stylesSectionOpen && !isSoft && !isHot && (
               <>
                 <p style={{ fontSize: "11.5px", color: "#8792A6", marginTop: "-6px", marginBottom: "10px" }}>
                   {isWine ? "Plusieurs caractéristiques peuvent se cumuler." : "Plusieurs styles peuvent se cumuler (ex. IPA + Hazy + Double IPA)."}
@@ -1928,54 +1953,8 @@ export function DrinkDetailPanel({ drink, onClose, onSaved, myUserId }) {
           </>
         ) : (
           <>
-            {isHot && HOT_STYLE_LISTS[form.beverageSubtype] && (
-              <div style={{ marginBottom: "14px" }}>
-                <button
-                  onClick={() => setStylesSectionOpen((o) => !o)}
-                  style={{
-                    width: "100%",
-                    display: "flex",
-                    justifyContent: "space-between",
-                    alignItems: "center",
-                    background: "none",
-                    border: "none",
-                    cursor: "pointer",
-                    padding: 0,
-                    marginBottom: stylesSectionOpen ? "12px" : 0,
-                  }}
-                >
-                  <span style={{ ...sectionTitleStyle, marginTop: 0, marginBottom: 0 }}>
-                    <span style={{ width: "4px", height: "14px", background: "#39FF66", borderRadius: "2px", display: "inline-block" }} />
-                    Style(s)
-                    {hotOwnedStyles.length > 0 && (
-                      <span style={{ color: "#8792A6", fontWeight: 500 }}>
-                        {" "}
-                        ({hotOwnedStyles.length} sélectionné{hotOwnedStyles.length > 1 ? "s" : ""})
-                      </span>
-                    )}
-                  </span>
-                  <span style={{ color: "#39FF66", fontSize: "12px" }}>{stylesSectionOpen ? "▼" : "▶"}</span>
-                </button>
-                {stylesSectionOpen && (
-                  <>
-                    <p style={{ fontSize: "11.5px", color: "#8792A6", marginTop: "-6px", marginBottom: "10px" }}>Plusieurs styles peuvent se cumuler.</p>
-                    <GroupedListField
-                      key={form.beverageSubtype}
-                      list={HOT_STYLE_LISTS[form.beverageSubtype]}
-                      chips={hotStyleChips}
-                      selected={form.styles}
-                      onToggle={toggleStyle}
-                      onAdded={softStyleAdded}
-                      onDeleted={softStyleDeleted}
-                    />
-                  </>
-                )}
-              </div>
-            )}
             <p style={{ background: "#16273D", borderRadius: "8px", padding: "12px", fontSize: "12.5px", color: "#8792A6", marginBottom: "14px" }}>
-              {isHot
-                ? "La fiche détaillée pour cette catégorie n'est pas encore construite — seuls le nom, la sous-catégorie et les styles du Café, du Thé, de l'Infusion, du Hot Milk, de la Soupe, du Hot Mix et des Céréales & Chicorée sont disponibles pour l'instant."
-                : "La fiche détaillée pour cette catégorie n'est pas encore construite — seuls le nom, le degré et l'énergie sont disponibles pour l'instant."}
+              La fiche détaillée pour cette catégorie n'est pas encore construite — seuls le nom, le degré et l'énergie sont disponibles pour l'instant.
             </p>
           </>
         )}
