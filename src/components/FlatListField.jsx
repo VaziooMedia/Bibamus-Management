@@ -1,5 +1,6 @@
 import React, { useMemo } from "react";
 import { FlatListEditor } from "./FlatListEditor.jsx";
+import { SelectedListChips } from "./SelectedListChips.jsx";
 import { useCustomListItems } from "./useCustomListItems.js";
 import { useCustomListOrder } from "./useCustomListOrder.js";
 import { orderedItems } from "../data/customLists.js";
@@ -43,8 +44,10 @@ export const listSource = (list) => SOURCES[list.source] || PRODUCT_SOURCE;
 //   compact      : faux pour les étiquettes de la fiche lieu (voir FlatListEditor)
 //   onAdded(item): un élément vient d'être ajouté (le parent le sélectionne pour ce produit)
 //   onDeleted(code): un élément vient d'être supprimé (le parent le retire de ce produit)
+//   chips        : { codes, ariaLabel } pour montrer les éléments cochés sur une ligne au-dessus du champ (facultatif)
+//   framed       : encadre le champ lui-même (les étiquettes cochées restent au-dessus du cadre)
 //   labelStyle, fieldStyle : styles de la fiche
-export function FlatListField({ list, label, variant, compact, value, selected, onChange, onToggle, onAdded, onDeleted, labelStyle, fieldStyle }) {
+export function FlatListField({ list, label, variant, compact, value, selected, onChange, onToggle, onAdded, onDeleted, chips, framed, labelStyle, fieldStyle }) {
   const [custom, setCustom, loaded] = useCustomListItems(list.key);
   const [order, setOrder] = useCustomListOrder(list.key, !!list.orderable);
   const items = useMemo(() => orderedItems(list, custom, order), [list, custom, order]);
@@ -52,9 +55,8 @@ export function FlatListField({ list, label, variant, compact, value, selected, 
   const isSelect = variant === "select";
   const unknownValue = isSelect && value && !items.some((t) => t.code === value);
 
-  return (
-    <div>
-      {label && <label style={labelStyle}>{label}</label>}
+  const field = (
+    <>
       {isSelect && (
         <select value={value} onChange={(e) => onChange(e.target.value)} style={fieldStyle}>
           <option value="">—</option>
@@ -85,6 +87,14 @@ export function FlatListField({ list, label, variant, compact, value, selected, 
         onCount={(code) => source.count(list.key, code)}
         onDelete={(item) => source.remove(list.key, item)}
       />
+    </>
+  );
+
+  return (
+    <div>
+      {label && <label style={labelStyle}>{label}</label>}
+      {chips && <SelectedListChips list={list} custom={custom} ready={loaded} codes={chips.codes} ariaLabel={chips.ariaLabel} />}
+      {framed ? <div style={{ border: "2px solid #28405C", borderRadius: "8px", padding: "12px" }}>{field}</div> : field}
     </div>
   );
 }

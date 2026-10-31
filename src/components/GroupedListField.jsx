@@ -1,5 +1,6 @@
 import React from "react";
 import { GroupedListPicker } from "./GroupedListPicker.jsx";
+import { SelectedListChips } from "./SelectedListChips.jsx";
 import { useCustomListItems } from "./useCustomListItems.js";
 import { listSource } from "./FlatListField.jsx";
 import { createCustomListItem, saveCustomListItem } from "../data/sharedDirectories.js";
@@ -12,22 +13,26 @@ import { createCustomListItem, saveCustomListItem } from "../data/sharedDirector
 //   selected       : codes sélectionnés pour ce produit ; onToggle(code)
 //   onAdded(item)  : un élément vient d'être ajouté (le parent le sélectionne pour ce produit)
 //   onDeleted(code): un élément vient d'être supprimé (le parent le retire de ce produit)
-export function GroupedListField({ list, selected, onToggle, onAdded, onDeleted }) {
-  const [custom, setCustom] = useCustomListItems(list.key);
+//   chips          : { codes, ariaLabel } pour montrer les éléments cochés sur une ligne au-dessus de la recherche (facultatif)
+export function GroupedListField({ list, selected, onToggle, onAdded, onDeleted, chips }) {
+  const [custom, setCustom, loaded] = useCustomListItems(list.key);
   const source = listSource(list);
   return (
-    <GroupedListPicker
-      list={list}
-      custom={custom}
-      onCustomChange={setCustom}
-      selected={selected}
-      onToggle={onToggle}
-      onAdded={onAdded}
-      onDeleted={onDeleted}
-      onCreate={(item) => createCustomListItem(list.key, item)}
-      onSave={(item) => saveCustomListItem(list.key, item)}
-      onCount={(code) => source.count(list.key, code)}
-      onDelete={(item) => source.remove(list.key, item)}
-    />
+    <>
+      {chips && <SelectedListChips list={list} custom={custom} ready={loaded} codes={chips.codes} ariaLabel={chips.ariaLabel} />}
+      <GroupedListPicker
+        list={list}
+        custom={custom}
+        onCustomChange={setCustom}
+        selected={selected}
+        onToggle={onToggle}
+        onAdded={onAdded}
+        onDeleted={onDeleted}
+        onCreate={(item) => createCustomListItem(list.key, item)}
+        onSave={(item) => saveCustomListItem(list.key, item)}
+        onCount={(code) => source.count(list.key, code)}
+        onDelete={(item) => source.remove(list.key, item)}
+      />
+    </>
   );
 }

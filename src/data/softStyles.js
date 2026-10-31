@@ -1,9 +1,9 @@
 // Styles des Softs & Eaux. Une sous-catégorie (voir SOFT_SUBTYPES) peut avoir sa propre liste de styles : pour l'instant
-// l'Eau (une liste plate), le Soda (trois groupes) et le Jus (quatre groupes). Le style d'un produit est rangé dans la
-// même colonne que ceux des bières et des vins (drinks_directory.styles, une liste de codes) : pour que les codes de deux
-// familles ne puissent jamais se confondre, ceux d'une sous-catégorie commencent par son préfixe (« eau_… », « soda_… »,
-// « jus_… »), et ceux qu'on y ajoute à la main par « perso_ » + ce préfixe (« perso_eau_… », voir `codePrefix` dans
-// customLists.js).
+// l'Eau (une liste plate), le Soda (trois groupes), le Jus et Energy (quatre groupes chacun). Le style d'un produit est
+// rangé dans la même colonne que ceux des bières et des vins (drinks_directory.styles, une liste de codes) : pour que les
+// codes de deux familles ne puissent jamais se confondre, ceux d'une sous-catégorie commencent par son préfixe (« eau_… »,
+// « soda_… », « jus_… », « energy_… »), et ceux qu'on y ajoute à la main par « perso_ » + ce préfixe (« perso_eau_… », voir
+// `codePrefix` dans customLists.js).
 
 // Eau : les cinq styles de départ (noms tels que donnés, en anglais). Comme toute liste modifiable, on peut les
 // renommer, les supprimer, et en ajouter depuis la fiche produit.
@@ -137,10 +137,76 @@ export const JUICE_STYLE_GROUPS = [
   },
 ];
 
+// Energy : quatre classifications, rangées en groupes (comme le Soda et le Jus). Noms tels que donnés, en anglais ; les titres des
+// groupes sont ceux donnés. On peut les renommer, les supprimer, changer de groupe et en ajouter depuis la fiche produit.
+export const ENERGY_STYLE_GROUPS = [
+  {
+    title: "Gazéification",
+    tags: [
+      { code: "energy_still", fr: "Still" },
+      { code: "energy_lightly_sparkling", fr: "Lightly Sparkling" },
+      { code: "energy_sparkling", fr: "Sparkling" },
+    ],
+  },
+  {
+    title: "Types de boissons",
+    tags: [
+      { code: "energy_classic_energy", fr: "Classic Energy" },
+      { code: "energy_energy_shot", fr: "Energy Shot" },
+      { code: "energy_juice_energy", fr: "Juice Energy" },
+      { code: "energy_tea_energy", fr: "Tea Energy" },
+      { code: "energy_coffee_energy", fr: "Coffee Energy" },
+      { code: "energy_mate_energy", fr: "Mate Energy" },
+    ],
+  },
+  {
+    title: "Saveurs fruitées",
+    tags: [
+      { code: "energy_lemon", fr: "Lemon" },
+      { code: "energy_lime", fr: "Lime" },
+      { code: "energy_lemon_lime", fr: "Lemon-Lime" },
+      { code: "energy_orange", fr: "Orange" },
+      { code: "energy_grapefruit", fr: "Grapefruit" },
+      { code: "energy_apple", fr: "Apple" },
+      { code: "energy_peach", fr: "Peach" },
+      { code: "energy_apricot", fr: "Apricot" },
+      { code: "energy_mango", fr: "Mango" },
+      { code: "energy_pineapple", fr: "Pineapple" },
+      { code: "energy_passion_fruit", fr: "Passion Fruit" },
+      { code: "energy_watermelon", fr: "Watermelon" },
+      { code: "energy_strawberry", fr: "Strawberry" },
+      { code: "energy_raspberry", fr: "Raspberry" },
+      { code: "energy_cherry", fr: "Cherry" },
+      { code: "energy_blueberry", fr: "Blueberry" },
+      { code: "energy_coconut", fr: "Coconut" },
+      { code: "energy_tropical", fr: "Tropical" },
+      { code: "energy_exotic", fr: "Exotic" },
+      { code: "energy_mixed_berry", fr: "Mixed Berry" },
+      { code: "energy_mixed_fruit", fr: "Mixed Fruit" },
+    ],
+  },
+  {
+    title: "Autres saveurs",
+    tags: [
+      { code: "energy_ginger", fr: "Ginger" },
+      { code: "energy_vanilla", fr: "Vanilla" },
+      { code: "energy_caramel", fr: "Caramel" },
+      { code: "energy_coffee", fr: "Coffee" },
+      { code: "energy_cola", fr: "Cola" },
+      { code: "energy_mint", fr: "Mint" },
+      { code: "energy_elderflower", fr: "Elderflower" },
+      { code: "energy_hibiscus", fr: "Hibiscus" },
+      { code: "energy_herbal", fr: "Herbal" },
+      { code: "energy_botanical", fr: "Botanical" },
+      { code: "energy_candy", fr: "Candy" },
+    ],
+  },
+];
+
 // Les sous-catégories de Softs & Eaux qui ont une liste de styles, avec le préfixe des codes de leurs styles. Le préfixe est le
 // code de la sous-catégorie, sauf pour le Jus : sa sous-catégorie s'appelle toujours « jus_de_fruits » en base (seul son nom
 // affiché est devenu « Jus »), mais ses styles s'appellent « jus_… ».
-export const SOFT_STYLE_PREFIXES = { eau: "eau", soda: "soda", jus_de_fruits: "jus" };
+export const SOFT_STYLE_PREFIXES = { eau: "eau", soda: "soda", jus_de_fruits: "jus", energy: "energy" };
 export const SOFT_STYLE_SUBTYPES = Object.keys(SOFT_STYLE_PREFIXES);
 
 // La sous-catégorie à laquelle appartient un code de style de Softs & Eaux, ou null si ce n'est pas un de leurs codes
