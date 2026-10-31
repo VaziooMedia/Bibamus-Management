@@ -464,9 +464,123 @@ export const HOT_MILK_STYLE_GROUPS = [
   },
 ];
 
+// Soupe : six classifications (Types de soupes, Présentation commerciale, Légumes & Saveurs végétales, Viandes, poissons & autres
+// saveurs, Texture & Profil gustatif, Garnitures & Ingrédients complémentaires), rangées en groupes comme celles du Café, du Thé,
+// de l'Infusion et du Hot Milk. Noms tels que donnés, en anglais. Codes « soupe_… » (« perso_soupe_… » pour un ajout à la main) ;
+// comme Mushroom, Herbal et Spicy existent dans deux groupes, les codes du groupe « Viandes, poissons & autres saveurs » portent en
+// plus « saveur_ » (« soupe_saveur_… ») pour rester uniques. Comme toute liste modifiable, on peut renommer, supprimer, changer de
+// groupe et ajouter depuis la fiche produit.
+export const SOUP_STYLE_GROUPS = [
+  {
+    title: "Types de soupes",
+    tags: [
+      { code: "soupe_instant_soup", fr: "Instant Soup" },
+      { code: "soupe_cup_soup", fr: "Cup Soup" },
+      { code: "soupe_cream_soup", fr: "Cream Soup" },
+      { code: "soupe_broth", fr: "Broth" },
+      { code: "soupe_bouillon", fr: "Bouillon" },
+      { code: "soupe_consomme", fr: "Consommé" },
+      { code: "soupe_vegetable_soup", fr: "Vegetable Soup" },
+      { code: "soupe_meat_soup", fr: "Meat Soup" },
+      { code: "soupe_fish_soup", fr: "Fish Soup" },
+      { code: "soupe_noodle_soup", fr: "Noodle Soup" },
+      { code: "soupe_miso_soup", fr: "Miso Soup" },
+      { code: "soupe_puree_soup", fr: "Purée Soup" },
+      { code: "soupe_drinking_soup", fr: "Drinking Soup" },
+    ],
+  },
+  {
+    title: "Présentation commerciale",
+    tags: [
+      { code: "soupe_powdered", fr: "Powdered" },
+      { code: "soupe_instant", fr: "Instant" },
+      { code: "soupe_sachet", fr: "Sachet" },
+      { code: "soupe_cup", fr: "Cup" },
+      { code: "soupe_ready_to_drink", fr: "Ready to Drink" },
+      { code: "soupe_concentrate", fr: "Concentrate" },
+      { code: "soupe_liquid", fr: "Liquid" },
+      { code: "soupe_cube", fr: "Cube" },
+      { code: "soupe_paste", fr: "Paste" },
+    ],
+  },
+  {
+    title: "Légumes & Saveurs végétales",
+    tags: [
+      { code: "soupe_tomato", fr: "Tomato" },
+      { code: "soupe_carrot", fr: "Carrot" },
+      { code: "soupe_pumpkin", fr: "Pumpkin" },
+      { code: "soupe_butternut_squash", fr: "Butternut Squash" },
+      { code: "soupe_leek", fr: "Leek" },
+      { code: "soupe_onion", fr: "Onion" },
+      { code: "soupe_garlic", fr: "Garlic" },
+      { code: "soupe_mushroom", fr: "Mushroom" },
+      { code: "soupe_potato", fr: "Potato" },
+      { code: "soupe_celery", fr: "Celery" },
+      { code: "soupe_broccoli", fr: "Broccoli" },
+      { code: "soupe_cauliflower", fr: "Cauliflower" },
+      { code: "soupe_spinach", fr: "Spinach" },
+      { code: "soupe_pea", fr: "Pea" },
+      { code: "soupe_asparagus", fr: "Asparagus" },
+      { code: "soupe_zucchini", fr: "Zucchini" },
+      { code: "soupe_bell_pepper", fr: "Bell Pepper" },
+      { code: "soupe_sweet_corn", fr: "Sweet Corn" },
+      { code: "soupe_lentil", fr: "Lentil" },
+      { code: "soupe_mixed_vegetables", fr: "Mixed Vegetables" },
+    ],
+  },
+  {
+    title: "Viandes, poissons & autres saveurs",
+    tags: [
+      { code: "soupe_saveur_chicken", fr: "Chicken" },
+      { code: "soupe_saveur_beef", fr: "Beef" },
+      { code: "soupe_saveur_pork", fr: "Pork" },
+      { code: "soupe_saveur_turkey", fr: "Turkey" },
+      { code: "soupe_saveur_fish", fr: "Fish" },
+      { code: "soupe_saveur_seafood", fr: "Seafood" },
+      { code: "soupe_saveur_shrimp", fr: "Shrimp" },
+      { code: "soupe_saveur_miso", fr: "Miso" },
+      { code: "soupe_saveur_mushroom", fr: "Mushroom" },
+      { code: "soupe_saveur_cheese", fr: "Cheese" },
+      { code: "soupe_saveur_cream", fr: "Cream" },
+      { code: "soupe_saveur_curry", fr: "Curry" },
+      { code: "soupe_saveur_ginger", fr: "Ginger" },
+      { code: "soupe_saveur_herbal", fr: "Herbal" },
+      { code: "soupe_saveur_spicy", fr: "Spicy" },
+      { code: "soupe_saveur_smoky", fr: "Smoky" },
+    ],
+  },
+  {
+    title: "Texture & Profil gustatif",
+    tags: [
+      { code: "soupe_clear", fr: "Clear" },
+      { code: "soupe_creamy", fr: "Creamy" },
+      { code: "soupe_smooth", fr: "Smooth" },
+      { code: "soupe_thick", fr: "Thick" },
+      { code: "soupe_chunky", fr: "Chunky" },
+      { code: "soupe_velvety", fr: "Velvety" },
+      { code: "soupe_rich", fr: "Rich" },
+      { code: "soupe_light", fr: "Light" },
+      { code: "soupe_savory", fr: "Savory" },
+      { code: "soupe_umami", fr: "Umami" },
+      { code: "soupe_mild", fr: "Mild" },
+      { code: "soupe_spicy", fr: "Spicy" },
+      { code: "soupe_peppery", fr: "Peppery" },
+      { code: "soupe_tangy", fr: "Tangy" },
+      { code: "soupe_herbal", fr: "Herbal" },
+    ],
+  },
+  {
+    title: "Garnitures & Ingrédients complémentaires",
+    tags: [
+      { code: "soupe_croutons", fr: "Croutons" },
+      { code: "soupe_vermicelli", fr: "Vermicelli" },
+    ],
+  },
+];
+
 // Les sous-catégories de Boissons chaudes qui ont une liste de styles, avec le préfixe des codes de leurs styles (ici le
 // code de la sous-catégorie).
-export const HOT_STYLE_PREFIXES = { cafe: "cafe", the: "the", infusion: "infusion", hot_milk: "hot_milk" };
+export const HOT_STYLE_PREFIXES = { cafe: "cafe", the: "the", infusion: "infusion", hot_milk: "hot_milk", soupe: "soupe" };
 export const HOT_STYLE_SUBTYPES = Object.keys(HOT_STYLE_PREFIXES);
 
 // La sous-catégorie à laquelle appartient un code de style de Boissons chaudes, ou null si ce n'est pas un de leurs codes
