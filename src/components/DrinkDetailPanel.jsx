@@ -113,6 +113,7 @@ export const HOT_SUBTYPES = [
 ];
 const SOFT_COMING_SOON_TITLE = "Pas encore disponible pour les Softs & Eaux";
 const HOT_COMING_SOON_TITLE = "Pas encore disponible pour les Boissons chaudes";
+const COCKTAIL_COMING_SOON_TITLE = "Pas encore disponible pour les Cocktails / Mocktails";
 // Champ grisé (non modifiable pour l'instant) : même teinte que les onglets désactivés.
 const greyedFieldStyle = { opacity: 0.45, cursor: "not-allowed" };
 
@@ -296,8 +297,8 @@ export function DrinkDetailPanel({ drink, onClose, onSaved, myUserId }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [status]);
   const [stylesSectionOpen, setStylesSectionOpen] = useState(true);
-  // Softs & Eaux et Boissons chaudes : pas d'onglet « Ajout rapide », la fiche s'ouvre directement sur le Niveau 1.
-  const [activeTab, setActiveTab] = useState(drink?.type === "softs_eaux" || drink?.type === "boissons_chaudes" ? "niveau1" : "quick");
+  // Softs & Eaux, Boissons chaudes et Cocktails / Mocktails : pas d'onglet « Ajout rapide », la fiche s'ouvre directement sur le Niveau 1.
+  const [activeTab, setActiveTab] = useState(drink?.type === "softs_eaux" || drink?.type === "boissons_chaudes" || drink?.type === "cocktails_mocktails" ? "niveau1" : "quick");
   const [aiProposals, setAiProposals] = useState(null);
   const [requestingAI, setRequestingAI] = useState(false);
   const [aiError, setAiError] = useState(null);
@@ -399,8 +400,9 @@ export function DrinkDetailPanel({ drink, onClose, onSaved, myUserId }) {
   const isSpirit = form.type === "spiritueux";
   const isSoft = form.type === "softs_eaux";
   const isHot = form.type === "boissons_chaudes";
+  const isCocktail = form.type === "cocktails_mocktails";
   // Info-bulle des onglets et champs grisés « pas encore disponible », selon la catégorie.
-  const comingSoonTitle = isHot ? HOT_COMING_SOON_TITLE : SOFT_COMING_SOON_TITLE;
+  const comingSoonTitle = isHot ? HOT_COMING_SOON_TITLE : isCocktail ? COCKTAIL_COMING_SOON_TITLE : SOFT_COMING_SOON_TITLE;
   const isBeer = form.beverageSubtype === "biere";
   const visibleGrapeVarietyOptions = grapeVarietyOptions.filter((v) => !v.sparklingOnly || form.beverageSubtype === "vin_effervescent");
 
@@ -422,10 +424,10 @@ export function DrinkDetailPanel({ drink, onClose, onSaved, myUserId }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [form.type]);
 
-  // Softs & Eaux et Boissons chaudes n'ont pas d'onglet « Ajout rapide », ni de Niveau 2 ou Statistiques utilisables : en passant
-  // un produit dans l'une de ces catégories, on revient sur le Niveau 1 si l'onglet ouvert n'existe pas pour elle.
+  // Softs & Eaux, Boissons chaudes et Cocktails / Mocktails n'ont pas d'onglet « Ajout rapide », ni de Niveau 2 ou Statistiques utilisables :
+  // en passant un produit dans l'une de ces catégories, on revient sur le Niveau 1 si l'onglet ouvert n'existe pas pour elle.
   useEffect(() => {
-    if ((isSoft || isHot) && !["niveau1", "gallery", "ai"].includes(activeTab)) setActiveTab("niveau1");
+    if ((isSoft || isHot || isCocktail) && !["niveau1", "gallery", "ai"].includes(activeTab)) setActiveTab("niveau1");
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [form.type]);
 
@@ -474,16 +476,18 @@ export function DrinkDetailPanel({ drink, onClose, onSaved, myUserId }) {
       duplicateOfId: status === "duplicate" ? duplicateOfId : null,
       isGeneric,
     };
-    if (isSoft || isHot) {
-      // Softs & Eaux et Boissons chaudes : seulement ce que la fiche propose pour l'instant (Niveau 1 + Médias). Niveau 2 et
-      // Statistiques sont grisés. Le degré d'alcool, lui, passe par « base » : grisé (renvoyé tel quel) pour les Softs & Eaux,
-      // modifiable pour les Boissons chaudes (le Hot Mix a une base alcoolisée).
+    if (isSoft || isHot || isCocktail) {
+      // Softs & Eaux, Boissons chaudes et Cocktails / Mocktails : seulement ce que la fiche propose pour l'instant (Niveau 1 + Médias).
+      // Niveau 2 et Statistiques sont grisés. Le degré d'alcool, lui, passe par « base » : grisé (renvoyé tel quel) pour les Softs & Eaux,
+      // modifiable pour les Boissons chaudes (le Hot Mix a une base alcoolisée) et les Cocktails / Mocktails.
       return {
         ...base,
-        beverageSubtype: form.beverageSubtype || null,
+        // Cocktails / Mocktails : ni sous-catégorie ni styles pour l'instant (pas de liste) — la sous-catégorie est vidée (null),
+        // les styles ne sont pas touchés.
+        beverageSubtype: isCocktail ? null : form.beverageSubtype || null,
         // Styles : ceux de la sous-catégorie choisie ; ceux d'une AUTRE sous-catégorie de la même catégorie, restés cochés
         // après un changement de sous-catégorie, sont retirés.
-        styles: isHot ? stylesForHotSubtype(form.styles, form.beverageSubtype) : stylesForSoftSubtype(form.styles, form.beverageSubtype),
+        ...(isCocktail ? {} : { styles: isHot ? stylesForHotSubtype(form.styles, form.beverageSubtype) : stylesForSoftSubtype(form.styles, form.beverageSubtype) }),
         defaultVolumeCl: form.defaultVolumeCl === "" ? null : parseFloat(form.defaultVolumeCl),
         defaultServingMode: form.defaultServingMode || null,
         defaultPriceEuro: form.defaultPriceEuro === "" ? null : parseFloat(form.defaultPriceEuro),
@@ -792,12 +796,12 @@ export function DrinkDetailPanel({ drink, onClose, onSaved, myUserId }) {
         <label style={labelStyle}>Nom du produit *</label>
         <input value={form.name} onChange={(e) => set("name", e.target.value)} style={{ ...fieldStyle, marginBottom: "14px" }} />
 
-        {isBeerOrCider || isWine || isSpirit || isSoft || isHot ? (
+        {isBeerOrCider || isWine || isSpirit || isSoft || isHot || isCocktail ? (
           <>
             <div style={{ display: "flex", flexWrap: "wrap", gap: "4px", marginBottom: "18px", borderBottom: "2px solid #28405C" }}>
-              {(isSoft || isHot
+              {(isSoft || isHot || isCocktail
                 ? [
-                    // Softs & Eaux et Boissons chaudes : 5 onglets. Niveau 2 et Statistiques sont déjà là mais grisés, en attendant leur contenu.
+                    // Softs & Eaux, Boissons chaudes et Cocktails / Mocktails : 5 onglets. Niveau 2 et Statistiques sont déjà là mais grisés, en attendant leur contenu.
                     { key: "niveau1", label: "Niveau 1" },
                     { key: "niveau2", label: "Niveau 2 (expert)", disabled: true, disabledTitle: comingSoonTitle },
                     { key: "gallery", label: "Médias" },
@@ -1057,40 +1061,44 @@ export function DrinkDetailPanel({ drink, onClose, onSaved, myUserId }) {
                 <input type="number" step="1" value={form.defaultPriceJeton} onChange={(e) => set("defaultPriceJeton", e.target.value)} placeholder="Ex. 1" style={fieldStyle} />
               </div>
             </div>
-            <div style={separatorStyle} />
-            <button
-              onClick={() => setStylesSectionOpen((o) => !o)}
-              style={{
-                width: "100%",
-                display: "flex",
-                justifyContent: "space-between",
-                alignItems: "center",
-                background: "none",
-                border: "none",
-                cursor: "pointer",
-                padding: 0,
-                marginBottom: stylesSectionOpen ? "12px" : 0,
-              }}
-            >
-              <span style={{ ...sectionTitleStyle, marginTop: 0, marginBottom: 0 }}>
-                <span style={{ width: "4px", height: "14px", background: "#39FF66", borderRadius: "2px", display: "inline-block" }} />
-                {isWine ? "Caractéristiques" : "Style(s)"}
-                {!isSoft && !isHot && form.styles.length > 0 && <span style={{ color: "#8792A6", fontWeight: 500 }}> ({form.styles.length} sélectionné{form.styles.length > 1 ? "s" : ""})</span>}
-                {isHot && HOT_STYLE_LISTS[form.beverageSubtype] && hotOwnedStyles.length > 0 && (
-                  <span style={{ color: "#8792A6", fontWeight: 500 }}>
-                    {" "}
-                    ({hotOwnedStyles.length} sélectionné{hotOwnedStyles.length > 1 ? "s" : ""})
-                  </span>
-                )}
-                {isSoft && SOFT_STYLE_LISTS[form.beverageSubtype] && softOwnedStyles.length > 0 && (
-                  <span style={{ color: "#8792A6", fontWeight: 500 }}>
-                    {" "}
-                    ({softOwnedStyles.length} sélectionné{softOwnedStyles.length > 1 ? "s" : ""})
-                  </span>
-                )}
-              </span>
-              <span style={{ color: "#39FF66", fontSize: "12px" }}>{stylesSectionOpen ? "▼" : "▶"}</span>
-            </button>
+            {!isCocktail && (
+              <>
+              <div style={separatorStyle} />
+              <button
+                onClick={() => setStylesSectionOpen((o) => !o)}
+                style={{
+                  width: "100%",
+                  display: "flex",
+                  justifyContent: "space-between",
+                  alignItems: "center",
+                  background: "none",
+                  border: "none",
+                  cursor: "pointer",
+                  padding: 0,
+                  marginBottom: stylesSectionOpen ? "12px" : 0,
+                }}
+              >
+                <span style={{ ...sectionTitleStyle, marginTop: 0, marginBottom: 0 }}>
+                  <span style={{ width: "4px", height: "14px", background: "#39FF66", borderRadius: "2px", display: "inline-block" }} />
+                  {isWine ? "Caractéristiques" : "Style(s)"}
+                  {!isSoft && !isHot && form.styles.length > 0 && <span style={{ color: "#8792A6", fontWeight: 500 }}> ({form.styles.length} sélectionné{form.styles.length > 1 ? "s" : ""})</span>}
+                  {isHot && HOT_STYLE_LISTS[form.beverageSubtype] && hotOwnedStyles.length > 0 && (
+                    <span style={{ color: "#8792A6", fontWeight: 500 }}>
+                      {" "}
+                      ({hotOwnedStyles.length} sélectionné{hotOwnedStyles.length > 1 ? "s" : ""})
+                    </span>
+                  )}
+                  {isSoft && SOFT_STYLE_LISTS[form.beverageSubtype] && softOwnedStyles.length > 0 && (
+                    <span style={{ color: "#8792A6", fontWeight: 500 }}>
+                      {" "}
+                      ({softOwnedStyles.length} sélectionné{softOwnedStyles.length > 1 ? "s" : ""})
+                    </span>
+                  )}
+                </span>
+                <span style={{ color: "#39FF66", fontSize: "12px" }}>{stylesSectionOpen ? "▼" : "▶"}</span>
+              </button>
+              </>
+            )}
             {stylesSectionOpen && isSoft && SOFT_STYLE_LISTS[form.beverageSubtype] && (
               <>
                 <p style={{ fontSize: "11.5px", color: "#8792A6", marginTop: "-6px", marginBottom: "10px" }}>Plusieurs styles peuvent se cumuler.</p>
@@ -1141,7 +1149,7 @@ export function DrinkDetailPanel({ drink, onClose, onSaved, myUserId }) {
             {stylesSectionOpen && isHot && !HOT_STYLE_LISTS[form.beverageSubtype] && (
               <p style={{ fontSize: "12.5px", color: "#8792A6", fontStyle: "italic", margin: 0 }}>Choisissez d'abord une sous-catégorie.</p>
             )}
-            {stylesSectionOpen && !isSoft && !isHot && (
+            {stylesSectionOpen && !isSoft && !isHot && !isCocktail && (
               <>
                 <p style={{ fontSize: "11.5px", color: "#8792A6", marginTop: "-6px", marginBottom: "10px" }}>
                   {isWine ? "Plusieurs caractéristiques peuvent se cumuler." : "Plusieurs styles peuvent se cumuler (ex. IPA + Hazy + Double IPA)."}
