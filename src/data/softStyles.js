@@ -1,8 +1,8 @@
 // Styles des Softs & Eaux. Une sous-catégorie (voir SOFT_SUBTYPES) peut avoir sa propre liste de styles : pour l'instant
-// l'Eau (une liste plate), le Soda (trois groupes), le Jus, Energy et Sport (quatre groupes chacun). Le style d'un produit est
+// l'Eau (une liste plate), le Soda (trois groupes), le Jus, Energy, Sport et Lactée (quatre groupes chacun). Le style d'un produit est
 // rangé dans la même colonne que ceux des bières et des vins (drinks_directory.styles, une liste de codes) : pour que les
 // codes de deux familles ne puissent jamais se confondre, ceux d'une sous-catégorie commencent par son préfixe (« eau_… »,
-// « soda_… », « jus_… », « energy_… », « sport_… »), et ceux qu'on y ajoute à la main par « perso_ » + ce préfixe
+// « soda_… », « jus_… », « energy_… », « sport_… », « lactee_… »), et ceux qu'on y ajoute à la main par « perso_ » + ce préfixe
 // (« perso_eau_… », voir `codePrefix` dans customLists.js).
 
 // Eau : les cinq styles de départ (noms tels que donnés, en anglais). Comme toute liste modifiable, on peut les
@@ -262,10 +262,84 @@ export const SPORT_STYLE_GROUPS = [
   },
 ];
 
+// Lactée : quatre classifications, rangées en groupes (comme le Soda, le Jus, Energy et Sport). Noms tels que donnés, en anglais ; les
+// titres des groupes sont ceux donnés. On peut les renommer, les supprimer, changer de groupe et en ajouter depuis la fiche produit.
+// « Coconut » et « Hazelnut » figurent deux fois (comme base, puis comme saveur) : un code n'a qu'une place dans une liste, donc ceux de la
+// base s'appellent « lactee_base_coconut » et « lactee_base_hazelnut ».
+export const DAIRY_STYLE_GROUPS = [
+  {
+    title: "Types de boissons lactées",
+    tags: [
+      { code: "lactee_milk_drink", fr: "Milk Drink" },
+      { code: "lactee_flavored_milk", fr: "Flavored Milk" },
+      { code: "lactee_milkshake", fr: "Milkshake" },
+      { code: "lactee_drinkable_yogurt", fr: "Drinkable Yogurt" },
+      { code: "lactee_fermented_milk", fr: "Fermented Milk" },
+      { code: "lactee_kefir", fr: "Kefir" },
+      { code: "lactee_lassi", fr: "Lassi" },
+      { code: "lactee_buttermilk", fr: "Buttermilk" },
+      { code: "lactee_protein_shake", fr: "Protein Shake" },
+      { code: "lactee_plant_based_drink", fr: "Plant-Based Drink" },
+      { code: "lactee_malted_milk", fr: "Malted Milk" },
+    ],
+  },
+  {
+    title: "Base lactée ou végétale",
+    tags: [
+      { code: "lactee_cow_milk", fr: "Cow Milk" },
+      { code: "lactee_goat_milk", fr: "Goat Milk" },
+      { code: "lactee_sheep_milk", fr: "Sheep Milk" },
+      { code: "lactee_soy", fr: "Soy" },
+      { code: "lactee_oat", fr: "Oat" },
+      { code: "lactee_almond", fr: "Almond" },
+      { code: "lactee_base_coconut", fr: "Coconut" },
+      { code: "lactee_rice", fr: "Rice" },
+      { code: "lactee_base_hazelnut", fr: "Hazelnut" },
+      { code: "lactee_pea", fr: "Pea" },
+      { code: "lactee_cashew", fr: "Cashew" },
+    ],
+  },
+  {
+    title: "Saveurs",
+    tags: [
+      { code: "lactee_plain", fr: "Plain" },
+      { code: "lactee_chocolate", fr: "Chocolate" },
+      { code: "lactee_vanilla", fr: "Vanilla" },
+      { code: "lactee_strawberry", fr: "Strawberry" },
+      { code: "lactee_raspberry", fr: "Raspberry" },
+      { code: "lactee_banana", fr: "Banana" },
+      { code: "lactee_peach", fr: "Peach" },
+      { code: "lactee_mango", fr: "Mango" },
+      { code: "lactee_pineapple", fr: "Pineapple" },
+      { code: "lactee_coconut", fr: "Coconut" },
+      { code: "lactee_blueberry", fr: "Blueberry" },
+      { code: "lactee_cherry", fr: "Cherry" },
+      { code: "lactee_mixed_berry", fr: "Mixed Berry" },
+      { code: "lactee_tropical", fr: "Tropical" },
+      { code: "lactee_caramel", fr: "Caramel" },
+      { code: "lactee_coffee", fr: "Coffee" },
+      { code: "lactee_hazelnut", fr: "Hazelnut" },
+      { code: "lactee_honey", fr: "Honey" },
+      { code: "lactee_cinnamon", fr: "Cinnamon" },
+      { code: "lactee_pistachio", fr: "Pistachio" },
+    ],
+  },
+  {
+    title: "Texture & Consistance",
+    tags: [
+      { code: "lactee_smooth", fr: "Smooth" },
+      { code: "lactee_creamy", fr: "Creamy" },
+      { code: "lactee_thick", fr: "Thick" },
+      { code: "lactee_frothy", fr: "Frothy" },
+      { code: "lactee_with_pieces", fr: "With Pieces" },
+    ],
+  },
+];
+
 // Les sous-catégories de Softs & Eaux qui ont une liste de styles, avec le préfixe des codes de leurs styles. Le préfixe est le
 // code de la sous-catégorie, sauf pour le Jus : sa sous-catégorie s'appelle toujours « jus_de_fruits » en base (seul son nom
 // affiché est devenu « Jus »), mais ses styles s'appellent « jus_… ».
-export const SOFT_STYLE_PREFIXES = { eau: "eau", soda: "soda", jus_de_fruits: "jus", energy: "energy", sport: "sport" };
+export const SOFT_STYLE_PREFIXES = { eau: "eau", soda: "soda", jus_de_fruits: "jus", energy: "energy", sport: "sport", lactee: "lactee" };
 export const SOFT_STYLE_SUBTYPES = Object.keys(SOFT_STYLE_PREFIXES);
 
 // La sous-catégorie à laquelle appartient un code de style de Softs & Eaux, ou null si ce n'est pas un de leurs codes
