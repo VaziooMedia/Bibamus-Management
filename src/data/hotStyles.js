@@ -640,9 +640,97 @@ export const HOT_MIX_STYLE_GROUPS = [
   },
 ];
 
+// Céréales & Chicorée : cinq classifications (Types de boissons, Ingrédients principaux, Présentation commerciale, Saveurs & Arômes,
+// Profil gustatif), rangées en groupes comme celles du Café, du Thé, de l'Infusion, du Hot Milk, de la Soupe et du Hot Mix. Noms tels
+// que donnés, en anglais. Codes « cereales_chicoree_… » (« perso_cereales_chicoree_… » pour un ajout à la main) ; comme Coffee existe
+// dans deux groupes, les codes du groupe « Saveurs & Arômes » portent en plus « arome_ » (« cereales_chicoree_arome_… ») pour rester
+// uniques. Comme toute liste modifiable, on peut renommer, supprimer, changer de groupe et ajouter depuis la fiche produit.
+export const CEREAL_CHICORY_STYLE_GROUPS = [
+  {
+    title: "Types de boissons",
+    tags: [
+      { code: "cereales_chicoree_chicory_drink", fr: "Chicory Drink" },
+      { code: "cereales_chicoree_cereal_drink", fr: "Cereal Drink" },
+      { code: "cereales_chicoree_malt_drink", fr: "Malt Drink" },
+      { code: "cereales_chicoree_coffee_substitute", fr: "Coffee Substitute" },
+      { code: "cereales_chicoree_coffee_blend", fr: "Coffee Blend" },
+      { code: "cereales_chicoree_chicory_blend", fr: "Chicory Blend" },
+      { code: "cereales_chicoree_cereal_blend", fr: "Cereal Blend" },
+      { code: "cereales_chicoree_roasted_grain_drink", fr: "Roasted Grain Drink" },
+    ],
+  },
+  {
+    title: "Ingrédients principaux",
+    tags: [
+      { code: "cereales_chicoree_chicory", fr: "Chicory" },
+      { code: "cereales_chicoree_barley", fr: "Barley" },
+      { code: "cereales_chicoree_malted_barley", fr: "Malted Barley" },
+      { code: "cereales_chicoree_rye", fr: "Rye" },
+      { code: "cereales_chicoree_wheat", fr: "Wheat" },
+      { code: "cereales_chicoree_spelt", fr: "Spelt" },
+      { code: "cereales_chicoree_oat", fr: "Oat" },
+      { code: "cereales_chicoree_corn", fr: "Corn" },
+      { code: "cereales_chicoree_rice", fr: "Rice" },
+      { code: "cereales_chicoree_malt", fr: "Malt" },
+      { code: "cereales_chicoree_coffee", fr: "Coffee" },
+      { code: "cereales_chicoree_fig", fr: "Fig" },
+    ],
+  },
+  {
+    title: "Présentation commerciale",
+    tags: [
+      { code: "cereales_chicoree_instant", fr: "Instant" },
+      { code: "cereales_chicoree_powdered", fr: "Powdered" },
+      { code: "cereales_chicoree_granules", fr: "Granules" },
+      { code: "cereales_chicoree_ground", fr: "Ground" },
+      { code: "cereales_chicoree_liquid", fr: "Liquid" },
+      { code: "cereales_chicoree_concentrate", fr: "Concentrate" },
+      { code: "cereales_chicoree_ready_to_drink", fr: "Ready to Drink" },
+      { code: "cereales_chicoree_single_serve", fr: "Single Serve" },
+    ],
+  },
+  {
+    title: "Saveurs & Arômes",
+    tags: [
+      { code: "cereales_chicoree_arome_roasted", fr: "Roasted" },
+      { code: "cereales_chicoree_arome_toasted", fr: "Toasted" },
+      { code: "cereales_chicoree_arome_malty", fr: "Malty" },
+      { code: "cereales_chicoree_arome_nutty", fr: "Nutty" },
+      { code: "cereales_chicoree_arome_hazelnut", fr: "Hazelnut" },
+      { code: "cereales_chicoree_arome_chocolate", fr: "Chocolate" },
+      { code: "cereales_chicoree_arome_cocoa", fr: "Cocoa" },
+      { code: "cereales_chicoree_arome_caramel", fr: "Caramel" },
+      { code: "cereales_chicoree_arome_vanilla", fr: "Vanilla" },
+      { code: "cereales_chicoree_arome_honey", fr: "Honey" },
+      { code: "cereales_chicoree_arome_coffee", fr: "Coffee" },
+      { code: "cereales_chicoree_arome_earthy", fr: "Earthy" },
+      { code: "cereales_chicoree_arome_woody", fr: "Woody" },
+      { code: "cereales_chicoree_arome_smoky", fr: "Smoky" },
+      { code: "cereales_chicoree_arome_spicy", fr: "Spicy" },
+    ],
+  },
+  {
+    title: "Profil gustatif",
+    tags: [
+      { code: "cereales_chicoree_mild", fr: "Mild" },
+      { code: "cereales_chicoree_smooth", fr: "Smooth" },
+      { code: "cereales_chicoree_balanced", fr: "Balanced" },
+      { code: "cereales_chicoree_rich", fr: "Rich" },
+      { code: "cereales_chicoree_bold", fr: "Bold" },
+      { code: "cereales_chicoree_full_bodied", fr: "Full-Bodied" },
+      { code: "cereales_chicoree_light_bodied", fr: "Light-Bodied" },
+      { code: "cereales_chicoree_creamy", fr: "Creamy" },
+      { code: "cereales_chicoree_bitter", fr: "Bitter" },
+      { code: "cereales_chicoree_sweet", fr: "Sweet" },
+      { code: "cereales_chicoree_bittersweet", fr: "Bittersweet" },
+      { code: "cereales_chicoree_intense", fr: "Intense" },
+    ],
+  },
+];
+
 // Les sous-catégories de Boissons chaudes qui ont une liste de styles, avec le préfixe des codes de leurs styles (ici le
 // code de la sous-catégorie).
-export const HOT_STYLE_PREFIXES = { cafe: "cafe", the: "the", infusion: "infusion", hot_milk: "hot_milk", soupe: "soupe", hot_mix: "hot_mix" };
+export const HOT_STYLE_PREFIXES = { cafe: "cafe", the: "the", infusion: "infusion", hot_milk: "hot_milk", soupe: "soupe", hot_mix: "hot_mix", cereales_chicoree: "cereales_chicoree" };
 export const HOT_STYLE_SUBTYPES = Object.keys(HOT_STYLE_PREFIXES);
 
 // La sous-catégorie à laquelle appartient un code de style de Boissons chaudes, ou null si ce n'est pas un de leurs codes
