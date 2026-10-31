@@ -16,6 +16,7 @@
 
 import { FLAVOR_NOTE_GROUPS, FOOD_PAIRINGS, OCCASIONS, PRODUCT_CHARACTERISTICS, RECOMMENDED_GLASSES } from "./beerCiderStyles.js";
 import { WATER_STYLES, SODA_STYLE_GROUPS, JUICE_STYLE_GROUPS, ENERGY_STYLE_GROUPS, SPORT_STYLE_GROUPS, DAIRY_STYLE_GROUPS, SYRUP_STYLE_GROUPS } from "./softStyles.js";
+import { COFFEE_STYLE_GROUPS } from "./hotStyles.js";
 import { PAYMENT_METHODS, VENUE_TYPES, PRODUCER_TYPES, PRODUCER_PROFILES, BRAND_CLASSIFICATIONS, BRAND_TYPES } from "../constants.js";
 
 // Un code ne peut avoir qu'une place dans une liste modifiable (une modification d'un élément vise son code, et
@@ -492,6 +493,33 @@ export const SYRUP_STYLE_LIST = {
 };
 // La liste de styles de chaque sous-catégorie de Softs & Eaux (clé : code de la sous-catégorie).
 export const SOFT_STYLE_LISTS = { eau: WATER_STYLE_LIST, soda: SODA_STYLE_LIST, jus_de_fruits: JUICE_STYLE_LIST, energy: ENERGY_STYLE_LIST, sport: SPORT_STYLE_LIST, lactee: DAIRY_STYLE_LIST, sirop: SYRUP_STYLE_LIST };
+
+// Fiche Boissons chaudes : styles du Café — six classifications (Types de café, Variétés de café, Torréfaction, Profil aromatique,
+// Profil gustatif, Traitement des grains), donc une liste à groupes comme celles des softs. La liste s'appelle « coffee_style »,
+// ses styles « cafe_… » (« perso_cafe_… » pour un ajout à la main, voir `codePrefix`). Seules les boissons chaudes sont comptées et
+// modifiées (`source: "hot_styles"`) : cette colonne est aussi celle des bières, des vins et des softs. Les styles de départ sont
+// dans hotStyles.js.
+export const COFFEE_ENTITY = { ...PRODUCT_ENTITY, all: "tous les cafés", none: "aucun café" };
+export const COFFEE_STYLE_LIST = {
+  key: "coffee_style",
+  source: "hot_styles",
+  codePrefix: "perso_cafe_",
+  entity: COFFEE_ENTITY,
+  builtinGroups: COFFEE_STYLE_GROUPS,
+  orphanTitle: "Autres styles",
+  words: {
+    noun: "style",
+    one: "un style",
+    this: "ce style",
+    the: "le style",
+    ofThe: "du style",
+    ofAll: "des styles",
+    namePlaceholder: "Nom du style (ex. Decaf)",
+    searchPlaceholder: "Chercher un style (ex. Arabica, Dark Roast, Fruity...)",
+  },
+};
+// La liste de styles de chaque sous-catégorie de Boissons chaudes (clé : code de la sous-catégorie) ; les autres n'en ont pas encore.
+export const HOT_STYLE_LISTS = { cafe: COFFEE_STYLE_LIST };
 
 // L'avertissement à montrer avant de supprimer cet élément, ou null : celui propre au code, sinon celui de la liste
 // (qui ne vaut que pour un élément de départ : un élément ajouté à la main n'existait pas dans l'application).
