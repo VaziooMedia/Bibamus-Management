@@ -16,7 +16,7 @@
 
 import { FLAVOR_NOTE_GROUPS, FOOD_PAIRINGS, OCCASIONS, PRODUCT_CHARACTERISTICS, RECOMMENDED_GLASSES } from "./beerCiderStyles.js";
 import { WATER_STYLES, SODA_STYLE_GROUPS, JUICE_STYLE_GROUPS, ENERGY_STYLE_GROUPS, SPORT_STYLE_GROUPS, DAIRY_STYLE_GROUPS, SYRUP_STYLE_GROUPS } from "./softStyles.js";
-import { COFFEE_STYLE_GROUPS, TEA_STYLE_GROUPS } from "./hotStyles.js";
+import { COFFEE_STYLE_GROUPS, TEA_STYLE_GROUPS, INFUSION_STYLE_GROUPS } from "./hotStyles.js";
 import { PAYMENT_METHODS, VENUE_TYPES, PRODUCER_TYPES, PRODUCER_PROFILES, BRAND_CLASSIFICATIONS, BRAND_TYPES } from "../constants.js";
 
 // Un code ne peut avoir qu'une place dans une liste modifiable (une modification d'un élément vise son code, et
@@ -542,8 +542,32 @@ export const TEA_STYLE_LIST = {
     searchPlaceholder: "Chercher un style (ex. Earl Grey, Matcha, Lemon...)",
   },
 };
+// Fiche Boissons chaudes : styles de l'Infusion — cinq classifications (Types d'infusions, Présentation, Plantes, fleurs & végétaux,
+// Fruits & saveurs, Profil aromatique & gustatif), donc une liste à groupes comme celles du Café et du Thé. La liste s'appelle
+// « infusion_style », ses styles « infusion_… » (« perso_infusion_… » pour un ajout à la main, voir `codePrefix`). Même
+// fonctionnement que le Café : seules les boissons chaudes sont comptées et modifiées (`source: "hot_styles"`). Les styles de
+// départ sont dans hotStyles.js.
+export const INFUSION_ENTITY = { ...PRODUCT_ENTITY, all: "toutes les infusions", none: "aucune infusion" };
+export const INFUSION_STYLE_LIST = {
+  key: "infusion_style",
+  source: "hot_styles",
+  codePrefix: "perso_infusion_",
+  entity: INFUSION_ENTITY,
+  builtinGroups: INFUSION_STYLE_GROUPS,
+  orphanTitle: "Autres styles",
+  words: {
+    noun: "style",
+    one: "un style",
+    this: "ce style",
+    the: "le style",
+    ofThe: "du style",
+    ofAll: "des styles",
+    namePlaceholder: "Nom du style (ex. Decaf)",
+    searchPlaceholder: "Chercher un style (ex. Rooibos, Chamomile, Lemon...)",
+  },
+};
 // La liste de styles de chaque sous-catégorie de Boissons chaudes (clé : code de la sous-catégorie) ; les autres n'en ont pas encore.
-export const HOT_STYLE_LISTS = { cafe: COFFEE_STYLE_LIST, the: TEA_STYLE_LIST };
+export const HOT_STYLE_LISTS = { cafe: COFFEE_STYLE_LIST, the: TEA_STYLE_LIST, infusion: INFUSION_STYLE_LIST };
 
 // L'avertissement à montrer avant de supprimer cet élément, ou null : celui propre au code, sinon celui de la liste
 // (qui ne vaut que pour un élément de départ : un élément ajouté à la main n'existait pas dans l'application).

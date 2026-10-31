@@ -1,8 +1,8 @@
 // Styles des Boissons chaudes. Une sous-catégorie (voir HOT_SUBTYPES) peut avoir sa propre liste de styles : pour l'instant
-// le Café et le Thé ont la leur (six groupes chacun) ; les autres sous-catégories suivront. Le style d'un produit est rangé dans la même
+// le Café, le Thé et l'Infusion ont la leur (six groupes pour les deux premiers, cinq pour l'Infusion) ; les autres suivront. Le style d'un produit est rangé dans la même
 // colonne que ceux des bières, des vins et des softs (drinks_directory.styles, une liste de codes) : pour que les codes de
-// deux familles ne puissent jamais se confondre, ceux d'une sous-catégorie commencent par son préfixe (« cafe_… », « the_… »), et ceux
-// qu'on y ajoute à la main par « perso_ » + ce préfixe (« perso_cafe_… », « perso_the_… », voir `codePrefix` dans customLists.js).
+// deux familles ne puissent jamais se confondre, ceux d'une sous-catégorie commencent par son préfixe (« cafe_… », « the_… », « infusion_… »), et ceux
+// qu'on y ajoute à la main par « perso_ » + ce préfixe (« perso_cafe_… », « perso_the_… », « perso_infusion_… », voir `codePrefix` dans customLists.js).
 
 // Café : six classifications, rangées en groupes (comme les styles des softs). Noms tels que donnés, en anglais ; les titres
 // des groupes sont en français. Comme toute liste modifiable, on peut renommer, supprimer, changer de groupe et ajouter
@@ -228,9 +228,138 @@ export const TEA_STYLE_GROUPS = [
   },
 ];
 
+// Infusion : cinq classifications, rangées en groupes comme celles du Café et du Thé. Noms tels que donnés, en anglais ; les titres des
+// groupes sont en français. Codes « infusion_… » (« perso_infusion_… » pour un ajout à la main). Comme toute liste modifiable, on peut
+// renommer, supprimer, changer de groupe et ajouter depuis la fiche produit.
+export const INFUSION_STYLE_GROUPS = [
+  {
+    title: "Types d'infusions",
+    tags: [
+      { code: "infusion_herbal_infusion", fr: "Herbal Infusion" },
+      { code: "infusion_fruit_infusion", fr: "Fruit Infusion" },
+      { code: "infusion_floral_infusion", fr: "Floral Infusion" },
+      { code: "infusion_spice_infusion", fr: "Spice Infusion" },
+      { code: "infusion_rooibos", fr: "Rooibos" },
+      { code: "infusion_honeybush", fr: "Honeybush" },
+      { code: "infusion_mate", fr: "Mate" },
+      { code: "infusion_chicory_infusion", fr: "Chicory Infusion" },
+      { code: "infusion_herbal_blend", fr: "Herbal Blend" },
+      { code: "infusion_fruit_blend", fr: "Fruit Blend" },
+      { code: "infusion_ayurvedic_blend", fr: "Ayurvedic Blend" },
+    ],
+  },
+  {
+    title: "Présentation",
+    tags: [
+      { code: "infusion_loose_leaf", fr: "Loose Leaf" },
+      { code: "infusion_tea_bag", fr: "Tea Bag" },
+      { code: "infusion_pyramid_bag", fr: "Pyramid Bag" },
+      { code: "infusion_powdered", fr: "Powdered" },
+      { code: "infusion_instant", fr: "Instant" },
+      { code: "infusion_concentrate", fr: "Concentrate" },
+      { code: "infusion_whole_leaf", fr: "Whole Leaf" },
+      { code: "infusion_cut_leaf", fr: "Cut Leaf" },
+    ],
+  },
+  {
+    title: "Plantes, fleurs & végétaux",
+    tags: [
+      { code: "infusion_chamomile", fr: "Chamomile" },
+      { code: "infusion_peppermint", fr: "Peppermint" },
+      { code: "infusion_spearmint", fr: "Spearmint" },
+      { code: "infusion_mint", fr: "Mint" },
+      { code: "infusion_lemon_balm", fr: "Lemon Balm" },
+      { code: "infusion_verbena", fr: "Verbena" },
+      { code: "infusion_lemongrass", fr: "Lemongrass" },
+      { code: "infusion_linden", fr: "Linden" },
+      { code: "infusion_hibiscus", fr: "Hibiscus" },
+      { code: "infusion_rosehip", fr: "Rosehip" },
+      { code: "infusion_rose", fr: "Rose" },
+      { code: "infusion_lavender", fr: "Lavender" },
+      { code: "infusion_elderflower", fr: "Elderflower" },
+      { code: "infusion_orange_blossom", fr: "Orange Blossom" },
+      { code: "infusion_jasmine", fr: "Jasmine" },
+      { code: "infusion_fennel", fr: "Fennel" },
+      { code: "infusion_anise", fr: "Anise" },
+      { code: "infusion_star_anise", fr: "Star Anise" },
+      { code: "infusion_licorice", fr: "Licorice" },
+      { code: "infusion_ginger", fr: "Ginger" },
+      { code: "infusion_turmeric", fr: "Turmeric" },
+      { code: "infusion_cinnamon", fr: "Cinnamon" },
+      { code: "infusion_cardamom", fr: "Cardamom" },
+      { code: "infusion_clove", fr: "Clove" },
+      { code: "infusion_sage", fr: "Sage" },
+      { code: "infusion_thyme", fr: "Thyme" },
+      { code: "infusion_rosemary", fr: "Rosemary" },
+      { code: "infusion_nettle", fr: "Nettle" },
+      { code: "infusion_dandelion", fr: "Dandelion" },
+      { code: "infusion_echinacea", fr: "Echinacea" },
+      { code: "infusion_ginseng", fr: "Ginseng" },
+      { code: "infusion_moringa", fr: "Moringa" },
+      { code: "infusion_tulsi", fr: "Tulsi" },
+      { code: "infusion_basil", fr: "Basil" },
+      { code: "infusion_eucalyptus", fr: "Eucalyptus" },
+    ],
+  },
+  {
+    title: "Fruits & saveurs",
+    tags: [
+      { code: "infusion_lemon", fr: "Lemon" },
+      { code: "infusion_lime", fr: "Lime" },
+      { code: "infusion_orange", fr: "Orange" },
+      { code: "infusion_bergamot", fr: "Bergamot" },
+      { code: "infusion_grapefruit", fr: "Grapefruit" },
+      { code: "infusion_apple", fr: "Apple" },
+      { code: "infusion_pear", fr: "Pear" },
+      { code: "infusion_peach", fr: "Peach" },
+      { code: "infusion_apricot", fr: "Apricot" },
+      { code: "infusion_mango", fr: "Mango" },
+      { code: "infusion_pineapple", fr: "Pineapple" },
+      { code: "infusion_passion_fruit", fr: "Passion Fruit" },
+      { code: "infusion_strawberry", fr: "Strawberry" },
+      { code: "infusion_raspberry", fr: "Raspberry" },
+      { code: "infusion_cherry", fr: "Cherry" },
+      { code: "infusion_blackcurrant", fr: "Blackcurrant" },
+      { code: "infusion_blackberry", fr: "Blackberry" },
+      { code: "infusion_blueberry", fr: "Blueberry" },
+      { code: "infusion_cranberry", fr: "Cranberry" },
+      { code: "infusion_pomegranate", fr: "Pomegranate" },
+      { code: "infusion_coconut", fr: "Coconut" },
+      { code: "infusion_mixed_berry", fr: "Mixed Berry" },
+      { code: "infusion_mixed_fruit", fr: "Mixed Fruit" },
+      { code: "infusion_tropical", fr: "Tropical" },
+      { code: "infusion_citrus", fr: "Citrus" },
+      { code: "infusion_vanilla", fr: "Vanilla" },
+      { code: "infusion_caramel", fr: "Caramel" },
+      { code: "infusion_honey", fr: "Honey" },
+    ],
+  },
+  {
+    title: "Profil aromatique & gustatif",
+    tags: [
+      { code: "infusion_floral", fr: "Floral" },
+      { code: "infusion_fruity", fr: "Fruity" },
+      { code: "infusion_herbal", fr: "Herbal" },
+      { code: "infusion_botanical", fr: "Botanical" },
+      { code: "infusion_spicy", fr: "Spicy" },
+      { code: "infusion_earthy", fr: "Earthy" },
+      { code: "infusion_woody", fr: "Woody" },
+      { code: "infusion_citrusy", fr: "Citrusy" },
+      { code: "infusion_minty", fr: "Minty" },
+      { code: "infusion_sweet", fr: "Sweet" },
+      { code: "infusion_tangy", fr: "Tangy" },
+      { code: "infusion_bitter", fr: "Bitter" },
+      { code: "infusion_mild", fr: "Mild" },
+      { code: "infusion_smooth", fr: "Smooth" },
+      { code: "infusion_refreshing", fr: "Refreshing" },
+      { code: "infusion_warming", fr: "Warming" },
+    ],
+  },
+];
+
 // Les sous-catégories de Boissons chaudes qui ont une liste de styles, avec le préfixe des codes de leurs styles (ici le
 // code de la sous-catégorie).
-export const HOT_STYLE_PREFIXES = { cafe: "cafe", the: "the" };
+export const HOT_STYLE_PREFIXES = { cafe: "cafe", the: "the", infusion: "infusion" };
 export const HOT_STYLE_SUBTYPES = Object.keys(HOT_STYLE_PREFIXES);
 
 // La sous-catégorie à laquelle appartient un code de style de Boissons chaudes, ou null si ce n'est pas un de leurs codes
