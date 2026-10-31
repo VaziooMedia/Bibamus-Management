@@ -19,9 +19,10 @@ import { SelectedStyleChips } from "./SelectedStyleChips.jsx";
 import { FlavorNotesPicker } from "./FlavorNotesPicker.jsx";
 import { FlatListField } from "./FlatListField.jsx";
 import { GroupedListField } from "./GroupedListField.jsx";
-import { FOOD_PAIRING_LIST, OCCASION_LIST, GLASS_LIST, CHARACTERISTIC_LIST, SOFT_STYLE_LISTS, HOT_STYLE_LISTS } from "../data/customLists.js";
+import { FOOD_PAIRING_LIST, OCCASION_LIST, GLASS_LIST, CHARACTERISTIC_LIST, SOFT_STYLE_LISTS, HOT_STYLE_LISTS, COCKTAIL_STYLE_LISTS } from "../data/customLists.js";
 import { softStyleOwner, stylesForSoftSubtype } from "../data/softStyles.js";
 import { hotStyleOwner, stylesForHotSubtype } from "../data/hotStyles.js";
+import { cocktailStyleOwner, stylesForCocktailSubtype } from "../data/cocktailStyles.js";
 import { VintageManager } from "./VintageManager.jsx";
 import { PendingContributionsSection } from "./PendingContributionsSection.jsx";
 import { FreeTagInput } from "./FreeTagInput.jsx";
@@ -411,8 +412,9 @@ export function DrinkDetailPanel({ drink, onClose, onSaved, myUserId }) {
   const isHot = form.type === "boissons_chaudes";
   const isCocktail = form.type === "cocktails_mocktails";
   const isSnack = form.type === "snacks";
-  // Cocktails / Mocktails et Snacks : pas de styles pour l'instant (pas de liste).
-  const hasNoStyles = isCocktail || isSnack;
+  // Snacks : pas de styles pour l'instant (pas de liste). Cocktails / Mocktails : une liste de styles pour la sous-catégorie « Cocktails »
+  // (« Mocktails » n'en a pas encore).
+  const hasNoStyles = isSnack;
   // Taux d'alcool grisé : Softs & Eaux et Snacks.
   const alcoholGreyed = isSoft || isSnack;
   // Info-bulle des onglets et champs grisés « pas encore disponible », selon la catégorie.
@@ -473,6 +475,9 @@ export function DrinkDetailPanel({ drink, onClose, onSaved, myUserId }) {
   // Pareil pour une boisson chaude : les styles de sa sous-catégorie seulement, et la même ligne d'étiquettes.
   const hotOwnedStyles = isHot ? form.styles.filter((c) => hotStyleOwner(c) === form.beverageSubtype) : [];
   const hotStyleChips = { codes: hotOwnedStyles, ariaLabel: "Styles sélectionnés" };
+  // Pareil pour un cocktail / mocktail : les styles de sa sous-catégorie seulement, et la même ligne d'étiquettes.
+  const cocktailOwnedStyles = isCocktail ? form.styles.filter((c) => cocktailStyleOwner(c) === form.beverageSubtype) : [];
+  const cocktailStyleChips = { codes: cocktailOwnedStyles, ariaLabel: "Styles sélectionnés" };
   const toggleArrayField = (field, value) => setForm((f) => ({ ...f, [field]: f[field].includes(value) ? f[field].filter((v) => v !== value) : [...f[field], value] }));
 
   const handleCreateGrapeVariety = async (name) => {
@@ -502,12 +507,12 @@ export function DrinkDetailPanel({ drink, onClose, onSaved, myUserId }) {
       // Snacks : « defaultVolumeCl » et « kcalPer100ml » gardent leur colonne ; la fiche les présente en grammes et en kcal/100gr.
       return {
         ...base,
-        // Cocktails / Mocktails : une sous-catégorie (Cocktails ou Mocktails) mais pas de styles pour l'instant (pas de liste) — les styles
-        // ne sont pas touchés. Snacks : ni sous-catégorie (vidée, null) ni styles.
+        // Cocktails / Mocktails : une sous-catégorie (Cocktails ou Mocktails) et les styles de celle qui a une liste (« Cocktails »).
+        // Snacks : ni sous-catégorie (vidée, null) ni styles (les styles ne sont pas touchés).
         beverageSubtype: isSnack ? null : form.beverageSubtype || null,
         // Styles : ceux de la sous-catégorie choisie ; ceux d'une AUTRE sous-catégorie de la même catégorie, restés cochés
         // après un changement de sous-catégorie, sont retirés.
-        ...(hasNoStyles ? {} : { styles: isHot ? stylesForHotSubtype(form.styles, form.beverageSubtype) : stylesForSoftSubtype(form.styles, form.beverageSubtype) }),
+        ...(hasNoStyles ? {} : { styles: isHot ? stylesForHotSubtype(form.styles, form.beverageSubtype) : isCocktail ? stylesForCocktailSubtype(form.styles, form.beverageSubtype) : stylesForSoftSubtype(form.styles, form.beverageSubtype) }),
         defaultVolumeCl: form.defaultVolumeCl === "" ? null : parseFloat(form.defaultVolumeCl),
         defaultServingMode: form.defaultServingMode || null,
         defaultPriceEuro: form.defaultPriceEuro === "" ? null : parseFloat(form.defaultPriceEuro),
@@ -1101,11 +1106,17 @@ export function DrinkDetailPanel({ drink, onClose, onSaved, myUserId }) {
                 <span style={{ ...sectionTitleStyle, marginTop: 0, marginBottom: 0 }}>
                   <span style={{ width: "4px", height: "14px", background: "#39FF66", borderRadius: "2px", display: "inline-block" }} />
                   {isWine ? "Caractéristiques" : "Style(s)"}
-                  {!isSoft && !isHot && form.styles.length > 0 && <span style={{ color: "#8792A6", fontWeight: 500 }}> ({form.styles.length} sélectionné{form.styles.length > 1 ? "s" : ""})</span>}
+                  {!isSoft && !isHot && !isCocktail && form.styles.length > 0 && <span style={{ color: "#8792A6", fontWeight: 500 }}> ({form.styles.length} sélectionné{form.styles.length > 1 ? "s" : ""})</span>}
                   {isHot && HOT_STYLE_LISTS[form.beverageSubtype] && hotOwnedStyles.length > 0 && (
                     <span style={{ color: "#8792A6", fontWeight: 500 }}>
                       {" "}
                       ({hotOwnedStyles.length} sélectionné{hotOwnedStyles.length > 1 ? "s" : ""})
+                    </span>
+                  )}
+                  {isCocktail && COCKTAIL_STYLE_LISTS[form.beverageSubtype] && cocktailOwnedStyles.length > 0 && (
+                    <span style={{ color: "#8792A6", fontWeight: 500 }}>
+                      {" "}
+                      ({cocktailOwnedStyles.length} sélectionné{cocktailOwnedStyles.length > 1 ? "s" : ""})
                     </span>
                   )}
                   {isSoft && SOFT_STYLE_LISTS[form.beverageSubtype] && softOwnedStyles.length > 0 && (
@@ -1169,7 +1180,24 @@ export function DrinkDetailPanel({ drink, onClose, onSaved, myUserId }) {
             {stylesSectionOpen && isHot && !HOT_STYLE_LISTS[form.beverageSubtype] && (
               <p style={{ fontSize: "12.5px", color: "#8792A6", fontStyle: "italic", margin: 0 }}>Choisissez d'abord une sous-catégorie.</p>
             )}
-            {stylesSectionOpen && !isSoft && !isHot && !hasNoStyles && (
+            {stylesSectionOpen && isCocktail && COCKTAIL_STYLE_LISTS[form.beverageSubtype] && (
+              <>
+                <p style={{ fontSize: "11.5px", color: "#8792A6", marginTop: "-6px", marginBottom: "10px" }}>Plusieurs styles peuvent se cumuler.</p>
+                <GroupedListField
+                  key={form.beverageSubtype}
+                  list={COCKTAIL_STYLE_LISTS[form.beverageSubtype]}
+                  chips={cocktailStyleChips}
+                  selected={form.styles}
+                  onToggle={toggleStyle}
+                  onAdded={softStyleAdded}
+                  onDeleted={softStyleDeleted}
+                />
+              </>
+            )}
+            {stylesSectionOpen && isCocktail && !COCKTAIL_STYLE_LISTS[form.beverageSubtype] && (
+              <p style={{ fontSize: "12.5px", color: "#8792A6", fontStyle: "italic", margin: 0 }}>Choisissez d'abord une sous-catégorie.</p>
+            )}
+            {stylesSectionOpen && !isSoft && !isHot && !isCocktail && !hasNoStyles && (
               <>
                 <p style={{ fontSize: "11.5px", color: "#8792A6", marginTop: "-6px", marginBottom: "10px" }}>
                   {isWine ? "Plusieurs caractéristiques peuvent se cumuler." : "Plusieurs styles peuvent se cumuler (ex. IPA + Hazy + Double IPA)."}
