@@ -578,9 +578,71 @@ export const SOUP_STYLE_GROUPS = [
   },
 ];
 
+// Hot Mix : trois classifications (Types de boissons, Base alcoolisée, Saveurs & Épices), rangées en groupes comme celles du Café, du
+// Thé, de l'Infusion, du Hot Milk et de la Soupe. Noms tels que donnés, en anglais. Codes « hot_mix_… » (« perso_hot_mix_… » pour un
+// ajout à la main). Comme toute liste modifiable, on peut renommer, supprimer, changer de groupe et ajouter depuis la fiche produit.
+export const HOT_MIX_STYLE_GROUPS = [
+  {
+    title: "Types de boissons",
+    tags: [
+      { code: "hot_mix_coffee_based", fr: "Coffee-Based" },
+      { code: "hot_mix_tea_based", fr: "Tea-Based" },
+      { code: "hot_mix_chocolate_based", fr: "Chocolate-Based" },
+      { code: "hot_mix_milk_based", fr: "Milk-Based" },
+      { code: "hot_mix_wine_based", fr: "Wine-Based" },
+      { code: "hot_mix_cider_based", fr: "Cider-Based" },
+      { code: "hot_mix_beer_based", fr: "Beer-Based" },
+      { code: "hot_mix_water_based", fr: "Water-Based" },
+      { code: "hot_mix_punch", fr: "Punch" },
+    ],
+  },
+  {
+    title: "Base alcoolisée",
+    tags: [
+      { code: "hot_mix_whiskey", fr: "Whiskey" },
+      { code: "hot_mix_rum", fr: "Rum" },
+      { code: "hot_mix_cognac", fr: "Cognac" },
+      { code: "hot_mix_brandy", fr: "Brandy" },
+      { code: "hot_mix_calvados", fr: "Calvados" },
+      { code: "hot_mix_gin", fr: "Gin" },
+      { code: "hot_mix_genever", fr: "Genever" },
+      { code: "hot_mix_vodka", fr: "Vodka" },
+      { code: "hot_mix_amaretto", fr: "Amaretto" },
+      { code: "hot_mix_coffee_liqueur", fr: "Coffee Liqueur" },
+      { code: "hot_mix_cream_liqueur", fr: "Cream Liqueur" },
+      { code: "hot_mix_orange_liqueur", fr: "Orange Liqueur" },
+      { code: "hot_mix_herbal_liqueur", fr: "Herbal Liqueur" },
+      { code: "hot_mix_egg_liqueur", fr: "Egg Liqueur" },
+      { code: "hot_mix_red_wine", fr: "Red Wine" },
+      { code: "hot_mix_white_wine", fr: "White Wine" },
+      { code: "hot_mix_cider", fr: "Cider" },
+      { code: "hot_mix_beer", fr: "Beer" },
+    ],
+  },
+  {
+    title: "Saveurs & Épices",
+    tags: [
+      { code: "hot_mix_coffee", fr: "Coffee" },
+      { code: "hot_mix_chocolate", fr: "Chocolate" },
+      { code: "hot_mix_vanilla", fr: "Vanilla" },
+      { code: "hot_mix_caramel", fr: "Caramel" },
+      { code: "hot_mix_honey", fr: "Honey" },
+      { code: "hot_mix_orange", fr: "Orange" },
+      { code: "hot_mix_lemon", fr: "Lemon" },
+      { code: "hot_mix_apple", fr: "Apple" },
+      { code: "hot_mix_cinnamon", fr: "Cinnamon" },
+      { code: "hot_mix_clove", fr: "Clove" },
+      { code: "hot_mix_star_anise", fr: "Star Anise" },
+      { code: "hot_mix_nutmeg", fr: "Nutmeg" },
+      { code: "hot_mix_ginger", fr: "Ginger" },
+      { code: "hot_mix_spiced", fr: "Spiced" },
+    ],
+  },
+];
+
 // Les sous-catégories de Boissons chaudes qui ont une liste de styles, avec le préfixe des codes de leurs styles (ici le
 // code de la sous-catégorie).
-export const HOT_STYLE_PREFIXES = { cafe: "cafe", the: "the", infusion: "infusion", hot_milk: "hot_milk", soupe: "soupe" };
+export const HOT_STYLE_PREFIXES = { cafe: "cafe", the: "the", infusion: "infusion", hot_milk: "hot_milk", soupe: "soupe", hot_mix: "hot_mix" };
 export const HOT_STYLE_SUBTYPES = Object.keys(HOT_STYLE_PREFIXES);
 
 // La sous-catégorie à laquelle appartient un code de style de Boissons chaudes, ou null si ce n'est pas un de leurs codes

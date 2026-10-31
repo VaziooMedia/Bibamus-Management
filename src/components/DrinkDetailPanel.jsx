@@ -1974,7 +1974,7 @@ export function DrinkDetailPanel({ drink, onClose, onSaved, myUserId }) {
             )}
             <p style={{ background: "#16273D", borderRadius: "8px", padding: "12px", fontSize: "12.5px", color: "#8792A6", marginBottom: "14px" }}>
               {isHot
-                ? "La fiche détaillée pour cette catégorie n'est pas encore construite — seuls le nom, la sous-catégorie et les styles du Café, du Thé, de l'Infusion, du Hot Milk et de la Soupe sont disponibles pour l'instant."
+                ? "La fiche détaillée pour cette catégorie n'est pas encore construite — seuls le nom, la sous-catégorie et les styles du Café, du Thé, de l'Infusion, du Hot Milk, de la Soupe et du Hot Mix sont disponibles pour l'instant."
                 : "La fiche détaillée pour cette catégorie n'est pas encore construite — seuls le nom, le degré et l'énergie sont disponibles pour l'instant."}
             </p>
           </>
