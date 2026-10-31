@@ -19,8 +19,9 @@ import { SelectedStyleChips } from "./SelectedStyleChips.jsx";
 import { FlavorNotesPicker } from "./FlavorNotesPicker.jsx";
 import { FlatListField } from "./FlatListField.jsx";
 import { GroupedListField } from "./GroupedListField.jsx";
-import { FOOD_PAIRING_LIST, OCCASION_LIST, GLASS_LIST, CHARACTERISTIC_LIST, SOFT_STYLE_LISTS } from "../data/customLists.js";
+import { FOOD_PAIRING_LIST, OCCASION_LIST, GLASS_LIST, CHARACTERISTIC_LIST, SOFT_STYLE_LISTS, HOT_STYLE_LISTS } from "../data/customLists.js";
 import { softStyleOwner, stylesForSoftSubtype } from "../data/softStyles.js";
+import { hotStyleOwner, stylesForHotSubtype } from "../data/hotStyles.js";
 import { VintageManager } from "./VintageManager.jsx";
 import { PendingContributionsSection } from "./PendingContributionsSection.jsx";
 import { FreeTagInput } from "./FreeTagInput.jsx";
@@ -438,13 +439,16 @@ export function DrinkDetailPanel({ drink, onClose, onSaved, myUserId }) {
   // pour un champ au nom différent, la fiche doit être rouverte pour voir le changement.
   const refreshAfterContribution = (contribution) => set(contribution.fieldPath, contribution.proposedValue);
   const toggleStyle = (tag) => setForm((f) => ({ ...f, styles: f.styles.includes(tag) ? f.styles.filter((t) => t !== tag) : [...f.styles, tag] }));
-  // Les styles d'un Softs & Eaux : un style ajouté depuis la liste est coché pour ce produit, un style supprimé en est retiré.
+  // Les styles d'un Softs & Eaux (ou d'une boisson chaude) : un style ajouté depuis la liste est coché pour ce produit, un style supprimé en est retiré.
   const softStyleAdded = (item) => setForm((f) => (f.styles.includes(item.code) ? f : { ...f, styles: [...f.styles, item.code] }));
   const softStyleDeleted = (code) => setForm((f) => (f.styles.includes(code) ? { ...f, styles: f.styles.filter((c) => c !== code) } : f));
   // Ceux de la sous-catégorie en cours seulement (un style hérité d'une autre liste, ex. « ipa », ne compte pas et ne s'affiche pas),
   // dans l'ordre de sélection : le compteur de l'en-tête et la ligne d'étiquettes au-dessus du champ.
   const softOwnedStyles = isSoft ? form.styles.filter((c) => softStyleOwner(c) === form.beverageSubtype) : [];
   const softStyleChips = { codes: softOwnedStyles, ariaLabel: "Styles sélectionnés" };
+  // Pareil pour une boisson chaude (Café pour l'instant) : ses styles seulement, et la même ligne d'étiquettes.
+  const hotOwnedStyles = isHot ? form.styles.filter((c) => hotStyleOwner(c) === form.beverageSubtype) : [];
+  const hotStyleChips = { codes: hotOwnedStyles, ariaLabel: "Styles sélectionnés" };
   const toggleArrayField = (field, value) => setForm((f) => ({ ...f, [field]: f[field].includes(value) ? f[field].filter((v) => v !== value) : [...f[field], value] }));
 
   const handleCreateGrapeVariety = async (name) => {
@@ -493,8 +497,9 @@ export function DrinkDetailPanel({ drink, onClose, onSaved, myUserId }) {
         galleryPhotos,
       };
     }
-    // Boissons chaudes : la fiche minimale, plus la sous-catégorie.
-    if (isHot) return { ...base, beverageSubtype: form.beverageSubtype || null };
+    // Boissons chaudes : la fiche minimale, plus la sous-catégorie et ses styles (ceux d'une AUTRE sous-catégorie de Boissons
+    // chaudes, restés cochés après un changement de sous-catégorie, sont retirés).
+    if (isHot) return { ...base, beverageSubtype: form.beverageSubtype || null, styles: stylesForHotSubtype(form.styles, form.beverageSubtype) };
     // isBeerOrCider ne couvrait QUE les bières/cidres — les vins tombaient dans le "base" minimal
     // ci-dessus, sans jamais envoyer couleur, pays, appellation, cépage, ni même la photo. C'est
     // la cause du vrai défaut : rien de tout cela n'était jamais enregistré pour un vin.
@@ -1922,9 +1927,57 @@ export function DrinkDetailPanel({ drink, onClose, onSaved, myUserId }) {
             )}
           </>
         ) : (
-          <p style={{ background: "#16273D", borderRadius: "8px", padding: "12px", fontSize: "12.5px", color: "#8792A6", marginBottom: "14px" }}>
-            La fiche détaillée pour cette catégorie n'est pas encore construite — seuls le nom, le degré et l'énergie sont disponibles pour l'instant.
-          </p>
+          <>
+            {isHot && HOT_STYLE_LISTS[form.beverageSubtype] && (
+              <div style={{ marginBottom: "14px" }}>
+                <button
+                  onClick={() => setStylesSectionOpen((o) => !o)}
+                  style={{
+                    width: "100%",
+                    display: "flex",
+                    justifyContent: "space-between",
+                    alignItems: "center",
+                    background: "none",
+                    border: "none",
+                    cursor: "pointer",
+                    padding: 0,
+                    marginBottom: stylesSectionOpen ? "12px" : 0,
+                  }}
+                >
+                  <span style={{ ...sectionTitleStyle, marginTop: 0, marginBottom: 0 }}>
+                    <span style={{ width: "4px", height: "14px", background: "#39FF66", borderRadius: "2px", display: "inline-block" }} />
+                    Style(s)
+                    {hotOwnedStyles.length > 0 && (
+                      <span style={{ color: "#8792A6", fontWeight: 500 }}>
+                        {" "}
+                        ({hotOwnedStyles.length} sélectionné{hotOwnedStyles.length > 1 ? "s" : ""})
+                      </span>
+                    )}
+                  </span>
+                  <span style={{ color: "#39FF66", fontSize: "12px" }}>{stylesSectionOpen ? "▼" : "▶"}</span>
+                </button>
+                {stylesSectionOpen && (
+                  <>
+                    <p style={{ fontSize: "11.5px", color: "#8792A6", marginTop: "-6px", marginBottom: "10px" }}>Plusieurs styles peuvent se cumuler.</p>
+                    <GroupedListField
+                      key={form.beverageSubtype}
+                      list={HOT_STYLE_LISTS[form.beverageSubtype]}
+                      chips={hotStyleChips}
+                      selected={form.styles}
+                      onToggle={toggleStyle}
+                      onAdded={softStyleAdded}
+                      onDeleted={softStyleDeleted}
+                    />
+                  </>
+                )}
+              </div>
+            )}
+            <p style={{ background: "#16273D", borderRadius: "8px", padding: "12px", fontSize: "12.5px", color: "#8792A6", marginBottom: "14px" }}>
+              {isHot
+                ? "La fiche détaillée pour cette catégorie n'est pas encore construite — seuls le nom, la sous-catégorie et les styles du Café sont disponibles pour l'instant."
+                : "La fiche détaillée pour cette catégorie n'est pas encore construite — seuls le nom, le degré et l'énergie sont disponibles pour l'instant."}
+            </p>
+          </>
         )}
 
         <div style={separatorStyle} />
