@@ -1,9 +1,10 @@
 // Styles des Softs & Eaux. Une sous-catégorie (voir SOFT_SUBTYPES) peut avoir sa propre liste de styles : pour l'instant
-// l'Eau (une liste plate), le Soda (trois groupes), le Jus, Energy, Sport et Lactée (quatre groupes chacun). Le style d'un produit est
+// l'Eau (une liste plate), le Soda (trois groupes), le Jus, Energy, Sport, Lactée et Sirop (quatre groupes chacun) : toutes les sous-catégories
+// de Softs & Eaux ont leur liste. Le style d'un produit est
 // rangé dans la même colonne que ceux des bières et des vins (drinks_directory.styles, une liste de codes) : pour que les
 // codes de deux familles ne puissent jamais se confondre, ceux d'une sous-catégorie commencent par son préfixe (« eau_… »,
-// « soda_… », « jus_… », « energy_… », « sport_… », « lactee_… »), et ceux qu'on y ajoute à la main par « perso_ » + ce préfixe
-// (« perso_eau_… », voir `codePrefix` dans customLists.js).
+// « soda_… », « jus_… », « energy_… », « sport_… », « lactee_… », « sirop_… »), et ceux qu'on y ajoute à la main par « perso_ » + ce
+// préfixe (« perso_eau_… », voir `codePrefix` dans customLists.js).
 
 // Eau : les cinq styles de départ (noms tels que donnés, en anglais). Comme toute liste modifiable, on peut les
 // renommer, les supprimer, et en ajouter depuis la fiche produit.
@@ -336,10 +337,120 @@ export const DAIRY_STYLE_GROUPS = [
   },
 ];
 
+// Sirop : quatre classifications, rangées en groupes (comme le Soda, le Jus, Energy, Sport et Lactée). Noms tels que donnés, en anglais ;
+// les titres des groupes sont ceux donnés. On peut les renommer, les supprimer, changer de groupe et en ajouter depuis la fiche produit.
+// Les codes n'ont ni accent ni majuscule (« Piña Colada » : sirop_pina_colada, « Blue Curaçao » : sirop_blue_curacao).
+export const SYRUP_STYLE_GROUPS = [
+  {
+    title: "Type de sirops",
+    tags: [
+      { code: "sirop_dilution_syrup", fr: "Dilution Syrup" },
+      { code: "sirop_cocktail_syrup", fr: "Cocktail Syrup" },
+      { code: "sirop_coffee_syrup", fr: "Coffee Syrup" },
+      { code: "sirop_cordial", fr: "Cordial" },
+      { code: "sirop_fruit_concentrate", fr: "Fruit Concentrate" },
+    ],
+  },
+  {
+    title: "Saveurs fruitées",
+    tags: [
+      { code: "sirop_grenadine", fr: "Grenadine" },
+      { code: "sirop_lemon", fr: "Lemon" },
+      { code: "sirop_lime", fr: "Lime" },
+      { code: "sirop_orange", fr: "Orange" },
+      { code: "sirop_grapefruit", fr: "Grapefruit" },
+      { code: "sirop_apple", fr: "Apple" },
+      { code: "sirop_green_apple", fr: "Green Apple" },
+      { code: "sirop_pear", fr: "Pear" },
+      { code: "sirop_peach", fr: "Peach" },
+      { code: "sirop_apricot", fr: "Apricot" },
+      { code: "sirop_strawberry", fr: "Strawberry" },
+      { code: "sirop_raspberry", fr: "Raspberry" },
+      { code: "sirop_cherry", fr: "Cherry" },
+      { code: "sirop_blackcurrant", fr: "Blackcurrant" },
+      { code: "sirop_blackberry", fr: "Blackberry" },
+      { code: "sirop_blueberry", fr: "Blueberry" },
+      { code: "sirop_cranberry", fr: "Cranberry" },
+      { code: "sirop_pomegranate", fr: "Pomegranate" },
+      { code: "sirop_pineapple", fr: "Pineapple" },
+      { code: "sirop_mango", fr: "Mango" },
+      { code: "sirop_passion_fruit", fr: "Passion Fruit" },
+      { code: "sirop_banana", fr: "Banana" },
+      { code: "sirop_coconut", fr: "Coconut" },
+      { code: "sirop_watermelon", fr: "Watermelon" },
+      { code: "sirop_kiwi", fr: "Kiwi" },
+      { code: "sirop_lychee", fr: "Lychee" },
+      { code: "sirop_mixed_berry", fr: "Mixed Berry" },
+      { code: "sirop_mixed_fruit", fr: "Mixed Fruit" },
+      { code: "sirop_tropical", fr: "Tropical" },
+      { code: "sirop_exotic", fr: "Exotic" },
+    ],
+  },
+  {
+    title: "Saveurs florales, végétales & épicées",
+    tags: [
+      { code: "sirop_mint", fr: "Mint" },
+      { code: "sirop_spearmint", fr: "Spearmint" },
+      { code: "sirop_peppermint", fr: "Peppermint" },
+      { code: "sirop_elderflower", fr: "Elderflower" },
+      { code: "sirop_violet", fr: "Violet" },
+      { code: "sirop_rose", fr: "Rose" },
+      { code: "sirop_lavender", fr: "Lavender" },
+      { code: "sirop_hibiscus", fr: "Hibiscus" },
+      { code: "sirop_jasmine", fr: "Jasmine" },
+      { code: "sirop_orange_blossom", fr: "Orange Blossom" },
+      { code: "sirop_basil", fr: "Basil" },
+      { code: "sirop_rosemary", fr: "Rosemary" },
+      { code: "sirop_thyme", fr: "Thyme" },
+      { code: "sirop_cucumber", fr: "Cucumber" },
+      { code: "sirop_ginger", fr: "Ginger" },
+      { code: "sirop_cinnamon", fr: "Cinnamon" },
+      { code: "sirop_anise", fr: "Anise" },
+      { code: "sirop_cardamom", fr: "Cardamom" },
+      { code: "sirop_clove", fr: "Clove" },
+      { code: "sirop_lemongrass", fr: "Lemongrass" },
+      { code: "sirop_licorice", fr: "Licorice" },
+      { code: "sirop_spiced", fr: "Spiced" },
+      { code: "sirop_herbal", fr: "Herbal" },
+      { code: "sirop_botanical", fr: "Botanical" },
+    ],
+  },
+  {
+    title: "Saveurs gourmandes & cocktails",
+    tags: [
+      { code: "sirop_vanilla", fr: "Vanilla" },
+      { code: "sirop_caramel", fr: "Caramel" },
+      { code: "sirop_salted_caramel", fr: "Salted Caramel" },
+      { code: "sirop_toffee", fr: "Toffee" },
+      { code: "sirop_chocolate", fr: "Chocolate" },
+      { code: "sirop_white_chocolate", fr: "White Chocolate" },
+      { code: "sirop_hazelnut", fr: "Hazelnut" },
+      { code: "sirop_almond", fr: "Almond" },
+      { code: "sirop_pistachio", fr: "Pistachio" },
+      { code: "sirop_orgeat", fr: "Orgeat" },
+      { code: "sirop_honey", fr: "Honey" },
+      { code: "sirop_maple", fr: "Maple" },
+      { code: "sirop_coffee", fr: "Coffee" },
+      { code: "sirop_gingerbread", fr: "Gingerbread" },
+      { code: "sirop_speculoos", fr: "Speculoos" },
+      { code: "sirop_cookie", fr: "Cookie" },
+      { code: "sirop_marshmallow", fr: "Marshmallow" },
+      { code: "sirop_bubble_gum", fr: "Bubble Gum" },
+      { code: "sirop_cotton_candy", fr: "Cotton Candy" },
+      { code: "sirop_mojito", fr: "Mojito" },
+      { code: "sirop_pina_colada", fr: "Piña Colada" },
+      { code: "sirop_blue_curacao", fr: "Blue Curaçao" },
+      { code: "sirop_amaretto", fr: "Amaretto" },
+      { code: "sirop_irish_cream", fr: "Irish Cream" },
+      { code: "sirop_cola", fr: "Cola" },
+    ],
+  },
+];
+
 // Les sous-catégories de Softs & Eaux qui ont une liste de styles, avec le préfixe des codes de leurs styles. Le préfixe est le
 // code de la sous-catégorie, sauf pour le Jus : sa sous-catégorie s'appelle toujours « jus_de_fruits » en base (seul son nom
 // affiché est devenu « Jus »), mais ses styles s'appellent « jus_… ».
-export const SOFT_STYLE_PREFIXES = { eau: "eau", soda: "soda", jus_de_fruits: "jus", energy: "energy", sport: "sport", lactee: "lactee" };
+export const SOFT_STYLE_PREFIXES = { eau: "eau", soda: "soda", jus_de_fruits: "jus", energy: "energy", sport: "sport", lactee: "lactee", sirop: "sirop" };
 export const SOFT_STYLE_SUBTYPES = Object.keys(SOFT_STYLE_PREFIXES);
 
 // La sous-catégorie à laquelle appartient un code de style de Softs & Eaux, ou null si ce n'est pas un de leurs codes
