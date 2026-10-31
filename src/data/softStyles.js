@@ -1,9 +1,9 @@
 // Styles des Softs & Eaux. Une sous-catégorie (voir SOFT_SUBTYPES) peut avoir sa propre liste de styles : pour l'instant
-// l'Eau (une liste plate), le Soda (trois groupes), le Jus et Energy (quatre groupes chacun). Le style d'un produit est
+// l'Eau (une liste plate), le Soda (trois groupes), le Jus, Energy et Sport (quatre groupes chacun). Le style d'un produit est
 // rangé dans la même colonne que ceux des bières et des vins (drinks_directory.styles, une liste de codes) : pour que les
 // codes de deux familles ne puissent jamais se confondre, ceux d'une sous-catégorie commencent par son préfixe (« eau_… »,
-// « soda_… », « jus_… », « energy_… »), et ceux qu'on y ajoute à la main par « perso_ » + ce préfixe (« perso_eau_… », voir
-// `codePrefix` dans customLists.js).
+// « soda_… », « jus_… », « energy_… », « sport_… »), et ceux qu'on y ajoute à la main par « perso_ » + ce préfixe
+// (« perso_eau_… », voir `codePrefix` dans customLists.js).
 
 // Eau : les cinq styles de départ (noms tels que donnés, en anglais). Comme toute liste modifiable, on peut les
 // renommer, les supprimer, et en ajouter depuis la fiche produit.
@@ -203,10 +203,69 @@ export const ENERGY_STYLE_GROUPS = [
   },
 ];
 
+// Sport : quatre classifications, rangées en groupes (comme le Soda, le Jus et Energy). Noms tels que donnés, en anglais ; les titres
+// des groupes sont ceux donnés. On peut les renommer, les supprimer, changer de groupe et en ajouter depuis la fiche produit.
+export const SPORT_STYLE_GROUPS = [
+  {
+    title: "Type de boisson sportive",
+    tags: [
+      { code: "sport_isotonic", fr: "Isotonic" },
+      { code: "sport_hypotonic", fr: "Hypotonic" },
+      { code: "sport_hypertonic", fr: "Hypertonic" },
+      { code: "sport_electrolyte", fr: "Electrolyte" },
+      { code: "sport_carbohydrate", fr: "Carbohydrate" },
+      { code: "sport_recovery", fr: "Recovery" },
+    ],
+  },
+  {
+    title: "Gazéification",
+    tags: [
+      { code: "sport_still", fr: "Still" },
+      { code: "sport_lightly_sparkling", fr: "Lightly Sparkling" },
+      { code: "sport_sparkling", fr: "Sparkling" },
+    ],
+  },
+  {
+    title: "Saveurs fruitées",
+    tags: [
+      { code: "sport_lemon", fr: "Lemon" },
+      { code: "sport_lime", fr: "Lime" },
+      { code: "sport_lemon_lime", fr: "Lemon-Lime" },
+      { code: "sport_orange", fr: "Orange" },
+      { code: "sport_grapefruit", fr: "Grapefruit" },
+      { code: "sport_apple", fr: "Apple" },
+      { code: "sport_peach", fr: "Peach" },
+      { code: "sport_mango", fr: "Mango" },
+      { code: "sport_pineapple", fr: "Pineapple" },
+      { code: "sport_passion_fruit", fr: "Passion Fruit" },
+      { code: "sport_watermelon", fr: "Watermelon" },
+      { code: "sport_strawberry", fr: "Strawberry" },
+      { code: "sport_raspberry", fr: "Raspberry" },
+      { code: "sport_cherry", fr: "Cherry" },
+      { code: "sport_blueberry", fr: "Blueberry" },
+      { code: "sport_mixed_berry", fr: "Mixed Berry" },
+      { code: "sport_mixed_fruit", fr: "Mixed Fruit" },
+      { code: "sport_tropical", fr: "Tropical" },
+    ],
+  },
+  {
+    title: "Autres saveurs",
+    tags: [
+      { code: "sport_ginger", fr: "Ginger" },
+      { code: "sport_mint", fr: "Mint" },
+      { code: "sport_coconut", fr: "Coconut" },
+      { code: "sport_citrus", fr: "Citrus" },
+      { code: "sport_herbal", fr: "Herbal" },
+      { code: "sport_botanical", fr: "Botanical" },
+      { code: "sport_neutral", fr: "Neutral" },
+    ],
+  },
+];
+
 // Les sous-catégories de Softs & Eaux qui ont une liste de styles, avec le préfixe des codes de leurs styles. Le préfixe est le
 // code de la sous-catégorie, sauf pour le Jus : sa sous-catégorie s'appelle toujours « jus_de_fruits » en base (seul son nom
 // affiché est devenu « Jus »), mais ses styles s'appellent « jus_… ».
-export const SOFT_STYLE_PREFIXES = { eau: "eau", soda: "soda", jus_de_fruits: "jus", energy: "energy" };
+export const SOFT_STYLE_PREFIXES = { eau: "eau", soda: "soda", jus_de_fruits: "jus", energy: "energy", sport: "sport" };
 export const SOFT_STYLE_SUBTYPES = Object.keys(SOFT_STYLE_PREFIXES);
 
 // La sous-catégorie à laquelle appartient un code de style de Softs & Eaux, ou null si ce n'est pas un de leurs codes
