@@ -1089,9 +1089,7 @@ export function DrinkDetailPanel({ drink, onClose, onSaved, myUserId }) {
               </>
             )}
             {stylesSectionOpen && isSoft && !SOFT_STYLE_LISTS[form.beverageSubtype] && (
-              <p style={{ fontSize: "12.5px", color: "#8792A6", fontStyle: "italic", margin: 0 }}>
-                {form.beverageSubtype ? "Pas encore de styles pour cette sous-catégorie." : "Choisissez d'abord une sous-catégorie."}
-              </p>
+              <p style={{ fontSize: "12.5px", color: "#8792A6", fontStyle: "italic", margin: 0 }}>Choisissez d'abord une sous-catégorie.</p>
             )}
             {stylesSectionOpen && !isSoft && (
               <>
