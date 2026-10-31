@@ -15,7 +15,7 @@
 // les groupes de départ, mise à jour de la liste en mémoire, contrôles et messages d'erreur.
 
 import { FLAVOR_NOTE_GROUPS, FOOD_PAIRINGS, OCCASIONS, PRODUCT_CHARACTERISTICS, RECOMMENDED_GLASSES } from "./beerCiderStyles.js";
-import { WATER_STYLES, SODA_STYLE_GROUPS, JUICE_STYLE_GROUPS, ENERGY_STYLE_GROUPS } from "./softStyles.js";
+import { WATER_STYLES, SODA_STYLE_GROUPS, JUICE_STYLE_GROUPS, ENERGY_STYLE_GROUPS, SPORT_STYLE_GROUPS } from "./softStyles.js";
 import { PAYMENT_METHODS, VENUE_TYPES, PRODUCER_TYPES, PRODUCER_PROFILES, BRAND_CLASSIFICATIONS, BRAND_TYPES } from "../constants.js";
 
 // Un code ne peut avoir qu'une place dans une liste modifiable (une modification d'un élément vise son code, et
@@ -419,8 +419,31 @@ export const ENERGY_STYLE_LIST = {
     searchPlaceholder: "Chercher un style (ex. Classic, Mango, Mint...)",
   },
 };
+
+// Fiche Softs & Eaux : styles de Sport — quatre classifications (Type de boisson sportive, Gazéification, Saveurs fruitées, Autres saveurs),
+// donc une liste à groupes comme le Soda, le Jus et Energy. Ses styles s'appellent « sport_… » (« perso_sport_… » pour un ajout à la main,
+// voir `codePrefix`). Seuls les produits Softs & Eaux sont comptés et modifiés.
+export const SPORT_ENTITY = { ...PRODUCT_ENTITY, all: "toutes les boissons sportives", none: "aucune boisson sportive" };
+export const SPORT_STYLE_LIST = {
+  key: "sport_style",
+  source: "soft_styles",
+  codePrefix: "perso_sport_",
+  entity: SPORT_ENTITY,
+  builtinGroups: SPORT_STYLE_GROUPS,
+  orphanTitle: "Autres styles",
+  words: {
+    noun: "style",
+    one: "un style",
+    this: "ce style",
+    the: "le style",
+    ofThe: "du style",
+    ofAll: "des styles",
+    namePlaceholder: "Nom du style (ex. Zero Sugar)",
+    searchPlaceholder: "Chercher un style (ex. Isotonic, Lemon, Mint...)",
+  },
+};
 // La liste de styles de chaque sous-catégorie de Softs & Eaux qui en a une (clé : code de la sous-catégorie).
-export const SOFT_STYLE_LISTS = { eau: WATER_STYLE_LIST, soda: SODA_STYLE_LIST, jus_de_fruits: JUICE_STYLE_LIST, energy: ENERGY_STYLE_LIST };
+export const SOFT_STYLE_LISTS = { eau: WATER_STYLE_LIST, soda: SODA_STYLE_LIST, jus_de_fruits: JUICE_STYLE_LIST, energy: ENERGY_STYLE_LIST, sport: SPORT_STYLE_LIST };
 
 // L'avertissement à montrer avant de supprimer cet élément, ou null : celui propre au code, sinon celui de la liste
 // (qui ne vaut que pour un élément de départ : un élément ajouté à la main n'existait pas dans l'application).
