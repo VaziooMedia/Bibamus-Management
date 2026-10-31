@@ -111,6 +111,12 @@ export const HOT_SUBTYPES = [
   { code: "hot_mix", fr: "Hot Mix" },
   { code: "cereales_chicoree", fr: "Céréales & Chicorée" },
 ];
+// Cocktails / Mocktails : une seule sous-catégorie par produit, choisie dans la liste déroulante sous « Catégorie » (comme
+// pour les Softs & Eaux et les Boissons chaudes). Au départ, aucune : « — ». Pas de liste de styles pour l'instant.
+export const COCKTAIL_SUBTYPES = [
+  { code: "cocktail", fr: "Cocktails" },
+  { code: "mocktail", fr: "Mocktails" },
+];
 const SOFT_COMING_SOON_TITLE = "Pas encore disponible pour les Softs & Eaux";
 const HOT_COMING_SOON_TITLE = "Pas encore disponible pour les Boissons chaudes";
 const COCKTAIL_COMING_SOON_TITLE = "Pas encore disponible pour les Cocktails / Mocktails";
@@ -405,7 +411,7 @@ export function DrinkDetailPanel({ drink, onClose, onSaved, myUserId }) {
   const isHot = form.type === "boissons_chaudes";
   const isCocktail = form.type === "cocktails_mocktails";
   const isSnack = form.type === "snacks";
-  // Cocktails / Mocktails et Snacks : ni sous-catégorie ni styles pour l'instant (pas de liste).
+  // Cocktails / Mocktails et Snacks : pas de styles pour l'instant (pas de liste).
   const hasNoStyles = isCocktail || isSnack;
   // Taux d'alcool grisé : Softs & Eaux et Snacks.
   const alcoholGreyed = isSoft || isSnack;
@@ -423,6 +429,11 @@ export function DrinkDetailPanel({ drink, onClose, onSaved, myUserId }) {
     if (isHot) {
       // Boissons chaudes : de même, une sous-catégorie qui n'est pas de cette famille est vidée.
       if (form.beverageSubtype !== "" && !HOT_SUBTYPES.some((s) => s.code === form.beverageSubtype)) set("beverageSubtype", "");
+      return;
+    }
+    if (isCocktail) {
+      // Cocktails / Mocktails : de même, une sous-catégorie qui n'est pas de cette famille est vidée.
+      if (form.beverageSubtype !== "" && !COCKTAIL_SUBTYPES.some((s) => s.code === form.beverageSubtype)) set("beverageSubtype", "");
       return;
     }
     const validSubtypes = isBeerOrCider ? BEER_CIDER_SUBTYPES : isWine ? WINE_SUBTYPES : isSpirit ? SPIRIT_SUBTYPES : null;
@@ -491,9 +502,9 @@ export function DrinkDetailPanel({ drink, onClose, onSaved, myUserId }) {
       // Snacks : « defaultVolumeCl » et « kcalPer100ml » gardent leur colonne ; la fiche les présente en grammes et en kcal/100gr.
       return {
         ...base,
-        // Cocktails / Mocktails et Snacks : ni sous-catégorie ni styles pour l'instant (pas de liste) — la sous-catégorie est vidée (null),
-        // les styles ne sont pas touchés.
-        beverageSubtype: hasNoStyles ? null : form.beverageSubtype || null,
+        // Cocktails / Mocktails : une sous-catégorie (Cocktails ou Mocktails) mais pas de styles pour l'instant (pas de liste) — les styles
+        // ne sont pas touchés. Snacks : ni sous-catégorie (vidée, null) ni styles.
+        beverageSubtype: isSnack ? null : form.beverageSubtype || null,
         // Styles : ceux de la sous-catégorie choisie ; ceux d'une AUTRE sous-catégorie de la même catégorie, restés cochés
         // après un changement de sous-catégorie, sont retirés.
         ...(hasNoStyles ? {} : { styles: isHot ? stylesForHotSubtype(form.styles, form.beverageSubtype) : stylesForSoftSubtype(form.styles, form.beverageSubtype) }),
@@ -788,12 +799,12 @@ export function DrinkDetailPanel({ drink, onClose, onSaved, myUserId }) {
           ))}
         </select>
 
-        {(isBeerOrCider || isWine || isSpirit || isSoft || isHot) && (
+        {(isBeerOrCider || isWine || isSpirit || isSoft || isHot || isCocktail) && (
           <>
             <label style={labelStyle}>Sous-catégorie</label>
             <select value={form.beverageSubtype} onChange={(e) => set("beverageSubtype", e.target.value)} style={{ ...fieldStyle, width: "220px", marginBottom: "14px" }}>
-              {(isSoft || isHot) && <option value="">—</option>}
-              {(isBeerOrCider ? BEER_CIDER_SUBTYPES : isWine ? WINE_SUBTYPES : isSpirit ? SPIRIT_SUBTYPES : isSoft ? SOFT_SUBTYPES : HOT_SUBTYPES).map((t) => (
+              {(isSoft || isHot || isCocktail) && <option value="">—</option>}
+              {(isBeerOrCider ? BEER_CIDER_SUBTYPES : isWine ? WINE_SUBTYPES : isSpirit ? SPIRIT_SUBTYPES : isSoft ? SOFT_SUBTYPES : isCocktail ? COCKTAIL_SUBTYPES : HOT_SUBTYPES).map((t) => (
                 <option key={t.code} value={t.code}>
                   {t.fr}
                 </option>
