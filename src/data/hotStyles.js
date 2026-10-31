@@ -357,9 +357,116 @@ export const INFUSION_STYLE_GROUPS = [
   },
 ];
 
+// Hot Milk : cinq classifications (Types de boissons, Base lactée ou végétale, Saveurs, Présentation commerciale, Texture & Profil
+// gustatif), rangées en groupes comme celles du Café, du Thé et de l'Infusion. Noms tels que donnés, en anglais. Codes « hot_milk_… »
+// (« perso_hot_milk_… » pour un ajout à la main) ; comme Hazelnut, Almond et Coconut existent à la fois comme base et comme saveur,
+// les codes du groupe « Base lactée ou végétale » portent en plus « base_ » (« hot_milk_base_… ») pour rester uniques.
+// Comme toute liste modifiable, on peut renommer, supprimer, changer de groupe et ajouter depuis la fiche produit.
+export const HOT_MILK_STYLE_GROUPS = [
+  {
+    title: "Types de boissons",
+    tags: [
+      { code: "hot_milk_hot_chocolate", fr: "Hot Chocolate" },
+      { code: "hot_milk_hot_cocoa", fr: "Hot Cocoa" },
+      { code: "hot_milk_white_hot_chocolate", fr: "White Hot Chocolate" },
+      { code: "hot_milk_hot_milk", fr: "Hot Milk" },
+      { code: "hot_milk_flavored_milk", fr: "Flavored Milk" },
+      { code: "hot_milk_malted_milk", fr: "Malted Milk" },
+      { code: "hot_milk_spiced_milk", fr: "Spiced Milk" },
+      { code: "hot_milk_plant_based_drink", fr: "Plant-Based Drink" },
+      { code: "hot_milk_milk_powder", fr: "Milk Powder" },
+      { code: "hot_milk_chocolate_powder", fr: "Chocolate Powder" },
+      { code: "hot_milk_cocoa_powder", fr: "Cocoa Powder" },
+    ],
+  },
+  {
+    title: "Base lactée ou végétale",
+    tags: [
+      { code: "hot_milk_base_cow_milk", fr: "Cow Milk" },
+      { code: "hot_milk_base_goat_milk", fr: "Goat Milk" },
+      { code: "hot_milk_base_sheep_milk", fr: "Sheep Milk" },
+      { code: "hot_milk_base_soy", fr: "Soy" },
+      { code: "hot_milk_base_oat", fr: "Oat" },
+      { code: "hot_milk_base_almond", fr: "Almond" },
+      { code: "hot_milk_base_coconut", fr: "Coconut" },
+      { code: "hot_milk_base_rice", fr: "Rice" },
+      { code: "hot_milk_base_hazelnut", fr: "Hazelnut" },
+      { code: "hot_milk_base_cashew", fr: "Cashew" },
+      { code: "hot_milk_base_pea", fr: "Pea" },
+    ],
+  },
+  {
+    title: "Saveurs",
+    tags: [
+      { code: "hot_milk_plain", fr: "Plain" },
+      { code: "hot_milk_chocolate", fr: "Chocolate" },
+      { code: "hot_milk_dark_chocolate", fr: "Dark Chocolate" },
+      { code: "hot_milk_milk_chocolate", fr: "Milk Chocolate" },
+      { code: "hot_milk_white_chocolate", fr: "White Chocolate" },
+      { code: "hot_milk_vanilla", fr: "Vanilla" },
+      { code: "hot_milk_caramel", fr: "Caramel" },
+      { code: "hot_milk_salted_caramel", fr: "Salted Caramel" },
+      { code: "hot_milk_hazelnut", fr: "Hazelnut" },
+      { code: "hot_milk_almond", fr: "Almond" },
+      { code: "hot_milk_coconut", fr: "Coconut" },
+      { code: "hot_milk_pistachio", fr: "Pistachio" },
+      { code: "hot_milk_strawberry", fr: "Strawberry" },
+      { code: "hot_milk_banana", fr: "Banana" },
+      { code: "hot_milk_orange", fr: "Orange" },
+      { code: "hot_milk_raspberry", fr: "Raspberry" },
+      { code: "hot_milk_cherry", fr: "Cherry" },
+      { code: "hot_milk_mint", fr: "Mint" },
+      { code: "hot_milk_peppermint", fr: "Peppermint" },
+      { code: "hot_milk_cinnamon", fr: "Cinnamon" },
+      { code: "hot_milk_ginger", fr: "Ginger" },
+      { code: "hot_milk_cardamom", fr: "Cardamom" },
+      { code: "hot_milk_chili", fr: "Chili" },
+      { code: "hot_milk_honey", fr: "Honey" },
+      { code: "hot_milk_maple", fr: "Maple" },
+      { code: "hot_milk_speculoos", fr: "Speculoos" },
+      { code: "hot_milk_gingerbread", fr: "Gingerbread" },
+      { code: "hot_milk_toffee", fr: "Toffee" },
+      { code: "hot_milk_coffee", fr: "Coffee" },
+      { code: "hot_milk_malt", fr: "Malt" },
+    ],
+  },
+  {
+    title: "Présentation commerciale",
+    tags: [
+      { code: "hot_milk_powdered", fr: "Powdered" },
+      { code: "hot_milk_instant", fr: "Instant" },
+      { code: "hot_milk_ready_to_drink", fr: "Ready to Drink" },
+      { code: "hot_milk_concentrate", fr: "Concentrate" },
+      { code: "hot_milk_chocolate_flakes", fr: "Chocolate Flakes" },
+      { code: "hot_milk_chocolate_drops", fr: "Chocolate Drops" },
+      { code: "hot_milk_chocolate_block", fr: "Chocolate Block" },
+      { code: "hot_milk_single_serve", fr: "Single Serve" },
+    ],
+  },
+  {
+    title: "Texture & Profil gustatif",
+    tags: [
+      { code: "hot_milk_creamy", fr: "Creamy" },
+      { code: "hot_milk_smooth", fr: "Smooth" },
+      { code: "hot_milk_thick", fr: "Thick" },
+      { code: "hot_milk_light", fr: "Light" },
+      { code: "hot_milk_rich", fr: "Rich" },
+      { code: "hot_milk_velvety", fr: "Velvety" },
+      { code: "hot_milk_frothy", fr: "Frothy" },
+      { code: "hot_milk_sweet", fr: "Sweet" },
+      { code: "hot_milk_bitter", fr: "Bitter" },
+      { code: "hot_milk_bittersweet", fr: "Bittersweet" },
+      { code: "hot_milk_intense", fr: "Intense" },
+      { code: "hot_milk_roasted", fr: "Roasted" },
+      { code: "hot_milk_nutty", fr: "Nutty" },
+      { code: "hot_milk_spicy", fr: "Spicy" },
+    ],
+  },
+];
+
 // Les sous-catégories de Boissons chaudes qui ont une liste de styles, avec le préfixe des codes de leurs styles (ici le
 // code de la sous-catégorie).
-export const HOT_STYLE_PREFIXES = { cafe: "cafe", the: "the", infusion: "infusion" };
+export const HOT_STYLE_PREFIXES = { cafe: "cafe", the: "the", infusion: "infusion", hot_milk: "hot_milk" };
 export const HOT_STYLE_SUBTYPES = Object.keys(HOT_STYLE_PREFIXES);
 
 // La sous-catégorie à laquelle appartient un code de style de Boissons chaudes, ou null si ce n'est pas un de leurs codes
