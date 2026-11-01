@@ -21,10 +21,12 @@ import {
   deleteHotStyle,
   countDrinksWithCocktailStyle,
   deleteCocktailStyle,
+  countDrinksWithSoftCharacteristic,
+  deleteSoftCharacteristic,
   saveCustomListOrder,
 } from "../data/sharedDirectories.js";
 
-// Où une liste compte et supprime ses éléments : dans les lieux, dans les producteurs, dans les marques, dans les softs, dans les boissons chaudes, dans les cocktails / mocktails, ou (par défaut) dans les produits.
+// Où une liste compte et supprime ses éléments : dans les lieux, dans les producteurs, dans les marques, dans les softs, dans les boissons chaudes, dans les cocktails / mocktails, dans les caractéristiques des softs, ou (par défaut) dans les produits.
 const SOURCES = {
   venues: { count: countVenuesWithListItem, remove: deleteVenueListItem },
   producers: { count: countProducersWithListItem, remove: deleteProducerListItem },
@@ -32,6 +34,7 @@ const SOURCES = {
   soft_styles: { count: countDrinksWithSoftStyle, remove: deleteSoftStyle },
   hot_styles: { count: countDrinksWithHotStyle, remove: deleteHotStyle },
   cocktail_styles: { count: countDrinksWithCocktailStyle, remove: deleteCocktailStyle },
+  soft_characteristics: { count: countDrinksWithSoftCharacteristic, remove: deleteSoftCharacteristic },
 };
 const PRODUCT_SOURCE = { count: countDrinksWithListItem, remove: deleteCustomListItem };
 // La source d'une liste (aussi lue par GroupedListField, pour les listes à groupes).

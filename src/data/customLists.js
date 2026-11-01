@@ -16,6 +16,7 @@
 
 import { FLAVOR_NOTE_GROUPS, FOOD_PAIRINGS, OCCASIONS, PRODUCT_CHARACTERISTICS, RECOMMENDED_GLASSES } from "./beerCiderStyles.js";
 import { WATER_STYLES, SODA_STYLE_GROUPS, JUICE_STYLE_GROUPS, ENERGY_STYLE_GROUPS, SPORT_STYLE_GROUPS, DAIRY_STYLE_GROUPS, SYRUP_STYLE_GROUPS } from "./softStyles.js";
+import { SOFT_CHARACTERISTICS } from "./softCharacteristics.js";
 import { COFFEE_STYLE_GROUPS, TEA_STYLE_GROUPS, INFUSION_STYLE_GROUPS, HOT_MILK_STYLE_GROUPS, SOUP_STYLE_GROUPS, HOT_MIX_STYLE_GROUPS, CEREAL_CHICORY_STYLE_GROUPS } from "./hotStyles.js";
 import { COCKTAIL_STYLE_GROUPS, MOCKTAIL_STYLE_GROUPS } from "./cocktailStyles.js";
 import { PAYMENT_METHODS, VENUE_TYPES, PRODUCER_TYPES, PRODUCER_PROFILES, BRAND_CLASSIFICATIONS, BRAND_TYPES } from "../constants.js";
@@ -494,6 +495,37 @@ export const SYRUP_STYLE_LIST = {
 };
 // La liste de styles de chaque sous-catégorie de Softs & Eaux (clé : code de la sous-catégorie).
 export const SOFT_STYLE_LISTS = { eau: WATER_STYLE_LIST, soda: SODA_STYLE_LIST, jus_de_fruits: JUICE_STYLE_LIST, energy: ENERGY_STYLE_LIST, sport: SPORT_STYLE_LIST, lactee: DAIRY_STYLE_LIST, sirop: SYRUP_STYLE_LIST };
+
+// Fiche Softs & Eaux, Niveau 2 : « Caractéristiques & labels » — une liste plate à plusieurs choix (étiquettes), comme celle des bières mais
+// avec ses propres éléments, en anglais (voir softCharacteristics.js). La liste s'appelle « soft_characteristic » ; son choix est rangé dans
+// la même colonne que celui des bières (drinks_directory.characteristics). Quatre éléments de départ ont le code de leur équivalent des
+// bières (« gluten_free », « bio », « sugar_free », « lactose_free »), les autres commencent par « soft_ » (« perso_soft_… » pour un ajout à
+// la main, voir `codePrefix`). Seuls les produits Softs & Eaux sont comptés et modifiés (`source: "soft_characteristics"`) : cette colonne est
+// aussi celle des bières, des vins et des spiritueux. « Gluten Free » et « Organic » sont, comme « Sans gluten » et « Bio » des bières, lus par
+// l'application Bibamus (cases « sans gluten » et « bio ») : `deleteNotices` en avertit à la confirmation d'une suppression.
+export const SOFT_CHARACTERISTIC_ENTITY = { ...PRODUCT_ENTITY, all: "tous les softs et eaux", none: "aucun soft ni eau" };
+export const SOFT_CHARACTERISTIC_LIST = {
+  key: "soft_characteristic",
+  flat: true,
+  source: "soft_characteristics",
+  codePrefix: "perso_soft_",
+  entity: SOFT_CHARACTERISTIC_ENTITY,
+  builtinGroups: [{ title: "", tags: SOFT_CHARACTERISTICS }],
+  orphanTitle: "",
+  words: {
+    noun: "caractéristique",
+    one: "une caractéristique",
+    this: "cette caractéristique",
+    the: "la caractéristique",
+    ofThe: "de la caractéristique",
+    ofAll: "des caractéristiques",
+    namePlaceholder: "Nom de la caractéristique (ex. Kosher)",
+  },
+  deleteNotices: {
+    gluten_free: APP_NOTICE("Gluten Free"),
+    bio: APP_NOTICE("Organic"),
+  },
+};
 
 // Fiche Boissons chaudes : styles du Café — six classifications (Types de café, Variétés de café, Torréfaction, Profil aromatique,
 // Profil gustatif, Traitement des grains), donc une liste à groupes comme celles des softs. La liste s'appelle « coffee_style »,
