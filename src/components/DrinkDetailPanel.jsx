@@ -412,8 +412,8 @@ export function DrinkDetailPanel({ drink, onClose, onSaved, myUserId }) {
   const isHot = form.type === "boissons_chaudes";
   const isCocktail = form.type === "cocktails_mocktails";
   const isSnack = form.type === "snacks";
-  // Snacks : pas de styles pour l'instant (pas de liste). Cocktails / Mocktails : une liste de styles pour la sous-catégorie « Cocktails »
-  // (« Mocktails » n'en a pas encore).
+  // Snacks : pas de styles pour l'instant (pas de liste). Cocktails / Mocktails : une liste de styles par sous-catégorie
+  // (« Cocktails » et « Mocktails »).
   const hasNoStyles = isSnack;
   // Taux d'alcool grisé : Softs & Eaux et Snacks.
   const alcoholGreyed = isSoft || isSnack;
@@ -507,7 +507,7 @@ export function DrinkDetailPanel({ drink, onClose, onSaved, myUserId }) {
       // Snacks : « defaultVolumeCl » et « kcalPer100ml » gardent leur colonne ; la fiche les présente en grammes et en kcal/100gr.
       return {
         ...base,
-        // Cocktails / Mocktails : une sous-catégorie (Cocktails ou Mocktails) et les styles de celle qui a une liste (« Cocktails »).
+        // Cocktails / Mocktails : une sous-catégorie (Cocktails ou Mocktails) et les styles de sa liste.
         // Snacks : ni sous-catégorie (vidée, null) ni styles (les styles ne sont pas touchés).
         beverageSubtype: isSnack ? null : form.beverageSubtype || null,
         // Styles : ceux de la sous-catégorie choisie ; ceux d'une AUTRE sous-catégorie de la même catégorie, restés cochés

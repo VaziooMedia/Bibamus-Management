@@ -2353,9 +2353,9 @@ export async function deleteHotStyle(listKey, { code, fr, groupTitle }) {
   return { removedFrom: Number(data) || 0 };
 }
 
-// Styles des Cocktails / Mocktails (liste « cocktail_style » de custom_list_items, colonne drinks_directory.styles) : comptés et retirés
+// Styles des Cocktails / Mocktails (listes « cocktail_style » et « mocktail_style » de custom_list_items, colonne drinks_directory.styles) : comptés et retirés
 // uniquement parmi les produits Cocktails / Mocktails, car cette colonne est aussi celle des bières, des vins, des softs et des boissons
-// chaudes. Fonctions SQL propres (voir le script « cocktail-styles »), sur le modèle de celles des boissons chaudes.
+// chaudes. Fonctions SQL propres (voir le script « cocktail-styles », qui accepte les deux listes), sur le modèle de celles des boissons chaudes.
 export async function countDrinksWithCocktailStyle(listKey, code) {
   const { data, error } = await supabase.rpc("count_drinks_with_cocktail_style", { p_list: listKey, p_code: code });
   if (error) {
