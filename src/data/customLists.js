@@ -17,7 +17,7 @@
 import { FLAVOR_NOTE_GROUPS, FOOD_PAIRINGS, OCCASIONS, PRODUCT_CHARACTERISTICS, RECOMMENDED_GLASSES } from "./beerCiderStyles.js";
 import { WATER_STYLES, SODA_STYLE_GROUPS, JUICE_STYLE_GROUPS, ENERGY_STYLE_GROUPS, SPORT_STYLE_GROUPS, DAIRY_STYLE_GROUPS, SYRUP_STYLE_GROUPS } from "./softStyles.js";
 import { COFFEE_STYLE_GROUPS, TEA_STYLE_GROUPS, INFUSION_STYLE_GROUPS, HOT_MILK_STYLE_GROUPS, SOUP_STYLE_GROUPS, HOT_MIX_STYLE_GROUPS, CEREAL_CHICORY_STYLE_GROUPS } from "./hotStyles.js";
-import { COCKTAIL_STYLE_GROUPS } from "./cocktailStyles.js";
+import { COCKTAIL_STYLE_GROUPS, MOCKTAIL_STYLE_GROUPS } from "./cocktailStyles.js";
 import { PAYMENT_METHODS, VENUE_TYPES, PRODUCER_TYPES, PRODUCER_PROFILES, BRAND_CLASSIFICATIONS, BRAND_TYPES } from "../constants.js";
 
 // Un code ne peut avoir qu'une place dans une liste modifiable (une modification d'un élément vise son code, et
@@ -689,8 +689,33 @@ export const COCKTAIL_STYLE_LIST = {
     searchPlaceholder: "Chercher un style (ex. Long Drink, Gin, Mint...)",
   },
 };
-// La liste de styles de chaque sous-catégorie de Cocktails / Mocktails (clé : code de la sous-catégorie) ; « Mocktails » n'en a pas encore.
-export const COCKTAIL_STYLE_LISTS = { cocktail: COCKTAIL_STYLE_LIST };
+
+// Styles des Mocktails : six classifications (Types de mocktails, Bases sans alcool & Mixers, Gazéification, Saveurs fruitées,
+// Saveurs végétales, épicées & Profil aromatique, Texture & Présentation). La liste s'appelle « mocktail_style », ses styles
+// « mocktail_… » (« perso_mocktail_… » pour un ajout à la main). Même colonne et mêmes fonctions de comptage et de suppression que
+// celles des Cocktails (`source: "cocktail_styles"`, qui ne regardent que les produits Cocktails / Mocktails) : seul le nom de la
+// liste change. Les styles de départ sont dans cocktailStyles.js.
+export const MOCKTAIL_ENTITY = { ...PRODUCT_ENTITY, all: "tous les mocktails", none: "aucun mocktail" };
+export const MOCKTAIL_STYLE_LIST = {
+  key: "mocktail_style",
+  source: "cocktail_styles",
+  codePrefix: "perso_mocktail_",
+  entity: MOCKTAIL_ENTITY,
+  builtinGroups: MOCKTAIL_STYLE_GROUPS,
+  orphanTitle: "Autres styles",
+  words: {
+    noun: "style",
+    one: "un style",
+    this: "ce style",
+    the: "le style",
+    ofThe: "du style",
+    ofAll: "des styles",
+    namePlaceholder: "Nom du style (ex. Cooler)",
+    searchPlaceholder: "Chercher un style (ex. Long Drink, Fruit Juice, Mint...)",
+  },
+};
+// La liste de styles de chaque sous-catégorie de Cocktails / Mocktails (clé : code de la sous-catégorie).
+export const COCKTAIL_STYLE_LISTS = { cocktail: COCKTAIL_STYLE_LIST, mocktail: MOCKTAIL_STYLE_LIST };
 
 // L'avertissement à montrer avant de supprimer cet élément, ou null : celui propre au code, sinon celui de la liste
 // (qui ne vaut que pour un élément de départ : un élément ajouté à la main n'existait pas dans l'application).

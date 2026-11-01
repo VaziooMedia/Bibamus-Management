@@ -1,5 +1,5 @@
-// Styles des Cocktails / Mocktails. Une sous-catégorie (voir COCKTAIL_SUBTYPES) peut avoir sa propre liste de styles : pour
-// l'instant « Cocktails » a la sienne (six groupes) ; « Mocktails » suivra. Le style d'un produit est rangé dans la même colonne
+// Styles des Cocktails / Mocktails. Chaque sous-catégorie (voir COCKTAIL_SUBTYPES) a sa propre liste de styles : six groupes pour
+// « Cocktails », six autres pour « Mocktails ». Le style d'un produit est rangé dans la même colonne
 // que ceux des bières, des vins, des softs et des boissons chaudes (drinks_directory.styles, une liste de codes) : pour que les
 // codes de deux familles ne puissent jamais se confondre, ceux d'une sous-catégorie commencent par son préfixe (« cocktail_… »),
 // et ceux qu'on y ajoute à la main par « perso_ » + ce préfixe (« perso_cocktail_… », voir `codePrefix` dans customLists.js).
@@ -164,9 +164,158 @@ export const COCKTAIL_STYLE_GROUPS = [
   },
 ];
 
+// Mocktails : six classifications, rangées en groupes comme celles des Cocktails. Noms tels que donnés, en anglais ; les titres des
+// groupes sont en français. Un seul nom existe dans deux groupes (« Frozen » : types et texture) : pour que les codes restent
+// uniques et se ressemblent d'un groupe à l'autre, ceux des deux groupes de saveurs portent en plus « arome_ » (« mocktail_arome_… »)
+// et ceux du groupe « Texture & Présentation » « texture_ » (« mocktail_texture_… »), comme pour les Cocktails. Les codes des
+// Mocktails commencent par « mocktail_ » (« perso_mocktail_… » pour un ajout à la main), jamais par « cocktail_ ».
+export const MOCKTAIL_STYLE_GROUPS = [
+  {
+    title: "Types de mocktails",
+    tags: [
+      { code: "mocktail_long_drink", fr: "Long Drink" },
+      { code: "mocktail_short_drink", fr: "Short Drink" },
+      { code: "mocktail_highball", fr: "Highball" },
+      { code: "mocktail_sour", fr: "Sour" },
+      { code: "mocktail_fizz", fr: "Fizz" },
+      { code: "mocktail_collins", fr: "Collins" },
+      { code: "mocktail_spritz", fr: "Spritz" },
+      { code: "mocktail_tiki", fr: "Tiki" },
+      { code: "mocktail_punch", fr: "Punch" },
+      { code: "mocktail_smash", fr: "Smash" },
+      { code: "mocktail_julep", fr: "Julep" },
+      { code: "mocktail_mule", fr: "Mule" },
+      { code: "mocktail_martini_style", fr: "Martini-Style" },
+      { code: "mocktail_shooter", fr: "Shooter" },
+      { code: "mocktail_frozen", fr: "Frozen" },
+    ],
+  },
+  {
+    title: "Bases sans alcool & Mixers",
+    tags: [
+      { code: "mocktail_non_alcoholic_spirit", fr: "Non-Alcoholic Spirit" },
+      { code: "mocktail_non_alcoholic_aperitif", fr: "Non-Alcoholic Aperitif" },
+      { code: "mocktail_non_alcoholic_wine", fr: "Non-Alcoholic Wine" },
+      { code: "mocktail_non_alcoholic_sparkling_wine", fr: "Non-Alcoholic Sparkling Wine" },
+      { code: "mocktail_non_alcoholic_beer", fr: "Non-Alcoholic Beer" },
+      { code: "mocktail_fruit_juice", fr: "Fruit Juice" },
+      { code: "mocktail_citrus_juice", fr: "Citrus Juice" },
+      { code: "mocktail_tomato_juice", fr: "Tomato Juice" },
+      { code: "mocktail_soda", fr: "Soda" },
+      { code: "mocktail_cola", fr: "Cola" },
+      { code: "mocktail_tonic", fr: "Tonic" },
+      { code: "mocktail_ginger_ale", fr: "Ginger Ale" },
+      { code: "mocktail_ginger_beer", fr: "Ginger Beer" },
+      { code: "mocktail_sparkling_water", fr: "Sparkling Water" },
+      { code: "mocktail_coconut_water", fr: "Coconut Water" },
+      { code: "mocktail_coconut_cream", fr: "Coconut Cream" },
+      { code: "mocktail_cream", fr: "Cream" },
+      { code: "mocktail_milk", fr: "Milk" },
+      { code: "mocktail_coffee", fr: "Coffee" },
+      { code: "mocktail_tea", fr: "Tea" },
+      { code: "mocktail_syrup", fr: "Syrup" },
+      { code: "mocktail_grenadine", fr: "Grenadine" },
+      { code: "mocktail_shrub", fr: "Shrub" },
+      { code: "mocktail_egg_white", fr: "Egg White" },
+      { code: "mocktail_aquafaba", fr: "Aquafaba" },
+      { code: "mocktail_verjus", fr: "Verjus" },
+      { code: "mocktail_alcohol_free_bitters", fr: "Alcohol-Free Bitters" },
+    ],
+  },
+  {
+    title: "Gazéification",
+    tags: [
+      { code: "mocktail_still", fr: "Still" },
+      { code: "mocktail_lightly_sparkling", fr: "Lightly Sparkling" },
+      { code: "mocktail_sparkling", fr: "Sparkling" },
+    ],
+  },
+  {
+    title: "Saveurs fruitées",
+    tags: [
+      { code: "mocktail_arome_citrus", fr: "Citrus" },
+      { code: "mocktail_arome_lemon", fr: "Lemon" },
+      { code: "mocktail_arome_lime", fr: "Lime" },
+      { code: "mocktail_arome_orange", fr: "Orange" },
+      { code: "mocktail_arome_grapefruit", fr: "Grapefruit" },
+      { code: "mocktail_arome_pineapple", fr: "Pineapple" },
+      { code: "mocktail_arome_coconut", fr: "Coconut" },
+      { code: "mocktail_arome_mango", fr: "Mango" },
+      { code: "mocktail_arome_passion_fruit", fr: "Passion Fruit" },
+      { code: "mocktail_arome_peach", fr: "Peach" },
+      { code: "mocktail_arome_apple", fr: "Apple" },
+      { code: "mocktail_arome_pear", fr: "Pear" },
+      { code: "mocktail_arome_strawberry", fr: "Strawberry" },
+      { code: "mocktail_arome_raspberry", fr: "Raspberry" },
+      { code: "mocktail_arome_cherry", fr: "Cherry" },
+      { code: "mocktail_arome_cranberry", fr: "Cranberry" },
+      { code: "mocktail_arome_blueberry", fr: "Blueberry" },
+      { code: "mocktail_arome_blackcurrant", fr: "Blackcurrant" },
+      { code: "mocktail_arome_watermelon", fr: "Watermelon" },
+      { code: "mocktail_arome_pomegranate", fr: "Pomegranate" },
+      { code: "mocktail_arome_mixed_berry", fr: "Mixed Berry" },
+      { code: "mocktail_arome_mixed_fruit", fr: "Mixed Fruit" },
+      { code: "mocktail_arome_tropical", fr: "Tropical" },
+    ],
+  },
+  {
+    title: "Saveurs végétales, épicées & Profil aromatique",
+    tags: [
+      { code: "mocktail_arome_mint", fr: "Mint" },
+      { code: "mocktail_arome_peppermint", fr: "Peppermint" },
+      { code: "mocktail_arome_basil", fr: "Basil" },
+      { code: "mocktail_arome_rosemary", fr: "Rosemary" },
+      { code: "mocktail_arome_thyme", fr: "Thyme" },
+      { code: "mocktail_arome_cucumber", fr: "Cucumber" },
+      { code: "mocktail_arome_ginger", fr: "Ginger" },
+      { code: "mocktail_arome_lemongrass", fr: "Lemongrass" },
+      { code: "mocktail_arome_elderflower", fr: "Elderflower" },
+      { code: "mocktail_arome_hibiscus", fr: "Hibiscus" },
+      { code: "mocktail_arome_lavender", fr: "Lavender" },
+      { code: "mocktail_arome_rose", fr: "Rose" },
+      { code: "mocktail_arome_vanilla", fr: "Vanilla" },
+      { code: "mocktail_arome_caramel", fr: "Caramel" },
+      { code: "mocktail_arome_honey", fr: "Honey" },
+      { code: "mocktail_arome_cinnamon", fr: "Cinnamon" },
+      { code: "mocktail_arome_cardamom", fr: "Cardamom" },
+      { code: "mocktail_arome_chili", fr: "Chili" },
+      { code: "mocktail_arome_floral", fr: "Floral" },
+      { code: "mocktail_arome_herbal", fr: "Herbal" },
+      { code: "mocktail_arome_botanical", fr: "Botanical" },
+      { code: "mocktail_arome_spicy", fr: "Spicy" },
+      { code: "mocktail_arome_smoky", fr: "Smoky" },
+      { code: "mocktail_arome_fruity", fr: "Fruity" },
+      { code: "mocktail_arome_sweet", fr: "Sweet" },
+      { code: "mocktail_arome_bitter", fr: "Bitter" },
+      { code: "mocktail_arome_tart", fr: "Tart" },
+      { code: "mocktail_arome_dry", fr: "Dry" },
+      { code: "mocktail_arome_balanced", fr: "Balanced" },
+      { code: "mocktail_arome_refreshing", fr: "Refreshing" },
+    ],
+  },
+  {
+    title: "Texture & Présentation",
+    tags: [
+      { code: "mocktail_texture_on_the_rocks", fr: "On the Rocks" },
+      { code: "mocktail_texture_straight_up", fr: "Straight Up" },
+      { code: "mocktail_texture_crushed_ice", fr: "Crushed Ice" },
+      { code: "mocktail_texture_frozen", fr: "Frozen" },
+      { code: "mocktail_texture_slushy", fr: "Slushy" },
+      { code: "mocktail_texture_creamy", fr: "Creamy" },
+      { code: "mocktail_texture_frothy", fr: "Frothy" },
+      { code: "mocktail_texture_smooth", fr: "Smooth" },
+      { code: "mocktail_texture_layered", fr: "Layered" },
+      { code: "mocktail_texture_blended", fr: "Blended" },
+      { code: "mocktail_texture_shaken", fr: "Shaken" },
+      { code: "mocktail_texture_stirred", fr: "Stirred" },
+      { code: "mocktail_texture_muddled", fr: "Muddled" },
+    ],
+  },
+];
+
 // Les sous-catégories de Cocktails / Mocktails qui ont une liste de styles, avec le préfixe des codes de leurs styles (ici le
 // code de la sous-catégorie).
-export const COCKTAIL_STYLE_PREFIXES = { cocktail: "cocktail" };
+export const COCKTAIL_STYLE_PREFIXES = { cocktail: "cocktail", mocktail: "mocktail" };
 export const COCKTAIL_STYLE_SUBTYPES = Object.keys(COCKTAIL_STYLE_PREFIXES);
 
 // La sous-catégorie à laquelle appartient un code de style de Cocktails / Mocktails, ou null si ce n'est pas un de leurs codes
