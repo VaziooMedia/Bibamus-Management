@@ -2399,6 +2399,30 @@ export async function deleteSoftCharacteristic(listKey, { code, fr, groupTitle }
   return { removedFrom: Number(data) || 0 };
 }
 
+// Caractéristiques & labels des Cocktails / Mocktails (liste « cocktail_characteristic » de custom_list_items, colonne
+// drinks_directory.characteristics) : comptées et retirées uniquement parmi les produits Cocktails / Mocktails, car cette colonne est aussi celle
+// des bières, des vins, des spiritueux et des softs. Fonctions SQL propres (voir le script « cocktails-caracteristiques »), sur le modèle de
+// celles des caractéristiques des softs.
+export async function countDrinksWithCocktailCharacteristic(listKey, code) {
+  const { data, error } = await supabase.rpc("count_drinks_with_cocktail_characteristic", { p_list: listKey, p_code: code });
+  if (error) {
+    console.error("countDrinksWithCocktailCharacteristic:", error);
+    return { error };
+  }
+  return { count: Number(data) || 0 };
+}
+
+// Supprimer une caractéristique : la retire de tous les cocktails / mocktails qui la portent, puis la supprime (ou la masque, si elle vient de
+// la liste de départ) — en une seule opération côté base. Rend le nombre de produits modifiés.
+export async function deleteCocktailCharacteristic(listKey, { code, fr, groupTitle }) {
+  const { data, error } = await supabase.rpc("delete_cocktail_characteristic", { p_list: listKey, p_code: code, p_fr: fr, p_group_title: groupTitle });
+  if (error) {
+    console.error("deleteCocktailCharacteristic:", error);
+    return { error };
+  }
+  return { removedFrom: Number(data) || 0 };
+}
+
 // Fiche Lieu : les mêmes listes modifiables (moyens de paiement, types d'établissement, aménités), avec en plus un
 // ordre d'affichage (table custom_list_order : une ligne par liste, la suite des codes dans l'ordre voulu, lisible
 // par tous, écrite par la gestion). Un échec de lecture rend un ordre vide : la liste garde son ordre de départ.
