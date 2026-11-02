@@ -78,7 +78,7 @@ export function GroupedListPicker({ list, custom, onCustomChange, selected, onTo
         onToggle={onToggle}
         manage={manage}
         searchPlaceholder={w.searchPlaceholder}
-        noMatchText={(query) => `Aucun ${w.noun} ne correspond à "${query}".`}
+        noMatchText={(query) => `${w.noneFound || `Aucun ${w.noun}`} ne correspond à "${query}".`}
       />
 
       {managing && (

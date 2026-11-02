@@ -19,6 +19,7 @@ import { WATER_STYLES, SODA_STYLE_GROUPS, JUICE_STYLE_GROUPS, ENERGY_STYLE_GROUP
 import { SOFT_CHARACTERISTICS } from "./softCharacteristics.js";
 import { COFFEE_STYLE_GROUPS, TEA_STYLE_GROUPS, INFUSION_STYLE_GROUPS, HOT_MILK_STYLE_GROUPS, SOUP_STYLE_GROUPS, HOT_MIX_STYLE_GROUPS, CEREAL_CHICORY_STYLE_GROUPS } from "./hotStyles.js";
 import { COCKTAIL_STYLE_GROUPS, MOCKTAIL_STYLE_GROUPS } from "./cocktailStyles.js";
+import { COCKTAIL_CHARACTERISTIC_GROUPS } from "./cocktailCharacteristics.js";
 import { PAYMENT_METHODS, VENUE_TYPES, PRODUCER_TYPES, PRODUCER_PROFILES, BRAND_CLASSIFICATIONS, BRAND_TYPES } from "../constants.js";
 
 // Un code ne peut avoir qu'une place dans une liste modifiable (une modification d'un élément vise son code, et
@@ -748,6 +749,40 @@ export const MOCKTAIL_STYLE_LIST = {
 };
 // La liste de styles de chaque sous-catégorie de Cocktails / Mocktails (clé : code de la sous-catégorie).
 export const COCKTAIL_STYLE_LISTS = { cocktail: COCKTAIL_STYLE_LIST, mocktail: MOCKTAIL_STYLE_LIST };
+
+// Fiche Cocktails / Mocktails, Niveau 2 : « Caractéristiques & labels » — cinq classifications (Alcool, Sucre & Calories, Allergènes &
+// Régimes alimentaires, Caféine & Stimulants, Labels & Certifications), donc une liste à groupes (accordéon), une seule pour les Cocktails ET
+// les Mocktails (voir cocktailCharacteristics.js). La liste s'appelle « cocktail_characteristic » ; son choix est rangé dans la même colonne que
+// celui des bières et des softs (drinks_directory.characteristics). Quatre éléments de départ ont le code de leur équivalent des bières
+// (« gluten_free », « bio », « sugar_free », « lactose_free »), les autres commencent par « cocktail_ » (« perso_cocktail_… » pour un ajout à la
+// main, voir `codePrefix`). Seuls les produits Cocktails / Mocktails sont comptés et modifiés (`source: "cocktail_characteristics"`) : cette
+// colonne est aussi celle des bières, des vins, des spiritueux et des softs. « Gluten Free » et « Organic » sont, comme « Sans gluten » et « Bio »
+// des bières, lus par l'application Bibamus (cases « sans gluten » et « bio ») : `deleteNotices` en avertit à la confirmation d'une suppression.
+export const COCKTAIL_CHARACTERISTIC_ENTITY = { ...PRODUCT_ENTITY, all: "tous les cocktails et mocktails", none: "aucun cocktail ni mocktail" };
+export const COCKTAIL_CHARACTERISTIC_LIST = {
+  key: "cocktail_characteristic",
+  source: "cocktail_characteristics",
+  codePrefix: "perso_cocktail_",
+  entity: COCKTAIL_CHARACTERISTIC_ENTITY,
+  builtinGroups: COCKTAIL_CHARACTERISTIC_GROUPS,
+  orphanTitle: "Autres caractéristiques",
+  words: {
+    noun: "caractéristique",
+    one: "une caractéristique",
+    this: "cette caractéristique",
+    the: "la caractéristique",
+    ofThe: "de la caractéristique",
+    ofAll: "des caractéristiques",
+    namePlaceholder: "Nom de la caractéristique (ex. Sulphite Free)",
+    searchPlaceholder: "Chercher une caractéristique (ex. Vegan, Sugar, Caffeine...)",
+    // « Aucune caractéristique ne correspond à… » : le nom est féminin (par défaut : « Aucun » + le nom).
+    noneFound: "Aucune caractéristique",
+  },
+  deleteNotices: {
+    gluten_free: APP_NOTICE("Gluten Free"),
+    bio: APP_NOTICE("Organic"),
+  },
+};
 
 // L'avertissement à montrer avant de supprimer cet élément, ou null : celui propre au code, sinon celui de la liste
 // (qui ne vaut que pour un élément de départ : un élément ajouté à la main n'existait pas dans l'application).
