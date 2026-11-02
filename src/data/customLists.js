@@ -20,6 +20,7 @@ import { SOFT_CHARACTERISTICS } from "./softCharacteristics.js";
 import { COFFEE_STYLE_GROUPS, TEA_STYLE_GROUPS, INFUSION_STYLE_GROUPS, HOT_MILK_STYLE_GROUPS, SOUP_STYLE_GROUPS, HOT_MIX_STYLE_GROUPS, CEREAL_CHICORY_STYLE_GROUPS } from "./hotStyles.js";
 import { COCKTAIL_STYLE_GROUPS, MOCKTAIL_STYLE_GROUPS } from "./cocktailStyles.js";
 import { COCKTAIL_CHARACTERISTIC_GROUPS } from "./cocktailCharacteristics.js";
+import { HOT_CHARACTERISTIC_GROUPS } from "./hotCharacteristics.js";
 import { PAYMENT_METHODS, VENUE_TYPES, PRODUCER_TYPES, PRODUCER_PROFILES, BRAND_CLASSIFICATIONS, BRAND_TYPES } from "../constants.js";
 
 // Un code ne peut avoir qu'une place dans une liste modifiable (une modification d'un élément vise son code, et
@@ -775,6 +776,41 @@ export const COCKTAIL_CHARACTERISTIC_LIST = {
     ofAll: "des caractéristiques",
     namePlaceholder: "Nom de la caractéristique (ex. Sulphite Free)",
     searchPlaceholder: "Chercher une caractéristique (ex. Vegan, Sugar, Caffeine...)",
+    // « Aucune caractéristique ne correspond à… » : le nom est féminin (par défaut : « Aucun » + le nom).
+    noneFound: "Aucune caractéristique",
+  },
+  deleteNotices: {
+    gluten_free: APP_NOTICE("Gluten Free"),
+    bio: APP_NOTICE("Organic"),
+  },
+};
+
+// Fiche Boissons chaudes, Niveau 2 : « Caractéristiques & labels » — quatre classifications (Sucre & Calories, Caféine & Stimulants,
+// Composition & Régimes alimentaires, Labels & Certifications), donc une liste à groupes (accordéon), une seule pour TOUTES les
+// sous-catégories des Boissons chaudes (Café, Thé, Infusion, Hot Milk, Soupe, Hot Mix, Céréales & Chicorée — voir hotCharacteristics.js).
+// La liste s'appelle « hot_characteristic » ; son choix est rangé dans la même colonne que celui des bières, des softs et des cocktails
+// (drinks_directory.characteristics). Quatre éléments de départ ont le code de leur équivalent des bières (« gluten_free », « bio »,
+// « sugar_free », « lactose_free »), les autres commencent par « hot_ » (« perso_hot_… » pour un ajout à la main, voir `codePrefix`). Seuls
+// les produits Boissons chaudes sont comptés et modifiés (`source: "hot_characteristics"`) : cette colonne est aussi celle des bières, des
+// vins, des spiritueux, des softs et des cocktails. « Gluten Free » et « Organic » sont, comme « Sans gluten » et « Bio » des bières, lus par
+// l'application Bibamus (cases « sans gluten » et « bio ») : `deleteNotices` en avertit à la confirmation d'une suppression.
+export const HOT_CHARACTERISTIC_ENTITY = { ...PRODUCT_ENTITY, all: "toutes les boissons chaudes", none: "aucune boisson chaude" };
+export const HOT_CHARACTERISTIC_LIST = {
+  key: "hot_characteristic",
+  source: "hot_characteristics",
+  codePrefix: "perso_hot_",
+  entity: HOT_CHARACTERISTIC_ENTITY,
+  builtinGroups: HOT_CHARACTERISTIC_GROUPS,
+  orphanTitle: "Autres caractéristiques",
+  words: {
+    noun: "caractéristique",
+    one: "une caractéristique",
+    this: "cette caractéristique",
+    the: "la caractéristique",
+    ofThe: "de la caractéristique",
+    ofAll: "des caractéristiques",
+    namePlaceholder: "Nom de la caractéristique (ex. Sulphite Free)",
+    searchPlaceholder: "Chercher une caractéristique (ex. Decaf, Sugar, Organic...)",
     // « Aucune caractéristique ne correspond à… » : le nom est féminin (par défaut : « Aucun » + le nom).
     noneFound: "Aucune caractéristique",
   },
