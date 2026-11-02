@@ -27,10 +27,12 @@ import {
   deleteCocktailCharacteristic,
   countDrinksWithHotCharacteristic,
   deleteHotCharacteristic,
+  countDrinksWithSnackCharacteristic,
+  deleteSnackCharacteristic,
   saveCustomListOrder,
 } from "../data/sharedDirectories.js";
 
-// Où une liste compte et supprime ses éléments : dans les lieux, dans les producteurs, dans les marques, dans les softs, dans les boissons chaudes, dans les cocktails / mocktails, dans les caractéristiques des softs, dans les caractéristiques des cocktails / mocktails, dans les caractéristiques des boissons chaudes, ou (par défaut) dans les produits.
+// Où une liste compte et supprime ses éléments : dans les lieux, dans les producteurs, dans les marques, dans les softs, dans les boissons chaudes, dans les cocktails / mocktails, dans les caractéristiques des softs, dans les caractéristiques des cocktails / mocktails, dans les caractéristiques des boissons chaudes, dans les caractéristiques des snacks, ou (par défaut) dans les produits.
 const SOURCES = {
   venues: { count: countVenuesWithListItem, remove: deleteVenueListItem },
   producers: { count: countProducersWithListItem, remove: deleteProducerListItem },
@@ -41,6 +43,7 @@ const SOURCES = {
   soft_characteristics: { count: countDrinksWithSoftCharacteristic, remove: deleteSoftCharacteristic },
   cocktail_characteristics: { count: countDrinksWithCocktailCharacteristic, remove: deleteCocktailCharacteristic },
   hot_characteristics: { count: countDrinksWithHotCharacteristic, remove: deleteHotCharacteristic },
+  snack_characteristics: { count: countDrinksWithSnackCharacteristic, remove: deleteSnackCharacteristic },
 };
 const PRODUCT_SOURCE = { count: countDrinksWithListItem, remove: deleteCustomListItem };
 // La source d'une liste (aussi lue par GroupedListField, pour les listes à groupes).

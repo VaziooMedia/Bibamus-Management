@@ -19,11 +19,12 @@ import { SelectedStyleChips } from "./SelectedStyleChips.jsx";
 import { FlavorNotesPicker } from "./FlavorNotesPicker.jsx";
 import { FlatListField } from "./FlatListField.jsx";
 import { GroupedListField } from "./GroupedListField.jsx";
-import { FOOD_PAIRING_LIST, OCCASION_LIST, GLASS_LIST, CHARACTERISTIC_LIST, SOFT_CHARACTERISTIC_LIST, COCKTAIL_CHARACTERISTIC_LIST, HOT_CHARACTERISTIC_LIST, SOFT_STYLE_LISTS, HOT_STYLE_LISTS, COCKTAIL_STYLE_LISTS } from "../data/customLists.js";
+import { FOOD_PAIRING_LIST, OCCASION_LIST, GLASS_LIST, CHARACTERISTIC_LIST, SOFT_CHARACTERISTIC_LIST, COCKTAIL_CHARACTERISTIC_LIST, HOT_CHARACTERISTIC_LIST, SNACK_CHARACTERISTIC_LIST, SOFT_STYLE_LISTS, HOT_STYLE_LISTS, COCKTAIL_STYLE_LISTS } from "../data/customLists.js";
 import { softStyleOwner, stylesForSoftSubtype } from "../data/softStyles.js";
 import { characteristicsForSoft, characteristicsWithoutSoftOnly } from "../data/softCharacteristics.js";
 import { characteristicsForCocktail, characteristicsWithoutCocktailOnly } from "../data/cocktailCharacteristics.js";
 import { characteristicsForHot, characteristicsWithoutHotOnly } from "../data/hotCharacteristics.js";
+import { characteristicsForSnack, characteristicsWithoutSnackOnly } from "../data/snackCharacteristics.js";
 import { hotStyleOwner, stylesForHotSubtype } from "../data/hotStyles.js";
 import { cocktailStyleOwner, stylesForCocktailSubtype } from "../data/cocktailStyles.js";
 import { VintageManager } from "./VintageManager.jsx";
@@ -466,11 +467,11 @@ export function DrinkDetailPanel({ drink, onClose, onSaved, myUserId }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [form.type]);
 
-  // Softs & Eaux, Boissons chaudes, Cocktails / Mocktails et Snacks n'ont pas d'onglet « Ajout rapide », ni de Statistiques utilisables, et leur
-  // Niveau 2 n'est utilisable que pour les Softs & Eaux, les Boissons chaudes et les Cocktails / Mocktails : en passant un produit dans l'une
-  // de ces catégories, on revient sur le Niveau 1 si l'onglet ouvert n'existe pas pour elle.
+  // Softs & Eaux, Boissons chaudes, Cocktails / Mocktails et Snacks n'ont pas d'onglet « Ajout rapide », ni de Statistiques utilisables, mais
+  // ont un Niveau 2 (Caractéristiques & labels) : en passant un produit dans l'une de ces catégories, on revient sur le Niveau 1 si l'onglet
+  // ouvert n'existe pas pour elle.
   useEffect(() => {
-    if ((isSoft || isHot || isCocktail || isSnack) && !["niveau1", ...(isSoft || isHot || isCocktail ? ["niveau2"] : []), "gallery", "ai"].includes(activeTab)) setActiveTab("niveau1");
+    if ((isSoft || isHot || isCocktail || isSnack) && !["niveau1", "niveau2", "gallery", "ai"].includes(activeTab)) setActiveTab("niveau1");
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [form.type]);
 
@@ -525,9 +526,10 @@ export function DrinkDetailPanel({ drink, onClose, onSaved, myUserId }) {
     const softCharacteristics = isSoft ? characteristicsForSoft(form.characteristics) : [];
     const cocktailCharacteristics = isCocktail ? characteristicsForCocktail(form.characteristics) : [];
     const hotCharacteristics = isHot ? characteristicsForHot(form.characteristics) : [];
+    const snackCharacteristics = isSnack ? characteristicsForSnack(form.characteristics) : [];
     if (isSoft || isHot || isCocktail || isSnack) {
       // Softs & Eaux, Boissons chaudes, Cocktails / Mocktails et Snacks : seulement ce que la fiche propose pour l'instant (Niveau 1 + Médias,
-      // et pour les Softs & Eaux, les Boissons chaudes et les Cocktails / Mocktails les Caractéristiques & labels du Niveau 2). Statistiques est grisé, comme le Niveau 2 des Snacks. Le degré d'alcool, lui, passe par « base » : grisé (renvoyé tel quel) pour les Softs & Eaux et
+      // et les Caractéristiques & labels du Niveau 2). Statistiques est grisé. Le degré d'alcool, lui, passe par « base » : grisé (renvoyé tel quel) pour les Softs & Eaux et
       // les Snacks, modifiable pour les Boissons chaudes (le Hot Mix a une base alcoolisée) et les Cocktails / Mocktails.
       // Snacks : « defaultVolumeCl » et « kcalPer100ml » gardent leur colonne ; la fiche les présente en grammes et en kcal/100gr.
       return {
@@ -537,12 +539,13 @@ export function DrinkDetailPanel({ drink, onClose, onSaved, myUserId }) {
         beverageSubtype: form.beverageSubtype || null,
         // Styles : ceux de la sous-catégorie choisie ; ceux d'une AUTRE sous-catégorie de la même catégorie, restés cochés
         // après un changement de sous-catégorie, sont retirés.
-        // Softs & Eaux, Boissons chaudes et Cocktails / Mocktails : les caractéristiques cochées (celles d'une autre catégorie, restées cochées après
-        // un changement de catégorie, sont retirées). L'application Bibamus lit encore les cases « sans gluten » et « bio » : on les tient d'accord avec la liste,
+        // Softs & Eaux, Boissons chaudes, Cocktails / Mocktails et Snacks : les caractéristiques cochées (celles d'une autre catégorie, restées cochées
+        // après un changement de catégorie, sont retirées). L'application Bibamus lit encore les cases « sans gluten » et « bio » : on les tient d'accord avec la liste,
         // comme pour les bières.
         ...(isSoft ? { characteristics: softCharacteristics, glutenFree: softCharacteristics.includes("gluten_free"), bio: softCharacteristics.includes("bio") } : {}),
         ...(isCocktail ? { characteristics: cocktailCharacteristics, glutenFree: cocktailCharacteristics.includes("gluten_free"), bio: cocktailCharacteristics.includes("bio") } : {}),
         ...(isHot ? { characteristics: hotCharacteristics, glutenFree: hotCharacteristics.includes("gluten_free"), bio: hotCharacteristics.includes("bio") } : {}),
+        ...(isSnack ? { characteristics: snackCharacteristics, glutenFree: snackCharacteristics.includes("gluten_free"), bio: snackCharacteristics.includes("bio") } : {}),
         ...(hasNoStyles ? {} : { styles: isHot ? stylesForHotSubtype(form.styles, form.beverageSubtype) : isCocktail ? stylesForCocktailSubtype(form.styles, form.beverageSubtype) : stylesForSoftSubtype(form.styles, form.beverageSubtype) }),
         defaultVolumeCl: form.defaultVolumeCl === "" ? null : parseFloat(form.defaultVolumeCl),
         defaultServingMode: form.defaultServingMode || null,
@@ -625,9 +628,9 @@ export function DrinkDetailPanel({ drink, onClose, onSaved, myUserId }) {
       recommendedGlass: form.recommendedGlass,
       foodPairings: form.foodPairings,
       occasion: form.occasion,
-      // Les caractéristiques propres aux Softs & Eaux, aux Boissons chaudes et aux Cocktails / Mocktails, restées cochées après un changement de
-      // catégorie, sont retirées.
-      characteristics: characteristicsWithoutHotOnly(characteristicsWithoutCocktailOnly(characteristicsWithoutSoftOnly(form.characteristics))),
+      // Les caractéristiques propres aux Softs & Eaux, aux Boissons chaudes, aux Cocktails / Mocktails et aux Snacks, restées cochées après un
+      // changement de catégorie, sont retirées.
+      characteristics: characteristicsWithoutSnackOnly(characteristicsWithoutHotOnly(characteristicsWithoutCocktailOnly(characteristicsWithoutSoftOnly(form.characteristics)))),
       // L'application Bibamus (annuaire, icônes, filtres) lit encore ces deux cases : la base les tient d'accord avec la liste,
       // et on les garde d'accord ici aussi pour que l'écran soit juste avant le prochain chargement.
       glutenFree: form.characteristics.includes("gluten_free"),
@@ -860,9 +863,9 @@ export function DrinkDetailPanel({ drink, onClose, onSaved, myUserId }) {
               {(isSoft || isHot || isCocktail || isSnack
                 ? [
                     // Softs & Eaux, Boissons chaudes, Cocktails / Mocktails et Snacks : 5 onglets. Statistiques est déjà là mais grisé, en attendant son
-                    // contenu ; Niveau 2 aussi, sauf pour les Softs & Eaux, les Boissons chaudes et les Cocktails / Mocktails (Caractéristiques & labels).
+                    // contenu ; Niveau 2 (Caractéristiques & labels) est utilisable.
                     { key: "niveau1", label: "Niveau 1" },
-                    isSoft || isHot || isCocktail ? { key: "niveau2", label: "Niveau 2 (expert)" } : { key: "niveau2", label: "Niveau 2 (expert)", disabled: true, disabledTitle: comingSoonTitle },
+                    { key: "niveau2", label: "Niveau 2 (expert)" },
                     { key: "gallery", label: "Médias" },
                     { key: "stats", label: "Statistiques", disabled: true, disabledTitle: comingSoonTitle },
                     { key: "ai", label: null, disabled: isNew },
@@ -1930,9 +1933,26 @@ export function DrinkDetailPanel({ drink, onClose, onSaved, myUserId }) {
                     </div>
                     </CollapsibleSection>
                   </>
-                ) : (
-                  <p style={{ fontSize: "13px", color: "#8792A6", fontStyle: "italic" }}>Cette section sera complétée prochainement.</p>
-                )}
+                ) : isSnack ? (
+                  <>
+                    <div style={{ background: "#2A1F0D", border: "2px solid #FF9500", borderRadius: "8px", padding: "12px", marginBottom: "16px", fontSize: "12px", color: "#F2F2E8" }}>
+                      🔒 Réservé aux producteurs "Business" (accord B2B) et aux administrateurs. L'accès depuis cette plateforme n'est pas encore restreint techniquement — un vrai verrouillage par compte producteur reste à construire.
+                    </div>
+                    {/* Snacks : seule section du Niveau 2, « Caractéristiques & labels » (liste à groupes, la même pour toutes les sous-catégories). */}
+                    <CollapsibleSection title="Caractéristiques & labels">
+                    <div style={{ marginBottom: "12px" }}>
+                      <GroupedListField
+                        list={SNACK_CHARACTERISTIC_LIST}
+                        chips={{ codes: characteristicsForSnack(form.characteristics), ariaLabel: "Caractéristiques sélectionnées" }}
+                        selected={form.characteristics}
+                        onToggle={(code) => toggleArrayField("characteristics", code)}
+                        onAdded={(item) => setForm((f) => (f.characteristics.includes(item.code) ? f : { ...f, characteristics: [...f.characteristics, item.code] }))}
+                        onDeleted={(code) => setForm((f) => (f.characteristics.includes(code) ? { ...f, characteristics: f.characteristics.filter((c) => c !== code) } : f))}
+                      />
+                    </div>
+                    </CollapsibleSection>
+                  </>
+                ) : null}
               </>
             )}
 

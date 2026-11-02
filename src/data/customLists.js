@@ -21,6 +21,7 @@ import { COFFEE_STYLE_GROUPS, TEA_STYLE_GROUPS, INFUSION_STYLE_GROUPS, HOT_MILK_
 import { COCKTAIL_STYLE_GROUPS, MOCKTAIL_STYLE_GROUPS } from "./cocktailStyles.js";
 import { COCKTAIL_CHARACTERISTIC_GROUPS } from "./cocktailCharacteristics.js";
 import { HOT_CHARACTERISTIC_GROUPS } from "./hotCharacteristics.js";
+import { SNACK_CHARACTERISTIC_GROUPS } from "./snackCharacteristics.js";
 import { PAYMENT_METHODS, VENUE_TYPES, PRODUCER_TYPES, PRODUCER_PROFILES, BRAND_CLASSIFICATIONS, BRAND_TYPES } from "../constants.js";
 
 // Un code ne peut avoir qu'une place dans une liste modifiable (une modification d'un élément vise son code, et
@@ -811,6 +812,42 @@ export const HOT_CHARACTERISTIC_LIST = {
     ofAll: "des caractéristiques",
     namePlaceholder: "Nom de la caractéristique (ex. Sulphite Free)",
     searchPlaceholder: "Chercher une caractéristique (ex. Decaf, Sugar, Organic...)",
+    // « Aucune caractéristique ne correspond à… » : le nom est féminin (par défaut : « Aucun » + le nom).
+    noneFound: "Aucune caractéristique",
+  },
+  deleteNotices: {
+    gluten_free: APP_NOTICE("Gluten Free"),
+    bio: APP_NOTICE("Organic"),
+  },
+};
+
+// Fiche Snacks, Niveau 2 : « Caractéristiques & labels » — quatre classifications (Sucre & Nutrition, Allergènes & Régimes alimentaires,
+// Composition & Fabrication, Labels & Certifications), donc une liste à groupes (accordéon), une seule pour TOUTES les sous-catégories des
+// Snacks (Chips, Apéritifs, Charcuterie, Fromage, Snacks chauds, Glaces, Chocolats, Confiseries, Biscuits & Gâteaux — voir
+// snackCharacteristics.js). La liste s'appelle « snack_characteristic » ; son choix est rangé dans la même colonne que celui des bières, des
+// softs, des cocktails et des boissons chaudes (drinks_directory.characteristics). Quatre éléments de départ ont le code de leur équivalent
+// des bières (« gluten_free », « bio », « sugar_free », « lactose_free »), les autres commencent par « snack_ » (« perso_snack_… » pour un
+// ajout à la main, voir `codePrefix`). Seuls les produits Snacks sont comptés et modifiés (`source: "snack_characteristics"`) : cette colonne
+// est aussi celle des bières, des vins, des spiritueux, des softs, des cocktails et des boissons chaudes. « Gluten Free » et « Organic »
+// sont, comme « Sans gluten » et « Bio » des bières, lus par l'application Bibamus (cases « sans gluten » et « bio ») : `deleteNotices` en
+// avertit à la confirmation d'une suppression.
+export const SNACK_CHARACTERISTIC_ENTITY = { ...PRODUCT_ENTITY, all: "tous les snacks", none: "aucun snack" };
+export const SNACK_CHARACTERISTIC_LIST = {
+  key: "snack_characteristic",
+  source: "snack_characteristics",
+  codePrefix: "perso_snack_",
+  entity: SNACK_CHARACTERISTIC_ENTITY,
+  builtinGroups: SNACK_CHARACTERISTIC_GROUPS,
+  orphanTitle: "Autres caractéristiques",
+  words: {
+    noun: "caractéristique",
+    one: "une caractéristique",
+    this: "cette caractéristique",
+    the: "la caractéristique",
+    ofThe: "de la caractéristique",
+    ofAll: "des caractéristiques",
+    namePlaceholder: "Nom de la caractéristique (ex. Sulphite Free)",
+    searchPlaceholder: "Chercher une caractéristique (ex. Protein, Sugar, Organic...)",
     // « Aucune caractéristique ne correspond à… » : le nom est féminin (par défaut : « Aucun » + le nom).
     noneFound: "Aucune caractéristique",
   },
