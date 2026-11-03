@@ -181,6 +181,8 @@ export function DrinkDetailPanel({ drink, onClose, onSaved, myUserId }) {
     defaultPriceJeton: drink?.defaultPriceJeton ?? "1",
     // Spiritueux seulement : la case « Shot » et, quand elle est cochée, les valeurs par défaut du shot (en plus de celles du spiritueux).
     servesAsShot: !!drink?.servesAsShot,
+    // Quand la case « Shot » est cochée : le produit est par défaut un Spiritueux (false) ou par défaut un Shot (true).
+    defaultAsShot: !!drink?.defaultAsShot,
     defaultShotVolumeCl: drink?.defaultShotVolumeCl ?? "",
     defaultShotServingMode: drink?.defaultShotServingMode || "",
     defaultShotPriceEuro: drink?.defaultShotPriceEuro ?? "",
@@ -586,6 +588,7 @@ export function DrinkDetailPanel({ drink, onClose, onSaved, myUserId }) {
       ...(isSpirit
         ? {
             servesAsShot: form.servesAsShot,
+            defaultAsShot: form.servesAsShot && form.defaultAsShot,
             defaultShotVolumeCl: form.servesAsShot && form.defaultShotVolumeCl !== "" ? parseFloat(form.defaultShotVolumeCl) : null,
             defaultShotServingMode: form.servesAsShot ? form.defaultShotServingMode || null : null,
             defaultShotPriceEuro: form.servesAsShot && form.defaultShotPriceEuro !== "" ? parseFloat(form.defaultShotPriceEuro) : null,
@@ -1145,6 +1148,19 @@ export function DrinkDetailPanel({ drink, onClose, onSaved, myUserId }) {
                   <input type="checkbox" checked={form.servesAsShot} onChange={(e) => set("servesAsShot", e.target.checked)} />
                   Shot
                 </label>
+                {form.servesAsShot && (
+                  <div role="radiogroup" aria-label="Par défaut, ce produit est un" style={{ display: "flex", alignItems: "center", flexWrap: "wrap", gap: "6px 18px", fontSize: "13px", color: "#F2F2E8", marginBottom: "12px" }}>
+                    <span style={{ fontSize: "12.5px", color: "#8792A6", fontWeight: 600 }}>Par défaut, ce produit est un :</span>
+                    <label style={{ display: "flex", alignItems: "center", gap: "6px", cursor: "pointer" }}>
+                      <input type="radio" name="spirit-default-kind" checked={!form.defaultAsShot} onChange={() => set("defaultAsShot", false)} />
+                      Spiritueux
+                    </label>
+                    <label style={{ display: "flex", alignItems: "center", gap: "6px", cursor: "pointer" }}>
+                      <input type="radio" name="spirit-default-kind" checked={form.defaultAsShot} onChange={() => set("defaultAsShot", true)} />
+                      Shot
+                    </label>
+                  </div>
+                )}
                 {form.servesAsShot && (
                   <div style={{ border: "2px solid #28405C", borderRadius: "10px", padding: "12px", marginBottom: "14px" }}>
                     <div style={{ fontSize: "12.5px", color: "#F2F2E8", fontWeight: 700, marginBottom: "10px" }}>Valeurs par défaut du shot</div>
