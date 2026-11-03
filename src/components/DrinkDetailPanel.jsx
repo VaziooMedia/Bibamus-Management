@@ -179,6 +179,12 @@ export function DrinkDetailPanel({ drink, onClose, onSaved, myUserId }) {
     defaultServingMode: drink?.defaultServingMode || "",
     defaultPriceEuro: drink?.defaultPriceEuro ?? "",
     defaultPriceJeton: drink?.defaultPriceJeton ?? "1",
+    // Spiritueux seulement : la case « Shot » et, quand elle est cochée, les valeurs par défaut du shot (en plus de celles du spiritueux).
+    servesAsShot: !!drink?.servesAsShot,
+    defaultShotVolumeCl: drink?.defaultShotVolumeCl ?? "",
+    defaultShotServingMode: drink?.defaultShotServingMode || "",
+    defaultShotPriceEuro: drink?.defaultShotPriceEuro ?? "",
+    defaultShotPriceJeton: drink?.defaultShotPriceJeton ?? "1",
     brandId: drink?.brandId || null,
     producerIds: drink?.producerIds || [],
     nationality: drink?.nationality || "",
@@ -576,6 +582,16 @@ export function DrinkDetailPanel({ drink, onClose, onSaved, myUserId }) {
       defaultServingMode: form.defaultServingMode || null,
       defaultPriceEuro: form.defaultPriceEuro === "" ? null : parseFloat(form.defaultPriceEuro),
       defaultPriceJeton: form.defaultPriceJeton === "" ? null : parseFloat(form.defaultPriceJeton),
+      // Spiritueux : la case « Shot » et ses valeurs par défaut. Case décochée → les valeurs du shot sont effacées à l'enregistrement.
+      ...(isSpirit
+        ? {
+            servesAsShot: form.servesAsShot,
+            defaultShotVolumeCl: form.servesAsShot && form.defaultShotVolumeCl !== "" ? parseFloat(form.defaultShotVolumeCl) : null,
+            defaultShotServingMode: form.servesAsShot ? form.defaultShotServingMode || null : null,
+            defaultShotPriceEuro: form.servesAsShot && form.defaultShotPriceEuro !== "" ? parseFloat(form.defaultShotPriceEuro) : null,
+            defaultShotPriceJeton: form.servesAsShot && form.defaultShotPriceJeton !== "" ? parseFloat(form.defaultShotPriceJeton) : null,
+          }
+        : {}),
       brandId: form.brandId,
       producerIds: form.producerIds,
       nationality: form.nationality || null,
@@ -1123,6 +1139,44 @@ export function DrinkDetailPanel({ drink, onClose, onSaved, myUserId }) {
                 <input type="number" step="1" value={form.defaultPriceJeton} onChange={(e) => set("defaultPriceJeton", e.target.value)} placeholder="Ex. 1" style={fieldStyle} />
               </div>
             </div>
+            {isSpirit && (
+              <>
+                <label style={{ display: "flex", alignItems: "center", gap: "8px", fontSize: "13px", color: "#F2F2E8", cursor: "pointer", marginBottom: form.servesAsShot ? "12px" : "14px" }}>
+                  <input type="checkbox" checked={form.servesAsShot} onChange={(e) => set("servesAsShot", e.target.checked)} />
+                  Shot
+                </label>
+                {form.servesAsShot && (
+                  <div style={{ border: "2px solid #28405C", borderRadius: "10px", padding: "12px", marginBottom: "14px" }}>
+                    <div style={{ fontSize: "12.5px", color: "#F2F2E8", fontWeight: 700, marginBottom: "10px" }}>Valeurs par défaut du shot</div>
+                    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px" }}>
+                      <div>
+                        <label style={labelStyle}>Volume par défaut (centilitres)</label>
+                        <input type="number" step="0.1" min="0" value={form.defaultShotVolumeCl} onChange={(e) => set("defaultShotVolumeCl", e.target.value)} placeholder="Ex. 4" style={fieldStyle} />
+                      </div>
+                      <div>
+                        <label style={labelStyle}>Type de service par défaut</label>
+                        <select value={form.defaultShotServingMode} onChange={(e) => set("defaultShotServingMode", e.target.value)} style={fieldStyle}>
+                          <option value="">—</option>
+                          {DEFAULT_SERVING_MODES.map((m) => (
+                            <option key={m.code} value={m.code}>
+                              {m.fr}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+                      <div>
+                        <label style={labelStyle}>Valeur € par défaut</label>
+                        <input type="number" step="0.01" min="0" value={form.defaultShotPriceEuro} onChange={(e) => set("defaultShotPriceEuro", e.target.value)} placeholder="Ex. 3.00" style={fieldStyle} />
+                      </div>
+                      <div>
+                        <label style={labelStyle}>Valeur jeton par défaut</label>
+                        <input type="number" step="1" value={form.defaultShotPriceJeton} onChange={(e) => set("defaultShotPriceJeton", e.target.value)} placeholder="Ex. 1" style={fieldStyle} />
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </>
+            )}
             {!hasNoStyles && (
               <>
               <div style={separatorStyle} />
