@@ -672,6 +672,9 @@ export const DEFAULT_SERVING_MODES = [
   { code: "canette", fr: "Canette" },
   { code: "fut", fr: "On Tap" },
   { code: "verre", fr: "Au verre" },
+  { code: "pet", fr: "PET" },
+  { code: "brique", fr: "Brique" },
+  { code: "carton", fr: "Carton" },
 ];
 
 export const MASHING_PROCESSES = [
