@@ -90,6 +90,10 @@ export const SPIRIT_DERIVATIVE_LIST = {
   flat: true,
   orderable: true,
   energy: { label: "Énergie (kcal/100ml)", column: "kcal/100ml", placeholder: "Ex. 70", missing: "valeur du produit" },
+  // Volume du verre quand le spiritueux est pris en dérivé (Vodka + Red Bull = 20 cl au lieu des 4 cl de la vodka seule) : une valeur PAR
+  // PRODUIT et par dérivé coché, saisie dans le tableau de la fiche du spiritueux (colonne drinks_directory.derivative_volumes), pas dans
+  // la liste commune. Vide = le verre garde le volume du produit.
+  volume: { label: "Volume du verre (cl)", column: "Verre (cl)", placeholder: "Ex. 20", missing: "volume du produit" },
   builtinGroups: [{ title: "", tags: [] }],
   orphanTitle: "",
   words: { noun: "dérivé", one: "un dérivé", this: "ce dérivé", the: "le dérivé", ofThe: "du dérivé", ofAll: "des dérivés", namePlaceholder: "Nom du dérivé (ex. Whisky Coca)" },
@@ -1049,6 +1053,41 @@ export function validateItemFields(list, name, groupTitle, custom, exceptCode = 
   const dup = findDuplicateItem(list, trimmed, custom, exceptCode);
   if (dup) return dup.groupTitle ? `« ${dup.fr} » existe déjà, dans le groupe « ${dup.groupTitle} ».` : `« ${dup.fr} » existe déjà.`;
   return null;
+}
+
+// Volume du verre d'un dérivé de spiritueux (liste avec `volume`) : saisie facultative en cl, pour UN produit et UN dérivé coché. Rend { value }
+// (nombre, ou null si vide = le verre garde le volume du produit) ou { error } (message).
+export const MAX_DERIVATIVE_VOLUME_CL = 100;
+export function parseDerivativeVolume(raw) {
+  const text = String(raw ?? "").trim().replace(",", ".");
+  if (text === "") return { value: null };
+  const n = Number(text);
+  if (!Number.isFinite(n) || n <= 0) return { error: "Le volume doit être un nombre positif (en cl)." };
+  if (n > MAX_DERIVATIVE_VOLUME_CL) return { error: `Le volume semble trop grand (${MAX_DERIVATIVE_VOLUME_CL} cl au maximum).` };
+  return { value: n };
+}
+
+// Les volumes à enregistrer pour un produit : { code: cl } pour les seuls dérivés cochés qui ont un volume saisi. `raw` = { code: texte saisi }.
+// Rend { volumes } ou { error } (le premier volume refusé, avec le nom du dérivé si `nameOf(code)` le donne).
+export function derivativeVolumesToSave(checkedCodes, raw, nameOf = (code) => code) {
+  const volumes = {};
+  for (const code of checkedCodes || []) {
+    const res = parseDerivativeVolume(raw?.[code]);
+    if (res.error) return { error: `${nameOf(code)} : ${res.error}` };
+    if (res.value != null) volumes[code] = res.value;
+  }
+  return { volumes };
+}
+
+// Les volumes saisis d'un produit, remis en texte pour les champs de la fiche : { code: "20" }.
+export function derivativeVolumesToForm(volumes) {
+  const out = {};
+  if (volumes && typeof volumes === "object" && !Array.isArray(volumes)) {
+    Object.entries(volumes).forEach(([code, v]) => {
+      if (typeof v === "number" && Number.isFinite(v)) out[code] = String(v);
+    });
+  }
+  return out;
 }
 
 // Énergie d'un élément (liste avec `energy`) : saisie facultative en kcal/100ml. Rend { value } (nombre, ou null si vide) ou { error } (message).

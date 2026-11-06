@@ -20,7 +20,7 @@ import { FlavorNotesPicker } from "./FlavorNotesPicker.jsx";
 import { FlatListField } from "./FlatListField.jsx";
 import { OnOffSwitch } from "./OnOffSwitch.jsx";
 import { GroupedListField } from "./GroupedListField.jsx";
-import { BEER_DERIVATIVE_LIST, SPIRIT_DERIVATIVE_LIST, mergeCustomItems, FOOD_PAIRING_LIST, OCCASION_LIST, GLASS_LIST, CHARACTERISTIC_LIST, SOFT_CHARACTERISTIC_LIST, COCKTAIL_CHARACTERISTIC_LIST, HOT_CHARACTERISTIC_LIST, SNACK_CHARACTERISTIC_LIST, SOFT_STYLE_LISTS, HOT_STYLE_LISTS, COCKTAIL_STYLE_LISTS } from "../data/customLists.js";
+import { BEER_DERIVATIVE_LIST, SPIRIT_DERIVATIVE_LIST, derivativeVolumesToForm, derivativeVolumesToSave, mergeCustomItems, FOOD_PAIRING_LIST, OCCASION_LIST, GLASS_LIST, CHARACTERISTIC_LIST, SOFT_CHARACTERISTIC_LIST, COCKTAIL_CHARACTERISTIC_LIST, HOT_CHARACTERISTIC_LIST, SNACK_CHARACTERISTIC_LIST, SOFT_STYLE_LISTS, HOT_STYLE_LISTS, COCKTAIL_STYLE_LISTS } from "../data/customLists.js";
 import { softStyleOwner, stylesForSoftSubtype } from "../data/softStyles.js";
 import { characteristicsForSoft, characteristicsWithoutSoftOnly } from "../data/softCharacteristics.js";
 import { characteristicsForCocktail, characteristicsWithoutCocktailOnly } from "../data/cocktailCharacteristics.js";
@@ -193,6 +193,8 @@ export function DrinkDetailPanel({ drink, onClose, onSaved, myUserId }) {
     // → les dérivés cochés sont effacés.
     derivativesOn: (drink?.derivatives || []).length > 0,
     derivatives: drink?.derivatives || [],
+    // Spiritueux : le volume du verre de chaque dérivé coché (texte saisi, { code: "20" }) ; vide = le verre garde le volume du produit.
+    derivativeVolumes: derivativeVolumesToForm(drink?.derivativeVolumes),
     brandId: drink?.brandId || null,
     producerIds: drink?.producerIds || [],
     nationality: drink?.nationality || "",
@@ -605,6 +607,9 @@ export function DrinkDetailPanel({ drink, onClose, onSaved, myUserId }) {
       defaultPriceJeton: form.defaultPriceJeton === "" ? null : parseFloat(form.defaultPriceJeton),
       // Bières et spiritueux : les dérivés cochés. Interrupteur sur OFF (ou produit qui n'est plus une bière ni un spiritueux) → aucun dérivé enregistré.
       derivatives: hasDerivatives && form.derivativesOn ? form.derivatives : [],
+      // Spiritueux : le volume du verre des seuls dérivés cochés qui en ont un (la saisie a déjà été vérifiée à l'enregistrement) ; interrupteur
+      // sur OFF ou dérivé décoché → son volume est effacé.
+      derivativeVolumes: isSpirit && form.derivativesOn ? derivativeVolumesToSave(form.derivatives, form.derivativeVolumes).volumes || {} : {},
       // Spiritueux : la case « Shot » et ses valeurs par défaut. Case décochée → les valeurs du shot sont effacées à l'enregistrement.
       ...(isSpirit
         ? {
@@ -746,6 +751,16 @@ export function DrinkDetailPanel({ drink, onClose, onSaved, myUserId }) {
     if (barcodeProblems.length > 0) {
       alert("Codes-barres : " + barcodeProblems.join(" ; "));
       return;
+    }
+    // Volumes des dérivés d'un spiritueux : un volume refusé (négatif, trop grand, pas un nombre) arrête l'enregistrement, avec le nom du dérivé.
+    if (isSpirit && form.derivativesOn) {
+      const check = derivativeVolumesToSave(form.derivatives, form.derivativeVolumes);
+      if (check.error) {
+        const rows = await loadCustomListItems(derivativeList.key);
+        const names = Object.fromEntries(mergeCustomItems(derivativeList, rows).flatMap((g) => g.tags).map((t) => [t.code, t.fr]));
+        alert("Volume d'un dérivé — " + derivativeVolumesToSave(form.derivatives, form.derivativeVolumes, (code) => names[code] || code).error);
+        return;
+      }
     }
     setSaving(true);
     if (isNew) {
@@ -1234,7 +1249,7 @@ export function DrinkDetailPanel({ drink, onClose, onSaved, myUserId }) {
                   <>
                     <p style={{ fontSize: "11.5px", color: "#8792A6", marginTop: "-6px", marginBottom: "10px" }}>
                       {isSpirit
-                        ? "Cochez les dérivés que ce spiritueux peut devenir (ex. Whisky Coca = whisky + cola). La liste est commune à tous les spiritueux : un dérivé ajouté ici est proposé sur toutes les fiches de spiritueux. Il ne concerne pas les verres pris en Shot."
+                        ? "Cochez les dérivés que ce spiritueux peut devenir (ex. Whisky Coca = whisky + cola). La liste est commune à tous les spiritueux : un dérivé ajouté ici est proposé sur toutes les fiches de spiritueux. Il ne concerne pas les verres pris en Shot. Pour chaque dérivé coché, indiquez le volume du verre (ex. Vodka + Red Bull = 20 cl, alors que la vodka seule fait 4 cl) : il remplace le volume du produit dans l'application et sert au calcul des calories. Laissé vide, le verre garde le volume du produit."
                         : "Cochez les dérivés que ce produit peut devenir (ex. Mazout = pils + cola). La liste est commune à toutes les bières : un dérivé ajouté ici est proposé sur toutes les fiches."}
                     </p>
                     <FlatListField
@@ -1243,7 +1258,13 @@ export function DrinkDetailPanel({ drink, onClose, onSaved, myUserId }) {
                       selected={form.derivatives}
                       onToggle={(code) => toggleArrayField("derivatives", code)}
                       onAdded={(item) => setForm((f) => (f.derivatives.includes(item.code) ? f : { ...f, derivatives: [...f.derivatives, item.code] }))}
-                      onDeleted={(code) => setForm((f) => (f.derivatives.includes(code) ? { ...f, derivatives: f.derivatives.filter((c) => c !== code) } : f))}
+                      onDeleted={(code) =>
+                        setForm((f) => {
+                          const { [code]: _gone, ...volumes } = f.derivativeVolumes || {};
+                          return f.derivatives.includes(code) || _gone !== undefined ? { ...f, derivatives: f.derivatives.filter((c) => c !== code), derivativeVolumes: volumes } : f;
+                        })
+                      }
+                      rowValues={isSpirit ? { values: form.derivativeVolumes, onChange: (code, v) => setForm((f) => ({ ...f, derivativeVolumes: { ...f.derivativeVolumes, [code]: v } })) } : undefined}
                       labelStyle={labelStyle}
                       fieldStyle={fieldStyle}
                     />
