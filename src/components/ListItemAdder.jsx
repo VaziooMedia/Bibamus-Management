@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { validateItemFields, uniqueItemCode, allItemCodes, describeItemError, capitalize, entityOf } from "../data/customLists.js";
+import { validateItemFields, uniqueItemCode, allItemCodes, describeItemError, capitalize, entityOf, parseItemEnergy } from "../data/customLists.js";
 
 // Ajout manuel d'un élément à une liste de la fiche produit (un arôme, par exemple), de la fiche lieu (une aménité) ou de la
 // fiche producteur (un type).
@@ -19,6 +19,7 @@ export function ListItemAdder({ list, custom, onCreate, onCreated }) {
   const [open, setOpen] = useState(false);
   const [name, setName] = useState("");
   const [groupTitle, setGroupTitle] = useState("");
+  const [kcal, setKcal] = useState("");
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState(null);
 
@@ -26,6 +27,7 @@ export function ListItemAdder({ list, custom, onCreate, onCreated }) {
     setOpen(false);
     setName("");
     setGroupTitle("");
+    setKcal("");
   };
 
   const submit = async () => {
@@ -35,10 +37,15 @@ export function ListItemAdder({ list, custom, onCreate, onCreated }) {
       setMessage({ kind: "error", text: problem });
       return;
     }
+    const energy = list.energy ? parseItemEnergy(kcal) : { value: null };
+    if (energy.error) {
+      setMessage({ kind: "error", text: energy.error });
+      return;
+    }
     setBusy(true);
     const fr = name.trim().replace(/\s+/g, " ");
     const code = uniqueItemCode(fr, allItemCodes(list, custom), list.codePrefix);
-    const res = await onCreate({ code, fr, groupTitle });
+    const res = await onCreate(list.energy ? { code, fr, groupTitle, kcalPer100ml: energy.value } : { code, fr, groupTitle });
     setBusy(false);
     if (res.error) {
       setMessage({ kind: "error", text: describeItemError(list, res.error) });
@@ -66,7 +73,7 @@ export function ListItemAdder({ list, custom, onCreate, onCreated }) {
           <p style={{ fontSize: "11.5px", color: "#8792A6", fontStyle: "italic", marginTop: 0, marginBottom: "10px" }}>
             {capitalize(w.this)} rejoindra la liste pour {e.all} : vérifiez l'orthographe avant d'ajouter.
           </p>
-          <div style={{ display: "flex", flexWrap: "wrap", gap: "8px", alignItems: "center" }}>
+          <div style={{ display: "flex", flexWrap: "wrap", gap: "8px", alignItems: list.energy ? "flex-end" : "center" }}>
             <input
               value={name}
               onChange={(e) => setName(e.target.value)}
@@ -74,6 +81,12 @@ export function ListItemAdder({ list, custom, onCreate, onCreated }) {
               placeholder={w.namePlaceholder}
               style={{ ...fieldStyle, flex: 1, minWidth: "200px" }}
             />
+            {list.energy && (
+              <div style={{ width: "170px" }}>
+                <label style={{ fontSize: "12.5px", color: "#8792A6", marginBottom: "4px", display: "block", fontWeight: 600 }}>{list.energy.label}</label>
+                <input type="number" step="0.1" min="0" aria-label={`${list.energy.label} ${w.ofThe}`} value={kcal} onChange={(e) => setKcal(e.target.value)} onKeyDown={(e) => e.key === "Enter" && submit()} placeholder={list.energy.placeholder} style={{ ...fieldStyle, width: "100%" }} />
+              </div>
+            )}
             {!list.flat && (
               <select value={groupTitle} onChange={(e) => setGroupTitle(e.target.value)} style={{ ...fieldStyle, flex: 1, minWidth: "200px" }}>
                 <option value="">Groupe…</option>

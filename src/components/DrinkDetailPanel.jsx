@@ -18,8 +18,9 @@ import { BeerCiderStylePicker } from "./BeerCiderStylePicker.jsx";
 import { SelectedStyleChips } from "./SelectedStyleChips.jsx";
 import { FlavorNotesPicker } from "./FlavorNotesPicker.jsx";
 import { FlatListField } from "./FlatListField.jsx";
+import { OnOffSwitch } from "./OnOffSwitch.jsx";
 import { GroupedListField } from "./GroupedListField.jsx";
-import { FOOD_PAIRING_LIST, OCCASION_LIST, GLASS_LIST, CHARACTERISTIC_LIST, SOFT_CHARACTERISTIC_LIST, COCKTAIL_CHARACTERISTIC_LIST, HOT_CHARACTERISTIC_LIST, SNACK_CHARACTERISTIC_LIST, SOFT_STYLE_LISTS, HOT_STYLE_LISTS, COCKTAIL_STYLE_LISTS } from "../data/customLists.js";
+import { BEER_DERIVATIVE_LIST, FOOD_PAIRING_LIST, OCCASION_LIST, GLASS_LIST, CHARACTERISTIC_LIST, SOFT_CHARACTERISTIC_LIST, COCKTAIL_CHARACTERISTIC_LIST, HOT_CHARACTERISTIC_LIST, SNACK_CHARACTERISTIC_LIST, SOFT_STYLE_LISTS, HOT_STYLE_LISTS, COCKTAIL_STYLE_LISTS } from "../data/customLists.js";
 import { softStyleOwner, stylesForSoftSubtype } from "../data/softStyles.js";
 import { characteristicsForSoft, characteristicsWithoutSoftOnly } from "../data/softCharacteristics.js";
 import { characteristicsForCocktail, characteristicsWithoutCocktailOnly } from "../data/cocktailCharacteristics.js";
@@ -187,6 +188,10 @@ export function DrinkDetailPanel({ drink, onClose, onSaved, myUserId }) {
     defaultShotServingMode: drink?.defaultShotServingMode || "",
     defaultShotPriceEuro: drink?.defaultShotPriceEuro ?? "",
     defaultShotPriceJeton: drink?.defaultShotPriceJeton ?? "1",
+    // Bières seulement : « Dérivés du produit ». `derivatives` = codes cochés (actifs) dans la liste « beer_derivative » ; `derivativesOn` ouvre
+    // le bloc : activé à l'ouverture dès qu'au moins un dérivé est coché. Interrupteur sur OFF à l'enregistrement → les dérivés cochés sont effacés.
+    derivativesOn: (drink?.derivatives || []).length > 0,
+    derivatives: drink?.derivatives || [],
     brandId: drink?.brandId || null,
     producerIds: drink?.producerIds || [],
     nationality: drink?.nationality || "",
@@ -584,6 +589,8 @@ export function DrinkDetailPanel({ drink, onClose, onSaved, myUserId }) {
       defaultServingMode: form.defaultServingMode || null,
       defaultPriceEuro: form.defaultPriceEuro === "" ? null : parseFloat(form.defaultPriceEuro),
       defaultPriceJeton: form.defaultPriceJeton === "" ? null : parseFloat(form.defaultPriceJeton),
+      // Bières : les dérivés cochés. Interrupteur sur OFF (ou produit qui n'est plus une bière) → aucun dérivé enregistré.
+      derivatives: isBeerOrCider && isBeer && form.derivativesOn ? form.derivatives : [],
       // Spiritueux : la case « Shot » et ses valeurs par défaut. Case décochée → les valeurs du shot sont effacées à l'enregistrement.
       ...(isSpirit
         ? {
@@ -1190,6 +1197,41 @@ export function DrinkDetailPanel({ drink, onClose, onSaved, myUserId }) {
                       </div>
                     </div>
                   </div>
+                )}
+              </>
+            )}
+            {isBeerOrCider && isBeer && (
+              <>
+                <div style={separatorStyle} />
+                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: "12px", marginBottom: form.derivativesOn ? "12px" : 0 }}>
+                  <span style={{ ...sectionTitleStyle, marginTop: 0, marginBottom: 0 }}>
+                    <span style={{ width: "4px", height: "14px", background: "#39FF66", borderRadius: "2px", display: "inline-block" }} />
+                    Dérivés du produit
+                    {form.derivativesOn && form.derivatives.length > 0 && (
+                      <span style={{ color: "#8792A6", fontWeight: 500 }}>
+                        {" "}
+                        ({form.derivatives.length} activé{form.derivatives.length > 1 ? "s" : ""})
+                      </span>
+                    )}
+                  </span>
+                  <OnOffSwitch on={form.derivativesOn} onChange={(on) => set("derivativesOn", on)} label="Dérivés du produit" />
+                </div>
+                {form.derivativesOn && (
+                  <>
+                    <p style={{ fontSize: "11.5px", color: "#8792A6", marginTop: "-6px", marginBottom: "10px" }}>
+                      Cochez les dérivés que ce produit peut devenir (ex. Mazout = pils + cola). La liste est commune à toutes les bières : un dérivé ajouté ici est proposé sur toutes les fiches.
+                    </p>
+                    <FlatListField
+                      list={BEER_DERIVATIVE_LIST}
+                      variant="rows"
+                      selected={form.derivatives}
+                      onToggle={(code) => toggleArrayField("derivatives", code)}
+                      onAdded={(item) => setForm((f) => (f.derivatives.includes(item.code) ? f : { ...f, derivatives: [...f.derivatives, item.code] }))}
+                      onDeleted={(code) => setForm((f) => (f.derivatives.includes(code) ? { ...f, derivatives: f.derivatives.filter((c) => c !== code) } : f))}
+                      labelStyle={labelStyle}
+                      fieldStyle={fieldStyle}
+                    />
+                  </>
                 )}
               </>
             )}

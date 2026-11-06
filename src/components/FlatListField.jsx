@@ -29,10 +29,12 @@ import {
   deleteHotCharacteristic,
   countDrinksWithSnackCharacteristic,
   deleteSnackCharacteristic,
+  countDrinksWithDerivative,
+  deleteDerivative,
   saveCustomListOrder,
 } from "../data/sharedDirectories.js";
 
-// Où une liste compte et supprime ses éléments : dans les lieux, dans les producteurs, dans les marques, dans les softs, dans les boissons chaudes, dans les cocktails / mocktails, dans les caractéristiques des softs, dans les caractéristiques des cocktails / mocktails, dans les caractéristiques des boissons chaudes, dans les caractéristiques des snacks, ou (par défaut) dans les produits.
+// Où une liste compte et supprime ses éléments : dans les lieux, dans les producteurs, dans les marques, dans les softs, dans les boissons chaudes, dans les cocktails / mocktails, dans les caractéristiques des softs, dans les caractéristiques des cocktails / mocktails, dans les caractéristiques des boissons chaudes, dans les caractéristiques des snacks, dans les dérivés des bières, ou (par défaut) dans les produits.
 const SOURCES = {
   venues: { count: countVenuesWithListItem, remove: deleteVenueListItem },
   producers: { count: countProducersWithListItem, remove: deleteProducerListItem },
@@ -44,6 +46,7 @@ const SOURCES = {
   cocktail_characteristics: { count: countDrinksWithCocktailCharacteristic, remove: deleteCocktailCharacteristic },
   hot_characteristics: { count: countDrinksWithHotCharacteristic, remove: deleteHotCharacteristic },
   snack_characteristics: { count: countDrinksWithSnackCharacteristic, remove: deleteSnackCharacteristic },
+  beer_derivatives: { count: countDrinksWithDerivative, remove: deleteDerivative },
 };
 const PRODUCT_SOURCE = { count: countDrinksWithListItem, remove: deleteCustomListItem };
 // La source d'une liste (aussi lue par GroupedListField, pour les listes à groupes).
@@ -57,7 +60,8 @@ export const listSource = (list) => SOURCES[list.source] || PRODUCT_SOURCE;
 // producteurs, une liste de la fiche marque (`"brands"`) dans les marques, une autre dans les produits.
 //   list         : la liste (FOOD_PAIRING_LIST, PAYMENT_LIST, AMENITY_LIST…, voir customLists.js)
 //   label        : le titre du champ (facultatif : la section qui l'entoure peut déjà le porter)
-//   variant      : "pills" (étiquettes, `selected` = tableau de codes, `onToggle`), "checkboxes" (cases à cocher, mêmes
+//   variant      : "pills" (étiquettes, `selected` = tableau de codes, `onToggle`), "rows" (tableau : une case, le nom et,
+//                  pour une liste avec `energy`, sa valeur d'énergie ; mêmes propriétés), "checkboxes" (cases à cocher, mêmes
 //                  propriétés) ou "select" (`value` = un code, `onChange`)
 //   compact      : faux pour les étiquettes de la fiche lieu (voir FlatListEditor)
 //   onAdded(item): un élément vient d'être ajouté (le parent le sélectionne pour ce produit)
@@ -94,6 +98,7 @@ export function FlatListField({ list, label, variant, compact, value, selected, 
         onOrderChange={setOrder}
         onReorder={list.orderable ? (codes) => saveCustomListOrder(list.key, codes) : undefined}
         pills={variant === "pills"}
+        rows={variant === "rows"}
         checkboxes={variant === "checkboxes"}
         compact={compact}
         selected={isSelect ? (value ? [value] : []) : selected}

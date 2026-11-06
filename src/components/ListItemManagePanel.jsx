@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { validateItemFields, describeItemError, entityOf, countLabel, deleteNoticeFor } from "../data/customLists.js";
+import { validateItemFields, describeItemError, entityOf, countLabel, deleteNoticeFor, parseItemEnergy } from "../data/customLists.js";
 
 // Panneau de modification d'un élément d'une liste de la fiche produit (un arôme, par exemple), de la fiche lieu ou de la
 // fiche producteur, affiché sous les
@@ -29,6 +29,7 @@ export function ListItemManagePanel({ list, item, custom, onSave, onCount, onDel
   const produits = (n) => countLabel(list, n);
   const [name, setName] = useState(item.fr);
   const [groupTitle, setGroupTitle] = useState(item.groupTitle);
+  const [kcal, setKcal] = useState(item.kcalPer100ml != null ? String(item.kcalPer100ml) : "");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState(null);
   // null = pas de suppression en cours ; sinon { count } : on attend la confirmation.
@@ -37,7 +38,12 @@ export function ListItemManagePanel({ list, item, custom, onSave, onCount, onDel
   const save = async () => {
     if (busy) return;
     const fr = cleanName(name);
-    if (fr === item.fr && groupTitle === item.groupTitle) {
+    const energy = list.energy ? parseItemEnergy(kcal) : { value: null };
+    if (energy.error) {
+      setError(energy.error);
+      return;
+    }
+    if (fr === item.fr && groupTitle === item.groupTitle && (!list.energy || energy.value === (item.kcalPer100ml ?? null))) {
       setError("Aucun changement à enregistrer.");
       return;
     }
@@ -48,7 +54,7 @@ export function ListItemManagePanel({ list, item, custom, onSave, onCount, onDel
     }
     setError(null);
     setBusy(true);
-    const res = await onSave({ code: item.code, fr, groupTitle });
+    const res = await onSave(list.energy ? { code: item.code, fr, groupTitle, kcalPer100ml: energy.value } : { code: item.code, fr, groupTitle });
     setBusy(false);
     if (res.error) setError(describeItemError(list, res.error));
   };
@@ -94,7 +100,7 @@ export function ListItemManagePanel({ list, item, custom, onSave, onCount, onDel
           <p style={{ fontSize: "11.5px", color: "#8792A6", fontStyle: "italic", marginTop: 0, marginBottom: "10px" }}>
             Les changements valent pour {e.all} qui portent {w.this}.
           </p>
-          <div style={{ display: "flex", flexWrap: "wrap", gap: "8px", alignItems: "center" }}>
+          <div style={{ display: "flex", flexWrap: "wrap", gap: "8px", alignItems: list.energy ? "flex-end" : "center" }}>
             <input
               aria-label={`Nom ${w.ofThe}`}
               value={name}
@@ -102,6 +108,12 @@ export function ListItemManagePanel({ list, item, custom, onSave, onCount, onDel
               onKeyDown={(e) => e.key === "Enter" && save()}
               style={{ ...fieldStyle, flex: 1, minWidth: "200px" }}
             />
+            {list.energy && (
+              <div style={{ width: "170px" }}>
+                <label style={{ fontSize: "12.5px", color: "#8792A6", marginBottom: "4px", display: "block", fontWeight: 600 }}>{list.energy.label}</label>
+                <input type="number" step="0.1" min="0" aria-label={`${list.energy.label} ${w.ofThe}`} value={kcal} onChange={(e) => setKcal(e.target.value)} onKeyDown={(e) => e.key === "Enter" && save()} placeholder={list.energy.placeholder} style={{ ...fieldStyle, width: "100%" }} />
+              </div>
+            )}
             {!list.flat && (
               <select aria-label={`Groupe ${w.ofThe}`} value={groupTitle} onChange={(e) => setGroupTitle(e.target.value)} style={{ ...fieldStyle, flex: 1, minWidth: "200px" }}>
                 {list.builtinGroups.map((g) => (
