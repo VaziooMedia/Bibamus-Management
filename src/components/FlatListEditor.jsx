@@ -1,7 +1,7 @@
 import React, { useMemo, useState } from "react";
 import { ListItemAdder } from "./ListItemAdder.jsx";
 import { ListItemManagePanel } from "./ListItemManagePanel.jsx";
-import { orderedItems, withItemSaved, withItemDeleted, moveInOrder, entityOf, countLabel, capitalize } from "../data/customLists.js";
+import { orderedItems, withItemSaved, withItemDeleted, moveInOrder, entityOf, countLabel, capitalize, describeItemError } from "../data/customLists.js";
 
 // Ajout, renommage, déplacement et suppression des éléments d'une liste PLATE de la fiche produit (accords
 // alimentaires, moment, verre, caractéristiques), de la fiche lieu (moyens de paiement, types d'établissement,
@@ -13,7 +13,9 @@ import { orderedItems, withItemSaved, withItemDeleted, moveInOrder, entityOf, co
 //   pills          : vrai pour une liste à plusieurs choix (accords) : les étiquettes sont toujours affichées et se
 //                    (dé)sélectionnent ; faux pour une liste déroulante : les étiquettes n'apparaissent qu'en mode modification
 //   rows           : vrai pour une liste à plusieurs choix présentée en tableau (case, nom, et la valeur d'énergie si la liste a `energy`) :
-//                    on voit d'un coup d'œil quels éléments ont une valeur ; en mode modification, toucher une ligne ouvre son panneau
+//                    on voit d'un coup d'œil quels éléments ont une valeur ; en mode modification, toucher une ligne ouvre son panneau.
+//                    Pour une liste dont l'ordre se modifie, chaque ligne porte aussi des flèches ↑ ↓ (hors mode modification) :
+//                    même ordre enregistré que dans le panneau d'un élément, commun à tous les produits, enregistré tout de suite
 //   checkboxes     : vrai pour une liste à plusieurs choix présentée en cases à cocher (aménités) ; hors du mode modification,
 //                    les cases sont affichées, et en mode modification les étiquettes en pointillés (comme pour une liste déroulante)
 //   compact        : faux pour les étiquettes des fiches lieu et producteur (un peu plus grandes, collées au titre) ; vrai par défaut (fiche produit)
@@ -30,6 +32,7 @@ export function FlatListEditor({ list, custom, onCustomChange, order, onOrderCha
   const [managing, setManaging] = useState(false);
   const [activeCode, setActiveCode] = useState(null);
   const [message, setMessage] = useState(null);
+  const [moving, setMoving] = useState(false);
 
   const items = useMemo(() => orderedItems(list, custom, order), [list, custom, order]);
   const active = managing && activeCode != null ? items.find((t) => t.code === activeCode) : null;
@@ -71,11 +74,48 @@ export function FlatListEditor({ list, custom, onCustomChange, order, onOrderCha
     return {};
   };
 
+  // Les flèches du tableau : un déplacement à la fois (le suivant attend que l'ordre soit enregistré).
+  const moveFromTable = async (code, direction) => {
+    if (moving) return;
+    setMessage(null);
+    setMoving(true);
+    const res = await move(code, direction);
+    setMoving(false);
+    if (res?.error) setMessage({ kind: "error", text: describeItemError(list, res.error) });
+  };
+
   return (
     <div>
       {rows && (() => {
         const energy = list.energy;
-        const cols = energy ? "28px 1fr 150px" : "28px 1fr";
+        const arrows = canReorder;
+        const cols = `28px 1fr${energy ? " 150px" : ""}${arrows ? " 64px" : ""}`;
+        const arrowButton = (tag, index, direction) => {
+          const disabled = moving || (direction < 0 ? index <= 0 : index >= items.length - 1);
+          return (
+            <button
+              type="button"
+              disabled={disabled}
+              onClick={(ev) => {
+                // La ligne est une étiquette qui (dé)coche le produit : un appui sur une flèche ne doit que déplacer.
+                ev.preventDefault();
+                ev.stopPropagation();
+                moveFromTable(tag.code, direction);
+              }}
+              aria-label={`${direction < 0 ? "Monter" : "Descendre"} ${w.the} ${tag.fr}`}
+              title={direction < 0 ? "Monter" : "Descendre"}
+              style={{ width: "28px", height: "28px", padding: 0, borderRadius: "6px", border: "1.5px solid #28405C", background: "none", color: "#F2F2E8", fontSize: "14px", lineHeight: 1, cursor: disabled ? "default" : "pointer", opacity: disabled ? 0.3 : 1 }}
+            >
+              {direction < 0 ? "↑" : "↓"}
+            </button>
+          );
+        };
+        const arrowsCell = (tag, index) => (
+          <span style={{ display: "flex", gap: "6px", justifyContent: "flex-end" }}>
+            {arrowButton(tag, index, -1)}
+            {arrowButton(tag, index, 1)}
+          </span>
+        );
         const cell = { fontSize: "13px", fontWeight: 600, color: "#F2F2E8" };
         const energyCell = (tag) =>
           tag.kcalPer100ml != null ? (
@@ -89,13 +129,14 @@ export function FlatListEditor({ list, custom, onCustomChange, order, onOrderCha
               <span />
               <span>{capitalize(w.noun)}</span>
               {energy && <span style={{ textAlign: "right" }}>{energy.column}</span>}
+              {arrows && <span />}
             </div>
             {items.length === 0 && (
               <p style={{ fontSize: "12.5px", color: "#8792A6", fontStyle: "italic", margin: 0, padding: "10px 12px", borderTop: "1px solid #28405C" }}>
                 Aucun élément pour l'instant : ajoutez-en avec « + Ajouter {w.one} ».
               </p>
             )}
-            {items.map((tag) => {
+            {items.map((tag, index) => {
               const checked = selected.includes(tag.code);
               const isActive = managing && tag.code === activeCode;
               const rowStyle = { display: "grid", gridTemplateColumns: cols, alignItems: "center", gap: "10px", padding: "9px 12px", width: "100%", textAlign: "left", border: "none", borderTop: "1px solid #28405C", background: checked && !managing ? "rgba(57,255,102,0.08)" : "none", cursor: "pointer", boxShadow: isActive ? "inset 0 0 0 2px #F2F2E8" : "none" };
@@ -113,12 +154,14 @@ export function FlatListEditor({ list, custom, onCustomChange, order, onOrderCha
                       <span />
                       <span style={cell}>{tag.fr}</span>
                       {energy && energyCell(tag)}
+                      {arrows && <span />}
                     </button>
                   ) : (
                     <label style={rowStyle}>
                       <input type="checkbox" checked={checked} onChange={() => onToggle && onToggle(tag.code)} />
                       <span style={cell}>{tag.fr}</span>
                       {energy && energyCell(tag)}
+                      {arrows && arrowsCell(tag, index)}
                     </label>
                   )}
                   {isActive && (
