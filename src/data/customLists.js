@@ -66,6 +66,20 @@ export const FOOD_PAIRING_LIST = {
   orphanTitle: "",
   words: { noun: "accord", one: "un accord", this: "cet accord", the: "l'accord", ofThe: "de l'accord", ofAll: "des accords", namePlaceholder: "Nom de l'accord (ex. Frites)" },
 };
+// Dérivés d'une bière (Mazout = pils + cola, Tango = pils + sirop de grenadine…) : une liste plate commune à toutes les bières, modifiable
+// depuis la gestion comme les accords alimentaires. Tous ses éléments sont ajoutés à la main (aucun élément de départ dans le code).
+export const BEER_DERIVATIVE_LIST = {
+  key: "beer_derivative",
+  source: "beer_derivatives",
+  flat: true,
+  orderable: true,
+  // Chaque dérivé a sa propre énergie (kcal/100ml) : quand on le choisit dans l'application, elle REMPLACE celle du produit.
+  // Facultative : sans valeur, l'application garde l'énergie du produit.
+  energy: { label: "Énergie (kcal/100ml)", column: "kcal/100ml", placeholder: "Ex. 65", missing: "valeur du produit" },
+  builtinGroups: [{ title: "", tags: [] }],
+  orphanTitle: "",
+  words: { noun: "dérivé", one: "un dérivé", this: "ce dérivé", the: "le dérivé", ofThe: "du dérivé", ofAll: "des dérivés", namePlaceholder: "Nom du dérivé (ex. Mazout)" },
+};
 export const OCCASION_LIST = {
   key: "occasion",
   flat: true,
@@ -915,7 +929,7 @@ export function mergeCustomItems(list, custom) {
   const toPlace = [];
   custom.forEach((c) => {
     if (builtinCodes.has(c.code)) changeByCode.set(c.code, c);
-    else if (!c.hidden) toPlace.push({ code: c.code, fr: c.fr, groupTitle: c.groupTitle });
+    else if (!c.hidden) toPlace.push({ code: c.code, fr: c.fr, groupTitle: c.groupTitle, kcalPer100ml: c.kcalPer100ml });
   });
 
   const kept = groups.map((g) => ({
@@ -936,6 +950,7 @@ export function mergeCustomItems(list, custom) {
   const orphans = [];
   [...toPlace].sort((a, b) => a.fr.localeCompare(b.fr)).forEach((c) => {
     const tag = { code: c.code, fr: c.fr };
+    if (c.kcalPer100ml != null) tag.kcalPer100ml = c.kcalPer100ml;
     const home = list.flat ? byTitle.get(groups[0].title) : byTitle.get(c.groupTitle);
     if (home) home.push(tag);
     else orphans.push(tag);
@@ -995,6 +1010,7 @@ export function findDuplicateItem(list, name, custom, exceptCode = null) {
 // La liste en mémoire après l'enregistrement d'un élément (ajouté ou modifié) : sa ligne est remplacée ou ajoutée.
 export function withItemSaved(custom, item) {
   const row = { code: item.code, fr: item.fr, groupTitle: item.groupTitle, hidden: false };
+  if (item.kcalPer100ml != null) row.kcalPer100ml = item.kcalPer100ml;
   return custom.some((c) => c.code === item.code) ? custom.map((c) => (c.code === item.code ? row : c)) : [...custom, row];
 }
 
@@ -1019,6 +1035,17 @@ export function validateItemFields(list, name, groupTitle, custom, exceptCode = 
   const dup = findDuplicateItem(list, trimmed, custom, exceptCode);
   if (dup) return dup.groupTitle ? `« ${dup.fr} » existe déjà, dans le groupe « ${dup.groupTitle} ».` : `« ${dup.fr} » existe déjà.`;
   return null;
+}
+
+// Énergie d'un élément (liste avec `energy`) : saisie facultative en kcal/100ml. Rend { value } (nombre, ou null si vide) ou { error } (message).
+export const MAX_ITEM_KCAL = 900;
+export function parseItemEnergy(raw) {
+  const text = String(raw ?? "").trim().replace(",", ".");
+  if (text === "") return { value: null };
+  const n = Number(text);
+  if (!Number.isFinite(n) || n < 0) return { error: "L'énergie doit être un nombre positif (kcal pour 100 ml)." };
+  if (n > MAX_ITEM_KCAL) return { error: `L'énergie semble trop haute (${MAX_ITEM_KCAL} kcal/100ml au maximum).` };
+  return { value: n };
 }
 
 // Message lisible pour un refus de la base.

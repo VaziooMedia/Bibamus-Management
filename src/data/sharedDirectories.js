@@ -1741,6 +1741,8 @@ function rowToDrink(row) {
     defaultServingMode: row.default_serving_mode,
     defaultPriceEuro: row.default_price_euro,
     defaultPriceJeton: row.default_price_jeton,
+    // Dérivés cochés pour ce produit (bières) : codes de la liste « beer_derivative » ; [] = aucun.
+    derivatives: Array.isArray(row.derivatives) ? row.derivatives : [],
     servesAsShot: !!row.serves_as_shot,
     defaultAsShot: !!row.default_as_shot,
     defaultShotVolumeCl: row.default_shot_volume_cl,
@@ -1907,6 +1909,7 @@ function drinkToRow(d, partial = false) {
     default_serving_mode: d.defaultServingMode,
     default_price_euro: d.defaultPriceEuro,
     default_price_jeton: d.defaultPriceJeton,
+    derivatives: d.derivatives,
     serves_as_shot: d.servesAsShot,
     default_as_shot: d.defaultAsShot,
     default_shot_volume_cl: d.defaultShotVolumeCl,
@@ -2263,7 +2266,14 @@ export async function deleteCustomBeerCiderStyle({ code, fr, groupTitle }) {
 // nouveau nom, nouveau groupe, ou masqué = supprimé). Une seule table pour toutes ces listes
 // (custom_list_items), distinguées par list_key. Lue par la gestion ; écrite uniquement par les rôles de la
 // gestion (voir le SQL). Un échec de lecture rend une liste vide : on retombe sur la liste figée.
-const rowToCustomListItem = (r) => ({ code: r.code, fr: r.fr, groupTitle: r.group_title ?? "", hidden: !!r.hidden });
+// kcalPer100ml : énergie propre à l'élément (dérivés des bières), null = pas de valeur (l'appli utilise alors celle du produit).
+const rowToCustomListItem = (r) => ({
+  code: r.code,
+  fr: r.fr,
+  groupTitle: r.group_title ?? "",
+  hidden: !!r.hidden,
+  kcalPer100ml: r.kcal_per_100ml ?? null,
+});
 
 export async function loadCustomListItems(listKey) {
   const { data, error } = await supabase.from("custom_list_items").select("*").eq("list_key", listKey).order("fr");
@@ -2274,8 +2284,11 @@ export async function loadCustomListItems(listKey) {
   return data.map(rowToCustomListItem);
 }
 
-export async function createCustomListItem(listKey, { code, fr, groupTitle }) {
-  const { data, error } = await supabase.from("custom_list_items").insert({ list_key: listKey, code, fr, group_title: groupTitle }).select("*").single();
+export async function createCustomListItem(listKey, { code, fr, groupTitle, kcalPer100ml }) {
+  const row = { list_key: listKey, code, fr, group_title: groupTitle };
+  // Colonne d'énergie envoyée seulement par les listes qui en ont une (dérivés) : les autres ne la touchent pas.
+  if (kcalPer100ml !== undefined) row.kcal_per_100ml = kcalPer100ml;
+  const { data, error } = await supabase.from("custom_list_items").insert(row).select("*").single();
   if (error) {
     console.error("createCustomListItem:", error);
     return { error };
@@ -2285,10 +2298,13 @@ export async function createCustomListItem(listKey, { code, fr, groupTitle }) {
 
 // Modifier un élément (nom et/ou groupe) : met à jour sa ligne, ou la crée s'il vient de la liste figée
 // (pas encore de ligne). Un élément masqué qu'on enregistre redevient visible.
-export async function saveCustomListItem(listKey, { code, fr, groupTitle }) {
+export async function saveCustomListItem(listKey, { code, fr, groupTitle, kcalPer100ml }) {
+  const row = { list_key: listKey, code, fr, group_title: groupTitle, hidden: false };
+  // undefined = liste sans énergie : la colonne n'est pas touchée ; null = valeur effacée (l'appli reprend celle du produit).
+  if (kcalPer100ml !== undefined) row.kcal_per_100ml = kcalPer100ml;
   const { data, error } = await supabase
     .from("custom_list_items")
-    .upsert({ list_key: listKey, code, fr, group_title: groupTitle, hidden: false }, { onConflict: "list_key,code" })
+    .upsert(row, { onConflict: "list_key,code" })
     .select("*")
     .single();
   if (error) {
@@ -2314,6 +2330,28 @@ export async function deleteCustomListItem(listKey, { code, fr, groupTitle }) {
   const { data, error } = await supabase.rpc("delete_list_item", { p_list: listKey, p_code: code, p_fr: fr, p_group_title: groupTitle });
   if (error) {
     console.error("deleteCustomListItem:", error);
+    return { error };
+  }
+  return { removedFrom: Number(data) || 0 };
+}
+
+// Dérivés des bières (liste « beer_derivative », colonne drinks_directory.derivatives) : comptés et retirés dans cette seule colonne,
+// par des fonctions SQL propres (voir le script « derives-1-ecriture »), comme celles des lieux, producteurs et marques.
+export async function countDrinksWithDerivative(listKey, code) {
+  const { data, error } = await supabase.rpc("count_drinks_with_derivative", { p_list: listKey, p_code: code });
+  if (error) {
+    console.error("countDrinksWithDerivative:", error);
+    return { error };
+  }
+  return { count: Number(data) || 0 };
+}
+
+// Supprimer un dérivé : le retire de tous les produits qui le portent, puis le supprime (ou le masque, s'il vient de la liste de
+// départ) — en une seule opération côté base. Rend le nombre de produits modifiés.
+export async function deleteDerivative(listKey, { code, fr, groupTitle }) {
+  const { data, error } = await supabase.rpc("delete_derivative", { p_list: listKey, p_code: code, p_fr: fr, p_group_title: groupTitle });
+  if (error) {
+    console.error("deleteDerivative:", error);
     return { error };
   }
   return { removedFrom: Number(data) || 0 };

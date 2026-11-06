@@ -1,7 +1,7 @@
 import React, { useMemo, useState } from "react";
 import { ListItemAdder } from "./ListItemAdder.jsx";
 import { ListItemManagePanel } from "./ListItemManagePanel.jsx";
-import { orderedItems, withItemSaved, withItemDeleted, moveInOrder, entityOf, countLabel } from "../data/customLists.js";
+import { orderedItems, withItemSaved, withItemDeleted, moveInOrder, entityOf, countLabel, capitalize } from "../data/customLists.js";
 
 // Ajout, renommage, déplacement et suppression des éléments d'une liste PLATE de la fiche produit (accords
 // alimentaires, moment, verre, caractéristiques), de la fiche lieu (moyens de paiement, types d'établissement,
@@ -12,6 +12,8 @@ import { orderedItems, withItemSaved, withItemDeleted, moveInOrder, entityOf, co
 //   custom         : les modifications enregistrées ; onCustomChange(prev => liste) pour les mettre à jour (un setState)
 //   pills          : vrai pour une liste à plusieurs choix (accords) : les étiquettes sont toujours affichées et se
 //                    (dé)sélectionnent ; faux pour une liste déroulante : les étiquettes n'apparaissent qu'en mode modification
+//   rows           : vrai pour une liste à plusieurs choix présentée en tableau (case, nom, et la valeur d'énergie si la liste a `energy`) :
+//                    on voit d'un coup d'œil quels éléments ont une valeur ; en mode modification, toucher une ligne ouvre son panneau
 //   checkboxes     : vrai pour une liste à plusieurs choix présentée en cases à cocher (aménités) ; hors du mode modification,
 //                    les cases sont affichées, et en mode modification les étiquettes en pointillés (comme pour une liste déroulante)
 //   compact        : faux pour les étiquettes des fiches lieu et producteur (un peu plus grandes, collées au titre) ; vrai par défaut (fiche produit)
@@ -21,7 +23,7 @@ import { orderedItems, withItemSaved, withItemDeleted, moveInOrder, entityOf, co
 //   onAdded(item)  : un élément vient d'être ajouté (le parent le sélectionne pour ce produit)
 //   onDeleted(code): un élément vient d'être supprimé (le parent le retire de ce produit)
 //   onCreate / onSave / onCount / onDelete : accès à la base (voir ListItemAdder et ListItemManagePanel)
-export function FlatListEditor({ list, custom, onCustomChange, order, onOrderChange, onReorder, pills, checkboxes, compact = true, selected, onToggle, onAdded, onDeleted, onCreate, onSave, onCount, onDelete }) {
+export function FlatListEditor({ list, custom, onCustomChange, order, onOrderChange, onReorder, pills, rows, checkboxes, compact = true, selected, onToggle, onAdded, onDeleted, onCreate, onSave, onCount, onDelete }) {
   const w = list.words;
   const e = entityOf(list);
   const canReorder = !!(list.orderable && onReorder);
@@ -71,7 +73,78 @@ export function FlatListEditor({ list, custom, onCustomChange, order, onOrderCha
 
   return (
     <div>
-      {(pills || managing) && (
+      {rows && (() => {
+        const energy = list.energy;
+        const cols = energy ? "28px 1fr 150px" : "28px 1fr";
+        const cell = { fontSize: "13px", fontWeight: 600, color: "#F2F2E8" };
+        const energyCell = (tag) =>
+          tag.kcalPer100ml != null ? (
+            <strong style={{ ...cell, textAlign: "right" }}>{String(tag.kcalPer100ml).replace(".", ",")}</strong>
+          ) : (
+            <span style={{ fontSize: "11.5px", color: "#8792A6", fontStyle: "italic", textAlign: "right" }}>{energy.missing}</span>
+          );
+        return (
+          <div style={{ border: "2px solid #28405C", borderRadius: "8px", overflow: "hidden", marginTop: compact ? "10px" : 0 }}>
+            <div style={{ display: "grid", gridTemplateColumns: cols, alignItems: "center", gap: "10px", padding: "7px 12px", background: "#16273D", fontSize: "12px", fontWeight: 700, color: "#8792A6" }}>
+              <span />
+              <span>{capitalize(w.noun)}</span>
+              {energy && <span style={{ textAlign: "right" }}>{energy.column}</span>}
+            </div>
+            {items.length === 0 && (
+              <p style={{ fontSize: "12.5px", color: "#8792A6", fontStyle: "italic", margin: 0, padding: "10px 12px", borderTop: "1px solid #28405C" }}>
+                Aucun élément pour l'instant : ajoutez-en avec « + Ajouter {w.one} ».
+              </p>
+            )}
+            {items.map((tag) => {
+              const checked = selected.includes(tag.code);
+              const isActive = managing && tag.code === activeCode;
+              const rowStyle = { display: "grid", gridTemplateColumns: cols, alignItems: "center", gap: "10px", padding: "9px 12px", width: "100%", textAlign: "left", border: "none", borderTop: "1px solid #28405C", background: checked && !managing ? "rgba(57,255,102,0.08)" : "none", cursor: "pointer", boxShadow: isActive ? "inset 0 0 0 2px #F2F2E8" : "none" };
+              return (
+                <React.Fragment key={tag.code}>
+                  {managing ? (
+                    <button
+                      onClick={() => {
+                        setMessage(null);
+                        setActiveCode((c) => (c === tag.code ? null : tag.code));
+                      }}
+                      title={`Modifier « ${tag.fr} »`}
+                      style={rowStyle}
+                    >
+                      <span />
+                      <span style={cell}>{tag.fr}</span>
+                      {energy && energyCell(tag)}
+                    </button>
+                  ) : (
+                    <label style={rowStyle}>
+                      <input type="checkbox" checked={checked} onChange={() => onToggle && onToggle(tag.code)} />
+                      <span style={cell}>{tag.fr}</span>
+                      {energy && energyCell(tag)}
+                    </label>
+                  )}
+                  {isActive && (
+                    <div style={{ padding: "12px", borderTop: "1px solid #28405C" }}>
+                      <ListItemManagePanel
+                        key={tag.code}
+                        list={list}
+                        item={{ code: tag.code, fr: tag.fr, groupTitle: "", kcalPer100ml: tag.kcalPer100ml }}
+                        custom={custom}
+                        onSave={save}
+                        onCount={onCount}
+                        onDelete={remove}
+                        onClose={() => setActiveCode(null)}
+                        position={canReorder ? { index: items.findIndex((t) => t.code === tag.code), total: items.length } : undefined}
+                        onMove={canReorder ? (direction) => move(tag.code, direction) : undefined}
+                      />
+                    </div>
+                  )}
+                </React.Fragment>
+              );
+            })}
+          </div>
+        );
+      })()}
+
+      {(pills || managing) && !rows && (
         <div style={{ display: "flex", flexWrap: "wrap", gap: "8px", marginTop: compact ? "10px" : managing ? "10px" : 0 }}>
           {items.map((tag) => {
             const checked = selected.includes(tag.code);
@@ -107,7 +180,7 @@ export function FlatListEditor({ list, custom, onCustomChange, order, onOrderCha
               <ListItemManagePanel
                 key={active.code}
                 list={list}
-                item={{ code: active.code, fr: active.fr, groupTitle: "" }}
+                item={{ code: active.code, fr: active.fr, groupTitle: "", kcalPer100ml: active.kcalPer100ml }}
                 custom={custom}
                 onSave={save}
                 onCount={onCount}
