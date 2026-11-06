@@ -1,7 +1,7 @@
 import React, { useMemo, useState } from "react";
 import { ListItemAdder } from "./ListItemAdder.jsx";
 import { ListItemManagePanel } from "./ListItemManagePanel.jsx";
-import { orderedItems, withItemSaved, withItemDeleted, moveInOrder, entityOf, countLabel, capitalize, describeItemError } from "../data/customLists.js";
+import { orderedItems, orderForProduct, moveSelectedInOrder, withItemSaved, withItemDeleted, moveInOrder, entityOf, countLabel, capitalize, describeItemError } from "../data/customLists.js";
 
 // Ajout, renommage, déplacement et suppression des éléments d'une liste PLATE de la fiche produit (accords
 // alimentaires, moment, verre, caractéristiques), de la fiche lieu (moyens de paiement, types d'établissement,
@@ -15,7 +15,10 @@ import { orderedItems, withItemSaved, withItemDeleted, moveInOrder, entityOf, co
 //   rows           : vrai pour une liste à plusieurs choix présentée en tableau (case, nom, et la valeur d'énergie si la liste a `energy`) :
 //                    on voit d'un coup d'œil quels éléments ont une valeur ; en mode modification, toucher une ligne ouvre son panneau.
 //                    Pour une liste dont l'ordre se modifie, chaque ligne porte aussi des flèches ↑ ↓ (hors mode modification) :
-//                    même ordre enregistré que dans le panneau d'un élément, commun à tous les produits, enregistré tout de suite
+//                    même ordre enregistré que dans le panneau d'un élément, commun à tous les produits, enregistré tout de suite.
+//                    Liste avec `productOrder` (dérivés) : l'ordre est PROPRE AU PRODUIT : les éléments cochés d'abord, dans l'ordre de `selected`,
+//                    puis les autres ; les flèches ne se trouvent que sur les lignes cochées et changent l'ordre de `selected` (onSelectedReorder),
+//                    enregistré avec la fiche, pas tout de suite
 //   checkboxes     : vrai pour une liste à plusieurs choix présentée en cases à cocher (aménités) ; hors du mode modification,
 //                    les cases sont affichées, et en mode modification les étiquettes en pointillés (comme pour une liste déroulante)
 //   compact        : faux pour les étiquettes des fiches lieu et producteur (un peu plus grandes, collées au titre) ; vrai par défaut (fiche produit)
@@ -24,19 +27,23 @@ import { orderedItems, withItemSaved, withItemDeleted, moveInOrder, entityOf, co
 //   selected       : codes sélectionnés pour ce produit ; onToggle(code) (liste à étiquettes)
 //   rowValues      : (tableau, liste avec `volume`) { values: { code: texte }, onChange(code, texte) } : une colonne de plus, avec une saisie
 //                    sur chaque ligne COCHÉE (un tiret sur les autres) ; la valeur est propre au produit, pas à la liste
+//   onSelectedReorder : (liste avec `productOrder`) (codes) -> void — le nouvel ordre des codes cochés du produit
 //   onAdded(item)  : un élément vient d'être ajouté (le parent le sélectionne pour ce produit)
 //   onDeleted(code): un élément vient d'être supprimé (le parent le retire de ce produit)
 //   onCreate / onSave / onCount / onDelete : accès à la base (voir ListItemAdder et ListItemManagePanel)
-export function FlatListEditor({ list, custom, onCustomChange, order, onOrderChange, onReorder, pills, rows, checkboxes, compact = true, selected, rowValues, onToggle, onAdded, onDeleted, onCreate, onSave, onCount, onDelete }) {
+export function FlatListEditor({ list, custom, onCustomChange, order, onOrderChange, onReorder, pills, rows, checkboxes, compact = true, selected, rowValues, onToggle, onSelectedReorder, onAdded, onDeleted, onCreate, onSave, onCount, onDelete }) {
   const w = list.words;
   const e = entityOf(list);
-  const canReorder = !!(list.orderable && onReorder);
+  // Dérivés : l'ordre est celui du produit (flèches du tableau, ligne cochée seulement) ; les autres listes gardent l'ordre commun.
+  const perProduct = !!(rows && list.productOrder && onSelectedReorder);
+  const canReorder = perProduct || !!(list.orderable && onReorder);
   const [managing, setManaging] = useState(false);
   const [activeCode, setActiveCode] = useState(null);
   const [message, setMessage] = useState(null);
   const [moving, setMoving] = useState(false);
 
-  const items = useMemo(() => orderedItems(list, custom, order), [list, custom, order]);
+  const commonItems = useMemo(() => orderedItems(list, custom, order), [list, custom, order]);
+  const items = useMemo(() => (perProduct ? orderForProduct(commonItems, selected) : commonItems), [perProduct, commonItems, selected]);
   const active = managing && activeCode != null ? items.find((t) => t.code === activeCode) : null;
 
   const stopManaging = () => {
@@ -76,8 +83,21 @@ export function FlatListEditor({ list, custom, onCustomChange, order, onOrderCha
     return {};
   };
 
+  // Le volume du verre d'un dérivé (propre au produit) modifié seul dans le panneau : il rejoint la fiche, à enregistrer avec elle.
+  const saveVolumeOnly = (tag, text) => {
+    rowValues.onChange(tag.code, text);
+    setActiveCode(null);
+    setMessage({ kind: "ok", text: `Volume de « ${tag.fr} » modifié pour ce produit : à enregistrer avec la fiche.` });
+  };
+
   // Les flèches du tableau : un déplacement à la fois (le suivant attend que l'ordre soit enregistré).
   const moveFromTable = async (code, direction) => {
+    if (perProduct) {
+      // Ordre du produit : un simple changement de la fiche, enregistré avec elle.
+      const next = moveSelectedInOrder(selected, items.map((t) => t.code), code, direction);
+      if (next) onSelectedReorder(next);
+      return;
+    }
     if (moving) return;
     setMessage(null);
     setMoving(true);
@@ -93,8 +113,9 @@ export function FlatListEditor({ list, custom, onCustomChange, order, onOrderCha
         const arrows = canReorder;
         const volume = rowValues && list.volume ? list.volume : null;
         const cols = `28px minmax(0, 1fr)${energy ? (volume ? " 124px" : " 150px") : ""}${volume ? " 88px" : ""}${arrows ? " 64px" : ""}`;
+        const checkedCount = perProduct ? items.filter((t) => selected.includes(t.code)).length : items.length;
         const arrowButton = (tag, index, direction) => {
-          const disabled = moving || (direction < 0 ? index <= 0 : index >= items.length - 1);
+          const disabled = moving || (direction < 0 ? index <= 0 : index >= checkedCount - 1);
           return (
             <button
               type="button"
@@ -113,10 +134,11 @@ export function FlatListEditor({ list, custom, onCustomChange, order, onOrderCha
             </button>
           );
         };
-        const arrowsCell = (tag, index) => (
+        // Ordre du produit : pas de flèches sur une ligne non cochée (elle n'a pas de place dans l'ordre du produit).
+        const arrowsCell = (tag, index, checked) => (
           <span style={{ display: "flex", gap: "6px", justifyContent: "flex-end" }}>
-            {arrowButton(tag, index, -1)}
-            {arrowButton(tag, index, 1)}
+            {perProduct && !checked ? null : arrowButton(tag, index, -1)}
+            {perProduct && !checked ? null : arrowButton(tag, index, 1)}
           </span>
         );
         const cell = { fontSize: "13px", fontWeight: 600, color: "#F2F2E8" };
@@ -189,7 +211,7 @@ export function FlatListEditor({ list, custom, onCustomChange, order, onOrderCha
                       <span style={cell}>{tag.fr}</span>
                       {energy && energyCell(tag)}
                       {volume && volumeCell(tag, checked)}
-                      {arrows && arrowsCell(tag, index)}
+                      {arrows && arrowsCell(tag, index, checked)}
                     </label>
                   )}
                   {isActive && (
@@ -203,8 +225,7 @@ export function FlatListEditor({ list, custom, onCustomChange, order, onOrderCha
                         onCount={onCount}
                         onDelete={remove}
                         onClose={() => setActiveCode(null)}
-                        position={canReorder ? { index: items.findIndex((t) => t.code === tag.code), total: items.length } : undefined}
-                        onMove={canReorder ? (direction) => move(tag.code, direction) : undefined}
+                        volume={volume && checked ? { label: volume.label, placeholder: volume.placeholder, text: rowValues.values?.[tag.code] ?? "", onCommit: (text) => rowValues.onChange(tag.code, text), onCommitOnly: (text) => saveVolumeOnly(tag, text) } : undefined}
                       />
                     </div>
                   )}
@@ -278,7 +299,7 @@ export function FlatListEditor({ list, custom, onCustomChange, order, onOrderCha
 
       {managing && (
         <p style={{ fontSize: "11.5px", color: "#F2F2E8", marginTop: "10px", marginBottom: 0 }}>
-          Mode modification : touchez {w.one} pour {canReorder ? "le renommer, le déplacer ou le supprimer" : "le renommer ou le supprimer"}. Rien n'est (dé)sélectionné {e.forThis} tant que ce mode est actif.
+          Mode modification : touchez {w.one} pour {rows ? "le modifier ou le supprimer" : canReorder ? "le renommer, le déplacer ou le supprimer" : "le renommer ou le supprimer"}. Rien n'est (dé)sélectionné {e.forThis} tant que ce mode est actif.
         </p>
       )}
 

@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { validateItemFields, describeItemError, entityOf, countLabel, deleteNoticeFor, parseItemEnergy } from "../data/customLists.js";
+import { validateItemFields, describeItemError, entityOf, countLabel, deleteNoticeFor, parseItemEnergy, parseDerivativeVolume } from "../data/customLists.js";
 
 // Panneau de modification d'un élément d'une liste de la fiche produit (un arôme, par exemple), de la fiche lieu ou de la
 // fiche producteur, affiché sous les
@@ -13,8 +13,11 @@ import { validateItemFields, describeItemError, entityOf, countLabel, deleteNoti
 //   onCount  : async (code) -> { count } ou { error } — combien de produits (lieux, producteurs) portent cet élément
 //   onDelete : async ({ code, fr, groupTitle }) -> { removedFrom } ou { error }
 //   onClose  : () -> void
-//   position : (facultatif, liste dont l'ordre se modifie) { index, total } — la place de l'élément dans la liste (à partir de 0)
+//   position : (facultatif, liste dont l'ordre se modifie, hors tableau) { index, total } — la place de l'élément dans la liste (à partir de 0)
 //   onMove   : (facultatif) async (direction) -> {} ou { error } — déplace l'élément d'un cran (-1 : vers le haut, +1 : vers le bas)
+//   volume   : (facultatif, dérivé coché d'un spiritueux) { label, placeholder, text, onCommit(text), onCommitOnly(text) } — le volume du verre pour CE
+//              produit : un champ de plus. Il n'est pas enregistré dans la liste mais dans la fiche du produit : `onCommit` le remet à la fiche après
+//              l'enregistrement du nom ou de l'énergie, `onCommitOnly` quand il est seul à changer (le panneau se referme, la fiche reste à enregistrer)
 // Quand l'enregistrement ou la suppression réussit, le parent referme le panneau (et affiche le résultat) :
 // ce panneau n'a donc pas de message de succès à lui.
 
@@ -23,13 +26,14 @@ const outlineButton = (color) => ({ background: "none", border: `2px solid ${col
 
 const cleanName = (s) => String(s ?? "").trim().replace(/\s+/g, " ");
 
-export function ListItemManagePanel({ list, item, custom, onSave, onCount, onDelete, onClose, position, onMove }) {
+export function ListItemManagePanel({ list, item, custom, onSave, onCount, onDelete, onClose, position, onMove, volume }) {
   const w = list.words;
   const e = entityOf(list);
   const produits = (n) => countLabel(list, n);
   const [name, setName] = useState(item.fr);
   const [groupTitle, setGroupTitle] = useState(item.groupTitle);
   const [kcal, setKcal] = useState(item.kcalPer100ml != null ? String(item.kcalPer100ml) : "");
+  const [volumeText, setVolumeText] = useState(volume ? volume.text : "");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState(null);
   // null = pas de suppression en cours ; sinon { count } : on attend la confirmation.
@@ -43,8 +47,22 @@ export function ListItemManagePanel({ list, item, custom, onSave, onCount, onDel
       setError(energy.error);
       return;
     }
-    if (fr === item.fr && groupTitle === item.groupTitle && (!list.energy || energy.value === (item.kcalPer100ml ?? null))) {
+    // Volume du verre (propre au produit) : lu et vérifié comme dans le tableau.
+    const vol = volume ? parseDerivativeVolume(volumeText) : { value: null };
+    if (vol.error) {
+      setError(vol.error);
+      return;
+    }
+    const volumeChanged = !!volume && vol.value !== (parseDerivativeVolume(volume.text).value ?? null);
+    const volumeToForm = vol.value == null ? "" : String(vol.value);
+    const mainUnchanged = fr === item.fr && groupTitle === item.groupTitle && (!list.energy || energy.value === (item.kcalPer100ml ?? null));
+    if (mainUnchanged && !volumeChanged) {
       setError("Aucun changement à enregistrer.");
+      return;
+    }
+    if (mainUnchanged) {
+      setError(null);
+      volume.onCommitOnly(volumeToForm);
       return;
     }
     const problem = validateItemFields(list, fr, groupTitle, custom, item.code);
@@ -57,6 +75,7 @@ export function ListItemManagePanel({ list, item, custom, onSave, onCount, onDel
     const res = await onSave(list.energy ? { code: item.code, fr, groupTitle, kcalPer100ml: energy.value } : { code: item.code, fr, groupTitle });
     setBusy(false);
     if (res.error) setError(describeItemError(list, res.error));
+    else if (volumeChanged) volume.onCommit(volumeToForm);
   };
 
   const askDelete = async () => {
@@ -114,6 +133,12 @@ export function ListItemManagePanel({ list, item, custom, onSave, onCount, onDel
                 <input type="number" step="0.1" min="0" aria-label={`${list.energy.label} ${w.ofThe}`} value={kcal} onChange={(e) => setKcal(e.target.value)} onKeyDown={(e) => e.key === "Enter" && save()} placeholder={list.energy.placeholder} style={{ ...fieldStyle, width: "100%" }} />
               </div>
             )}
+            {volume && (
+              <div style={{ width: "120px" }}>
+                <label style={{ fontSize: "12.5px", color: "#8792A6", marginBottom: "4px", display: "block", fontWeight: 600 }}>{volume.label}</label>
+                <input type="text" inputMode="decimal" aria-label={`${volume.label} ${w.ofThe}`} value={volumeText} onChange={(e) => setVolumeText(e.target.value)} onKeyDown={(e) => e.key === "Enter" && save()} placeholder={volume.placeholder} style={{ ...fieldStyle, width: "100%" }} />
+              </div>
+            )}
             {!list.flat && (
               <select aria-label={`Groupe ${w.ofThe}`} value={groupTitle} onChange={(e) => setGroupTitle(e.target.value)} style={{ ...fieldStyle, flex: 1, minWidth: "200px" }}>
                 {list.builtinGroups.map((g) => (
@@ -125,6 +150,11 @@ export function ListItemManagePanel({ list, item, custom, onSave, onCount, onDel
               </select>
             )}
           </div>
+          {volume && (
+            <p style={{ fontSize: "11.5px", color: "#8792A6", fontStyle: "italic", marginTop: "8px", marginBottom: 0 }}>
+              Le volume ne vaut que pour ce produit : il s'enregistre avec la fiche.
+            </p>
+          )}
           {position && onMove && (
             <div style={{ display: "flex", flexWrap: "wrap", gap: "8px", alignItems: "center", marginTop: "10px" }}>
               <span style={{ fontSize: "12px", color: "#F2F2E8" }}>
