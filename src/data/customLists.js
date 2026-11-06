@@ -70,7 +70,7 @@ export const FOOD_PAIRING_LIST = {
 // depuis la gestion comme les accords alimentaires. Tous ses éléments sont ajoutés à la main (aucun élément de départ dans le code).
 export const BEER_DERIVATIVE_LIST = {
   key: "beer_derivative",
-  source: "beer_derivatives",
+  source: "derivatives",
   flat: true,
   orderable: true,
   // Chaque dérivé a sa propre énergie (kcal/100ml) : quand on le choisit dans l'application, elle REMPLACE celle du produit.
@@ -79,6 +79,20 @@ export const BEER_DERIVATIVE_LIST = {
   builtinGroups: [{ title: "", tags: [] }],
   orphanTitle: "",
   words: { noun: "dérivé", one: "un dérivé", this: "ce dérivé", the: "le dérivé", ofThe: "du dérivé", ofAll: "des dérivés", namePlaceholder: "Nom du dérivé (ex. Mazout)" },
+};
+// Dérivés d'un spiritueux (Whisky Coca = whisky + cola, Gin Tonic = gin + tonic…) : une seconde liste plate, commune à tous les spiritueux et
+// distincte de celle des bières (mêmes règles, même colonne drinks_directory.derivatives : les codes de chaque produit sont ceux de SA liste).
+// `codePrefix` : un dérivé ajouté à la main s'appelle « perso_spirit_… », pour ne jamais se confondre avec un dérivé de bière.
+export const SPIRIT_DERIVATIVE_LIST = {
+  key: "spirit_derivative",
+  source: "derivatives",
+  codePrefix: "perso_spirit_",
+  flat: true,
+  orderable: true,
+  energy: { label: "Énergie (kcal/100ml)", column: "kcal/100ml", placeholder: "Ex. 70", missing: "valeur du produit" },
+  builtinGroups: [{ title: "", tags: [] }],
+  orphanTitle: "",
+  words: { noun: "dérivé", one: "un dérivé", this: "ce dérivé", the: "le dérivé", ofThe: "du dérivé", ofAll: "des dérivés", namePlaceholder: "Nom du dérivé (ex. Whisky Coca)" },
 };
 export const OCCASION_LIST = {
   key: "occasion",

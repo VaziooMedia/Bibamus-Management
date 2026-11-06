@@ -46,7 +46,8 @@ const SOURCES = {
   cocktail_characteristics: { count: countDrinksWithCocktailCharacteristic, remove: deleteCocktailCharacteristic },
   hot_characteristics: { count: countDrinksWithHotCharacteristic, remove: deleteHotCharacteristic },
   snack_characteristics: { count: countDrinksWithSnackCharacteristic, remove: deleteSnackCharacteristic },
-  beer_derivatives: { count: countDrinksWithDerivative, remove: deleteDerivative },
+  // Dérivés des bières (« beer_derivative ») et des spiritueux (« spirit_derivative ») : même colonne, mêmes fonctions SQL (la liste est un paramètre).
+  derivatives: { count: countDrinksWithDerivative, remove: deleteDerivative },
 };
 const PRODUCT_SOURCE = { count: countDrinksWithListItem, remove: deleteCustomListItem };
 // La source d'une liste (aussi lue par GroupedListField, pour les listes à groupes).
