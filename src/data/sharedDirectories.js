@@ -1743,6 +1743,8 @@ function rowToDrink(row) {
     defaultPriceJeton: row.default_price_jeton,
     // Dérivés cochés pour ce produit (bières) : codes de la liste « beer_derivative » ; [] = aucun.
     derivatives: Array.isArray(row.derivatives) ? row.derivatives : [],
+    // Volume du verre de chaque dérivé coché (spiritueux) : { code du dérivé: cl } ; {} = aucun (le verre garde le volume du produit).
+    derivativeVolumes: row.derivative_volumes && typeof row.derivative_volumes === "object" && !Array.isArray(row.derivative_volumes) ? row.derivative_volumes : {},
     servesAsShot: !!row.serves_as_shot,
     defaultAsShot: !!row.default_as_shot,
     defaultShotVolumeCl: row.default_shot_volume_cl,
@@ -1910,6 +1912,7 @@ function drinkToRow(d, partial = false) {
     default_price_euro: d.defaultPriceEuro,
     default_price_jeton: d.defaultPriceJeton,
     derivatives: d.derivatives,
+    derivative_volumes: d.derivativeVolumes,
     serves_as_shot: d.servesAsShot,
     default_as_shot: d.defaultAsShot,
     default_shot_volume_cl: d.defaultShotVolumeCl,
