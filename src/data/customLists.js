@@ -73,9 +73,12 @@ export const BEER_DERIVATIVE_LIST = {
   source: "derivatives",
   flat: true,
   orderable: true,
+  // L'ordre des dérivés est PROPRE À CHAQUE PRODUIT (un rhum a le cola en premier, un gin le tonic) : c'est l'ordre des codes cochés de la fiche
+  // (colonne drinks_directory.derivatives), changé par les flèches du tableau. L'ordre commun de la liste ne sert plus que de départ.
+  productOrder: true,
   // Chaque dérivé a sa propre énergie (kcal/100ml) : quand on le choisit dans l'application, elle REMPLACE celle du produit.
   // Facultative : sans valeur, l'application garde l'énergie du produit.
-  energy: { label: "Énergie (kcal/100ml)", column: "kcal/100ml", placeholder: "Ex. 65", missing: "valeur du produit" },
+  energy: { label: "Énergie (kcal/100ml)", column: "Kcal/100ml.", placeholder: "Ex. 65", missing: "valeur du produit" },
   builtinGroups: [{ title: "", tags: [] }],
   orphanTitle: "",
   words: { noun: "dérivé", one: "un dérivé", this: "ce dérivé", the: "le dérivé", ofThe: "du dérivé", ofAll: "des dérivés", namePlaceholder: "Nom du dérivé (ex. Mazout)" },
@@ -89,11 +92,12 @@ export const SPIRIT_DERIVATIVE_LIST = {
   codePrefix: "perso_spirit_",
   flat: true,
   orderable: true,
-  energy: { label: "Énergie (kcal/100ml)", column: "kcal/100ml", placeholder: "Ex. 70", missing: "valeur du produit" },
+  productOrder: true, // voir BEER_DERIVATIVE_LIST
+  energy: { label: "Énergie (kcal/100ml)", column: "Kcal/100ml.", placeholder: "Ex. 70", missing: "valeur du produit" },
   // Volume du verre quand le spiritueux est pris en dérivé (Vodka + Red Bull = 20 cl au lieu des 4 cl de la vodka seule) : une valeur PAR
   // PRODUIT et par dérivé coché, saisie dans le tableau de la fiche du spiritueux (colonne drinks_directory.derivative_volumes), pas dans
   // la liste commune. Vide = le verre garde le volume du produit.
-  volume: { label: "Volume du verre (cl)", column: "Verre (cl)", placeholder: "Ex. 20", missing: "volume du produit" },
+  volume: { label: "Volume (cl.)", column: "Volume (cl.)", placeholder: "Ex. 20", missing: "volume du produit" },
   builtinGroups: [{ title: "", tags: [] }],
   orphanTitle: "",
   words: { noun: "dérivé", one: "un dérivé", this: "ce dérivé", the: "le dérivé", ofThe: "du dérivé", ofAll: "des dérivés", namePlaceholder: "Nom du dérivé (ex. Whisky Coca)" },
@@ -1011,6 +1015,33 @@ export function moveInOrder(codes, code, direction) {
   const next = [...codes];
   [next[i], next[j]] = [next[j], next[i]];
   return next;
+}
+
+// Ordre PROPRE À UN PRODUIT (dérivés) : d'abord les éléments cochés, dans l'ordre des codes cochés du produit, puis les autres dans l'ordre commun.
+// Un code coché qui n'existe plus dans la liste est ignoré ici (il reste dans la fiche).
+export function orderForProduct(items, selected) {
+  const byCode = new Map(items.map((t) => [t.code, t]));
+  const seen = new Set();
+  const picked = [];
+  for (const code of selected || []) {
+    const t = byCode.get(code);
+    if (t && !seen.has(code)) {
+      seen.add(code);
+      picked.push(t);
+    }
+  }
+  return [...picked, ...items.filter((t) => !seen.has(t.code))];
+}
+
+// Les codes cochés d'un produit après avoir déplacé `code` d'un cran parmi les éléments cochés visibles ; null si impossible. Les codes cochés
+// qui n'existent plus dans la liste restent à la fin, sans changer entre eux.
+export function moveSelectedInOrder(selected, visibleCodes, code, direction) {
+  const known = new Set(visibleCodes);
+  const shown = [];
+  for (const c of selected || []) if (known.has(c) && !shown.includes(c)) shown.push(c);
+  const stale = (selected || []).filter((c) => !known.has(c));
+  const next = moveInOrder(shown, code, direction);
+  return next ? [...next, ...stale] : null;
 }
 
 // L'élément visible qui porte déjà ce nom, ou null. On compare avec les noms tels qu'ils s'affichent (les

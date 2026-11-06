@@ -67,12 +67,13 @@ export const listSource = (list) => SOURCES[list.source] || PRODUCT_SOURCE;
 //   compact      : faux pour les étiquettes de la fiche lieu (voir FlatListEditor)
 //   onAdded(item): un élément vient d'être ajouté (le parent le sélectionne pour ce produit)
 //   onDeleted(code): un élément vient d'être supprimé (le parent le retire de ce produit)
+//   onSelectedReorder(codes) : (variante "rows", liste avec `productOrder`, les dérivés) le nouvel ordre des codes cochés du produit (flèches du tableau)
 //   rowValues    : (variante "rows", liste avec `volume`) { values: { code: texte }, onChange(code, texte) } — une saisie PAR PRODUIT sur chaque
 //                  ligne cochée du tableau (le volume du verre d'un dérivé de spiritueux) ; facultatif
 //   chips        : { codes, ariaLabel } pour montrer les éléments cochés sur une ligne au-dessus du champ (facultatif)
 //   framed       : encadre le champ lui-même (les étiquettes cochées restent au-dessus du cadre)
 //   labelStyle, fieldStyle : styles de la fiche
-export function FlatListField({ list, label, variant, compact, value, selected, onChange, onToggle, onAdded, onDeleted, rowValues, chips, framed, labelStyle, fieldStyle }) {
+export function FlatListField({ list, label, variant, compact, value, selected, onChange, onToggle, onSelectedReorder, onAdded, onDeleted, rowValues, chips, framed, labelStyle, fieldStyle }) {
   const [custom, setCustom, loaded] = useCustomListItems(list.key);
   const [order, setOrder] = useCustomListOrder(list.key, !!list.orderable);
   const items = useMemo(() => orderedItems(list, custom, order), [list, custom, order]);
@@ -107,6 +108,7 @@ export function FlatListField({ list, label, variant, compact, value, selected, 
         selected={isSelect ? (value ? [value] : []) : selected}
         rowValues={rowValues}
         onToggle={onToggle}
+        onSelectedReorder={onSelectedReorder}
         onAdded={onAdded}
         onDeleted={onDeleted}
         onCreate={(item) => createCustomListItem(list.key, item)}

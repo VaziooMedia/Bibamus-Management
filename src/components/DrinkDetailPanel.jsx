@@ -1247,16 +1247,12 @@ export function DrinkDetailPanel({ drink, onClose, onSaved, myUserId }) {
                 </div>
                 {form.derivativesOn && (
                   <>
-                    <p style={{ fontSize: "11.5px", color: "#8792A6", marginTop: "-6px", marginBottom: "10px" }}>
-                      {isSpirit
-                        ? "Cochez les dérivés que ce spiritueux peut devenir (ex. Whisky Coca = whisky + cola). La liste est commune à tous les spiritueux : un dérivé ajouté ici est proposé sur toutes les fiches de spiritueux. Il ne concerne pas les verres pris en Shot. Pour chaque dérivé coché, indiquez le volume du verre (ex. Vodka + Red Bull = 20 cl, alors que la vodka seule fait 4 cl) : il remplace le volume du produit dans l'application et sert au calcul des calories. Laissé vide, le verre garde le volume du produit."
-                        : "Cochez les dérivés que ce produit peut devenir (ex. Mazout = pils + cola). La liste est commune à toutes les bières : un dérivé ajouté ici est proposé sur toutes les fiches."}
-                    </p>
                     <FlatListField
                       list={derivativeList}
                       variant="rows"
                       selected={form.derivatives}
                       onToggle={(code) => toggleArrayField("derivatives", code)}
+                      onSelectedReorder={(codes) => set("derivatives", codes)}
                       onAdded={(item) => setForm((f) => (f.derivatives.includes(item.code) ? f : { ...f, derivatives: [...f.derivatives, item.code] }))}
                       onDeleted={(code) =>
                         setForm((f) => {
