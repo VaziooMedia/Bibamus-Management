@@ -2,7 +2,7 @@ import React, { useState, useEffect, useMemo } from "react";
 import aiIconGrey from "../assets/brand/ai_icon_grey.svg";
 import aiIconGreen from "../assets/brand/ai_icon_green.svg";
 import aiIconBlack from "../assets/brand/ai_icon_black.svg";
-import { updateDrink, deleteDrink, createDrink, uploadDrinkMainPhoto, uploadDrinkCoverPhoto, uploadDrinkGalleryPhoto, uploadDrinkAwardBadge, loadBrandsDirectory, loadBreweriesDirectory, loadDrinksDirectory, loadGrapeVarieties, createGrapeVariety, mergeEntities, requestAICompletion, loadPendingAIProposals, resolveAIProposal } from "../data/sharedDirectories.js";
+import { loadCustomListItems, updateDrink, deleteDrink, createDrink, uploadDrinkMainPhoto, uploadDrinkCoverPhoto, uploadDrinkGalleryPhoto, uploadDrinkAwardBadge, loadBrandsDirectory, loadBreweriesDirectory, loadDrinksDirectory, loadGrapeVarieties, createGrapeVariety, mergeEntities, requestAICompletion, loadPendingAIProposals, resolveAIProposal } from "../data/sharedDirectories.js";
 import { GrapeVarietySelect } from "./GrapeVarietySelect.jsx";
 import { StatusSelector } from "./StatusSelector.jsx";
 import { AdminPhotoField } from "./AdminPhotoField.jsx";
@@ -20,7 +20,7 @@ import { FlavorNotesPicker } from "./FlavorNotesPicker.jsx";
 import { FlatListField } from "./FlatListField.jsx";
 import { OnOffSwitch } from "./OnOffSwitch.jsx";
 import { GroupedListField } from "./GroupedListField.jsx";
-import { BEER_DERIVATIVE_LIST, FOOD_PAIRING_LIST, OCCASION_LIST, GLASS_LIST, CHARACTERISTIC_LIST, SOFT_CHARACTERISTIC_LIST, COCKTAIL_CHARACTERISTIC_LIST, HOT_CHARACTERISTIC_LIST, SNACK_CHARACTERISTIC_LIST, SOFT_STYLE_LISTS, HOT_STYLE_LISTS, COCKTAIL_STYLE_LISTS } from "../data/customLists.js";
+import { BEER_DERIVATIVE_LIST, mergeCustomItems, FOOD_PAIRING_LIST, OCCASION_LIST, GLASS_LIST, CHARACTERISTIC_LIST, SOFT_CHARACTERISTIC_LIST, COCKTAIL_CHARACTERISTIC_LIST, HOT_CHARACTERISTIC_LIST, SNACK_CHARACTERISTIC_LIST, SOFT_STYLE_LISTS, HOT_STYLE_LISTS, COCKTAIL_STYLE_LISTS } from "../data/customLists.js";
 import { softStyleOwner, stylesForSoftSubtype } from "../data/softStyles.js";
 import { characteristicsForSoft, characteristicsWithoutSoftOnly } from "../data/softCharacteristics.js";
 import { characteristicsForCocktail, characteristicsWithoutCocktailOnly } from "../data/cocktailCharacteristics.js";
@@ -514,6 +514,16 @@ export function DrinkDetailPanel({ drink, onClose, onSaved, myUserId }) {
   // Pareil pour un cocktail / mocktail : les styles de sa sous-catégorie seulement, et la même ligne d'étiquettes.
   const cocktailOwnedStyles = isCocktail ? form.styles.filter((c) => cocktailStyleOwner(c) === form.beverageSubtype) : [];
   const cocktailStyleChips = { codes: cocktailOwnedStyles, ariaLabel: "Styles sélectionnés" };
+  // Interrupteur « Dérivés du produit » : en l'allumant, tous les dérivés de la liste sont cochés d'emblée (on décoche ensuite ceux que
+  // ce produit ne peut pas devenir). La liste est lue à l'instant, avec les dérivés ajoutés ou supprimés depuis la gestion.
+  const switchDerivatives = async (on) => {
+    set("derivativesOn", on);
+    if (!on) return;
+    const rows = await loadCustomListItems(BEER_DERIVATIVE_LIST.key);
+    const codes = mergeCustomItems(BEER_DERIVATIVE_LIST, rows).flatMap((g) => g.tags).map((t) => t.code);
+    // Si l'interrupteur a été refermé entre-temps, on ne touche à rien ; sinon on ajoute ce qui n'est pas déjà coché.
+    setForm((f) => (f.derivativesOn ? { ...f, derivatives: [...new Set([...f.derivatives, ...codes])] } : f));
+  };
   const toggleArrayField = (field, value) => setForm((f) => ({ ...f, [field]: f[field].includes(value) ? f[field].filter((v) => v !== value) : [...f[field], value] }));
 
   const handleCreateGrapeVariety = async (name) => {
@@ -1214,7 +1224,7 @@ export function DrinkDetailPanel({ drink, onClose, onSaved, myUserId }) {
                       </span>
                     )}
                   </span>
-                  <OnOffSwitch on={form.derivativesOn} onChange={(on) => set("derivativesOn", on)} label="Dérivés du produit" />
+                  <OnOffSwitch on={form.derivativesOn} onChange={switchDerivatives} label="Dérivés du produit" />
                 </div>
                 {form.derivativesOn && (
                   <>
