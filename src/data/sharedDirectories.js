@@ -1704,6 +1704,43 @@ export async function deleteDrink(id) {
   return { ok: true };
 }
 
+// Une entrée de carte « liée » à une fiche du répertoire : fromDirectory + sourceDrinkId. Le nom,
+// le type, etc. viennent de la fiche — si la fiche disparaît, l'entrée reste sans nom dans la carte.
+// Le filtre est passé en JSON (chaîne) car postgrest-js transformerait un tableau en liste Postgres.
+const venueMenuLinkedTo = (drinkId) => JSON.stringify([{ fromDirectory: true, sourceDrinkId: drinkId }]);
+
+// Lieux dont la carte contient ce produit. Sert à prévenir AVANT la suppression de la fiche.
+export async function loadVenuesUsingDrink(drinkId) {
+  const { data, error } = await supabase.from("public_venues").select("id, name").contains("menu", venueMenuLinkedTo(drinkId)).order("name");
+  if (error) {
+    console.error("loadVenuesUsingDrink:", error);
+    return { error: error.message };
+  }
+  return { venues: data || [] };
+}
+
+// Retire ce produit de la carte de chaque lieu qui le contient. Les cartes sont relues ici même
+// (pas celles lues pour l'avertissement) pour ne pas écraser une modification faite entre-temps.
+// Une mise à jour refusée par les droits ne renvoie pas d'erreur mais aucune ligne : on le vérifie.
+export async function removeDrinkFromVenueMenus(drinkId) {
+  const { data, error } = await supabase.from("public_venues").select("id, name, menu").contains("menu", venueMenuLinkedTo(drinkId));
+  if (error) {
+    console.error("removeDrinkFromVenueMenus:", error);
+    return { error: error.message, failed: [] };
+  }
+  const failed = [];
+  for (const venue of data || []) {
+    const menu = (venue.menu || []).filter((item) => !(item.fromDirectory && item.sourceDrinkId === drinkId));
+    const { data: updated, error: updateError } = await supabase.from("public_venues").update({ menu }).eq("id", venue.id).select("id");
+    if (updateError || !updated || updated.length === 0) {
+      console.error("removeDrinkFromVenueMenus:", venue.id, updateError);
+      failed.push(venue.name);
+    }
+  }
+  if (failed.length > 0) return { error: "Mise à jour refusée ou échouée.", failed };
+  return { ok: true };
+}
+
 function rowToDrink(row) {
   return {
     id: row.id,
