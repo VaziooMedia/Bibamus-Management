@@ -1800,7 +1800,7 @@ function rowToDrink(row) {
     defaultServingMode: row.default_serving_mode,
     defaultPriceEuro: row.default_price_euro,
     defaultPriceJeton: row.default_price_jeton,
-    // Dérivés cochés pour ce produit (bières) : codes de la liste « beer_derivative » ; [] = aucun.
+    // Dérivés cochés pour ce produit (bières, spiritueux, thés et infusions) : codes de la liste du produit (« beer_derivative », « spirit_derivative » ou « tea_derivative ») ; [] = aucun.
     derivatives: Array.isArray(row.derivatives) ? row.derivatives : [],
     // Volume du verre de chaque dérivé coché (spiritueux) : { code du dérivé: cl } ; {} = aucun (le verre garde le volume du produit).
     derivativeVolumes: row.derivative_volumes && typeof row.derivative_volumes === "object" && !Array.isArray(row.derivative_volumes) ? row.derivative_volumes : {},
@@ -2397,7 +2397,7 @@ export async function deleteCustomListItem(listKey, { code, fr, groupTitle }) {
   return { removedFrom: Number(data) || 0 };
 }
 
-// Dérivés des bières (liste « beer_derivative », colonne drinks_directory.derivatives) : comptés et retirés dans cette seule colonne,
+// Dérivés des bières, des spiritueux et des thés (listes « beer_derivative », « spirit_derivative », « tea_derivative », colonne drinks_directory.derivatives) : comptés et retirés dans cette seule colonne,
 // par des fonctions SQL propres (voir le script « derives-1-ecriture »), comme celles des lieux, producteurs et marques.
 export async function countDrinksWithDerivative(listKey, code) {
   const { data, error } = await supabase.rpc("count_drinks_with_derivative", { p_list: listKey, p_code: code });

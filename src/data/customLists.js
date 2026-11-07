@@ -102,6 +102,22 @@ export const SPIRIT_DERIVATIVE_LIST = {
   orphanTitle: "",
   words: { noun: "dérivé", one: "un dérivé", this: "ce dérivé", the: "le dérivé", ofThe: "du dérivé", ofAll: "des dérivés", namePlaceholder: "Nom du dérivé (ex. Whisky Coca)" },
 };
+// Dérivés d'un thé ou d'une infusion (Thé citron, Thé au lait, Infusion miel…) : une troisième liste plate, commune aux thés ET aux infusions et
+// distincte de celles des bières et des spiritueux. Mêmes règles que les bières : une énergie propre à chaque dérivé, un ordre propre à chaque
+// produit, PAS de volume par dérivé (la tasse garde son volume). Même colonne drinks_directory.derivatives : les codes de chaque produit sont
+// ceux de SA liste. `codePrefix` : un dérivé ajouté à la main s'appelle « perso_tea_… ».
+export const TEA_DERIVATIVE_LIST = {
+  key: "tea_derivative",
+  source: "derivatives",
+  codePrefix: "perso_tea_",
+  flat: true,
+  orderable: true,
+  productOrder: true, // voir BEER_DERIVATIVE_LIST
+  energy: { label: "Énergie (kcal/100ml)", column: "Kcal/100ml.", placeholder: "Ex. 20", missing: "valeur du produit" },
+  builtinGroups: [{ title: "", tags: [] }],
+  orphanTitle: "",
+  words: { noun: "dérivé", one: "un dérivé", this: "ce dérivé", the: "le dérivé", ofThe: "du dérivé", ofAll: "des dérivés", namePlaceholder: "Nom du dérivé (ex. Thé citron)" },
+};
 export const OCCASION_LIST = {
   key: "occasion",
   flat: true,

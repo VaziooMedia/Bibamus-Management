@@ -20,7 +20,7 @@ import { FlavorNotesPicker } from "./FlavorNotesPicker.jsx";
 import { FlatListField } from "./FlatListField.jsx";
 import { OnOffSwitch } from "./OnOffSwitch.jsx";
 import { GroupedListField } from "./GroupedListField.jsx";
-import { BEER_DERIVATIVE_LIST, SPIRIT_DERIVATIVE_LIST, derivativeVolumesToForm, derivativeVolumesToSave, mergeCustomItems, FOOD_PAIRING_LIST, OCCASION_LIST, GLASS_LIST, CHARACTERISTIC_LIST, SOFT_CHARACTERISTIC_LIST, COCKTAIL_CHARACTERISTIC_LIST, HOT_CHARACTERISTIC_LIST, SNACK_CHARACTERISTIC_LIST, SOFT_STYLE_LISTS, HOT_STYLE_LISTS, COCKTAIL_STYLE_LISTS } from "../data/customLists.js";
+import { BEER_DERIVATIVE_LIST, SPIRIT_DERIVATIVE_LIST, TEA_DERIVATIVE_LIST, derivativeVolumesToForm, derivativeVolumesToSave, mergeCustomItems, FOOD_PAIRING_LIST, OCCASION_LIST, GLASS_LIST, CHARACTERISTIC_LIST, SOFT_CHARACTERISTIC_LIST, COCKTAIL_CHARACTERISTIC_LIST, HOT_CHARACTERISTIC_LIST, SNACK_CHARACTERISTIC_LIST, SOFT_STYLE_LISTS, HOT_STYLE_LISTS, COCKTAIL_STYLE_LISTS } from "../data/customLists.js";
 import { softStyleOwner, stylesForSoftSubtype } from "../data/softStyles.js";
 import { characteristicsForSoft, characteristicsWithoutSoftOnly } from "../data/softCharacteristics.js";
 import { characteristicsForCocktail, characteristicsWithoutCocktailOnly } from "../data/cocktailCharacteristics.js";
@@ -188,8 +188,8 @@ export function DrinkDetailPanel({ drink, onClose, onSaved, myUserId }) {
     defaultShotServingMode: drink?.defaultShotServingMode || "",
     defaultShotPriceEuro: drink?.defaultShotPriceEuro ?? "",
     defaultShotPriceJeton: drink?.defaultShotPriceJeton ?? "1",
-    // Bières et spiritueux : « Dérivés du produit ». `derivatives` = codes cochés (actifs) dans la liste « beer_derivative » (bière) ou « spirit_derivative »
-    // (spiritueux) ; `derivativesOn` ouvre le bloc : activé à l'ouverture dès qu'au moins un dérivé est coché. Interrupteur sur OFF à l'enregistrement
+    // Bières, spiritueux, thés et infusions : « Dérivés du produit ». `derivatives` = codes cochés (actifs) dans la liste « beer_derivative » (bière),
+    // « spirit_derivative » (spiritueux) ou « tea_derivative » (thé, infusion) ; `derivativesOn` ouvre le bloc : activé à l'ouverture dès qu'au moins un dérivé est coché. Interrupteur sur OFF à l'enregistrement
     // → les dérivés cochés sont effacés.
     derivativesOn: (drink?.derivatives || []).length > 0,
     derivatives: drink?.derivatives || [],
@@ -453,9 +453,11 @@ export function DrinkDetailPanel({ drink, onClose, onSaved, myUserId }) {
   // Info-bulle des onglets et champs grisés « pas encore disponible », selon la catégorie.
   const comingSoonTitle = isHot ? HOT_COMING_SOON_TITLE : isCocktail ? COCKTAIL_COMING_SOON_TITLE : isSnack ? SNACK_COMING_SOON_TITLE : SOFT_COMING_SOON_TITLE;
   const isBeer = form.beverageSubtype === "biere";
-  // Dérivés du produit : les bières (sous-catégorie « Bière » seulement) et les spiritueux, chacun avec SA liste commune.
-  const hasDerivatives = (isBeerOrCider && isBeer) || isSpirit;
-  const derivativeList = isSpirit ? SPIRIT_DERIVATIVE_LIST : BEER_DERIVATIVE_LIST;
+  // Thés et infusions : les deux sous-catégories « Thé » et « Infusion » des Boissons chaudes (ni le café, ni le Hot Mix, ni le reste).
+  const isTea = isHot && (form.beverageSubtype === "the" || form.beverageSubtype === "infusion");
+  // Dérivés du produit : les bières (sous-catégorie « Bière » seulement), les spiritueux et les thés / infusions, chacun avec SA liste commune.
+  const hasDerivatives = (isBeerOrCider && isBeer) || isSpirit || isTea;
+  const derivativeList = isSpirit ? SPIRIT_DERIVATIVE_LIST : isTea ? TEA_DERIVATIVE_LIST : BEER_DERIVATIVE_LIST;
   const visibleGrapeVarietyOptions = grapeVarietyOptions.filter((v) => !v.sparklingOnly || form.beverageSubtype === "vin_effervescent");
 
   useEffect(() => {
@@ -574,6 +576,8 @@ export function DrinkDetailPanel({ drink, onClose, onSaved, myUserId }) {
         ...(isSoft ? { characteristics: softCharacteristics, glutenFree: softCharacteristics.includes("gluten_free"), bio: softCharacteristics.includes("bio") } : {}),
         ...(isCocktail ? { characteristics: cocktailCharacteristics, glutenFree: cocktailCharacteristics.includes("gluten_free"), bio: cocktailCharacteristics.includes("bio") } : {}),
         ...(isHot ? { characteristics: hotCharacteristics, glutenFree: hotCharacteristics.includes("gluten_free"), bio: hotCharacteristics.includes("bio") } : {}),
+        // Thés et infusions : les dérivés cochés. Interrupteur sur OFF, ou autre boisson chaude (café…) → aucun dérivé enregistré.
+        ...(isHot ? { derivatives: hasDerivatives && form.derivativesOn ? form.derivatives : [] } : {}),
         ...(isSnack ? { characteristics: snackCharacteristics, glutenFree: snackCharacteristics.includes("gluten_free"), bio: snackCharacteristics.includes("bio") } : {}),
         ...(hasNoStyles ? {} : { styles: isHot ? stylesForHotSubtype(form.styles, form.beverageSubtype) : isCocktail ? stylesForCocktailSubtype(form.styles, form.beverageSubtype) : stylesForSoftSubtype(form.styles, form.beverageSubtype) }),
         defaultVolumeCl: form.defaultVolumeCl === "" ? null : parseFloat(form.defaultVolumeCl),
