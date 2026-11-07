@@ -517,7 +517,8 @@ export const DRINK_TYPE_MIGRATIONS = {
 
 export const NON_ALCOHOLIC_DRINK_TYPES = ["Softs & Eaux", "Boissons chaudes", "Snacks"];
 
-export const SERVING_MODE_LABELS = { bouteille: "Bouteille", canette: "Canette", verre: "Au verre", fut: "On tap" };
+// Mêmes types de service que « Type de service par défaut » de la fiche produit (DEFAULT_SERVING_MODES) et que l'app.
+export const SERVING_MODE_LABELS = { bouteille: "Bouteille", canette: "Canette", verre: "Au verre", fut: "On tap", pet: "PET", brique: "Brique", carton: "Carton" };
 
 export const MONTH_NAMES_FR = ["janvier", "février", "mars", "avril", "mai", "juin", "juillet", "août", "septembre", "octobre", "novembre", "décembre"];
 

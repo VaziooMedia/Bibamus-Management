@@ -162,7 +162,8 @@ function CompactProductRow({ drink, volumes, priceStep = 0.1, onChangeVolumeFiel
                 </button>
                 <select value={v.cl || ""} onChange={(e) => onChangeVolumeField(v.id, "cl", e.target.value ? parseFloat(e.target.value) : null)} style={{ ...selectStyle, flex: 1 }}>
                   <option value="">Non défini</option>
-                  {DRINK_VOLUMES_CL.map((cl) => (
+                  {/* Un volume absent de la liste (ex. 27,5 ou 37,5 cl, repris de la fiche) reste affiché au lieu de retomber sur « Non défini ». */}
+                  {[...DRINK_VOLUMES_CL, ...(v.cl && !DRINK_VOLUMES_CL.includes(v.cl) ? [v.cl] : [])].sort((a, b) => a - b).map((cl) => (
                     <option key={cl} value={cl}>
                       {String(cl).replace(".", ",")} cl.
                     </option>
@@ -237,6 +238,12 @@ export function VenueCategoryMenuScreen({ venue, category, drinksDirectory, onCl
 
   const countInMenu = (drinkId) => menu.filter((item) => item.fromDirectory && item.sourceDrinkId === drinkId).length;
 
+  // Volume et type de service proposés à l'ajout : ceux encodés sur la fiche dans « Valeurs par défaut » ;
+  // à défaut, les anciens champs de la fiche (volume, type de service). Le prix reste à 0.
+  const positiveOrNull = (v) => {
+    const n = Number(v);
+    return v != null && v !== "" && Number.isFinite(n) && n > 0 ? n : null;
+  };
   const addProduct = (source) => {
     setDirty(true);
     setMenu((m) => [
@@ -246,8 +253,8 @@ export function VenueCategoryMenuScreen({ venue, category, drinksDirectory, onCl
         fromDirectory: true,
         sourceDrinkId: source.id,
         menuCategory: category,
-        servingMode: source.servingMode || "",
-        volumes: [{ id: nextId(), cl: source.volumeCl != null ? source.volumeCl : null, price: 0, isDefault: true }],
+        servingMode: source.defaultServingMode || source.servingMode || "",
+        volumes: [{ id: nextId(), cl: positiveOrNull(source.defaultVolumeCl) ?? positiveOrNull(source.volumeCl), price: 0, isDefault: true }],
       },
     ]);
   };
