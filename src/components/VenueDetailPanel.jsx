@@ -9,7 +9,7 @@ import { StatusSelector } from "./StatusSelector.jsx";
 import { AdminPhotoField } from "./AdminPhotoField.jsx";
 import { GooglePlaceLinker } from "./GooglePlaceLinker.jsx";
 import { AddressAutocomplete } from "./AddressAutocomplete.jsx";
-import { VenueCategoryMenuScreen } from "./VenueCategoryMenuScreen.jsx";
+import { VenueCategoryMenuScreen, entryCategoryOf } from "./VenueCategoryMenuScreen.jsx";
 import { COUNTRIES, PHONE_PREFIXES, COUNTRY_ISO_CODES, RATING_LABELS, MENU_CATEGORIES } from "../constants.js";
 import { FlatListField } from "./FlatListField.jsx";
 import { PAYMENT_LIST, VENUE_TYPE_LIST, AMENITY_LIST } from "../data/customLists.js";
@@ -176,6 +176,12 @@ export function VenueDetailPanel({ venue, onClose, onSaved, drinksDirectory, myU
   const [establishmentExpanded, setEstablishmentExpanded] = useState(false);
   const [openCategoryScreen, setOpenCategoryScreen] = useState(null);
   const [venueMenu, setVenueMenu] = useState(venue?.menu || []);
+  // Catégorie d'une entrée de la carte (celle de l'entrée, sinon celle de sa fiche) ; « Non classé » si aucune des 8 n'est reconnue ou si la fiche n'existe plus.
+  const menuCategoryOf = (item) => entryCategoryOf(item, resolveMenuItem(item, drinksDirectory || []));
+  // « Non classé » : produits rangés dans aucune des 8 catégories (fiche supprimée, ou sans catégorie reconnue). La ligne n'apparaît qu'une fois le répertoire
+  // chargé : sans lui, aucune fiche n'est reconnue et toute la carte y tomberait.
+  const directoryLoaded = !!drinksDirectory && drinksDirectory.length > 0;
+  const unclassifiedCount = directoryLoaded ? venueMenu.filter((item) => menuCategoryOf(item) === "Non classé").length : 0;
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [deletePassword, setDeletePassword] = useState("");
   const [showDeletePassword, setShowDeletePassword] = useState(false);
@@ -800,12 +806,7 @@ export function VenueDetailPanel({ venue, onClose, onSaved, drinksDirectory, myU
 
             {!isNew && (
               <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
-                {MENU_CATEGORIES.map((cat) => {
-                  const count = venueMenu.filter((item) => {
-                    const resolved = resolveMenuItem(item, drinksDirectory || []);
-                    const itsCategory = MENU_CATEGORIES.includes(resolved.menuCategory) ? resolved.menuCategory : MENU_CATEGORIES.includes(resolved.type) ? resolved.type : "Non classé";
-                    return itsCategory === cat;
-                  }).length;
+                {[...MENU_CATEGORIES.map((cat) => ({ cat, count: venueMenu.filter((item) => menuCategoryOf(item) === cat).length })), ...(unclassifiedCount > 0 ? [{ cat: "Non classé", count: unclassifiedCount }] : [])].map(({ cat, count }) => {
                   return (
                     <button
                       key={cat}

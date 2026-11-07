@@ -1447,12 +1447,34 @@ export async function uploadDrinkAwardBadge(drinkId, file) {
   return data.url;
 }
 
+// Le serveur ne renvoie jamais plus de 1 000 lignes par requête (plafond par défaut de Supabase) : une seule lecture de « tout le répertoire »
+// s'arrêtait donc en silence à la 1 000e fiche (par ordre alphabétique), et les produits suivants n'étaient plus reconnus — sur la carte d'un lieu,
+// leurs entrées se retrouvaient rangées en « Non classé » et sortaient des comptes par catégorie. On lit donc par tranches, jusqu'à épuisement.
+// Le tri se fait sur le nom puis sur l'identifiant : le nom seul n'est pas unique, et deux fiches de même nom pourraient alors sauter ou se doubler
+// d'une tranche à l'autre.
+const DIRECTORY_PAGE_SIZE = 1000;
+const DIRECTORY_MAX_PAGES = 200;
+
 export async function loadDrinksDirectory() {
-  const { data, error } = await supabase.from("drinks_directory").select("*").order("name");
-  if (error) {
-    console.error("loadDrinksDirectory:", error);
-    return [];
+  const rows = [];
+  let total = Infinity;
+  for (let page = 0; rows.length < total && page < DIRECTORY_MAX_PAGES; page++) {
+    const { data, count, error } = await supabase
+      .from("drinks_directory")
+      .select("*", { count: "exact" })
+      .order("name")
+      .order("id")
+      .range(rows.length, rows.length + DIRECTORY_PAGE_SIZE - 1);
+    if (error) {
+      console.error("loadDrinksDirectory:", error);
+      return [];
+    }
+    if (!data || data.length === 0) break;
+    rows.push(...data);
+    if (typeof count === "number") total = count;
   }
+  // Une fiche ajoutée pendant la lecture peut décaler les tranches : une même fiche ne doit jamais apparaître deux fois.
+  const data = [...new Map(rows.map((row) => [row.id, row])).values()];
   // Le type est stocké en base sous forme de code technique (ex. "bieres_cidres") — cette
   // fonction alimente des écrans (comme la carte d'un lieu) qui comparent sur le libellé
   // français des catégories, d'où la traduction ici plutôt que dans rowToDrink lui-même (qui

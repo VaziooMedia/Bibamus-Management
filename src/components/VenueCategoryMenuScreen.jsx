@@ -12,6 +12,11 @@ import { resolveMenuItem, nextId, normalizeForSearch } from "../utils.js";
 
 const categoryOf = (d) => (MENU_CATEGORIES.includes(d.menuCategory) ? d.menuCategory : MENU_CATEGORIES.includes(d.type) ? d.type : "Non classé");
 
+// Entrée de répertoire dont la fiche n'existe plus (produit supprimé) : sans nom ni type. Même si l'entrée a gardé une ancienne catégorie, elle est rangée
+// d'office dans « Non classé » : c'est là qu'on la retire (sinon elle resterait dans sa catégorie, sans nom).
+const isGhostEntry = (raw, resolved) => !!raw.fromDirectory && !!raw.sourceDrinkId && !resolved.name;
+export const entryCategoryOf = (raw, resolved) => (isGhostEntry(raw, resolved) ? "Non classé" : categoryOf(resolved));
+
 // Une entrée de carte porte désormais plusieurs volumes (champ volumes), chacun avec son propre
 // prix — à la place de l'ancien volumeCl/price uniques posés directement sur l'entrée. Les
 // entrées déjà enregistrées avant ce changement n'ont que l'ancienne forme : on la retrouve ici
@@ -27,6 +32,12 @@ const letterBucketOf = (name) => {
   const first = normalizeForSearch(name).trim().charAt(0).toUpperCase();
   return /[A-Z]/.test(first) ? first : "0-9";
 };
+
+// Prix lisible de la première ligne de volume d'une entrée sans fiche (« 2,70 € »), vide s'il n'y en a pas.
+function formatGhostPrice(raw) {
+  const price = normalizeVolumes(raw)[0]?.price;
+  return typeof price === "number" && price > 0 ? `${price.toFixed(2).replace(".", ",")} €` : "";
+}
 
 function CollapsibleSection({ title, count, expanded, onToggle, children }) {
   return (
@@ -230,7 +241,10 @@ export function VenueCategoryMenuScreen({ venue, category, drinksDirectory, onCl
 
   // Pas de tri alphabétique ici — l'ordre du tableau est l'ordre d'affichage voulu, et peut
   // être réorganisé manuellement (flèches ▲▼).
-  const currentItems = menu.map((raw) => ({ raw, resolved: resolveMenuItem(raw, drinksDirectory) })).filter(({ resolved }) => categoryOf(resolved) === category);
+  const currentItems = menu.map((raw) => ({ raw, resolved: resolveMenuItem(raw, drinksDirectory) })).filter(({ raw, resolved }) => entryCategoryOf(raw, resolved) === category);
+
+  // « Non classé » : écran de nettoyage — on n'y fait que vérifier et retirer (ni ajout depuis la base produits, ni classement manuel).
+  const isCleanup = category === "Non classé";
 
   const q = normalizeForSearch(query.trim());
   const matchingDirectoryItems = (drinksDirectory || [])
@@ -328,7 +342,7 @@ export function VenueCategoryMenuScreen({ venue, category, drinksDirectory, onCl
   const moveItem = (id, direction) => {
     setDirty(true);
     setMenu((m) => {
-      const idsInCategory = m.map((raw) => ({ raw, resolved: resolveMenuItem(raw, drinksDirectory) })).filter(({ resolved }) => categoryOf(resolved) === category).map(({ raw }) => raw.id);
+      const idsInCategory = m.map((raw) => ({ raw, resolved: resolveMenuItem(raw, drinksDirectory) })).filter(({ raw, resolved }) => entryCategoryOf(raw, resolved) === category).map(({ raw }) => raw.id);
       const pos = idsInCategory.indexOf(id);
       const swapPos = direction === "up" ? pos - 1 : pos + 1;
       if (swapPos < 0 || swapPos >= idsInCategory.length) return m;
@@ -387,7 +401,12 @@ export function VenueCategoryMenuScreen({ venue, category, drinksDirectory, onCl
             ✕
           </button>
         </div>
-        <p style={{ fontSize: "13px", color: "#8792A6", margin: "0 0 16px 0" }}>{venue.name}</p>
+        <p style={{ fontSize: "13px", color: "#8792A6", margin: isCleanup ? "0 0 8px 0" : "0 0 16px 0" }}>{venue.name}</p>
+        {isCleanup && (
+          <p style={{ fontSize: "12.5px", color: "#8792A6", margin: "0 0 16px 0", lineHeight: 1.5 }}>
+            Ces produits ne sont rangés dans aucune catégorie : leur fiche a été supprimée, ou elle n'a pas de catégorie reconnue. Les retirer les enlève de la carte du lieu (n'oublie pas d'enregistrer).
+          </p>
+        )}
 
         <div style={{ borderBottom: "1px solid #28405C", margin: "0 0 16px 0" }} />
 
@@ -395,10 +414,25 @@ export function VenueCategoryMenuScreen({ venue, category, drinksDirectory, onCl
 
         <div style={{ borderBottom: "1px solid #28405C", margin: "0 0 20px 0" }} />
 
-        <CollapsibleSection title="Produits ajoutés" count={currentItems.length} expanded={currentExpanded} onToggle={() => setCurrentExpanded((e) => !e)}>
+        <CollapsibleSection title={isCleanup ? "Produits sans catégorie" : "Produits ajoutés"} count={currentItems.length} expanded={currentExpanded} onToggle={() => setCurrentExpanded((e) => !e)}>
           {currentItems.length === 0 && <p style={{ fontSize: "12.5px", color: "#8792A6", fontStyle: "italic", margin: 0 }}>Aucun produit dans cette catégorie pour l'instant.</p>}
           <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
-            {currentItems.map(({ raw, resolved }, idx) => (
+            {currentItems.map(({ raw, resolved }, idx) => isGhostEntry(raw, resolved) ? (
+              <div key={raw.id} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: "10px", background: "#16273D", border: "2px solid #28405C", borderRadius: "8px", padding: "10px 12px" }}>
+                <div style={{ minWidth: 0 }}>
+                  <div style={{ fontSize: "13px", fontWeight: 700, color: "#F2F2E8" }}>Produit supprimé — fiche introuvable</div>
+                  <div style={{ fontSize: "11px", color: "#8792A6", marginTop: "3px", overflowWrap: "anywhere" }}>
+                    {formatGhostPrice(raw)}{formatGhostPrice(raw) ? " · " : ""}{raw.sourceDrinkId}
+                  </div>
+                </div>
+                <button
+                  onClick={() => removeItem(raw.id)}
+                  style={{ flexShrink: 0, background: "none", border: "2px solid #FF3B4E", borderRadius: "6px", padding: "5px 10px", color: "#FF3B4E", fontSize: "12px", fontWeight: 700, cursor: "pointer" }}
+                >
+                  Retirer
+                </button>
+              </div>
+            ) : (
               <div key={raw.id} style={{ display: "flex", alignItems: "stretch", gap: "6px" }}>
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <CompactProductRow
@@ -413,6 +447,7 @@ export function VenueCategoryMenuScreen({ venue, category, drinksDirectory, onCl
                     onRemove={() => removeItem(raw.id)}
                   />
                 </div>
+                {!isCleanup && (
                 <div style={{ display: "flex", flexDirection: "column", justifyContent: "center", gap: "2px" }}>
                   <button
                     onClick={() => moveItem(raw.id, "up")}
@@ -431,11 +466,14 @@ export function VenueCategoryMenuScreen({ venue, category, drinksDirectory, onCl
                     ▼
                   </button>
                 </div>
+                )}
               </div>
             ))}
           </div>
         </CollapsibleSection>
 
+        {!isCleanup && (
+        <>
         <div style={{ borderBottom: "1px solid #28405C", margin: "20px 0" }} />
 
         <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "12px" }}>
@@ -518,6 +556,9 @@ export function VenueCategoryMenuScreen({ venue, category, drinksDirectory, onCl
             );
           })}
           </>
+        )}
+
+        </>
         )}
 
         <div style={{ borderBottom: "1px solid #28405C", margin: "0 0 20px 0" }} />
