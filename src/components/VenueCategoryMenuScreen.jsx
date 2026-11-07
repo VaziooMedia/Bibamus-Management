@@ -53,7 +53,11 @@ function CollapsibleSection({ title, count, expanded, onToggle, children }) {
 // regroupées en bas à droite.
 // Une seule ligne de prix éditable, réutilisée pour le raccourci "un seul volume" en en-tête et
 // pour chaque ligne de volume dans la liste dépliée.
-function PriceStepper({ price, onChangePrice, priceStep = 0.1 }) {
+// Rose fluo : prix repris de la fiche à l'ajout, à adapter au lieu (il varie d'un lieu à l'autre). Le cadre disparaît dès que le prix est modifié.
+const PRICE_TO_ADAPT_COLOR = "#FF2FD0";
+
+function PriceStepper({ price, onChangePrice, priceStep = 0.1, toAdapt = false }) {
+  const frame = toAdapt ? PRICE_TO_ADAPT_COLOR : "#28405C";
   const [priceInput, setPriceInput] = useState(() => String(price ?? "").replace(".", ","));
   const commit = (next) => {
     const rounded = Math.round(next * 100) / 100;
@@ -61,7 +65,10 @@ function PriceStepper({ price, onChangePrice, priceStep = 0.1 }) {
     onChangePrice(rounded);
   };
   return (
-    <div style={{ display: "flex", alignItems: "stretch", border: "2px solid #28405C", borderRadius: "6px", overflow: "hidden", flexShrink: 0 }}>
+    <div
+      title={toAdapt ? "Prix repris de la fiche : à adapter à ce lieu" : undefined}
+      style={{ display: "flex", alignItems: "stretch", border: `2px solid ${frame}`, borderRadius: "6px", overflow: "hidden", flexShrink: 0, boxShadow: toAdapt ? `0 0 7px ${PRICE_TO_ADAPT_COLOR}99` : "none" }}
+    >
       <span style={{ fontSize: "11.5px", color: "#8792A6", padding: "0 6px", display: "flex", alignItems: "center", background: "#0D1B2A" }}>€</span>
       <input
         type="text"
@@ -73,9 +80,9 @@ function PriceStepper({ price, onChangePrice, priceStep = 0.1 }) {
           const parsed = parseFloat(raw.replace(",", "."));
           onChangePrice(isNaN(parsed) ? 0 : parsed);
         }}
-        style={{ width: "44px", padding: "5px 4px", border: "none", borderLeft: "2px solid #28405C", fontSize: "12.5px", textAlign: "right", fontFamily: "'Urbanist', sans-serif", background: "#16273D", color: "#F2F2E8" }}
+        style={{ width: "44px", padding: "5px 4px", border: "none", borderLeft: `2px solid ${frame}`, fontSize: "12.5px", textAlign: "right", fontFamily: "'Urbanist', sans-serif", background: "#16273D", color: "#F2F2E8" }}
       />
-      <div style={{ display: "flex", flexDirection: "column", borderLeft: "2px solid #28405C" }}>
+      <div style={{ display: "flex", flexDirection: "column", borderLeft: `2px solid ${frame}` }}>
         <button
           onClick={() => commit((parseFloat(priceInput.replace(",", ".")) || 0) + priceStep)}
           style={{ background: "none", border: "none", borderBottom: "1px solid #28405C", cursor: "pointer", padding: "0 5px", fontSize: "8px", lineHeight: 1.3, color: "#8792A6" }}
@@ -98,7 +105,7 @@ function PriceStepper({ price, onChangePrice, priceStep = 0.1 }) {
 // volumes : toujours au moins un (voir normalizeVolumes) — un seul volume garde l'ancien
 // raccourci "prix visible sans déplier" ; dès qu'il y en a plusieurs, chaque volume (et son
 // propre prix) ne se gère que dans la liste dépliée, avec sa coche "par défaut".
-function CompactProductRow({ drink, volumes, priceStep = 0.1, onChangeVolumeField, onAddVolume, onRemoveVolume, onSetDefaultVolume, onChangeServingMode, onRemove }) {
+function CompactProductRow({ drink, volumes, priceToAdapt, priceStep = 0.1, onChangeVolumeField, onAddVolume, onRemoveVolume, onSetDefaultVolume, onChangeServingMode, onRemove }) {
   const [expanded, setExpanded] = useState(false);
   const isBeer = BEER_TYPES.includes(drink.type);
   const hasSingleVolume = volumes.length === 1;
@@ -114,7 +121,7 @@ function CompactProductRow({ drink, volumes, priceStep = 0.1, onChangeVolumeFiel
           <ProductInfoLines drink={drink} volumes={volumes} />
         </div>
         {hasSingleVolume ? (
-          <PriceStepper price={defaultVolume.price} onChangePrice={(price) => onChangeVolumeField(defaultVolume.id, "price", price)} priceStep={priceStep} />
+          <PriceStepper price={defaultVolume.price} onChangePrice={(price) => onChangeVolumeField(defaultVolume.id, "price", price)} priceStep={priceStep} toAdapt={!!priceToAdapt?.has(defaultVolume.id)} />
         ) : (
           <span style={{ fontSize: "12px", color: "#8792A6", fontWeight: 600, flexShrink: 0, whiteSpace: "nowrap", padding: "6px 0" }}>{volumes.length} volumes</span>
         )}
@@ -162,13 +169,14 @@ function CompactProductRow({ drink, volumes, priceStep = 0.1, onChangeVolumeFiel
                 </button>
                 <select value={v.cl || ""} onChange={(e) => onChangeVolumeField(v.id, "cl", e.target.value ? parseFloat(e.target.value) : null)} style={{ ...selectStyle, flex: 1 }}>
                   <option value="">Non défini</option>
-                  {DRINK_VOLUMES_CL.map((cl) => (
+                  {/* Un volume absent de la liste (ex. 27,5 ou 37,5 cl, repris de la fiche) reste affiché au lieu de retomber sur « Non défini ». */}
+                  {[...DRINK_VOLUMES_CL, ...(v.cl && !DRINK_VOLUMES_CL.includes(v.cl) ? [v.cl] : [])].sort((a, b) => a - b).map((cl) => (
                     <option key={cl} value={cl}>
                       {String(cl).replace(".", ",")} cl.
                     </option>
                   ))}
                 </select>
-                <PriceStepper price={v.price} onChangePrice={(price) => onChangeVolumeField(v.id, "price", price)} priceStep={priceStep} />
+                <PriceStepper price={v.price} onChangePrice={(price) => onChangeVolumeField(v.id, "price", price)} priceStep={priceStep} toAdapt={!!priceToAdapt?.has(v.id)} />
                 {volumes.length > 1 && (
                   <button onClick={() => onRemoveVolume(v.id)} title="Retirer ce volume" style={{ background: "none", border: "none", color: "#FF3B4E", fontSize: "15px", cursor: "pointer", padding: "0 2px", lineHeight: 1, flexShrink: 0 }}>
                     ×
@@ -207,6 +215,8 @@ export function VenueCategoryMenuScreen({ venue, category, drinksDirectory, onCl
   const [query, setQuery] = useState("");
   const [saving, setSaving] = useState(false);
   const [dirty, setDirty] = useState(false);
+  // Volumes dont le prix vient d'être repris de la fiche et n'a pas encore été touché (cadre rose fluo). Propre à cette session d'encodage.
+  const [priceToAdapt, setPriceToAdapt] = useState(() => new Set());
   const [currentExpanded, setCurrentExpanded] = useState(true);
   const [directoryExpanded, setDirectoryExpanded] = useState(true);
   const [expandedLetterKeys, setExpandedLetterKeys] = useState(() => new Set());
@@ -237,8 +247,18 @@ export function VenueCategoryMenuScreen({ venue, category, drinksDirectory, onCl
 
   const countInMenu = (drinkId) => menu.filter((item) => item.fromDirectory && item.sourceDrinkId === drinkId).length;
 
+  // Volume, type de service et prix proposés à l'ajout : ceux encodés sur la fiche dans « Valeurs par défaut » ;
+  // à défaut, les anciens champs de la fiche (volume, type de service, prix moyen). Le volume et le type de service
+  // sont presque toujours les bons ; le prix varie d'un lieu à l'autre, d'où le cadre rose fluo tant qu'il n'est pas adapté.
+  const positiveOrNull = (v) => {
+    const n = Number(v);
+    return v != null && v !== "" && Number.isFinite(n) && n > 0 ? n : null;
+  };
   const addProduct = (source) => {
     setDirty(true);
+    const volumeId = nextId();
+    const price = positiveOrNull(source.defaultPriceEuro) ?? positiveOrNull(source.averagePrice) ?? 0;
+    if (price > 0) setPriceToAdapt((prev) => new Set(prev).add(volumeId));
     setMenu((m) => [
       ...m,
       {
@@ -246,8 +266,8 @@ export function VenueCategoryMenuScreen({ venue, category, drinksDirectory, onCl
         fromDirectory: true,
         sourceDrinkId: source.id,
         menuCategory: category,
-        servingMode: source.servingMode || "",
-        volumes: [{ id: nextId(), cl: source.volumeCl != null ? source.volumeCl : null, price: 0, isDefault: true }],
+        servingMode: source.defaultServingMode || source.servingMode || "",
+        volumes: [{ id: volumeId, cl: positiveOrNull(source.defaultVolumeCl) ?? positiveOrNull(source.volumeCl), price, isDefault: true }],
       },
     ]);
   };
@@ -269,8 +289,18 @@ export function VenueCategoryMenuScreen({ venue, category, drinksDirectory, onCl
   // periment mais jamais nettoyés, pouvant induire en erreur tout code qui les lirait encore.
   const setVolumes = (rawId, newVolumes) => updateRaw(rawId, { volumes: newVolumes, volumeCl: undefined, price: undefined });
 
-  const updateVolume = (rawId, volumeId, patch) =>
+  const updateVolume = (rawId, volumeId, patch) => {
+    // Dès que le prix est modifié, il n'est plus « à adapter » : le cadre rose disparaît.
+    if ("price" in patch) {
+      setPriceToAdapt((prev) => {
+        if (!prev.has(volumeId)) return prev;
+        const next = new Set(prev);
+        next.delete(volumeId);
+        return next;
+      });
+    }
     setVolumes(rawId, normalizeVolumes(menu.find((r) => r.id === rawId)).map((v) => (v.id === volumeId ? { ...v, ...patch } : v)));
+  };
 
   const addVolume = (rawId) => {
     const current = normalizeVolumes(menu.find((r) => r.id === rawId));
@@ -374,6 +404,7 @@ export function VenueCategoryMenuScreen({ venue, category, drinksDirectory, onCl
                   <CompactProductRow
                     drink={resolved}
                     volumes={normalizeVolumes(raw)}
+                    priceToAdapt={priceToAdapt}
                     onChangeVolumeField={(volumeId, field, value) => updateVolume(raw.id, volumeId, { [field]: value })}
                     onAddVolume={() => addVolume(raw.id)}
                     onRemoveVolume={(volumeId) => removeVolume(raw.id, volumeId)}
