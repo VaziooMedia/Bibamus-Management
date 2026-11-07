@@ -2,7 +2,7 @@ import React, { useState, useEffect, useMemo } from "react";
 import aiIconGrey from "../assets/brand/ai_icon_grey.svg";
 import aiIconGreen from "../assets/brand/ai_icon_green.svg";
 import aiIconBlack from "../assets/brand/ai_icon_black.svg";
-import { loadCustomListItems, updateDrink, deleteDrink, createDrink, uploadDrinkMainPhoto, uploadDrinkCoverPhoto, uploadDrinkGalleryPhoto, uploadDrinkAwardBadge, loadBrandsDirectory, loadBreweriesDirectory, loadDrinksDirectory, loadGrapeVarieties, createGrapeVariety, mergeEntities, requestAICompletion, loadPendingAIProposals, resolveAIProposal } from "../data/sharedDirectories.js";
+import { loadCustomListItems, updateDrink, deleteDrink, loadVenuesUsingDrink, removeDrinkFromVenueMenus, createDrink, uploadDrinkMainPhoto, uploadDrinkCoverPhoto, uploadDrinkGalleryPhoto, uploadDrinkAwardBadge, loadBrandsDirectory, loadBreweriesDirectory, loadDrinksDirectory, loadGrapeVarieties, createGrapeVariety, mergeEntities, requestAICompletion, loadPendingAIProposals, resolveAIProposal } from "../data/sharedDirectories.js";
 import { GrapeVarietySelect } from "./GrapeVarietySelect.jsx";
 import { StatusSelector } from "./StatusSelector.jsx";
 import { AdminPhotoField } from "./AdminPhotoField.jsx";
@@ -800,11 +800,34 @@ export function DrinkDetailPanel({ drink, onClose, onSaved, myUserId }) {
   };
 
   const remove = async () => {
-    if (!confirm(`Supprimer définitivement "${drink.name}" ?`)) return;
+    // Cartes de lieux qui contiennent ce produit : on prévient avant, puis on les nettoie une fois la
+    // fiche supprimée. Sans ça, la carte garderait une entrée vers une fiche disparue (entrée sans nom).
+    // Si la vérification échoue, on n'efface rien : on ne saurait pas quelles cartes nettoyer.
+    const usage = await loadVenuesUsingDrink(drink.id);
+    if (usage.error) {
+      alert("Impossible de vérifier les cartes des lieux, la suppression est annulée : " + usage.error);
+      return;
+    }
+    const venueNames = usage.venues.map((v) => v.name);
+    const shown = venueNames.length > 10 ? [...venueNames.slice(0, 10), `et ${venueNames.length - 10} autres`] : venueNames;
+    let message = `Supprimer définitivement "${drink.name}" ?`;
+    if (venueNames.length === 1) {
+      message += `\n\nCe produit est dans la carte de : ${shown[0]}. Le supprimer le retirera aussi de cette carte.`;
+    } else if (venueNames.length > 1) {
+      message += `\n\nCe produit est dans les cartes de : ${shown.join(", ")}. Le supprimer le retirera aussi de ces cartes.`;
+    }
+    if (!confirm(message)) return;
     const result = await deleteDrink(drink.id);
     if (result?.error) {
       alert("La suppression a échoué : " + result.error);
       return;
+    }
+    if (venueNames.length > 0) {
+      const cleanup = await removeDrinkFromVenueMenus(drink.id);
+      if (cleanup.error) {
+        const where = cleanup.failed.length > 0 ? cleanup.failed.join(", ") : venueNames.join(", ");
+        alert(`La fiche est supprimée, mais le produit n'a pas pu être retiré de la carte de : ${where}. Retire-le à la main depuis « Carte boissons » du lieu.`);
+      }
     }
     onSaved(null);
   };
