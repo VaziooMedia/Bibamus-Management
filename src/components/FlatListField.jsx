@@ -46,7 +46,7 @@ const SOURCES = {
   cocktail_characteristics: { count: countDrinksWithCocktailCharacteristic, remove: deleteCocktailCharacteristic },
   hot_characteristics: { count: countDrinksWithHotCharacteristic, remove: deleteHotCharacteristic },
   snack_characteristics: { count: countDrinksWithSnackCharacteristic, remove: deleteSnackCharacteristic },
-  // Dérivés des bières (« beer_derivative ») et des spiritueux (« spirit_derivative ») : même colonne, mêmes fonctions SQL (la liste est un paramètre).
+  // Dérivés des bières (« beer_derivative »), des spiritueux (« spirit_derivative ») et des thés / infusions (« tea_derivative ») : même colonne, mêmes fonctions SQL (la liste est un paramètre).
   derivatives: { count: countDrinksWithDerivative, remove: deleteDerivative },
 };
 const PRODUCT_SOURCE = { count: countDrinksWithListItem, remove: deleteCustomListItem };
