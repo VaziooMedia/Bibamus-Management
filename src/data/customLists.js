@@ -76,9 +76,10 @@ export const BEER_DERIVATIVE_LIST = {
   // L'ordre des dérivés est PROPRE À CHAQUE PRODUIT (un rhum a le cola en premier, un gin le tonic) : c'est l'ordre des codes cochés de la fiche
   // (colonne drinks_directory.derivatives), changé par les flèches du tableau. L'ordre commun de la liste ne sert plus que de départ.
   productOrder: true,
-  // Chaque dérivé a sa propre énergie (kcal/100ml) : quand on le choisit dans l'application, elle REMPLACE celle du produit.
-  // Facultative : sans valeur, l'application garde l'énergie du produit.
-  energy: { label: "Énergie (kcal/100ml)", column: "Kcal/100ml.", placeholder: "Ex. 65", missing: "valeur du produit" },
+  // L'énergie (kcal/100ml) d'un dérivé est PROPRE À CHAQUE PRODUIT (une Jupiler au Mazout n'a pas celle d'une Leffe au Mazout) : une saisie par dérivé
+  // coché dans le tableau de la fiche du produit (colonne drinks_directory.derivative_kcal), JAMAIS dans la liste commune : un dérivé n'a pas de valeur
+  // par défaut. Quand elle est saisie, l'application la prend à la place de l'énergie du produit ; sans valeur, elle garde celle du produit.
+  kcal: { label: "Énergie (kcal/100ml)", column: "Kcal/100ml.", placeholder: "Ex. 52", missing: "valeur du produit" },
   builtinGroups: [{ title: "", tags: [] }],
   orphanTitle: "",
   words: { noun: "dérivé", one: "un dérivé", this: "ce dérivé", the: "le dérivé", ofThe: "du dérivé", ofAll: "des dérivés", namePlaceholder: "Nom du dérivé (ex. Mazout)" },
@@ -93,7 +94,7 @@ export const SPIRIT_DERIVATIVE_LIST = {
   flat: true,
   orderable: true,
   productOrder: true, // voir BEER_DERIVATIVE_LIST
-  energy: { label: "Énergie (kcal/100ml)", column: "Kcal/100ml.", placeholder: "Ex. 70", missing: "valeur du produit" },
+  kcal: { label: "Énergie (kcal/100ml)", column: "Kcal/100ml.", placeholder: "Ex. 70", missing: "valeur du produit" }, // propre au produit, voir BEER_DERIVATIVE_LIST
   // Volume du verre quand le spiritueux est pris en dérivé (Vodka + Red Bull = 20 cl au lieu des 4 cl de la vodka seule) : une valeur PAR
   // PRODUIT et par dérivé coché, saisie dans le tableau de la fiche du spiritueux (colonne drinks_directory.derivative_volumes), pas dans
   // la liste commune. Vide = le verre garde le volume du produit.
@@ -103,7 +104,7 @@ export const SPIRIT_DERIVATIVE_LIST = {
   words: { noun: "dérivé", one: "un dérivé", this: "ce dérivé", the: "le dérivé", ofThe: "du dérivé", ofAll: "des dérivés", namePlaceholder: "Nom du dérivé (ex. Whisky Coca)" },
 };
 // Dérivés d'un thé ou d'une infusion (Thé citron, Thé au lait, Infusion miel…) : une troisième liste plate, commune aux thés ET aux infusions et
-// distincte de celles des bières et des spiritueux. Mêmes règles que les bières : une énergie propre à chaque dérivé, un ordre propre à chaque
+// distincte de celles des bières et des spiritueux. Mêmes règles que les bières : une énergie propre à chaque produit et à chaque dérivé, un ordre propre à chaque
 // produit, PAS de volume par dérivé (la tasse garde son volume). Même colonne drinks_directory.derivatives : les codes de chaque produit sont
 // ceux de SA liste. `codePrefix` : un dérivé ajouté à la main s'appelle « perso_tea_… ».
 export const TEA_DERIVATIVE_LIST = {
@@ -113,7 +114,7 @@ export const TEA_DERIVATIVE_LIST = {
   flat: true,
   orderable: true,
   productOrder: true, // voir BEER_DERIVATIVE_LIST
-  energy: { label: "Énergie (kcal/100ml)", column: "Kcal/100ml.", placeholder: "Ex. 20", missing: "valeur du produit" },
+  kcal: { label: "Énergie (kcal/100ml)", column: "Kcal/100ml.", placeholder: "Ex. 20", missing: "valeur du produit" }, // propre au produit, voir BEER_DERIVATIVE_LIST
   builtinGroups: [{ title: "", tags: [] }],
   orphanTitle: "",
   words: { noun: "dérivé", one: "un dérivé", this: "ce dérivé", the: "le dérivé", ofThe: "du dérivé", ofAll: "des dérivés", namePlaceholder: "Nom du dérivé (ex. Thé citron)" },
@@ -1131,6 +1132,29 @@ export function derivativeVolumesToForm(volumes) {
   const out = {};
   if (volumes && typeof volumes === "object" && !Array.isArray(volumes)) {
     Object.entries(volumes).forEach(([code, v]) => {
+      if (typeof v === "number" && Number.isFinite(v)) out[code] = String(v);
+    });
+  }
+  return out;
+}
+
+// Les énergies à enregistrer pour un produit : { code: kcal/100ml } pour les seuls dérivés cochés qui ont une énergie saisie. `raw` = { code: texte saisi }.
+// Rend { kcal } ou { error } (la première énergie refusée, avec le nom du dérivé si `nameOf(code)` le donne). Sans valeur, l'application garde l'énergie du produit.
+export function derivativeKcalToSave(checkedCodes, raw, nameOf = (code) => code) {
+  const kcal = {};
+  for (const code of checkedCodes || []) {
+    const res = parseItemEnergy(raw?.[code]);
+    if (res.error) return { error: `${nameOf(code)} : ${res.error}` };
+    if (res.value != null) kcal[code] = res.value;
+  }
+  return { kcal };
+}
+
+// Les énergies saisies d'un produit, remises en texte pour les champs de la fiche : { code: "52" }.
+export function derivativeKcalToForm(kcal) {
+  const out = {};
+  if (kcal && typeof kcal === "object" && !Array.isArray(kcal)) {
+    Object.entries(kcal).forEach(([code, v]) => {
       if (typeof v === "number" && Number.isFinite(v)) out[code] = String(v);
     });
   }

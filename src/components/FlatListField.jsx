@@ -70,10 +70,12 @@ export const listSource = (list) => SOURCES[list.source] || PRODUCT_SOURCE;
 //   onSelectedReorder(codes) : (variante "rows", liste avec `productOrder`, les dérivés) le nouvel ordre des codes cochés du produit (flèches du tableau)
 //   rowValues    : (variante "rows", liste avec `volume`) { values: { code: texte }, onChange(code, texte) } — une saisie PAR PRODUIT sur chaque
 //                  ligne cochée du tableau (le volume du verre d'un dérivé de spiritueux) ; facultatif
+//   rowKcal      : (variante "rows", liste avec `kcal`) { values: { code: texte }, onChange(code, texte) } — l'énergie (kcal/100ml) d'un dérivé, une saisie PAR
+//                  PRODUIT sur chaque ligne cochée du tableau ; facultatif
 //   chips        : { codes, ariaLabel } pour montrer les éléments cochés sur une ligne au-dessus du champ (facultatif)
 //   framed       : encadre le champ lui-même (les étiquettes cochées restent au-dessus du cadre)
 //   labelStyle, fieldStyle : styles de la fiche
-export function FlatListField({ list, label, variant, compact, value, selected, onChange, onToggle, onSelectedReorder, onAdded, onDeleted, rowValues, chips, framed, labelStyle, fieldStyle }) {
+export function FlatListField({ list, label, variant, compact, value, selected, onChange, onToggle, onSelectedReorder, onAdded, onDeleted, rowValues, rowKcal, chips, framed, labelStyle, fieldStyle }) {
   const [custom, setCustom, loaded] = useCustomListItems(list.key);
   const [order, setOrder] = useCustomListOrder(list.key, !!list.orderable);
   const items = useMemo(() => orderedItems(list, custom, order), [list, custom, order]);
@@ -107,6 +109,7 @@ export function FlatListField({ list, label, variant, compact, value, selected, 
         compact={compact}
         selected={isSelect ? (value ? [value] : []) : selected}
         rowValues={rowValues}
+        rowKcal={rowKcal}
         onToggle={onToggle}
         onSelectedReorder={onSelectedReorder}
         onAdded={onAdded}

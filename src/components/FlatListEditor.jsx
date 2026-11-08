@@ -27,11 +27,13 @@ import { orderedItems, orderForProduct, moveSelectedInOrder, withItemSaved, with
 //   selected       : codes sélectionnés pour ce produit ; onToggle(code) (liste à étiquettes)
 //   rowValues      : (tableau, liste avec `volume`) { values: { code: texte }, onChange(code, texte) } : une colonne de plus, avec une saisie
 //                    sur chaque ligne COCHÉE (un tiret sur les autres) ; la valeur est propre au produit, pas à la liste
+//   rowKcal        : (tableau, liste avec `kcal`) même forme que rowValues : l'énergie (kcal/100ml) d'un dérivé, une saisie sur chaque ligne COCHÉE,
+//                    propre au produit (jamais à la liste : un dérivé n'a pas de valeur par défaut) ; colonne placée avant celle du volume
 //   onSelectedReorder : (liste avec `productOrder`) (codes) -> void — le nouvel ordre des codes cochés du produit
 //   onAdded(item)  : un élément vient d'être ajouté (le parent le sélectionne pour ce produit)
 //   onDeleted(code): un élément vient d'être supprimé (le parent le retire de ce produit)
 //   onCreate / onSave / onCount / onDelete : accès à la base (voir ListItemAdder et ListItemManagePanel)
-export function FlatListEditor({ list, custom, onCustomChange, order, onOrderChange, onReorder, pills, rows, checkboxes, compact = true, selected, rowValues, onToggle, onSelectedReorder, onAdded, onDeleted, onCreate, onSave, onCount, onDelete }) {
+export function FlatListEditor({ list, custom, onCustomChange, order, onOrderChange, onReorder, pills, rows, checkboxes, compact = true, selected, rowValues, rowKcal, onToggle, onSelectedReorder, onAdded, onDeleted, onCreate, onSave, onCount, onDelete }) {
   const w = list.words;
   const e = entityOf(list);
   // Dérivés : l'ordre est celui du produit (flèches du tableau, ligne cochée seulement) ; les autres listes gardent l'ordre commun.
@@ -112,7 +114,8 @@ export function FlatListEditor({ list, custom, onCustomChange, order, onOrderCha
         const energy = list.energy;
         const arrows = canReorder;
         const volume = rowValues && list.volume ? list.volume : null;
-        const cols = `28px minmax(0, 1fr)${energy ? (volume ? " 124px" : " 150px") : ""}${volume ? " 88px" : ""}${arrows ? " 64px" : ""}`;
+        const kcalCol = rowKcal && list.kcal ? list.kcal : null;
+        const cols = `28px minmax(0, 1fr)${energy ? (volume ? " 124px" : " 150px") : ""}${kcalCol ? " 92px" : ""}${volume ? " 88px" : ""}${arrows ? " 64px" : ""}`;
         const checkedCount = perProduct ? items.filter((t) => selected.includes(t.code)).length : items.length;
         const arrowButton = (tag, index, direction) => {
           const disabled = moving || (direction < 0 ? index <= 0 : index >= checkedCount - 1);
@@ -144,26 +147,30 @@ export function FlatListEditor({ list, custom, onCustomChange, order, onOrderCha
         const cell = { fontSize: "13px", fontWeight: 600, color: "#F2F2E8" };
         // Volume du verre (propre au produit) : une saisie sur une ligne cochée, un tiret sinon. La ligne est un <label> qui (dé)coche : un appui
         // dans la saisie ne doit rien (dé)cocher.
-        const volumeCell = (tag, checked) =>
+        const productInputCell = (src, col, tag, checked) =>
           checked ? (
             <input
               type="text"
               inputMode="decimal"
-              value={rowValues.values?.[tag.code] ?? ""}
-              onChange={(ev) => rowValues.onChange(tag.code, ev.target.value)}
+              value={src.values?.[tag.code] ?? ""}
+              onChange={(ev) => src.onChange(tag.code, ev.target.value)}
               onClick={(ev) => ev.stopPropagation()}
-              placeholder={volume.placeholder}
-              aria-label={`${volume.label} : ${tag.fr}`}
+              placeholder={col.placeholder}
+              aria-label={`${col.label} : ${tag.fr}`}
               style={{ width: "100%", boxSizing: "border-box", padding: "5px 8px", borderRadius: "6px", border: "1.5px solid #28405C", background: "#16273D", color: "#F2F2E8", fontSize: "13px", fontWeight: 600, textAlign: "right" }}
             />
           ) : (
             <span style={{ fontSize: "12px", color: "#8792A6", textAlign: "right" }}>—</span>
           );
+        const volumeCell = (tag, checked) => productInputCell(rowValues, volume, tag, checked);
+        const kcalCell = (tag, checked) => productInputCell(rowKcal, kcalCol, tag, checked);
         // En mode modification, la ligne est un bouton : la valeur saisie s'y lit seulement.
-        const volumeReadCell = (tag, checked) => {
-          const v = checked ? rowValues.values?.[tag.code] : "";
+        const productReadCell = (src, tag, checked) => {
+          const v = checked ? src.values?.[tag.code] : "";
           return v ? <strong style={{ ...cell, textAlign: "right" }}>{String(v).replace(".", ",")}</strong> : <span style={{ fontSize: "12px", color: "#8792A6", textAlign: "right" }}>—</span>;
         };
+        const volumeReadCell = (tag, checked) => productReadCell(rowValues, tag, checked);
+        const kcalReadCell = (tag, checked) => productReadCell(rowKcal, tag, checked);
         const energyCell = (tag) =>
           tag.kcalPer100ml != null ? (
             <strong style={{ ...cell, textAlign: "right" }}>{String(tag.kcalPer100ml).replace(".", ",")}</strong>
@@ -176,6 +183,7 @@ export function FlatListEditor({ list, custom, onCustomChange, order, onOrderCha
               <span />
               <span>{capitalize(w.noun)}</span>
               {energy && <span style={{ textAlign: "right" }}>{energy.column}</span>}
+              {kcalCol && <span style={{ textAlign: "right" }}>{kcalCol.column}</span>}
               {volume && <span style={{ textAlign: "right" }}>{volume.column}</span>}
               {arrows && <span />}
             </div>
@@ -202,6 +210,7 @@ export function FlatListEditor({ list, custom, onCustomChange, order, onOrderCha
                       <span />
                       <span style={cell}>{tag.fr}</span>
                       {energy && energyCell(tag)}
+                      {kcalCol && kcalReadCell(tag, checked)}
                       {volume && volumeReadCell(tag, checked)}
                       {arrows && <span />}
                     </button>
@@ -210,6 +219,7 @@ export function FlatListEditor({ list, custom, onCustomChange, order, onOrderCha
                       <input type="checkbox" checked={checked} onChange={() => onToggle && onToggle(tag.code)} />
                       <span style={cell}>{tag.fr}</span>
                       {energy && energyCell(tag)}
+                      {kcalCol && kcalCell(tag, checked)}
                       {volume && volumeCell(tag, checked)}
                       {arrows && arrowsCell(tag, index, checked)}
                     </label>
