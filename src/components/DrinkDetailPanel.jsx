@@ -20,7 +20,7 @@ import { FlavorNotesPicker } from "./FlavorNotesPicker.jsx";
 import { FlatListField } from "./FlatListField.jsx";
 import { OnOffSwitch } from "./OnOffSwitch.jsx";
 import { GroupedListField } from "./GroupedListField.jsx";
-import { BEER_DERIVATIVE_LIST, SPIRIT_DERIVATIVE_LIST, TEA_DERIVATIVE_LIST, derivativeVolumesToForm, derivativeVolumesToSave, mergeCustomItems, FOOD_PAIRING_LIST, OCCASION_LIST, GLASS_LIST, CHARACTERISTIC_LIST, SOFT_CHARACTERISTIC_LIST, COCKTAIL_CHARACTERISTIC_LIST, HOT_CHARACTERISTIC_LIST, SNACK_CHARACTERISTIC_LIST, SOFT_STYLE_LISTS, HOT_STYLE_LISTS, COCKTAIL_STYLE_LISTS } from "../data/customLists.js";
+import { BEER_DERIVATIVE_LIST, SPIRIT_DERIVATIVE_LIST, TEA_DERIVATIVE_LIST, derivativeVolumesToForm, derivativeVolumesToSave, derivativeKcalToForm, derivativeKcalToSave, mergeCustomItems, FOOD_PAIRING_LIST, OCCASION_LIST, GLASS_LIST, CHARACTERISTIC_LIST, SOFT_CHARACTERISTIC_LIST, COCKTAIL_CHARACTERISTIC_LIST, HOT_CHARACTERISTIC_LIST, SNACK_CHARACTERISTIC_LIST, SOFT_STYLE_LISTS, HOT_STYLE_LISTS, COCKTAIL_STYLE_LISTS } from "../data/customLists.js";
 import { softStyleOwner, stylesForSoftSubtype } from "../data/softStyles.js";
 import { characteristicsForSoft, characteristicsWithoutSoftOnly } from "../data/softCharacteristics.js";
 import { characteristicsForCocktail, characteristicsWithoutCocktailOnly } from "../data/cocktailCharacteristics.js";
@@ -195,6 +195,9 @@ export function DrinkDetailPanel({ drink, onClose, onSaved, myUserId }) {
     derivatives: drink?.derivatives || [],
     // Spiritueux : le volume du verre de chaque dérivé coché (texte saisi, { code: "20" }) ; vide = le verre garde le volume du produit.
     derivativeVolumes: derivativeVolumesToForm(drink?.derivativeVolumes),
+    // Bières, spiritueux, thés et infusions : l'énergie (kcal/100ml) du verre de chaque dérivé coché, propre à CE produit (texte saisi, { code: "52" }) ;
+    // vide = le verre garde l'énergie du produit. Jamais de valeur par défaut venue du dérivé.
+    derivativeKcal: derivativeKcalToForm(drink?.derivativeKcal),
     brandId: drink?.brandId || null,
     producerIds: drink?.producerIds || [],
     nationality: drink?.nationality || "",
@@ -576,8 +579,13 @@ export function DrinkDetailPanel({ drink, onClose, onSaved, myUserId }) {
         ...(isSoft ? { characteristics: softCharacteristics, glutenFree: softCharacteristics.includes("gluten_free"), bio: softCharacteristics.includes("bio") } : {}),
         ...(isCocktail ? { characteristics: cocktailCharacteristics, glutenFree: cocktailCharacteristics.includes("gluten_free"), bio: cocktailCharacteristics.includes("bio") } : {}),
         ...(isHot ? { characteristics: hotCharacteristics, glutenFree: hotCharacteristics.includes("gluten_free"), bio: hotCharacteristics.includes("bio") } : {}),
-        // Thés et infusions : les dérivés cochés. Interrupteur sur OFF, ou autre boisson chaude (café…) → aucun dérivé enregistré.
-        ...(isHot ? { derivatives: hasDerivatives && form.derivativesOn ? form.derivatives : [] } : {}),
+        // Thés et infusions : les dérivés cochés, et l'énergie propre à ce produit de ceux qui en ont une. Interrupteur sur OFF, ou autre boisson chaude (café…) → aucun dérivé enregistré.
+        ...(isHot
+          ? {
+              derivatives: hasDerivatives && form.derivativesOn ? form.derivatives : [],
+              derivativeKcal: hasDerivatives && form.derivativesOn ? derivativeKcalToSave(form.derivatives, form.derivativeKcal).kcal || {} : {},
+            }
+          : {}),
         ...(isSnack ? { characteristics: snackCharacteristics, glutenFree: snackCharacteristics.includes("gluten_free"), bio: snackCharacteristics.includes("bio") } : {}),
         ...(hasNoStyles ? {} : { styles: isHot ? stylesForHotSubtype(form.styles, form.beverageSubtype) : isCocktail ? stylesForCocktailSubtype(form.styles, form.beverageSubtype) : stylesForSoftSubtype(form.styles, form.beverageSubtype) }),
         defaultVolumeCl: form.defaultVolumeCl === "" ? null : parseFloat(form.defaultVolumeCl),
@@ -614,6 +622,9 @@ export function DrinkDetailPanel({ drink, onClose, onSaved, myUserId }) {
       // Spiritueux : le volume du verre des seuls dérivés cochés qui en ont un (la saisie a déjà été vérifiée à l'enregistrement) ; interrupteur
       // sur OFF ou dérivé décoché → son volume est effacé.
       derivativeVolumes: isSpirit && form.derivativesOn ? derivativeVolumesToSave(form.derivatives, form.derivativeVolumes).volumes || {} : {},
+      // Bières, spiritueux, thés et infusions : l'énergie des seuls dérivés cochés qui en ont une (déjà vérifiée à l'enregistrement) ; interrupteur
+      // sur OFF ou dérivé décoché → son énergie est effacée.
+      derivativeKcal: hasDerivatives && form.derivativesOn ? derivativeKcalToSave(form.derivatives, form.derivativeKcal).kcal || {} : {},
       // Spiritueux : la case « Shot » et ses valeurs par défaut. Case décochée → les valeurs du shot sont effacées à l'enregistrement.
       ...(isSpirit
         ? {
@@ -763,6 +774,16 @@ export function DrinkDetailPanel({ drink, onClose, onSaved, myUserId }) {
         const rows = await loadCustomListItems(derivativeList.key);
         const names = Object.fromEntries(mergeCustomItems(derivativeList, rows).flatMap((g) => g.tags).map((t) => [t.code, t.fr]));
         alert("Volume d'un dérivé — " + derivativeVolumesToSave(form.derivatives, form.derivativeVolumes, (code) => names[code] || code).error);
+        return;
+      }
+    }
+    // Énergie des dérivés : une énergie refusée (négative, trop haute, pas un nombre) arrête l'enregistrement, avec le nom du dérivé.
+    if (hasDerivatives && form.derivativesOn) {
+      const check = derivativeKcalToSave(form.derivatives, form.derivativeKcal);
+      if (check.error) {
+        const rows = await loadCustomListItems(derivativeList.key);
+        const names = Object.fromEntries(mergeCustomItems(derivativeList, rows).flatMap((g) => g.tags).map((t) => [t.code, t.fr]));
+        alert("Énergie d'un dérivé — " + derivativeKcalToSave(form.derivatives, form.derivativeKcal, (code) => names[code] || code).error);
         return;
       }
     }
@@ -1284,9 +1305,13 @@ export function DrinkDetailPanel({ drink, onClose, onSaved, myUserId }) {
                       onDeleted={(code) =>
                         setForm((f) => {
                           const { [code]: _gone, ...volumes } = f.derivativeVolumes || {};
-                          return f.derivatives.includes(code) || _gone !== undefined ? { ...f, derivatives: f.derivatives.filter((c) => c !== code), derivativeVolumes: volumes } : f;
+                          const { [code]: _goneKcal, ...kcal } = f.derivativeKcal || {};
+                          return f.derivatives.includes(code) || _gone !== undefined || _goneKcal !== undefined
+                            ? { ...f, derivatives: f.derivatives.filter((c) => c !== code), derivativeVolumes: volumes, derivativeKcal: kcal }
+                            : f;
                         })
                       }
+                      rowKcal={{ values: form.derivativeKcal, onChange: (code, v) => setForm((f) => ({ ...f, derivativeKcal: { ...f.derivativeKcal, [code]: v } })) }}
                       rowValues={isSpirit ? { values: form.derivativeVolumes, onChange: (code, v) => setForm((f) => ({ ...f, derivativeVolumes: { ...f.derivativeVolumes, [code]: v } })) } : undefined}
                       labelStyle={labelStyle}
                       fieldStyle={fieldStyle}

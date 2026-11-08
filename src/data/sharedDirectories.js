@@ -1804,6 +1804,8 @@ function rowToDrink(row) {
     derivatives: Array.isArray(row.derivatives) ? row.derivatives : [],
     // Volume du verre de chaque dérivé coché (spiritueux) : { code du dérivé: cl } ; {} = aucun (le verre garde le volume du produit).
     derivativeVolumes: row.derivative_volumes && typeof row.derivative_volumes === "object" && !Array.isArray(row.derivative_volumes) ? row.derivative_volumes : {},
+    // Énergie (kcal/100ml) de chaque dérivé coché, PROPRE à ce produit : { code du dérivé: kcal } ; {} = aucune (le verre garde l'énergie du produit).
+    derivativeKcal: row.derivative_kcal && typeof row.derivative_kcal === "object" && !Array.isArray(row.derivative_kcal) ? row.derivative_kcal : {},
     servesAsShot: !!row.serves_as_shot,
     defaultAsShot: !!row.default_as_shot,
     defaultShotVolumeCl: row.default_shot_volume_cl,
@@ -1972,6 +1974,7 @@ function drinkToRow(d, partial = false) {
     default_price_jeton: d.defaultPriceJeton,
     derivatives: d.derivatives,
     derivative_volumes: d.derivativeVolumes,
+    derivative_kcal: d.derivativeKcal,
     serves_as_shot: d.servesAsShot,
     default_as_shot: d.defaultAsShot,
     default_shot_volume_cl: d.defaultShotVolumeCl,
