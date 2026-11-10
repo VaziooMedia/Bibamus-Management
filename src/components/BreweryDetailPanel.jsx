@@ -519,7 +519,7 @@ export function BreweryDetailPanel({ brewery, onClose, onSaved, myUserId }) {
           <SocialLinkField icon={<TiktokIcon size={18} />} label="TikTok" prefix="https://www.tiktok.com/@" value={form.tiktokUrl} onChange={(v) => set("tiktokUrl", v)} />
           <SocialLinkField icon={<SnapchatIcon size={18} />} label="Snapchat" prefix="https://www.snapchat.com/add/" value={form.snapchatUrl} onChange={(v) => set("snapchatUrl", v)} />
           <SocialLinkField icon={<LinkedinIcon size={18} />} label="LinkedIn" prefix="https://www.linkedin.com/company/" value={form.linkedinUrl} onChange={(v) => set("linkedinUrl", v)} />
-          <SocialLinkField icon={<YoutubeIcon size={18} />} label="YouTube" prefix="https://www.youtube.com/@" value={form.youtubeUrl} onChange={(v) => set("youtubeUrl", v)} />
+          <SocialLinkField icon={<YoutubeIcon size={18} />} label="YouTube" prefix="https://www.youtube.com/channel/" value={form.youtubeUrl} onChange={(v) => set("youtubeUrl", v)} />
         </CollapsibleSection>
 
         <div style={separatorStyle} />
