@@ -1,5 +1,5 @@
 // Styles des Cocktails / Mocktails. Chaque sous-catégorie (voir COCKTAIL_SUBTYPES) a sa propre liste de styles : six groupes pour
-// « Cocktails », six autres pour « Mocktails ». Le style d'un produit est rangé dans la même colonne
+// « Cocktails », six autres pour « Mocktails », une liste plate pour « Ready-to-Drink ». Le style d'un produit est rangé dans la même colonne
 // que ceux des bières, des vins, des softs et des boissons chaudes (drinks_directory.styles, une liste de codes) : pour que les
 // codes de deux familles ne puissent jamais se confondre, ceux d'une sous-catégorie commencent par son préfixe (« cocktail_… »),
 // et ceux qu'on y ajoute à la main par « perso_ » + ce préfixe (« perso_cocktail_… », voir `codePrefix` dans customLists.js).
@@ -313,9 +313,24 @@ export const MOCKTAIL_STYLE_GROUPS = [
   },
 ];
 
+// Ready-to-Drink : une liste plate (sans groupes), comme les styles de l'Eau. Noms tels que donnés, en anglais. Les codes commencent
+// par « rtd_ » (« perso_rtd_… » pour un ajout à la main). Comme toute liste modifiable, on peut renommer, supprimer, déplacer
+// (changer l'ordre, commun à tous les produits) et ajouter depuis la fiche produit.
+export const RTD_STYLES = [
+  { code: "rtd_classic_cocktail", fr: "Classic Cocktail RTD" },
+  { code: "rtd_long_drink", fr: "Long Drink RTD" },
+  { code: "rtd_spritz", fr: "Spritz RTD" },
+  { code: "rtd_hard_seltzer", fr: "Hard Seltzer" },
+  { code: "rtd_hard_lemonade", fr: "Hard Lemonade" },
+  { code: "rtd_hard_tea", fr: "Hard Tea" },
+  { code: "rtd_hard_soda", fr: "Hard Soda" },
+  { code: "rtd_mocktail", fr: "Mocktail RTD" },
+  { code: "rtd_other", fr: "Other RTD" },
+];
+
 // Les sous-catégories de Cocktails / Mocktails qui ont une liste de styles, avec le préfixe des codes de leurs styles (ici le
 // code de la sous-catégorie).
-export const COCKTAIL_STYLE_PREFIXES = { cocktail: "cocktail", mocktail: "mocktail" };
+export const COCKTAIL_STYLE_PREFIXES = { cocktail: "cocktail", mocktail: "mocktail", rtd: "rtd" };
 export const COCKTAIL_STYLE_SUBTYPES = Object.keys(COCKTAIL_STYLE_PREFIXES);
 
 // La sous-catégorie à laquelle appartient un code de style de Cocktails / Mocktails, ou null si ce n'est pas un de leurs codes

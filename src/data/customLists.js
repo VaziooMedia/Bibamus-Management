@@ -18,7 +18,7 @@ import { FLAVOR_NOTE_GROUPS, FOOD_PAIRINGS, OCCASIONS, PRODUCT_CHARACTERISTICS, 
 import { WATER_STYLES, SODA_STYLE_GROUPS, JUICE_STYLE_GROUPS, ENERGY_STYLE_GROUPS, SPORT_STYLE_GROUPS, DAIRY_STYLE_GROUPS, SYRUP_STYLE_GROUPS } from "./softStyles.js";
 import { SOFT_CHARACTERISTICS } from "./softCharacteristics.js";
 import { COFFEE_STYLE_GROUPS, TEA_STYLE_GROUPS, INFUSION_STYLE_GROUPS, HOT_MILK_STYLE_GROUPS, SOUP_STYLE_GROUPS, HOT_MIX_STYLE_GROUPS, CEREAL_CHICORY_STYLE_GROUPS } from "./hotStyles.js";
-import { COCKTAIL_STYLE_GROUPS, MOCKTAIL_STYLE_GROUPS } from "./cocktailStyles.js";
+import { COCKTAIL_STYLE_GROUPS, MOCKTAIL_STYLE_GROUPS, RTD_STYLES } from "./cocktailStyles.js";
 import { COCKTAIL_CHARACTERISTIC_GROUPS } from "./cocktailCharacteristics.js";
 import { HOT_CHARACTERISTIC_GROUPS } from "./hotCharacteristics.js";
 import { SNACK_CHARACTERISTIC_GROUPS } from "./snackCharacteristics.js";
@@ -802,8 +802,32 @@ export const MOCKTAIL_STYLE_LIST = {
     searchPlaceholder: "Chercher un style (ex. Long Drink, Fruit Juice, Mint...)",
   },
 };
+// Styles des Ready-to-Drink : une liste plate (étiquettes, sans groupes), comme les styles de l'Eau, dont l'ordre se modifie (flèches du
+// panneau d'un style, ordre commun à tous les produits). La liste s'appelle « rtd_style », ses styles « rtd_… » (« perso_rtd_… » pour un
+// ajout à la main). Même colonne et mêmes fonctions de comptage et de suppression que celles des Cocktails et des Mocktails
+// (`source: "cocktail_styles"`). Les styles de départ sont dans cocktailStyles.js.
+export const RTD_ENTITY = { ...PRODUCT_ENTITY, all: "tous les ready-to-drink", none: "aucun ready-to-drink" };
+export const RTD_STYLE_LIST = {
+  key: "rtd_style",
+  flat: true,
+  orderable: true,
+  source: "cocktail_styles",
+  codePrefix: "perso_rtd_",
+  entity: RTD_ENTITY,
+  builtinGroups: [{ title: "", tags: RTD_STYLES }],
+  orphanTitle: "",
+  words: {
+    noun: "style",
+    one: "un style",
+    this: "ce style",
+    the: "le style",
+    ofThe: "du style",
+    ofAll: "des styles",
+    namePlaceholder: "Nom du style (ex. Hard Cider RTD)",
+  },
+};
 // La liste de styles de chaque sous-catégorie de Cocktails / Mocktails (clé : code de la sous-catégorie).
-export const COCKTAIL_STYLE_LISTS = { cocktail: COCKTAIL_STYLE_LIST, mocktail: MOCKTAIL_STYLE_LIST };
+export const COCKTAIL_STYLE_LISTS = { cocktail: COCKTAIL_STYLE_LIST, mocktail: MOCKTAIL_STYLE_LIST, rtd: RTD_STYLE_LIST };
 
 // Fiche Cocktails / Mocktails, Niveau 2 : « Caractéristiques & labels » — cinq classifications (Alcool, Sucre & Calories, Allergènes &
 // Régimes alimentaires, Caféine & Stimulants, Labels & Certifications), donc une liste à groupes (accordéon), une seule pour les Cocktails ET

@@ -118,10 +118,11 @@ export const HOT_SUBTYPES = [
   { code: "cereales_chicoree", fr: "Céréales & Chicorée" },
 ];
 // Cocktails / Mocktails : une seule sous-catégorie par produit, choisie dans la liste déroulante sous « Catégorie » (comme
-// pour les Softs & Eaux et les Boissons chaudes). Au départ, aucune : « — ». Pas de liste de styles pour l'instant.
+// pour les Softs & Eaux et les Boissons chaudes). Au départ, aucune : « — ». Chaque sous-catégorie a sa liste de styles (COCKTAIL_STYLE_LISTS).
 export const COCKTAIL_SUBTYPES = [
   { code: "cocktail", fr: "Cocktails" },
   { code: "mocktail", fr: "Mocktails" },
+  { code: "rtd", fr: "Ready-to-Drink" },
 ];
 // Snacks : une seule sous-catégorie par produit, choisie dans la liste déroulante sous « Catégorie » (comme pour les Cocktails /
 // Mocktails). Au départ, aucune : « — ». Toujours pas de styles pour les Snacks (pas de liste).
@@ -449,7 +450,7 @@ export function DrinkDetailPanel({ drink, onClose, onSaved, myUserId }) {
   const isCocktail = form.type === "cocktails_mocktails";
   const isSnack = form.type === "snacks";
   // Snacks : une sous-catégorie mais pas de styles pour l'instant (pas de liste). Cocktails / Mocktails : une liste de styles par
-  // sous-catégorie (« Cocktails » et « Mocktails »).
+  // sous-catégorie (« Cocktails », « Mocktails » et « Ready-to-Drink »).
   const hasNoStyles = isSnack;
   // Taux d'alcool grisé : Softs & Eaux et Snacks.
   const alcoholGreyed = isSoft || isSnack;
@@ -568,7 +569,7 @@ export function DrinkDetailPanel({ drink, onClose, onSaved, myUserId }) {
       // Snacks : « defaultVolumeCl » et « kcalPer100ml » gardent leur colonne ; la fiche les présente en grammes et en kcal/100gr.
       return {
         ...base,
-        // Cocktails / Mocktails : une sous-catégorie (Cocktails ou Mocktails) et les styles de sa liste.
+        // Cocktails / Mocktails : une sous-catégorie (Cocktails, Mocktails ou Ready-to-Drink) et les styles de sa liste.
         // Snacks : une sous-catégorie (null si « — ») mais pas de styles (les styles ne sont pas touchés).
         beverageSubtype: form.beverageSubtype || null,
         // Styles : ceux de la sous-catégorie choisie ; ceux d'une AUTRE sous-catégorie de la même catégorie, restés cochés
@@ -1417,15 +1418,31 @@ export function DrinkDetailPanel({ drink, onClose, onSaved, myUserId }) {
             {stylesSectionOpen && isCocktail && COCKTAIL_STYLE_LISTS[form.beverageSubtype] && (
               <>
                 <p style={{ fontSize: "11.5px", color: "#8792A6", marginTop: "-6px", marginBottom: "10px" }}>Plusieurs styles peuvent se cumuler.</p>
-                <GroupedListField
-                  key={form.beverageSubtype}
-                  list={COCKTAIL_STYLE_LISTS[form.beverageSubtype]}
-                  chips={cocktailStyleChips}
-                  selected={form.styles}
-                  onToggle={toggleStyle}
-                  onAdded={softStyleAdded}
-                  onDeleted={softStyleDeleted}
-                />
+                {COCKTAIL_STYLE_LISTS[form.beverageSubtype].flat ? (
+                  <FlatListField
+                    key={form.beverageSubtype}
+                    list={COCKTAIL_STYLE_LISTS[form.beverageSubtype]}
+                    variant="pills"
+                    framed
+                    chips={cocktailStyleChips}
+                    selected={form.styles}
+                    onToggle={toggleStyle}
+                    onAdded={softStyleAdded}
+                    onDeleted={softStyleDeleted}
+                    labelStyle={labelStyle}
+                    fieldStyle={fieldStyle}
+                  />
+                ) : (
+                  <GroupedListField
+                    key={form.beverageSubtype}
+                    list={COCKTAIL_STYLE_LISTS[form.beverageSubtype]}
+                    chips={cocktailStyleChips}
+                    selected={form.styles}
+                    onToggle={toggleStyle}
+                    onAdded={softStyleAdded}
+                    onDeleted={softStyleDeleted}
+                  />
+                )}
               </>
             )}
             {stylesSectionOpen && isCocktail && !COCKTAIL_STYLE_LISTS[form.beverageSubtype] && (
