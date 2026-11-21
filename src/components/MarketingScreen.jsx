@@ -404,7 +404,7 @@ export function MarketingScreen() {
             field="carousel_seconds"
             before="Chaque annonce reste affichée"
             unit="secondes"
-            hint={`Carrousel : de ${AD_CAROUSEL_MIN} à ${AD_CAROUSEL_MAX} secondes, quand plusieurs annonces sont actives sur l'accueil. L'app n'en affiche encore qu'une seule.`}
+            hint={`Carrousel : de ${AD_CAROUSEL_MIN} à ${AD_CAROUSEL_MAX} secondes, quand plusieurs annonces sont actives sur l'accueil.`}
             onSave={(patch) => changeSetting("home", patch)}
           />
           <PlacementCard
