@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { PageTitle } from "./PageTitle.jsx";
 import { OnOffSwitch } from "./OnOffSwitch.jsx";
 import {
@@ -10,7 +10,8 @@ import {
   AD_CAROUSEL_MAX,
   adStatus,
   loadAds,
-  saveAd,
+  checkAdImageFile,
+  saveAdWithImage,
   setAdFlag,
   deleteAd,
   loadAdSettings,
@@ -100,7 +101,7 @@ function BannerPreview({ url, showLabel }) {
           <img src={url} alt="" onError={() => setFailed(true)} style={{ display: "block", width: "100%", height: "100%", objectFit: "cover" }} />
         ) : (
           <div style={{ height: "100%", display: "flex", alignItems: "center", justifyContent: "center", color: MUTED, fontSize: "12px", textAlign: "center", padding: "0 12px" }}>
-            {url ? "Image introuvable à cette adresse" : "Colle l'adresse de l'image pour la voir ici"}
+            {url ? "Image introuvable à cette adresse" : "Choisis une image (ou colle son adresse) pour la voir ici"}
           </div>
         )}
         {showLabel && url && !failed && (
@@ -128,8 +129,27 @@ function AdForm({ ad, onClose, onSaved, onDeleted }) {
   const [f, setF] = useState(initial);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState(null);
+  // Image choisie sur l'ordinateur : { file, previewUrl, width, height } ; elle n'est envoyée qu'au clic sur « Enregistrer ».
+  const [pending, setPending] = useState(null);
+  const [imageError, setImageError] = useState(null);
+  const fileInput = useRef(null);
   const set = (patch) => setF((prev) => ({ ...prev, ...patch }));
-  const dirty = JSON.stringify(f) !== JSON.stringify(initial);
+  const dirty = JSON.stringify(f) !== JSON.stringify(initial) || !!pending;
+
+  useEffect(() => () => pending && URL.revokeObjectURL(pending.previewUrl), [pending]);
+
+  const chooseFile = async (e) => {
+    const file = e.target.files && e.target.files[0];
+    e.target.value = "";
+    if (!file) return;
+    const checked = await checkAdImageFile(file);
+    if (checked.error) {
+      setImageError(checked.error);
+      return;
+    }
+    setImageError(null);
+    setPending({ file, previewUrl: URL.createObjectURL(file), width: checked.width, height: checked.height });
+  };
 
   const close = () => {
     if (dirty && !confirm("Des modifications n'ont pas été enregistrées. Fermer quand même ?")) return;
@@ -142,7 +162,12 @@ function AdForm({ ad, onClose, onSaved, onDeleted }) {
     const order = f.sort_order.trim() === "" ? 0 : Number(f.sort_order);
     setSaving(true);
     setError(null);
-    const result = await saveAd(ad ? ad.id : null, { ...f, sort_order: order, starts_at: fromLocalInput(f.starts_at), ends_at: fromLocalInput(f.ends_at) });
+    const result = await saveAdWithImage(
+      ad ? ad.id : null,
+      { ...f, sort_order: order, starts_at: fromLocalInput(f.starts_at), ends_at: fromLocalInput(f.ends_at) },
+      pending ? pending.file : null,
+      ad ? ad.image_url : null
+    );
     setSaving(false);
     if (result.error) {
       setError(result.error);
@@ -154,7 +179,7 @@ function AdForm({ ad, onClose, onSaved, onDeleted }) {
   const remove = async () => {
     if (!confirm(`Supprimer définitivement "${ad.name}" ?`)) return;
     setSaving(true);
-    const result = await deleteAd(ad.id);
+    const result = await deleteAd(ad.id, ad.image_url);
     setSaving(false);
     if (result.error) {
       setError(result.error);
@@ -178,8 +203,32 @@ function AdForm({ ad, onClose, onSaved, onDeleted }) {
           <Field label="Annonceur">
             <input value={f.advertiser} onChange={(e) => set({ advertiser: e.target.value })} style={inputStyle} aria-label="Annonceur" />
           </Field>
-          <Field label="Image (adresse https) *" hint="Bannière 3:1, 1200 × 400 px conseillé, 150 Ko au plus (WebP ou JPEG). Le téléversement direct viendra avec le stockage des images : pour l'instant, colle l'adresse de l'image.">
-            <input value={f.image_url} onChange={(e) => set({ image_url: e.target.value })} placeholder="https://…" style={inputStyle} aria-label="Image" />
+          <Field label="Image *">
+            <div style={{ display: "flex", alignItems: "center", gap: "12px", flexWrap: "wrap" }}>
+              <input ref={fileInput} type="file" accept="image/webp,image/jpeg" onChange={chooseFile} style={{ display: "none" }} aria-label="Fichier image" />
+              <button type="button" onClick={() => fileInput.current && fileInput.current.click()} disabled={saving} style={ghostButton}>
+                {pending || f.image_url ? "Changer l'image" : "Choisir une image"}
+              </button>
+              {pending && (
+                <span data-image-pending style={{ fontSize: "12.5px", color: INK }}>
+                  {pending.file.name} · {pending.width} × {pending.height} px · {Math.round(pending.file.size / 1024)} Ko{" "}
+                  <button type="button" onClick={() => setPending(null)} disabled={saving} style={{ background: "none", border: "none", color: CYAN, fontWeight: 700, fontSize: "12.5px", cursor: "pointer", padding: 0 }}>
+                    Retirer
+                  </button>
+                </span>
+              )}
+            </div>
+            <p style={{ fontSize: "11.5px", color: MUTED, margin: "8px 0 0" }}>Bannière 3:1, 1200 × 400 px conseillé, 150 Ko au plus (WebP ou JPEG). L'image choisie est envoyée quand tu cliques sur « Enregistrer ».</p>
+            {imageError && <p role="alert" data-image-error style={{ fontSize: "12.5px", color: RED, margin: "8px 0 0" }}>{imageError}</p>}
+            <div style={{ fontSize: "11.5px", color: MUTED, margin: "14px 0 6px" }}>Ou colle l'adresse d'une image déjà en ligne (https) :</div>
+            <input
+              value={pending ? "" : f.image_url}
+              onChange={(e) => set({ image_url: e.target.value })}
+              disabled={!!pending}
+              placeholder={pending ? "Remplacée par l'image choisie ci-dessus" : "https://…"}
+              style={{ ...inputStyle, opacity: pending ? 0.6 : 1 }}
+              aria-label="Adresse de l'image"
+            />
           </Field>
           <Field label="Lien de l'annonceur (adresse https) *" hint="Ouvert dans un nouvel onglet quand on touche la bannière.">
             <input value={f.link_url} onChange={(e) => set({ link_url: e.target.value })} placeholder="https://…" style={inputStyle} aria-label="Lien" />
@@ -246,7 +295,7 @@ function AdForm({ ad, onClose, onSaved, onDeleted }) {
         </div>
 
         <div style={{ flex: "1 1 390px", minWidth: 0 }}>
-          <BannerPreview url={f.image_url.trim()} showLabel={f.show_label} />
+          <BannerPreview url={pending ? pending.previewUrl : f.image_url.trim()} showLabel={f.show_label} />
         </div>
       </div>
     </div>
