@@ -237,3 +237,31 @@ export async function saveAdSetting(placement, patch) {
   }
   return { setting: data };
 }
+
+/* ---------------- COMPTAGE (affichages et clics) ----------------
+   Compteurs ANONYMES par annonce, emplacement et jour (table `ad_stats_daily`, alimentée par la fonction `track_ad_event` appelée par l'app publique ;
+   voir docs/DATABASE.md de bibamus-web, « Annonces »). Ici : les TOTAUX depuis le début, par annonce, par la fonction `get_ad_stats_totals`
+   (lecture réservée aux rôles admin et super_admin). Un affichage = bannière vue pour moitié au moins pendant 1 seconde, compté une fois par annonce,
+   par emplacement et par ouverture de l'app ; un clic = chaque appui : le taux de clic (clics ÷ affichages) est donc indicatif. */
+
+// { stats: { [id d'annonce]: { impressions, clicks } } } ou { error }. Une annonce sans compteur n'a pas d'entrée (= 0 et 0).
+export async function loadAdStatsTotals() {
+  const { data, error } = await supabase.rpc("get_ad_stats_totals");
+  if (error || !Array.isArray(data)) {
+    console.error("loadAdStatsTotals:", error || "réponse inattendue");
+    return { error: error ? error.message : "réponse inattendue" };
+  }
+  const stats = {};
+  data.forEach((row) => {
+    if (row && row.ad_id) stats[row.ad_id] = { impressions: Number(row.impressions) || 0, clicks: Number(row.clicks) || 0 };
+  });
+  return { stats };
+}
+
+const countFormat = new Intl.NumberFormat("fr-BE");
+const rateFormat = new Intl.NumberFormat("fr-BE", { minimumFractionDigits: 1, maximumFractionDigits: 1 });
+
+export const formatCount = (n) => countFormat.format(n);
+// Taux de clic en pourcentage, « — » quand l'annonce n'a aucun affichage.
+export const formatRate = (impressions, clicks) => (impressions > 0 ? `${rateFormat.format((clicks / impressions) * 100)} %` : "—");
+
