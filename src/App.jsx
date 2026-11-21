@@ -8,6 +8,7 @@ import { VenuesScreen } from "./components/VenuesScreen.jsx";
 import { DrinksScreen } from "./components/DrinksScreen.jsx";
 import { BreweriesScreen, BrandsScreen } from "./components/BreweriesAndBrandsScreens.jsx";
 import { ComingSoon } from "./components/ComingSoon.jsx";
+import { MarketingScreen } from "./components/MarketingScreen.jsx";
 import { DataBaseOverviewScreen } from "./components/DataBaseOverviewScreen.jsx";
 import { CollaboratorsScreen } from "./components/CollaboratorsScreen.jsx";
 import { UsersScreen } from "./components/UsersScreen.jsx";
@@ -166,6 +167,7 @@ export default function App() {
       {screen === "chatBusiness" && <ChatBusinessScreen myUserId={myUserId} myRole={myRole} />}
       {screen === "stats" && <AnalyticsScreen onNavigate={setScreen} />}
       {screen === "finances" && <ComingSoon title="Finances" />}
+      {screen === "marketing" && <MarketingScreen />}
       {screen === "claims" && (
         <ClaimsScreen
           onOpenEntity={(entityType, id) => {
