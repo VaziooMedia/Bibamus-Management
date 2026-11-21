@@ -29,6 +29,8 @@ const BUSINESS_ITEMS = [
   { key: "businessAccounts", label: "Comptes Business" },
   { key: "claims", label: "Revendications" },
   { key: "finances", label: "Finances" },
+  // Annonces (bannières de l'app) : table `ads` côté base ; le tableau de gestion se construit dans cette sous-catégorie.
+  { key: "marketing", label: "Marketing" },
 ];
 
 const ANALYTICS_ITEMS = [{ key: "stats", label: "Analytics" }];

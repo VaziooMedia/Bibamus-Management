@@ -166,6 +166,7 @@ export default function App() {
       {screen === "chatBusiness" && <ChatBusinessScreen myUserId={myUserId} myRole={myRole} />}
       {screen === "stats" && <AnalyticsScreen onNavigate={setScreen} />}
       {screen === "finances" && <ComingSoon title="Finances" />}
+      {screen === "marketing" && <ComingSoon title="Marketing" />}
       {screen === "claims" && (
         <ClaimsScreen
           onOpenEntity={(entityType, id) => {
