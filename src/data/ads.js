@@ -17,15 +17,18 @@ export const AD_STATUSES = {
   scheduled: { label: "Programmée", color: "#00C8FF" },
   expired: { label: "Terminée", color: "#FF3B4E" },
   noplacement: { label: "Sans emplacement", color: "#FFB020" },
+  paused: { label: "Emplacement coupé", color: "#FFB020" },
   inactive: { label: "Inactive", color: "#8792A6" },
 };
 
-// Statut calculé : ce que verront les utilisateurs maintenant, d'après l'interrupteur « Actif », les emplacements et les dates.
-export function adStatus(ad, now = new Date()) {
+// Statut calculé : ce que verront les utilisateurs maintenant, d'après l'interrupteur « Actif », les emplacements, les interrupteurs généraux des
+// emplacements (`settings`, voir loadAdSettings ; absent = on ne tient pas compte des interrupteurs) et les dates.
+export function adStatus(ad, settings = null, now = new Date()) {
   if (!ad.active) return "inactive";
   if (!Array.isArray(ad.placements) || ad.placements.length === 0) return "noplacement";
   if (ad.starts_at && new Date(ad.starts_at) > now) return "scheduled";
   if (ad.ends_at && new Date(ad.ends_at) <= now) return "expired";
+  if (settings && ad.placements.every((p) => settings[p] && settings[p].enabled === false)) return "paused";
   return "live";
 }
 
@@ -103,4 +106,40 @@ export async function deleteAd(id) {
     return { error: error.message };
   }
   return { ok: true };
+}
+
+/* ---------------- RÉGLAGES PAR EMPLACEMENT (table ad_settings) ----------------
+   Une ligne par emplacement (`home`, `pulse`) : `enabled` = interrupteur général de l'emplacement, `every_n` = une annonce toutes les N publications
+   (Pulse), `carousel_seconds` = durée d'affichage de chaque annonce du carrousel (accueil). Même accès que `ads` : admin et super_admin. */
+
+export const AD_EVERY_N_MIN = 3;
+export const AD_CAROUSEL_MIN = 2;
+export const AD_CAROUSEL_MAX = 60;
+
+// { settings: { home: {...}, pulse: {...} } } ou { error }.
+export async function loadAdSettings() {
+  const { data, error } = await supabase.from("ad_settings").select("*");
+  if (error) {
+    console.error("loadAdSettings:", error);
+    return { error: error.message };
+  }
+  const settings = {};
+  (data || []).forEach((row) => {
+    settings[row.placement] = row;
+  });
+  return { settings };
+}
+
+// Modifie un ou plusieurs réglages d'un emplacement : { setting } ou { error }. Contrôles faits ici (la base refait les mêmes).
+export async function saveAdSetting(placement, patch) {
+  if ("every_n" in patch && !(Number.isInteger(patch.every_n) && patch.every_n >= AD_EVERY_N_MIN)) return { error: `La fréquence doit être un nombre entier d'au moins ${AD_EVERY_N_MIN} publications.` };
+  if ("carousel_seconds" in patch && !(Number.isInteger(patch.carousel_seconds) && patch.carousel_seconds >= AD_CAROUSEL_MIN && patch.carousel_seconds <= AD_CAROUSEL_MAX)) {
+    return { error: `La durée doit être un nombre entier de secondes, de ${AD_CAROUSEL_MIN} à ${AD_CAROUSEL_MAX}.` };
+  }
+  const { data, error } = await supabase.from("ad_settings").update({ ...patch, updated_at: new Date().toISOString() }).eq("placement", placement).select().single();
+  if (error) {
+    console.error("saveAdSetting:", error);
+    return { error: error.message };
+  }
+  return { setting: data };
 }

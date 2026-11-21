@@ -1,7 +1,21 @@
 import React, { useState, useEffect } from "react";
 import { PageTitle } from "./PageTitle.jsx";
 import { OnOffSwitch } from "./OnOffSwitch.jsx";
-import { AD_PLACEMENTS, AD_PLACEMENT_LABEL, AD_STATUSES, adStatus, loadAds, saveAd, setAdFlag, deleteAd } from "../data/ads.js";
+import {
+  AD_PLACEMENTS,
+  AD_PLACEMENT_LABEL,
+  AD_STATUSES,
+  AD_EVERY_N_MIN,
+  AD_CAROUSEL_MIN,
+  AD_CAROUSEL_MAX,
+  adStatus,
+  loadAds,
+  saveAd,
+  setAdFlag,
+  deleteAd,
+  loadAdSettings,
+  saveAdSetting,
+} from "../data/ads.js";
 
 // Business → Marketing : tableau de gestion des annonces (bannières 3:1 affichées dans l'app, sur l'accueil et dans le fil BibaPulse).
 // Les annonces sont dans la table `ads` (voir bibamus-web/docs/DATABASE.md, « Annonces »).
@@ -239,6 +253,61 @@ function AdForm({ ad, onClose, onSaved, onDeleted }) {
   );
 }
 
+// Une carte de réglages par emplacement : interrupteur général + un réglage chiffré (durée du carrousel pour l'accueil, fréquence pour BibaPulse).
+// Les interrupteurs s'enregistrent aussitôt ; le nombre s'enregistre avec le bouton « Enregistrer » (qui n'apparaît que si la valeur a changé).
+function PlacementCard({ title, setting, field, before, unit, hint, onSave }) {
+  const [draft, setDraft] = useState(String(setting[field]));
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState(null);
+  useEffect(() => setDraft(String(setting[field])), [setting, field]);
+  const dirty = draft.trim() !== String(setting[field]);
+
+  const save = async (patch) => {
+    setBusy(true);
+    setError(null);
+    const result = await onSave(patch);
+    setBusy(false);
+    if (result && result.error) setError(result.error);
+  };
+  const saveNumber = () => {
+    const trimmed = draft.trim();
+    if (!/^\d+$/.test(trimmed)) {
+      setError("Entre un nombre entier.");
+      return;
+    }
+    save({ [field]: Number(trimmed) });
+  };
+
+  return (
+    <div data-setting-card={setting.placement} style={{ background: CARD, borderRadius: "12px", padding: "16px 18px", opacity: busy ? 0.7 : 1 }}>
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: "12px", marginBottom: "14px" }}>
+        <div style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "15px", color: INK }}>{title}</div>
+        <OnOffSwitch on={!!setting.enabled} onChange={(v) => save({ enabled: v })} label={`Annonces ${title}`} />
+      </div>
+      {!setting.enabled && <p style={{ fontSize: "12px", color: "#FFB020", margin: "-4px 0 12px" }}>Emplacement coupé : aucune annonce ne s'affiche ici.</p>}
+      <div style={{ display: "flex", alignItems: "center", gap: "8px", flexWrap: "wrap", fontSize: "13px", color: INK }}>
+        <span>{before}</span>
+        <input
+          value={draft}
+          onChange={(e) => setDraft(e.target.value)}
+          onKeyDown={(e) => e.key === "Enter" && dirty && saveNumber()}
+          inputMode="numeric"
+          aria-label={`${title} : ${before} ${unit}`}
+          style={{ ...inputStyle, width: "64px", padding: "6px 8px", textAlign: "center" }}
+        />
+        <span>{unit}</span>
+        {dirty && (
+          <button onClick={saveNumber} disabled={busy} style={{ ...primaryButton, padding: "7px 12px", fontSize: "12px" }}>
+            Enregistrer
+          </button>
+        )}
+      </div>
+      <p style={{ fontSize: "11.5px", color: MUTED, margin: "10px 0 0" }}>{hint}</p>
+      {error && <p role="alert" style={{ fontSize: "12px", color: RED, margin: "8px 0 0" }}>{error}</p>}
+    </div>
+  );
+}
+
 function HeaderCell({ children, title }) {
   return (
     <div title={title} style={{ fontSize: "10.5px", fontWeight: 700, color: MUTED, textTransform: "uppercase", letterSpacing: "0.4px", lineHeight: 1.25 }}>
@@ -253,6 +322,22 @@ export function MarketingScreen() {
   const [actionError, setActionError] = useState(null);
   const [editing, setEditing] = useState(null); // null | "new" | une annonce
   const [busyId, setBusyId] = useState(null);
+  const [settings, setSettings] = useState(null); // { home: {...}, pulse: {...} } | null
+  const [settingsError, setSettingsError] = useState(null);
+
+  const refreshSettings = () =>
+    loadAdSettings().then((r) => {
+      if (r.error) setSettingsError(r.error);
+      else {
+        setSettingsError(null);
+        setSettings(r.settings);
+      }
+    });
+  const changeSetting = async (placement, patch) => {
+    const result = await saveAdSetting(placement, patch);
+    if (!result.error) setSettings((prev) => ({ ...prev, [placement]: result.setting }));
+    return result;
+  };
 
   const refresh = () =>
     loadAds().then((r) => {
@@ -264,6 +349,7 @@ export function MarketingScreen() {
     });
   useEffect(() => {
     refresh();
+    refreshSettings();
   }, []);
 
   const flip = async (ad, patch) => {
@@ -304,6 +390,34 @@ export function MarketingScreen() {
         <br />
         Bannière 3:1 (1200 × 400 px conseillé), de bord à bord, cliquable.
       </p>
+
+      <h2 style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "17px", margin: "0 0 12px", color: INK }}>Réglages</h2>
+      {settingsError ? (
+        <p role="alert" style={{ color: RED, fontSize: "13px", margin: "0 0 26px" }}>Impossible de charger les réglages : {settingsError}</p>
+      ) : !settings || !settings.home || !settings.pulse ? (
+        <p style={{ color: MUTED, margin: "0 0 26px" }}>{settings ? "Réglages introuvables (table ad_settings incomplète)." : "Chargement..."}</p>
+      ) : (
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(340px, 1fr))", gap: "16px", maxWidth: "1100px", marginBottom: "28px" }}>
+          <PlacementCard
+            title="Accueil"
+            setting={settings.home}
+            field="carousel_seconds"
+            before="Chaque annonce reste affichée"
+            unit="secondes"
+            hint={`Carrousel : de ${AD_CAROUSEL_MIN} à ${AD_CAROUSEL_MAX} secondes, quand plusieurs annonces sont actives sur l'accueil. L'app n'en affiche encore qu'une seule.`}
+            onSave={(patch) => changeSetting("home", patch)}
+          />
+          <PlacementCard
+            title="BibaPulse"
+            setting={settings.pulse}
+            field="every_n"
+            before="Une annonce toutes les"
+            unit="publications"
+            hint={`Au moins ${AD_EVERY_N_MIN}. Les annonces actives tournent d'une bannière à l'autre le long du fil.`}
+            onSave={(patch) => changeSetting("pulse", patch)}
+          />
+        </div>
+      )}
 
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "12px", maxWidth: "1100px" }}>
         <h2 style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "17px", margin: 0, color: INK }}>
@@ -369,7 +483,7 @@ export function MarketingScreen() {
                 <div onClick={(e) => e.stopPropagation()}>
                   <OnOffSwitch on={!!ad.active} onChange={(v) => flip(ad, { active: v })} label={`Actif : ${ad.name}`} />
                 </div>
-                <StatusPill status={adStatus(ad)} />
+                <StatusPill status={adStatus(ad, settings)} />
                 <span aria-hidden="true" style={{ color: CYAN, fontSize: "16px", fontWeight: 700, textAlign: "right" }}>›</span>
               </div>
             ))}
