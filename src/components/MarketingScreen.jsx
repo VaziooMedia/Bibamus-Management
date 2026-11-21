@@ -16,6 +16,9 @@ import {
   deleteAd,
   loadAdSettings,
   saveAdSetting,
+  loadAdStatsTotals,
+  formatCount,
+  formatRate,
 } from "../data/ads.js";
 
 // Business → Marketing : tableau de gestion des annonces (bannières 3:1 affichées dans l'app, sur l'accueil et dans le fil BibaPulse).
@@ -30,7 +33,8 @@ const RED = "#FF3B4E";
 const CYAN = "#00C8FF";
 const BG = "#0D1B2A";
 
-const COLUMNS = "108px minmax(150px, 1fr) 100px 130px 44px 84px 84px 112px 16px";
+// Aperçu | Annonce | Emplacements | Période | Ordre | Mention | Actif | Statut | Affichages | Clics | Taux de clic | ›
+const COLUMNS = "108px minmax(130px, 1fr) 96px 98px 40px 78px 78px 104px 76px 46px 54px 14px";
 
 const inputStyle = { width: "100%", boxSizing: "border-box", padding: "9px 10px", borderRadius: "8px", border: `2px solid ${BORDER}`, background: BG, color: INK, fontSize: "13px" };
 const primaryButton = { background: GREEN, border: "none", borderRadius: "8px", padding: "10px 18px", fontWeight: 700, fontSize: "13px", color: BG, cursor: "pointer" };
@@ -357,9 +361,11 @@ function PlacementCard({ title, setting, field, before, unit, hint, onSave }) {
   );
 }
 
-function HeaderCell({ children, title }) {
+const statCell = { fontSize: "13px", color: INK, textAlign: "right", fontVariantNumeric: "tabular-nums", whiteSpace: "nowrap" };
+
+function HeaderCell({ children, title, align }) {
   return (
-    <div title={title} style={{ fontSize: "10.5px", fontWeight: 700, color: MUTED, textTransform: "uppercase", letterSpacing: "0.4px", lineHeight: 1.25 }}>
+    <div title={title} style={{ fontSize: "10.5px", fontWeight: 700, color: MUTED, textTransform: "uppercase", letterSpacing: "0.4px", lineHeight: 1.25, textAlign: align }}>
       {children}
     </div>
   );
@@ -373,6 +379,19 @@ export function MarketingScreen() {
   const [busyId, setBusyId] = useState(null);
   const [settings, setSettings] = useState(null); // { home: {...}, pulse: {...} } | null
   const [settingsError, setSettingsError] = useState(null);
+  const [stats, setStats] = useState(null); // { [id d'annonce]: { impressions, clicks } } | null (pas encore lu, ou illisible)
+  const [statsError, setStatsError] = useState(null);
+
+  const refreshStats = () =>
+    loadAdStatsTotals().then((r) => {
+      if (r.error) {
+        setStats(null);
+        setStatsError(r.error);
+      } else {
+        setStatsError(null);
+        setStats(r.stats);
+      }
+    });
 
   const refreshSettings = () =>
     loadAdSettings().then((r) => {
@@ -399,6 +418,7 @@ export function MarketingScreen() {
   useEffect(() => {
     refresh();
     refreshSettings();
+    refreshStats();
   }, []);
 
   const flip = async (ad, patch) => {
@@ -468,7 +488,7 @@ export function MarketingScreen() {
         </div>
       )}
 
-      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "12px", maxWidth: "1100px" }}>
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "12px", maxWidth: "1320px" }}>
         <h2 style={{ fontFamily: "'Urbanist', sans-serif", fontWeight: 800, fontSize: "17px", margin: 0, color: INK }}>
           Annonces{ads ? <span style={{ color: MUTED, fontWeight: 600, fontSize: "14px" }}> · {ads.length}</span> : null}
         </h2>
@@ -478,6 +498,7 @@ export function MarketingScreen() {
       </div>
 
       {actionError && <p role="alert" style={{ fontSize: "12.5px", color: RED, margin: "0 0 10px" }}>{actionError}</p>}
+      {statsError && <p role="alert" data-stats-error style={{ fontSize: "12px", color: RED, margin: "0 0 10px" }}>Les chiffres (affichages, clics) ne sont pas disponibles : {statsError}</p>}
 
       {loadError ? (
         <p role="alert" style={{ color: RED, fontSize: "13px" }}>Impossible de charger les annonces : {loadError}</p>
@@ -488,9 +509,9 @@ export function MarketingScreen() {
           Aucune annonce pour le moment. Clique sur « Nouvelle annonce » pour créer la première.
         </div>
       ) : (
-        <div style={{ overflowX: "auto", maxWidth: "1100px" }}>
-          <div style={{ minWidth: "880px" }}>
-            <div style={{ display: "grid", gridTemplateColumns: COLUMNS, gap: "10px", padding: "0 12px 8px", alignItems: "end" }}>
+        <div style={{ overflowX: "auto", maxWidth: "1320px" }}>
+          <div style={{ minWidth: "1034px" }}>
+            <div style={{ display: "grid", gridTemplateColumns: COLUMNS, gap: "8px", padding: "0 12px 8px", alignItems: "end" }}>
               <HeaderCell>Aperçu</HeaderCell>
               <HeaderCell>Annonce</HeaderCell>
               <HeaderCell>Emplacements</HeaderCell>
@@ -499,6 +520,9 @@ export function MarketingScreen() {
               <HeaderCell title="Mention « Annonce » affichée sur la bannière">Mention « Annonce »</HeaderCell>
               <HeaderCell>Actif</HeaderCell>
               <HeaderCell>Statut</HeaderCell>
+              <HeaderCell align="right" title="Nombre d'affichages depuis le début : bannière vue pour moitié au moins pendant 1 seconde, comptée une fois par personne et par ouverture de l'app">Affichages</HeaderCell>
+              <HeaderCell align="right" title="Nombre de clics sur la bannière depuis le début">Clics</HeaderCell>
+              <HeaderCell align="right" title="Clics ÷ affichages (indicatif)">Taux de clic</HeaderCell>
               <HeaderCell>{""}</HeaderCell>
             </div>
             {ads.map((ad) => (
@@ -506,7 +530,7 @@ export function MarketingScreen() {
                 key={ad.id}
                 data-ad-row={ad.id}
                 onClick={() => setEditing(ad)}
-                style={{ display: "grid", gridTemplateColumns: COLUMNS, gap: "10px", alignItems: "center", background: CARD, borderRadius: "10px", padding: "10px 12px", marginBottom: "6px", cursor: "pointer", opacity: busyId === ad.id ? 0.6 : 1 }}
+                style={{ display: "grid", gridTemplateColumns: COLUMNS, gap: "8px", alignItems: "center", background: CARD, borderRadius: "10px", padding: "10px 12px", marginBottom: "6px", cursor: "pointer", opacity: busyId === ad.id ? 0.6 : 1 }}
               >
                 <Thumb url={ad.image_url} />
                 <div style={{ minWidth: 0 }}>
@@ -533,6 +557,9 @@ export function MarketingScreen() {
                   <OnOffSwitch on={!!ad.active} onChange={(v) => flip(ad, { active: v })} label={`Actif : ${ad.name}`} />
                 </div>
                 <StatusPill status={adStatus(ad, settings)} />
+                <div data-ad-impressions style={statCell}>{stats ? formatCount((stats[ad.id] || {}).impressions || 0) : "—"}</div>
+                <div data-ad-clicks style={statCell}>{stats ? formatCount((stats[ad.id] || {}).clicks || 0) : "—"}</div>
+                <div data-ad-rate style={statCell}>{stats ? formatRate((stats[ad.id] || {}).impressions || 0, (stats[ad.id] || {}).clicks || 0) : "—"}</div>
                 <span aria-hidden="true" style={{ color: CYAN, fontSize: "16px", fontWeight: 700, textAlign: "right" }}>›</span>
               </div>
             ))}
