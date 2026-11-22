@@ -3,7 +3,8 @@ import { supabase } from "../supabaseClient.js";
 /* ---------------- BOUTONS DE L'ACCUEIL (BibaClub, BibaCal, BibaPlay, BibaMeet, BibaCare, BibaFlash) ----------------
    Table `home_tiles` (voir docs/DATABASE.md de bibamus-web, « Boutons de l'accueil ») : une ligne par bouton. Lecture : tout compte connecté
    (l'app l'utilise pour dessiner l'accueil) ; modification : rôles admin et super_admin seulement (règle `home_tiles_admin_update`).
-   L'état est le même pour tous les pays. */
+   Chaque ligne règle l'état du bouton (`status`), sa place dans la grille de l'accueil (`sort_order`, 1 = en haut à gauche) et son sous-titre
+   (`subtitle`, vide = celui d'origine). Tout est identique pour tous les pays. */
 
 // Le champ `hasScreen` dit si l'app a déjà un écran vers lequel ce bouton mène : sans écran, le bouton ne peut pas être « Actif » (l'app le laisserait
 // grisé de toute façon). Le champ `fallback` est l'état que l'app affiche tant que la table ne dit rien de ce bouton (même valeur que HOME_TILE_DEFAULTS
@@ -49,4 +50,63 @@ export async function saveHomeTile(tileKey, status) {
     return { error: error.message };
   }
   return { tile: data };
+}
+
+// Nombre de caractères permis dans un sous-titre (au-delà, la tuile de l'app prendrait trop de lignes) ; même limite dans la base et dans l'app.
+export const HOME_TILE_SUBTITLE_MAX = 50;
+
+// Ordre des six boutons selon `sort_order` (entier positif) ; à égalité, ou sans valeur, l'ordre d'origine de HOME_TILES. Même règle que l'app.
+export function orderedTileKeys(tiles) {
+  const defaults = HOME_TILES.map((t) => t.key);
+  const rank = (k) => {
+    const v = tiles && tiles[k] && tiles[k].sort_order;
+    return Number.isInteger(v) && v > 0 ? v : defaults.indexOf(k) + 1;
+  };
+  return [...defaults].sort((a, b) => rank(a) - rank(b) || defaults.indexOf(a) - defaults.indexOf(b));
+}
+
+// Sous-titre affiché dans l'app pour un bouton : celui de la ligne s'il y en a un, sinon celui d'origine.
+export function tileSubtitle(tiles, tileKey) {
+  const meta = HOME_TILES.find((t) => t.key === tileKey);
+  const custom = tiles && tiles[tileKey] && typeof tiles[tileKey].subtitle === "string" ? tiles[tileKey].subtitle.trim() : "";
+  return custom || (meta ? meta.subtitle : "");
+}
+
+// Change le sous-titre d'un bouton : { tile } ou { error }. Un texte vide, ou identique à celui d'origine, remet le sous-titre d'origine (colonne vidée).
+export async function saveHomeTileSubtitle(tileKey, subtitle) {
+  const meta = HOME_TILES.find((t) => t.key === tileKey);
+  if (!meta) return { error: "Bouton inconnu." };
+  let text = typeof subtitle === "string" ? subtitle.trim() : "";
+  if (text === meta.subtitle) text = "";
+  if (text.length > HOME_TILE_SUBTITLE_MAX) return { error: `Le sous-titre fait ${HOME_TILE_SUBTITLE_MAX} caractères au plus.` };
+  const { data, error } = await supabase.from("home_tiles").update({ subtitle: text || null, updated_at: new Date().toISOString() }).eq("tile_key", tileKey).select().single();
+  if (error) {
+    console.error("saveHomeTileSubtitle:", error);
+    if (error.code === "PGRST116") return { error: "modification refusée (droits insuffisants ou bouton introuvable)." };
+    return { error: error.message };
+  }
+  return { tile: data };
+}
+
+// Monte (direction -1) ou descend (+1) un bouton d'une place : échange avec son voisin. Renvoie { tiles: [lignes modifiées] } ou { error, partial }
+// (`partial` vrai si une des deux écritures est passée : l'appelant relit alors la table pour afficher l'état réel).
+export async function moveHomeTile(tiles, tileKey, direction) {
+  const keys = orderedTileKeys(tiles);
+  const i = keys.indexOf(tileKey);
+  const j = i + direction;
+  if (i < 0 || j < 0 || j >= keys.length) return { error: "Déplacement impossible." };
+  [keys[i], keys[j]] = [keys[j], keys[i]];
+  // Seules les lignes dont la place change sont écrites (normalement deux) ; les places sont renumérotées de 1 à 6.
+  const changed = keys.map((k, index) => ({ k, order: index + 1 })).filter(({ k, order }) => !tiles[k] || tiles[k].sort_order !== order);
+  const now = new Date().toISOString();
+  const results = await Promise.all(
+    changed.map(({ k, order }) => supabase.from("home_tiles").update({ sort_order: order, updated_at: now }).eq("tile_key", k).select().single())
+  );
+  const failed = results.find((r) => r.error);
+  if (failed) {
+    console.error("moveHomeTile:", failed.error);
+    const message = failed.error.code === "PGRST116" ? "modification refusée (droits insuffisants ou bouton introuvable)." : failed.error.message;
+    return { error: message, partial: results.some((r) => !r.error) };
+  }
+  return { tiles: results.map((r) => r.data) };
 }
