@@ -134,12 +134,8 @@ export function HomeTilesScreen() {
   return (
     <div>
       <PageTitle>Affichage</PageTitle>
-      <p style={{ fontSize: "12.5px", color: MUTED, margin: "8px 0 22px" }}>
-        Les six boutons de l'accueil de l'app, pour tous les pays : <strong style={{ color: INK }}>Actif</strong> (cliquable), <strong style={{ color: INK }}>Grisé</strong> (assombri, badge « Soon », non cliquable) ou <strong style={{ color: INK }}>Masqué</strong> (n'apparaît pas).
-        <br />
-        Un changement est enregistré tout de suite ; l'app le prend en compte à la prochaine ouverture de l'accueil.
-      </p>
 
+      <div style={{ marginTop: "22px" }}>
       {loadError ? (
         <p role="alert" style={{ color: RED, fontSize: "13px" }}>Impossible de charger les boutons : {loadError}</p>
       ) : !tiles ? (
@@ -160,10 +156,7 @@ export function HomeTilesScreen() {
                 <div key={t.key} data-tile-row={t.key} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: "14px", flexWrap: "wrap", background: CARD, border: `2px solid ${BORDER}`, borderRadius: "12px", padding: "12px 16px" }}>
                   <div style={{ minWidth: 0 }}>
                     <TileName name={t.name} />
-                    <div style={{ fontSize: "12.5px", color: MUTED, marginTop: "2px" }}>
-                      {t.subtitle}
-                      {!t.hasScreen && <span> — pas encore d'écran dans l'app (reste grisé ou masqué)</span>}
-                    </div>
+                    <div style={{ fontSize: "12.5px", color: MUTED, marginTop: "2px" }}>{t.subtitle}</div>
                     {savedKey === t.key && <div role="status" style={{ fontSize: "12px", color: GREEN, marginTop: "4px", fontWeight: 700 }}>Enregistré</div>}
                   </div>
                   <StatusChoice tile={t} current={statusOf(tiles, t.key)} busy={busyKey === t.key} onPick={(status) => pick(t, status)} />
@@ -174,6 +167,7 @@ export function HomeTilesScreen() {
           <PhonePreview tiles={tiles} />
         </div>
       )}
+      </div>
     </div>
   );
 }
