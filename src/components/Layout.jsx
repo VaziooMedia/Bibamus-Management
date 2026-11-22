@@ -39,6 +39,8 @@ const SYSTEM_ITEMS = [
   { key: "audit", label: "Audit" },
   { key: "countryRules", label: "Âge minimum / Pays" },
   { key: "featureFlags", label: "Feature flags" },
+  // Affichage de l'app : boutons de l'accueil (BibaClub, BibaCal, BibaPlay, BibaMeet, BibaCare, BibaFlash) en Actif / Grisé / Masqué, table `home_tiles`.
+  { key: "homeTiles", label: "Affichage" },
   { key: "crashReports", label: "Crash reports" },
   { key: "integrations", label: "Intégrations externes" },
   { key: "admins", label: "Administrateurs" },
