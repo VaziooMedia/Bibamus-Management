@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { PageTitle } from "./PageTitle.jsx";
 import { HOME_TILES, HOME_TILE_STATUSES, loadHomeTiles, saveHomeTile } from "../data/homeTiles.js";
 
-// Business → Home : état des six boutons de l'accueil de l'app (BibaClub, BibaCal, BibaPlay, BibaMeet, BibaCare, BibaFlash).
+// Système → Affichage : état des six boutons de l'accueil de l'app (BibaClub, BibaCal, BibaPlay, BibaMeet, BibaCare, BibaFlash).
 // Chaque bouton est Actif, Grisé (badge « Soon », non cliquable) ou Masqué, pour tous les pays à la fois. Les états sont dans la table `home_tiles`
 // (voir bibamus-web/docs/DATABASE.md, « Boutons de l'accueil »). Un changement est enregistré tout de suite ; l'app le voit à sa prochaine ouverture de l'accueil.
 
@@ -133,7 +133,7 @@ export function HomeTilesScreen() {
 
   return (
     <div>
-      <PageTitle>Home</PageTitle>
+      <PageTitle>Affichage</PageTitle>
       <p style={{ fontSize: "12.5px", color: MUTED, margin: "8px 0 22px" }}>
         Les six boutons de l'accueil de l'app, pour tous les pays : <strong style={{ color: INK }}>Actif</strong> (cliquable), <strong style={{ color: INK }}>Grisé</strong> (assombri, badge « Soon », non cliquable) ou <strong style={{ color: INK }}>Masqué</strong> (n'apparaît pas).
         <br />
