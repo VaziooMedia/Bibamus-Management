@@ -31,6 +31,8 @@ const BUSINESS_ITEMS = [
   { key: "finances", label: "Finances" },
   // Annonces (bannières de l'app) : table `ads` côté base ; le tableau de gestion se construit dans cette sous-catégorie.
   { key: "marketing", label: "Marketing" },
+  // Boutons de l'accueil de l'app (BibaClub, BibaCal, BibaPlay, BibaMeet, BibaCare, BibaFlash) : Actif / Grisé / Masqué, table `home_tiles`.
+  { key: "homeTiles", label: "Home" },
 ];
 
 const ANALYTICS_ITEMS = [{ key: "stats", label: "Analytics" }];
