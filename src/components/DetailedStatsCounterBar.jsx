@@ -148,7 +148,9 @@ export function applyStatFilter(items, filterKey, getCountry = (item) => item.co
 //   comptages arrivent déjà calculés côté serveur, sous la forme
 //   { total, newContributions, suggestedEdits, byStatus: {draft, to_process, ...},
 //   byCertification: {utilisateur, bibamus, producteur} }.
-export function DetailedStatsCounterBar({ items, counts, activeFilter, onFilterChange, getCountry = (item) => item.country }) {
+// showContributions / showCertification (vrai par défaut) : un répertoire qui n'a pas encore de contributions venues de l'app, ni de niveau de certification
+// (les Shops) masque ces blocs, qui afficheraient toujours 0.
+export function DetailedStatsCounterBar({ items, counts, activeFilter, onFilterChange, getCountry = (item) => item.country, showContributions = true, showCertification = true }) {
   const [expandedRow1, setExpandedRow1] = useState(true);
   const [expandedRow2, setExpandedRow2] = useState(true);
   const [expandedRow3, setExpandedRow3] = useState(true);
@@ -170,20 +172,24 @@ export function DetailedStatsCounterBar({ items, counts, activeFilter, onFilterC
       {expandedRow1 && (
         <div style={rowStyle}>
           <Stat label="Total" value={total} active={!activeFilter || activeFilter === "total"} onClick={() => onFilterChange("total")} />
-          <Stat
-            label="Nouvelles contributions"
-            value={newContributions}
-            border={newContributions > 0 ? "#ef007c" : undefined}
-            active={activeFilter === "newContributions"}
-            onClick={() => handleClick("newContributions")}
-          />
-          <Stat
-            label="Modifications suggérées"
-            value={suggestedEdits}
-            border={suggestedEdits > 0 ? "#ef007c" : undefined}
-            active={activeFilter === "suggestedEdits"}
-            onClick={() => handleClick("suggestedEdits")}
-          />
+          {showContributions && (
+            <>
+              <Stat
+                label="Nouvelles contributions"
+                value={newContributions}
+                border={newContributions > 0 ? "#ef007c" : undefined}
+                active={activeFilter === "newContributions"}
+                onClick={() => handleClick("newContributions")}
+              />
+              <Stat
+                label="Modifications suggérées"
+                value={suggestedEdits}
+                border={suggestedEdits > 0 ? "#ef007c" : undefined}
+                active={activeFilter === "suggestedEdits"}
+                onClick={() => handleClick("suggestedEdits")}
+              />
+            </>
+          )}
         </div>
       )}
 
@@ -205,37 +211,40 @@ export function DetailedStatsCounterBar({ items, counts, activeFilter, onFilterC
         </div>
       )}
 
-      <div style={separatorStyle} />
-      <RowHeader title="Niveau de certification" expanded={expandedRow3} onToggle={() => setExpandedRow3((e) => !e)} />
-      {expandedRow3 && (
-        <div style={rowStyle}>
-          <Stat
-            label="Utilisateurs"
-            value={certCount("utilisateur")}
-            color={CERTIFICATION_LEVELS[0].color}
-            indicator={<CertificationIcon level="utilisateur" size={16} />}
-            active={activeFilter === "cert:utilisateur"}
-            onClick={() => handleClick("cert:utilisateur")}
-          />
-          <Stat
-            label="Bibamus"
-            value={certCount("bibamus")}
-            color={CERTIFICATION_LEVELS[1].color}
-            indicator={<CertificationIcon level="bibamus" size={16} />}
-            active={activeFilter === "cert:bibamus"}
-            onClick={() => handleClick("cert:bibamus")}
-          />
-          <Stat
-            label="Producteur"
-            value={certCount("producteur")}
-            color={CERTIFICATION_LEVELS[2].color}
-            indicator={<CertificationIcon level="producteur" size={16} />}
-            active={activeFilter === "cert:producteur"}
-            onClick={() => handleClick("cert:producteur")}
-          />
-        </div>
+      {showCertification && (
+        <>
+          <div style={separatorStyle} />
+          <RowHeader title="Niveau de certification" expanded={expandedRow3} onToggle={() => setExpandedRow3((e) => !e)} />
+          {expandedRow3 && (
+            <div style={rowStyle}>
+              <Stat
+                label="Utilisateurs"
+                value={certCount("utilisateur")}
+                color={CERTIFICATION_LEVELS[0].color}
+                indicator={<CertificationIcon level="utilisateur" size={16} />}
+                active={activeFilter === "cert:utilisateur"}
+                onClick={() => handleClick("cert:utilisateur")}
+              />
+              <Stat
+                label="Bibamus"
+                value={certCount("bibamus")}
+                color={CERTIFICATION_LEVELS[1].color}
+                indicator={<CertificationIcon level="bibamus" size={16} />}
+                active={activeFilter === "cert:bibamus"}
+                onClick={() => handleClick("cert:bibamus")}
+              />
+              <Stat
+                label="Producteur"
+                value={certCount("producteur")}
+                color={CERTIFICATION_LEVELS[2].color}
+                indicator={<CertificationIcon level="producteur" size={16} />}
+                active={activeFilter === "cert:producteur"}
+                onClick={() => handleClick("cert:producteur")}
+              />
+            </div>
+          )}
+        </>
       )}
-
       <div style={separatorStyle} />
       <RowHeader title="Pays / Continents" expanded={expandedGeo} onToggle={() => setExpandedGeo((e) => !e)} />
       {expandedGeo && (

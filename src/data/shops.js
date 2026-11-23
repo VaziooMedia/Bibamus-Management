@@ -1,0 +1,148 @@
+import { supabase } from "../supabaseClient.js";
+
+/* ---------------- SHOPS (points de vente de boissons à emporter) ----------------
+   Table `shops_directory` (voir docs/DATABASE.md de bibamus-web, « Shops ») : le 5ᵉ répertoire de l'app, à côté des Lieux, Produits, Marques et Producteurs.
+   Un shop vend des boissons à emporter : supermarché, négociant en vin, Drink & Food Shop, et aussi boutique en ligne.
+   Trois façons d'exister (colonne `channel`) : « store » (un magasin, avec une adresse et un point sur la carte), « online » (un site, sans adresse ni point
+   sur la carte, avec la liste des pays où il livre) ou « both » (les deux). Lecture : les comptes connectés ne voient que les fiches visibles
+   (à traiter, à compléter, complète) ; le personnel voit tout et écrit. */
+
+export const SHOP_CHANNELS = [
+  { key: "store", label: "Magasin" },
+  { key: "online", label: "En ligne" },
+  { key: "both", label: "Magasin + en ligne" },
+];
+
+export const shopChannelLabel = (key) => (SHOP_CHANNELS.find((c) => c.key === key) || SHOP_CHANNELS[0]).label;
+export const hasStore = (channel) => channel === "store" || channel === "both";
+export const hasOnline = (channel) => channel === "online" || channel === "both";
+
+// Ce qu'il manque pour pouvoir créer ou enregistrer la fiche (vide = tout est bon).
+export function missingShopFields(form) {
+  const missing = [];
+  if (!form.name.trim()) missing.push("le nom");
+  if (hasStore(form.channel) && !form.city.trim()) missing.push("la commune (un magasin a une adresse)");
+  if (hasOnline(form.channel) && !form.website.trim()) missing.push("le site internet (une boutique en ligne a un site)");
+  return missing;
+}
+
+export async function loadShops() {
+  const { data, error } = await supabase.from("shops_directory").select("*").order("name");
+  if (error) {
+    console.error("loadShops:", error);
+    return { error: error.message, items: [] };
+  }
+  return { items: data.map(rowToShop) };
+}
+
+export async function createShop(shop) {
+  const { data, error } = await supabase.from("shops_directory").insert(shopToRow(shop)).select().single();
+  if (error) {
+    console.error("createShop:", error);
+    return { error: error.message };
+  }
+  return { shop: rowToShop(data) };
+}
+
+export async function updateShop(id, patch) {
+  const { data, error } = await supabase
+    .from("shops_directory")
+    .update({ ...shopToRow(patch, true), updated_at: new Date().toISOString() })
+    .eq("id", id)
+    .select()
+    .single();
+  if (error) {
+    console.error("updateShop:", error);
+    // PGRST116 : la base n'a modifié aucune ligne (droits insuffisants ou fiche introuvable).
+    return { error: error.code === "PGRST116" ? "modification refusée (droits insuffisants ou fiche introuvable)." : error.message };
+  }
+  return { shop: rowToShop(data) };
+}
+
+export async function deleteShop(id) {
+  const { data, error } = await supabase.from("shops_directory").delete().eq("id", id).select();
+  if (error) {
+    console.error("deleteShop:", error);
+    return { error: error.message };
+  }
+  if (!data || data.length === 0) return { error: "Vous n'avez pas les droits nécessaires pour supprimer cette fiche." };
+  return { ok: true };
+}
+
+export async function saveShopGeocodeResult(shopId, { lat, lng, source, confidence, status }) {
+  const { error } = await supabase
+    .from("shops_directory")
+    .update({ lat, lng, geocode_source: source, geocode_confidence: confidence, geocode_status: status, geocoded_at: new Date().toISOString() })
+    .eq("id", shopId);
+  if (error) console.error("saveShopGeocodeResult:", error);
+}
+
+function rowToShop(row) {
+  return {
+    id: row.id,
+    name: row.name,
+    subtitle: row.subtitle,
+    channel: row.channel || "store",
+    country: row.country,
+    streetName: row.street_name,
+    streetNumber: row.street_number,
+    postalCode: row.postal_code,
+    city: row.city,
+    village: row.village,
+    lat: row.lat,
+    lng: row.lng,
+    geocodeStatus: row.geocode_status,
+    geocodeSource: row.geocode_source,
+    geocodeConfidence: row.geocode_confidence ?? null,
+    deliveryCountries: row.delivery_countries || [],
+    phone: row.phone,
+    email: row.email,
+    website: row.website,
+    googleUrl: row.google_url,
+    whatsappUrl: row.whatsapp_url,
+    facebookUrl: row.facebook_url,
+    instagramUrl: row.instagram_url,
+    tiktokUrl: row.tiktok_url,
+    snapchatUrl: row.snapchat_url,
+    linkedinUrl: row.linkedin_url,
+    youtubeUrl: row.youtube_url,
+    status: row.status,
+    createdAt: row.created_at,
+    updatedAt: row.updated_at,
+  };
+}
+
+function shopToRow(s, partial = false) {
+  const row = {
+    name: s.name,
+    subtitle: s.subtitle,
+    channel: s.channel,
+    country: s.country,
+    street_name: s.streetName,
+    street_number: s.streetNumber,
+    postal_code: s.postalCode,
+    city: s.city,
+    village: s.village,
+    lat: s.lat,
+    lng: s.lng,
+    geocode_status: s.geocodeStatus,
+    geocode_source: s.geocodeSource,
+    geocode_confidence: s.geocodeConfidence,
+    delivery_countries: s.deliveryCountries,
+    phone: s.phone,
+    email: s.email,
+    website: s.website,
+    google_url: s.googleUrl,
+    whatsapp_url: s.whatsappUrl,
+    facebook_url: s.facebookUrl,
+    instagram_url: s.instagramUrl,
+    tiktok_url: s.tiktokUrl,
+    snapchat_url: s.snapchatUrl,
+    linkedin_url: s.linkedinUrl,
+    youtube_url: s.youtubeUrl,
+    status: s.status,
+  };
+  if (!partial) row.id = s.id;
+  Object.keys(row).forEach((k) => row[k] === undefined && delete row[k]);
+  return row;
+}

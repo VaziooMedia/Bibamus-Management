@@ -32,9 +32,9 @@ function UsernameSection({ title, children }) {
   return <CollapsibleSection title={title}>{children}</CollapsibleSection>;
 }
 
-const GEOAPIFY_CONFIGURED = !!(typeof import.meta !== "undefined" && import.meta.env && import.meta.env.VITE_GEOAPIFY_API_KEY);
+export const GEOAPIFY_CONFIGURED = !!(typeof import.meta !== "undefined" && import.meta.env && import.meta.env.VITE_GEOAPIFY_API_KEY);
 
-const parseCoordinate = (raw) => {
+export const parseCoordinate = (raw) => {
   if (!raw) return raw;
   const match = String(raw).match(/(-?\d+[.,]?\d*)\s*°?\s*([NSEWnsew])?/);
   if (!match) return raw;
@@ -46,16 +46,16 @@ const parseCoordinate = (raw) => {
   return String(value);
 };
 
-const fieldStyle = { padding: "10px 12px", borderRadius: "8px", border: "2px solid #28405C", fontSize: "14px", width: "100%" };
-const labelStyle = { fontSize: "12.5px", color: "#8792A6", marginBottom: "4px", display: "block", fontWeight: 600 };
-const separatorStyle = { borderBottom: "1px solid #28405C", margin: "20px 0" };
+export const fieldStyle = { padding: "10px 12px", borderRadius: "8px", border: "2px solid #28405C", fontSize: "14px", width: "100%" };
+export const labelStyle = { fontSize: "12.5px", color: "#8792A6", marginBottom: "4px", display: "block", fontWeight: 600 };
+export const separatorStyle = { borderBottom: "1px solid #28405C", margin: "20px 0" };
 
 function stripPrefix(value, prefix) {
   if (!value) return "";
   return value.startsWith(prefix) ? value.slice(prefix.length) : value;
 }
 
-function SocialLinkField({ icon, label, prefix, value, onChange }) {
+export function SocialLinkField({ icon, label, prefix, value, onChange }) {
   const handle = stripPrefix(value, prefix);
   return (
     <div style={{ marginBottom: "16px" }}>

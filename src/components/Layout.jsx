@@ -18,6 +18,8 @@ const DATABASE_ITEMS = [
   { key: "drinks", label: "Produits" },
   { key: "brands", label: "Marques" },
   { key: "breweries", label: "Producteurs" },
+  // Shops : points de vente de boissons à emporter (supermarchés, négociants, boutiques en ligne…), table `shops_directory`.
+  { key: "shops", label: "Shops" },
   { key: "users", label: "Utilisateurs" },
   { key: "reports", label: "Signalements" },
   // Absent de la vraie liste donnée par l'utilisateur, mais gardé ici pour ne pas perdre l'accès
