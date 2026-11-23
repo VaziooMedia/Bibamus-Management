@@ -107,6 +107,11 @@ function rowToShop(row) {
     email: row.email,
     website: row.website,
     googleUrl: row.google_url,
+    // Liaison à Google (comme un lieu) : écrite par GooglePlaceLinker (linkGooglePlace…) directement sur la table ; shopToRow ne l'écrit que pour l'effacer quand le shop devient uniquement en ligne.
+    googlePlaceId: row.google_place_id,
+    googlePlaceIdCheckedAt: row.google_place_id_checked_at,
+    noGooglePresence: !!row.no_google_presence,
+    noFixedHours: !!row.no_fixed_hours,
     profilePhotoUrl: row.profile_photo_url || null,
     coverPhotoUrl: row.cover_photo_url || null,
     whatsappUrl: row.whatsapp_url,
@@ -159,6 +164,12 @@ function shopToRow(s, partial = false) {
     linkedin_url: s.linkedinUrl,
     youtube_url: s.youtubeUrl,
     status: s.status,
+    // Liaison à Google : jamais écrite par « Enregistrer » pour un magasin (elle l'est par GooglePlaceLinker).
+    // Seule exception : un shop devenu uniquement en ligne la perd (la fiche envoie alors ces quatre champs à vide).
+    google_place_id: s.googlePlaceId,
+    google_place_id_checked_at: s.googlePlaceIdCheckedAt,
+    google_hours_last_fetch_at: s.googleHoursLastFetchAt,
+    google_hours_last_status: s.googleHoursLastStatus,
   };
   if (!partial) row.id = s.id;
   Object.keys(row).forEach((k) => row[k] === undefined && delete row[k]);

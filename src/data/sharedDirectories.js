@@ -1152,9 +1152,10 @@ export async function searchGooglePlaceMatches({ name, address }) {
   }
 }
 
-export async function linkGooglePlace(venueId, googlePlaceId) {
+// La liaison à Google se fait sur la fiche d'un lieu (table `public_venues`, par défaut) ou d'un shop (`shops_directory`, qui a les mêmes colonnes Google).
+export async function linkGooglePlace(venueId, googlePlaceId, table = "public_venues") {
   const { error } = await supabase
-    .from("public_venues")
+    .from(table)
     .update({ google_place_id: googlePlaceId, google_place_id_checked_at: new Date().toISOString() })
     .eq("id", venueId);
   if (error) console.error("linkGooglePlace:", error);
@@ -1209,21 +1210,21 @@ export async function saveBreweryGeocodeResult(breweryId, { lat, lng, source, co
   if (error) console.error("saveBreweryGeocodeResult:", error);
 }
 
-export async function unlinkGooglePlace(venueId) {
+export async function unlinkGooglePlace(venueId, table = "public_venues") {
   const { error } = await supabase
-    .from("public_venues")
+    .from(table)
     .update({ google_place_id: null, google_place_id_checked_at: null, google_hours_last_fetch_at: null, google_hours_last_status: null })
     .eq("id", venueId);
   if (error) console.error("unlinkGooglePlace:", error);
 }
 
-export async function setNoGooglePresence(venueId, value) {
-  const { error } = await supabase.from("public_venues").update({ no_google_presence: value }).eq("id", venueId);
+export async function setNoGooglePresence(venueId, value, table = "public_venues") {
+  const { error } = await supabase.from(table).update({ no_google_presence: value }).eq("id", venueId);
   if (error) console.error("setNoGooglePresence:", error);
 }
 
-export async function setNoFixedHours(venueId, value) {
-  const { error } = await supabase.from("public_venues").update({ no_fixed_hours: value }).eq("id", venueId);
+export async function setNoFixedHours(venueId, value, table = "public_venues") {
+  const { error } = await supabase.from(table).update({ no_fixed_hours: value }).eq("id", venueId);
   if (error) console.error("setNoFixedHours:", error);
 }
 
