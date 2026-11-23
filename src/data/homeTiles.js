@@ -3,7 +3,7 @@ import { supabase } from "../supabaseClient.js";
 /* ---------------- BOUTONS DE L'ACCUEIL (BibaClub, BibaCal, BibaPlay, BibaMeet, BibaCare, BibaFlash) ----------------
    Table `home_tiles` (voir docs/DATABASE.md de bibamus-web, « Boutons de l'accueil ») : une ligne par bouton. Lecture : tout compte connecté
    (l'app l'utilise pour dessiner l'accueil) ; modification : rôles admin et super_admin seulement (règle `home_tiles_admin_update`).
-   Chaque ligne règle l'état du bouton (`status`), sa place dans la grille de l'accueil (`sort_order`, 1 = en haut à gauche) et son sous-titre
+   Chaque ligne règle l'état du bouton (`status`), sa place dans la grille de l'accueil (`sort_order`, 1 = en haut à gauche ; changé par glisser-déposer dans la page) et son sous-titre
    (`subtitle`, vide = celui d'origine). Tout est identique pour tous les pays. */
 
 // Le champ `hasScreen` dit si l'app a déjà un écran vers lequel ce bouton mène : sans écran, le bouton ne peut pas être « Actif » (l'app le laisserait
@@ -88,23 +88,21 @@ export async function saveHomeTileSubtitle(tileKey, subtitle) {
   return { tile: data };
 }
 
-// Monte (direction -1) ou descend (+1) un bouton d'une place : échange avec son voisin. Renvoie { tiles: [lignes modifiées] } ou { error, partial }
-// (`partial` vrai si une des deux écritures est passée : l'appelant relit alors la table pour afficher l'état réel).
-export async function moveHomeTile(tiles, tileKey, direction) {
-  const keys = orderedTileKeys(tiles);
-  const i = keys.indexOf(tileKey);
-  const j = i + direction;
-  if (i < 0 || j < 0 || j >= keys.length) return { error: "Déplacement impossible." };
-  [keys[i], keys[j]] = [keys[j], keys[i]];
-  // Seules les lignes dont la place change sont écrites (normalement deux) ; les places sont renumérotées de 1 à 6.
-  const changed = keys.map((k, index) => ({ k, order: index + 1 })).filter(({ k, order }) => !tiles[k] || tiles[k].sort_order !== order);
+// Enregistre un nouvel ordre des six boutons (`newKeys` : les six clés dans l'ordre voulu, de la première place à la dernière). Les places sont renumérotées de
+// 1 à 6 ; seules les lignes dont la place change sont écrites (de deux à six). Renvoie { tiles: [lignes modifiées] } ou { error, partial } (`partial` vrai si
+// au moins une écriture est passée alors qu'une autre a échoué : l'appelant relit alors la table pour afficher l'état réel).
+export async function reorderHomeTiles(tiles, newKeys) {
+  const valid = Array.isArray(newKeys) && newKeys.length === HOME_TILES.length && HOME_TILES.every((t) => newKeys.includes(t.key));
+  if (!valid) return { error: "Ordre invalide." };
+  const changed = newKeys.map((k, index) => ({ k, order: index + 1 })).filter(({ k, order }) => !tiles[k] || tiles[k].sort_order !== order);
+  if (changed.length === 0) return { tiles: [] };
   const now = new Date().toISOString();
   const results = await Promise.all(
     changed.map(({ k, order }) => supabase.from("home_tiles").update({ sort_order: order, updated_at: now }).eq("tile_key", k).select().single())
   );
   const failed = results.find((r) => r.error);
   if (failed) {
-    console.error("moveHomeTile:", failed.error);
+    console.error("reorderHomeTiles:", failed.error);
     const message = failed.error.code === "PGRST116" ? "modification refusée (droits insuffisants ou bouton introuvable)." : failed.error.message;
     return { error: message, partial: results.some((r) => !r.error) };
   }
