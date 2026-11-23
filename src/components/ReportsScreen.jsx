@@ -24,6 +24,9 @@ const REASON_LABELS = {
   other: "Autre raison",
 };
 
+// « Fermé définitivement » s'écrit selon la fiche : un établissement ou un shop.
+const reasonLabel = (r) => (r.reason === "closed_permanently" && r.entity_type === "shop" ? "Shop fermé définitivement" : REASON_LABELS[r.reason] || r.reason);
+
 const ENTITY_TYPE_LABELS = { venue: "Établissement", drink: "Produit", brand: "Marque", producer: "Producteur", shop: "Shop", pulse_event: "Publication", pulse_comment: "Commentaire" };
 
 // Aperçu compact d'une fiche (photo + nom + détails spécifiques au type) — juste pour situer le
@@ -291,7 +294,7 @@ export function ReportsScreen({ myUserId }) {
                   <span style={{ fontSize: "10px", color: "#8792A6", flexShrink: 0 }}>{r.created_at ? r.created_at.slice(0, 10) : ""}</span>
                 </div>
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: "8px", marginTop: "14px" }}>
-                  <span style={{ fontSize: "11px", color: "#39FF66", fontWeight: 700 }}>{REASON_LABELS[r.reason] || r.reason}</span>
+                  <span style={{ fontSize: "11px", color: "#39FF66", fontWeight: 700 }}>{reasonLabel(r)}</span>
                   <span style={{ fontSize: "10px", color: "#8792A6", textTransform: "uppercase", fontWeight: 700, flexShrink: 0 }}>{ENTITY_TYPE_LABELS[r.entity_type] || r.entity_type}</span>
                 </div>
 
