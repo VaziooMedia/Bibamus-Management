@@ -7,6 +7,7 @@ import { Dashboard } from "./components/Dashboard.jsx";
 import { VenuesScreen } from "./components/VenuesScreen.jsx";
 import { DrinksScreen } from "./components/DrinksScreen.jsx";
 import { BreweriesScreen, BrandsScreen } from "./components/BreweriesAndBrandsScreens.jsx";
+import { ShopsScreen } from "./components/ShopsScreen.jsx";
 import { ComingSoon } from "./components/ComingSoon.jsx";
 import { MarketingScreen } from "./components/MarketingScreen.jsx";
 import { HomeTilesScreen } from "./components/HomeTilesScreen.jsx";
@@ -159,6 +160,7 @@ export default function App() {
           myUserId={myUserId}
         />
       )}
+      {screen === "shops" && <ShopsScreen myUserId={myUserId} />}
       {screen === "officialStories" && <OfficialStoriesScreen myUserId={myUserId} />}
       {screen === "brands" && (
         <BrandsScreen initialBrandId={viewedClaimEntity?.type === "brand" ? viewedClaimEntity.id : null} onInitialBrandOpened={() => setViewedClaimEntity(null)} myUserId={myUserId} />

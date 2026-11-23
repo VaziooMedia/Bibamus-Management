@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { supabase } from "../supabaseClient.js";
 
-// Vrais compteurs de nouveaux ajouts "à traiter" pour les 4 types de fiches — même principe que
+// Vrais compteurs de nouveaux ajouts "à traiter" pour les 5 types de fiches — même principe que
 // usePendingReportsCount/useUnreadChatCounts : un vrai recompte à chaque changement (realtime),
 // avec un vrai rafraîchissement de secours toutes les 15 secondes si la réplication temps réel
 // n'est pas activée sur ces tables.
@@ -16,10 +16,11 @@ const TABLES = {
   venues: "public_venues",
   brands: "brands_directory",
   breweries: "breweries_directory",
+  shops: "shops_directory",
 };
 
 export function useNewItemsCounts() {
-  const [counts, setCounts] = useState({ drinks: 0, venues: 0, brands: 0, breweries: 0 });
+  const [counts, setCounts] = useState({ drinks: 0, venues: 0, brands: 0, breweries: 0, shops: 0 });
 
   const refresh = useCallback(async () => {
     const entries = await Promise.all(

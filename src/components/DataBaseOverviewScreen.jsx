@@ -6,6 +6,7 @@ const TILES = [
   { key: "drinks", label: "Produits" },
   { key: "brands", label: "Marques" },
   { key: "breweries", label: "Producteurs" },
+  { key: "shops", label: "Shops" },
 ];
 
 export function DataBaseOverviewScreen({ onNavigate, supabaseUrl }) {
