@@ -3,7 +3,9 @@ import React, { useState, useRef } from "react";
 export function AdminPhotoField({ label, photoUrl, aspect = "square", onUpload, onDelete, uploading }) {
   const inputRef = useRef(null);
   const [previewUrl, setPreviewUrl] = useState(null);
-  const displayUrl = previewUrl || photoUrl;
+  // L'aperçu local ne sert que pendant l'envoi. Ensuite on montre l'image réellement enregistrée : si l'envoi échoue, l'ancienne image (ou le cadre vide) revient ;
+  // si l'image est retirée avec ✕, le cadre se vide.
+  const displayUrl = uploading ? previewUrl || photoUrl : photoUrl;
   const height = aspect === "banner" ? "140px" : "160px";
   const width = aspect === "banner" ? "100%" : "160px";
 
