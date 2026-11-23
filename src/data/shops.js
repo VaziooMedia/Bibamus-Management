@@ -107,6 +107,11 @@ function rowToShop(row) {
     email: row.email,
     website: row.website,
     googleUrl: row.google_url,
+    // Liaison à Google (comme un lieu) : écrite par GooglePlaceLinker (linkGooglePlace…) directement sur la table, jamais par shopToRow.
+    googlePlaceId: row.google_place_id,
+    googlePlaceIdCheckedAt: row.google_place_id_checked_at,
+    noGooglePresence: !!row.no_google_presence,
+    noFixedHours: !!row.no_fixed_hours,
     profilePhotoUrl: row.profile_photo_url || null,
     coverPhotoUrl: row.cover_photo_url || null,
     whatsappUrl: row.whatsapp_url,

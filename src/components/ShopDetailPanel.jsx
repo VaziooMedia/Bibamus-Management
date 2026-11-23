@@ -8,6 +8,7 @@ import { AddressAutocomplete } from "./AddressAutocomplete.jsx";
 import { CollapsibleSection } from "./CollapsibleSection.jsx";
 import { FlatListField } from "./FlatListField.jsx";
 import { AdminPhotoField } from "./AdminPhotoField.jsx";
+import { GooglePlaceLinker } from "./GooglePlaceLinker.jsx";
 import { SHOP_CATEGORY_LIST } from "../data/customLists.js";
 import { COUNTRIES, PHONE_PREFIXES, COUNTRY_ISO_CODES } from "../constants.js";
 import { GEOAPIFY_CONFIGURED, parseCoordinate, fieldStyle, labelStyle, separatorStyle, SocialLinkField } from "./BreweryDetailPanel.jsx";
@@ -132,6 +133,10 @@ export function ShopDetailPanel({ shop, onClose, onSaved, myUserId }) {
   const [geocodeStatus, setGeocodeStatus] = useState(shop?.geocodeStatus || null);
   const [geocodeSource, setGeocodeSource] = useState(shop?.geocodeSource || null);
   const [geocodeConfidence, setGeocodeConfidence] = useState(shop?.geocodeConfidence ?? null);
+  // Liaison à Google (horaires d'ouverture d'un magasin) : écrite tout de suite par GooglePlaceLinker, pas avec « Enregistrer ».
+  const [googlePlaceId, setGooglePlaceId] = useState(shop?.googlePlaceId || null);
+  const [noGooglePresence, setNoGooglePresence] = useState(!!shop?.noGooglePresence);
+  const [noFixedHours, setNoFixedHours] = useState(!!shop?.noFixedHours);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
 
@@ -436,6 +441,23 @@ export function ShopDetailPanel({ shop, onClose, onSaved, myUserId }) {
                 {!geocodeNotFound && geocodeStatus === "approximate" && <span style={{ fontSize: "12px", color: "#00C8FF" }}>Position approximative</span>}
                 {!geocodeNotFound && geocodeStatus === "pending" && <span style={{ fontSize: "12px", color: "#8792A6" }}>Pas encore géocodée</span>}
               </div>
+            </CollapsibleSection>
+
+            <div style={separatorStyle} />
+            <CollapsibleSection title="Horaires d'ouverture" defaultOpen>
+              <GooglePlaceLinker
+                venueId={shop?.id || null}
+                table="shops_directory"
+                name={form.name}
+                address={`${form.streetName} ${form.streetNumber}, ${form.postalCode} ${form.city}`}
+                googlePlaceId={googlePlaceId}
+                checkedAt={shop?.googlePlaceIdCheckedAt}
+                noGooglePresence={noGooglePresence}
+                noFixedHours={noFixedHours}
+                onLinked={setGooglePlaceId}
+                onNoPresenceChange={setNoGooglePresence}
+                onNoFixedHoursChange={setNoFixedHours}
+              />
             </CollapsibleSection>
           </>
         )}

@@ -4,7 +4,8 @@ import { searchGooglePlaceMatches, linkGooglePlace, unlinkGooglePlace, setNoGoog
 // Les horaires ne sont jamais encodés à la main dans Bibamus — Google est la source unique.
 // Ce composant ne gère que la LIAISON (recherche + confirmation du Google Place ID), jamais
 // les horaires eux-mêmes.
-export function GooglePlaceLinker({ venueId, name, address, googlePlaceId, checkedAt, noGooglePresence, noFixedHours, onLinked, onNoPresenceChange, onNoFixedHoursChange }) {
+// `table` : la table de la fiche liée (« public_venues » pour un lieu, « shops_directory » pour un magasin) ; `venueId` est l'identifiant de la fiche, quelle que soit la table.
+export function GooglePlaceLinker({ venueId, table = "public_venues", name, address, googlePlaceId, checkedAt, noGooglePresence, noFixedHours, onLinked, onNoPresenceChange, onNoFixedHoursChange }) {
   const [searching, setSearching] = useState(false);
   const [candidates, setCandidates] = useState(null);
   const [error, setError] = useState(null);
@@ -23,34 +24,34 @@ export function GooglePlaceLinker({ venueId, name, address, googlePlaceId, check
   };
 
   const confirmMatch = async (placeId) => {
-    await linkGooglePlace(venueId, placeId);
+    await linkGooglePlace(venueId, placeId, table);
     setCandidates(null);
     onLinked?.(placeId);
   };
 
   const unlink = async () => {
     if (!window.confirm("Dissocier cette fiche de Google ? Les horaires ne seront plus affichés tant qu'une nouvelle liaison n'est pas faite.")) return;
-    await unlinkGooglePlace(venueId);
+    await unlinkGooglePlace(venueId, table);
     onLinked?.(null);
   };
 
   const markNoPresence = async () => {
-    await setNoGooglePresence(venueId, true);
+    await setNoGooglePresence(venueId, true, table);
     onNoPresenceChange?.(true);
   };
 
   const undoNoPresence = async () => {
-    await setNoGooglePresence(venueId, false);
+    await setNoGooglePresence(venueId, false, table);
     onNoPresenceChange?.(false);
   };
 
   const markNoFixedHours = async () => {
-    await setNoFixedHours(venueId, true);
+    await setNoFixedHours(venueId, true, table);
     onNoFixedHoursChange?.(true);
   };
 
   const undoNoFixedHours = async () => {
-    await setNoFixedHours(venueId, false);
+    await setNoFixedHours(venueId, false, table);
     onNoFixedHoursChange?.(false);
   };
 
