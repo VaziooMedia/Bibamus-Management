@@ -1,10 +1,21 @@
 import React, { useState, useEffect } from "react";
 import { PageTitle } from "./PageTitle.jsx";
-import { HOME_TILES, HOME_TILE_STATUSES, loadHomeTiles, saveHomeTile } from "../data/homeTiles.js";
+import {
+  HOME_TILES,
+  HOME_TILE_STATUSES,
+  HOME_TILE_SUBTITLE_MAX,
+  loadHomeTiles,
+  saveHomeTile,
+  saveHomeTileSubtitle,
+  reorderHomeTiles,
+  orderedTileKeys,
+  tileSubtitle,
+} from "../data/homeTiles.js";
 
-// Système → Affichage : état des six boutons de l'accueil de l'app (BibaClub, BibaCal, BibaPlay, BibaMeet, BibaCare, BibaFlash).
-// Chaque bouton est Actif, Grisé (badge « Soon », non cliquable) ou Masqué, pour tous les pays à la fois. Les états sont dans la table `home_tiles`
-// (voir bibamus-web/docs/DATABASE.md, « Boutons de l'accueil »). Un changement est enregistré tout de suite ; l'app le voit à sa prochaine ouverture de l'accueil.
+// Système → Affichage : les six boutons de l'accueil de l'app (BibaClub, BibaCal, BibaPlay, BibaMeet, BibaCare, BibaFlash).
+// Pour chacun : son état (Actif, Grisé avec le badge « Soon » et non cliquable, ou Masqué), sa place dans la grille (glisser-déposer) et son sous-titre,
+// pour tous les pays à la fois. Tout est dans la table `home_tiles` (voir bibamus-web/docs/DATABASE.md, « Boutons de l'accueil »). Les états et les places
+// s'enregistrent tout de suite (au clic, ou au lâcher du bloc glissé) ; le sous-titre avec « Enregistrer » (ou Entrée). L'app le voit à sa prochaine ouverture de l'accueil.
 
 const CARD = "#16273D";
 const BORDER = "#28405C";
@@ -14,6 +25,9 @@ const GREEN = "#39FF66";
 const RED = "#FF3B4E";
 const BG = "#0D1B2A";
 const PAPER = "#08131F";
+
+const inputStyle = { boxSizing: "border-box", padding: "7px 10px", borderRadius: "8px", border: `2px solid ${BORDER}`, background: BG, color: INK, fontSize: "13px" };
+const primaryButton = { background: GREEN, border: "none", borderRadius: "8px", padding: "7px 12px", fontWeight: 700, fontSize: "12px", color: BG, cursor: "pointer", flexShrink: 0 };
 
 // État d'un bouton : celui de la table, sinon celui que l'app affiche par défaut quand la ligne manque.
 const statusOf = (tiles, key) => (tiles[key] && tiles[key].status) || (HOME_TILES.find((t) => t.key === key) || {}).fallback || "soon";
@@ -30,7 +44,10 @@ function TileName({ name, size = 17 }) {
 
 // Aperçu en petit de la grille de l'accueil, dans l'état réglé : 2 colonnes, boutons masqués absents, boutons grisés assombris avec « Soon ».
 function PhonePreview({ tiles }) {
-  const shown = HOME_TILES.filter((t) => statusOf(tiles, t.key) !== "hidden");
+  // Dans l'ordre réglé, les boutons masqués en moins : la première place est en haut à gauche, puis de gauche à droite, ligne par ligne.
+  const shown = orderedTileKeys(tiles)
+    .map((k) => HOME_TILES.find((t) => t.key === k))
+    .filter((t) => statusOf(tiles, t.key) !== "hidden");
   return (
     <div>
       <div style={{ fontSize: "12.5px", color: MUTED, fontWeight: 600, marginBottom: "6px" }}>Aperçu de l'accueil (téléphone)</div>
@@ -55,7 +72,7 @@ function PhonePreview({ tiles }) {
                     <span style={{ width: "4px", height: "16px", background: GREEN, borderRadius: "2px", display: "inline-block" }} />
                     <TileName name={t.name} size={15} />
                   </div>
-                  <div style={{ fontSize: "12px", color: MUTED, lineHeight: 1.3 }}>{t.subtitle}</div>
+                  <div style={{ fontSize: "12px", color: MUTED, lineHeight: 1.3 }}>{tileSubtitle(tiles, t.key)}</div>
                 </div>
               );
             })}
@@ -101,12 +118,81 @@ function StatusChoice({ tile, current, busy, onPick }) {
   );
 }
 
+// La poignée de glisser-déposer d'un bloc : on l'attrape pour le déplacer dans la liste (l'image glissée est le bloc entier).
+function DragHandle({ tile, disabled, onStart, onEnd }) {
+  return (
+    <span
+      data-drag-handle={tile.key}
+      role="img"
+      aria-label={`Déplacer Biba${tile.name}`}
+      title={disabled ? undefined : "Glisser pour changer la place"}
+      draggable={!disabled}
+      onDragStart={(e) => onStart(e, tile)}
+      onDragEnd={onEnd}
+      style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", width: "26px", height: "40px", flexShrink: 0, cursor: disabled ? "default" : "grab", opacity: disabled ? 0.35 : 1, touchAction: "none" }}
+    >
+      <svg width="14" height="22" viewBox="0 0 14 22" aria-hidden="true">
+        {[3, 11, 19].map((y) => (
+          <g key={y} fill={MUTED}>
+            <circle cx="3.5" cy={y} r="2" />
+            <circle cx="10.5" cy={y} r="2" />
+          </g>
+        ))}
+      </svg>
+    </span>
+  );
+}
+
+// Le sous-titre d'un bouton : un champ qui montre le texte en cours (celui d'origine tant qu'on n'en a pas mis un autre). « Enregistrer » n'apparaît que
+// si le texte a changé ; Entrée enregistre, Échap annule. Vider le champ (ou remettre le texte d'origine) rend le sous-titre d'origine.
+function SubtitleField({ tile, tiles, busy, onSave }) {
+  const current = tileSubtitle(tiles, tile.key);
+  const [draft, setDraft] = useState(current);
+  useEffect(() => setDraft(current), [current]);
+  const dirty = draft.trim() !== current;
+  const save = async () => {
+    if (!dirty || busy) return;
+    // Champ vidé alors que le sous-titre d'origine est déjà en place : rien à écrire, on remet seulement le texte.
+    const target = draft.trim() || tile.subtitle;
+    if (target === current) {
+      setDraft(current);
+      return;
+    }
+    const result = await onSave(tile, draft);
+    if (result && result.tile) setDraft(tileSubtitle({ [tile.key]: result.tile }, tile.key));
+  };
+  return (
+    <div style={{ display: "flex", alignItems: "center", gap: "8px", marginTop: "6px" }}>
+      <input
+        value={draft}
+        onChange={(e) => setDraft(e.target.value)}
+        onKeyDown={(e) => {
+          if (e.key === "Enter") save();
+          if (e.key === "Escape") setDraft(current);
+        }}
+        maxLength={HOME_TILE_SUBTITLE_MAX}
+        placeholder={tile.subtitle}
+        aria-label={`Sous-titre de Biba${tile.name}`}
+        style={{ ...inputStyle, flex: "1 1 auto", minWidth: 0, maxWidth: "360px" }}
+      />
+      {dirty && (
+        <button type="button" onClick={save} disabled={busy} style={primaryButton}>
+          Enregistrer
+        </button>
+      )}
+    </div>
+  );
+}
+
 export function HomeTilesScreen() {
   const [tiles, setTiles] = useState(null); // { [clé]: ligne } | null
   const [loadError, setLoadError] = useState(null);
   const [actionError, setActionError] = useState(null);
   const [busyKey, setBusyKey] = useState(null);
   const [savedKey, setSavedKey] = useState(null);
+  const [moving, setMoving] = useState(false);
+  const [dragKey, setDragKey] = useState(null); // bloc en cours de glissement
+  const [overKey, setOverKey] = useState(null); // bloc survolé : le trait vert montre où il ira
 
   useEffect(() => {
     loadHomeTiles().then((r) => {
@@ -129,17 +215,77 @@ export function HomeTilesScreen() {
     setSavedKey(tile.key);
   };
 
+  // Sous-titre : l'écriture se fait avec le bouton du champ ; renvoie le résultat pour que le champ se remette au texte enregistré.
+  const saveSubtitle = async (tile, text) => {
+    setBusyKey(tile.key);
+    setActionError(null);
+    setSavedKey(null);
+    const result = await saveHomeTileSubtitle(tile.key, text);
+    setBusyKey(null);
+    if (result.error) {
+      setActionError(`Impossible d'enregistrer le sous-titre de « Biba${tile.name} » : ${result.error}`);
+      return result;
+    }
+    setTiles((prev) => ({ ...prev, [tile.key]: result.tile }));
+    setSavedKey(tile.key);
+    return result;
+  };
+
+  // Glisser-déposer : le bloc lâché prend la place du bloc survolé (les autres se décalent). Si une des écritures échoue alors que d'autres sont passées,
+  // on relit la table pour afficher l'état réel.
+  const startDrag = (e, tile) => {
+    e.dataTransfer.effectAllowed = "move";
+    e.dataTransfer.setData("text/plain", tile.key); // Firefox ne lance le glissement qu'avec une donnée
+    const rowEl = e.currentTarget.closest("[data-tile-row]");
+    if (rowEl) e.dataTransfer.setDragImage(rowEl, 20, 20);
+    setDragKey(tile.key);
+    setActionError(null);
+    setSavedKey(null);
+  };
+  const endDrag = () => {
+    setDragKey(null);
+    setOverKey(null);
+  };
+  const dropOn = async (targetKey) => {
+    const fromKey = dragKey;
+    endDrag();
+    if (!fromKey || fromKey === targetKey) return;
+    const keys = orderedTileKeys(tiles);
+    const from = keys.indexOf(fromKey);
+    const to = keys.indexOf(targetKey);
+    if (from < 0 || to < 0) return;
+    keys.splice(to, 0, keys.splice(from, 1)[0]);
+    const tile = HOME_TILES.find((t) => t.key === fromKey);
+    setMoving(true);
+    const result = await reorderHomeTiles(tiles, keys);
+    if (result.error) {
+      setActionError(`Impossible de déplacer « Biba${tile.name} » : ${result.error}`);
+      if (result.partial) {
+        const fresh = await loadHomeTiles();
+        if (fresh.tiles) setTiles(fresh.tiles);
+      }
+      setMoving(false);
+      return;
+    }
+    setTiles((prev) => {
+      const next = { ...prev };
+      result.tiles.forEach((row) => {
+        next[row.tile_key] = row;
+      });
+      return next;
+    });
+    setSavedKey(fromKey);
+    setMoving(false);
+  };
+
   const missing = tiles ? HOME_TILES.filter((t) => !tiles[t.key]) : [];
+  const orderedTiles = tiles ? orderedTileKeys(tiles).map((k) => HOME_TILES.find((t) => t.key === k)) : [];
 
   return (
     <div>
       <PageTitle>Affichage</PageTitle>
-      <p style={{ fontSize: "12.5px", color: MUTED, margin: "8px 0 22px" }}>
-        Les six boutons de l'accueil de l'app, pour tous les pays : <strong style={{ color: INK }}>Actif</strong> (cliquable), <strong style={{ color: INK }}>Grisé</strong> (assombri, badge « Soon », non cliquable) ou <strong style={{ color: INK }}>Masqué</strong> (n'apparaît pas).
-        <br />
-        Un changement est enregistré tout de suite ; l'app le prend en compte à la prochaine ouverture de l'accueil.
-      </p>
 
+      <div style={{ marginTop: "22px" }}>
       {loadError ? (
         <p role="alert" style={{ color: RED, fontSize: "13px" }}>Impossible de charger les boutons : {loadError}</p>
       ) : !tiles ? (
@@ -156,24 +302,43 @@ export function HomeTilesScreen() {
               <p role="alert" style={{ color: RED, fontSize: "13px", margin: "0 0 12px" }}>{actionError}</p>
             )}
             <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
-              {HOME_TILES.map((t) => (
-                <div key={t.key} data-tile-row={t.key} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: "14px", flexWrap: "wrap", background: CARD, border: `2px solid ${BORDER}`, borderRadius: "12px", padding: "12px 16px" }}>
-                  <div style={{ minWidth: 0 }}>
+              {orderedTiles.map((t, index) => {
+                // Le trait vert (hors du bloc, sans décaler la liste) : au-dessus si le bloc glissé vient d'en dessous, en dessous s'il vient d'au-dessus.
+                const dragIndex = dragKey ? orderedTiles.findIndex((x) => x.key === dragKey) : -1;
+                const showLine = dragKey && overKey === t.key && dragKey !== t.key;
+                const line = showLine ? (index < dragIndex ? `0 -4px 0 0 ${GREEN}` : `0 4px 0 0 ${GREEN}`) : "none";
+                return (
+                <div
+                  key={t.key}
+                  data-tile-row={t.key}
+                  onDragOver={(e) => {
+                    if (!dragKey || dragKey === t.key) return;
+                    e.preventDefault();
+                    e.dataTransfer.dropEffect = "move";
+                    if (overKey !== t.key) setOverKey(t.key);
+                  }}
+                  onDrop={(e) => {
+                    e.preventDefault();
+                    dropOn(t.key);
+                  }}
+                  style={{ display: "flex", alignItems: "center", gap: "14px", flexWrap: "wrap", background: CARD, border: `2px solid ${BORDER}`, borderRadius: "12px", padding: "12px 16px 12px 10px", opacity: dragKey === t.key ? 0.45 : 1, boxShadow: line }}
+                >
+                  <DragHandle tile={t} disabled={moving || busyKey !== null} onStart={startDrag} onEnd={endDrag} />
+                  <div style={{ flex: "1 1 260px", minWidth: 0 }}>
                     <TileName name={t.name} />
-                    <div style={{ fontSize: "12.5px", color: MUTED, marginTop: "2px" }}>
-                      {t.subtitle}
-                      {!t.hasScreen && <span> — pas encore d'écran dans l'app (reste grisé ou masqué)</span>}
-                    </div>
+                    <SubtitleField tile={t} tiles={tiles} busy={busyKey === t.key || moving} onSave={saveSubtitle} />
                     {savedKey === t.key && <div role="status" style={{ fontSize: "12px", color: GREEN, marginTop: "4px", fontWeight: 700 }}>Enregistré</div>}
                   </div>
-                  <StatusChoice tile={t} current={statusOf(tiles, t.key)} busy={busyKey === t.key} onPick={(status) => pick(t, status)} />
+                  <StatusChoice tile={t} current={statusOf(tiles, t.key)} busy={busyKey === t.key || moving} onPick={(status) => pick(t, status)} />
                 </div>
-              ))}
+                );
+              })}
             </div>
           </div>
           <PhonePreview tiles={tiles} />
         </div>
       )}
+      </div>
     </div>
   );
 }
