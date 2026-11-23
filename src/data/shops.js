@@ -3,26 +3,30 @@ import { supabase } from "../supabaseClient.js";
 /* ---------------- SHOPS (points de vente de boissons à emporter) ----------------
    Table `shops_directory` (voir docs/DATABASE.md de bibamus-web, « Shops ») : le 5ᵉ répertoire de l'app, à côté des Lieux, Produits, Marques et Producteurs.
    Un shop vend des boissons à emporter : supermarché, négociant en vin, Drink & Food Shop, et aussi boutique en ligne.
-   Trois façons d'exister (colonne `channel`) : « store » (un magasin, avec une adresse et un point sur la carte), « online » (un site, sans adresse ni point
-   sur la carte, avec la liste des pays où il livre) ou « both » (les deux). Lecture : les comptes connectés ne voient que les fiches visibles
-   (à traiter, à compléter, complète) ; le personnel voit tout et écrit. */
+   Deux pastilles, cumulables : « Magasin » (colonne `has_store` : une adresse et un point sur la carte) et « En ligne » (colonne `has_online` : un site,
+   et la liste des pays où il livre). Au moins une des deux. Lecture : les comptes connectés ne voient que les fiches visibles (à traiter, à compléter,
+   complète) ; le personnel voit tout et écrit ; un compte de l'app peut proposer un nouveau shop (`created_via = 'app'`, statut « à traiter »). */
 
-export const SHOP_CHANNELS = [
+export const SHOP_TYPES = [
   { key: "store", label: "Magasin" },
   { key: "online", label: "En ligne" },
-  { key: "both", label: "Magasin + en ligne" },
 ];
 
-export const shopChannelLabel = (key) => (SHOP_CHANNELS.find((c) => c.key === key) || SHOP_CHANNELS[0]).label;
-export const hasStore = (channel) => channel === "store" || channel === "both";
-export const hasOnline = (channel) => channel === "online" || channel === "both";
+// Le libellé du ou des types d'un shop : « Magasin », « En ligne » ou « Magasin + en ligne ».
+export const shopTypeLabel = (shop) => {
+  if (shop.hasStore && shop.hasOnline) return "Magasin + en ligne";
+  if (shop.hasOnline) return "En ligne";
+  if (shop.hasStore) return "Magasin";
+  return "—";
+};
 
 // Ce qu'il manque pour pouvoir créer ou enregistrer la fiche (vide = tout est bon).
 export function missingShopFields(form) {
   const missing = [];
   if (!form.name.trim()) missing.push("le nom");
-  if (hasStore(form.channel) && !form.city.trim()) missing.push("la commune (un magasin a une adresse)");
-  if (hasOnline(form.channel) && !form.website.trim()) missing.push("le site internet (une boutique en ligne a un site)");
+  if (!form.hasStore && !form.hasOnline) missing.push("au moins un type (Magasin ou En ligne)");
+  if (form.hasStore && !form.city.trim()) missing.push("la commune (un magasin a une adresse)");
+  if (form.hasOnline && !form.website.trim()) missing.push("le site internet (une boutique en ligne a un site)");
   return missing;
 }
 
@@ -82,7 +86,9 @@ function rowToShop(row) {
     id: row.id,
     name: row.name,
     subtitle: row.subtitle,
-    channel: row.channel || "store",
+    hasStore: row.has_store ?? true,
+    hasOnline: !!row.has_online,
+    categories: row.shop_categories || [],
     country: row.country,
     streetName: row.street_name,
     streetNumber: row.street_number,
@@ -107,6 +113,9 @@ function rowToShop(row) {
     linkedinUrl: row.linkedin_url,
     youtubeUrl: row.youtube_url,
     status: row.status,
+    createdVia: row.created_via,
+    submittedBy: row.submitted_by,
+    submittedAt: row.submitted_at ? new Date(row.submitted_at).getTime() : null,
     createdAt: row.created_at,
     updatedAt: row.updated_at,
   };
@@ -116,7 +125,9 @@ function shopToRow(s, partial = false) {
   const row = {
     name: s.name,
     subtitle: s.subtitle,
-    channel: s.channel,
+    has_store: s.hasStore,
+    has_online: s.hasOnline,
+    shop_categories: s.categories,
     country: s.country,
     street_name: s.streetName,
     street_number: s.streetNumber,

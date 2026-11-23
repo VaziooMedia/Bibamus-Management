@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { loadReports, loadClaims, loadNewItems } from "../data/sharedDirectories.js";
 import { PageTitle } from "./PageTitle.jsx";
 
-const ENTITY_TYPE_LABELS = { venue: "Lieu", drink: "Produit", brand: "Marque", producer: "Producteur" };
+const ENTITY_TYPE_LABELS = { venue: "Lieu", drink: "Produit", brand: "Marque", producer: "Producteur", shop: "Shop" };
 const REASON_LABELS = {
   suggestion: "Suggestion de modification",
   closed_permanently: "Établissement fermé définitivement",
@@ -15,7 +15,7 @@ const REASON_LABELS = {
 // Section centrale des notifications — vue d'ensemble de tout ce qui attend une action, tous
 // vrais types confondus : signalements et revendications en attente pour l'instant, d'autres
 // vraies sources pourront s'ajouter ici au même titre plus tard.
-const ENTITY_SCREEN_BY_TYPE = { venue: "venues", drink: "drinks", brand: "brands", producer: "breweries" };
+const ENTITY_SCREEN_BY_TYPE = { venue: "venues", drink: "drinks", brand: "brands", producer: "breweries", shop: "shops" };
 
 export function NotificationsScreen({ onOpenReports, onOpenClaims, onOpenEntityList }) {
   const [reports, setReports] = useState(null);

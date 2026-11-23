@@ -418,7 +418,7 @@ export async function loadClaims(status = "pending") {
 // fraîchement créée depuis l'app, jamais encore relue. Distinct des Signalements/Revendications
 // ci-dessus, et des "Nouvelles contributions" (data_contributions), qui concernent des
 // modifications suggérées sur une fiche déjà existante, pas les nouveaux ajouts.
-const NEW_ITEMS_TABLES = { drink: "drinks_directory", venue: "public_venues", brand: "brands_directory", producer: "breweries_directory" };
+const NEW_ITEMS_TABLES = { drink: "drinks_directory", venue: "public_venues", brand: "brands_directory", producer: "breweries_directory", shop: "shops_directory" };
 
 export async function loadNewItems() {
   const entries = await Promise.all(
@@ -2650,6 +2650,28 @@ export async function deleteProducerListItem(listKey, { code, fr, groupTitle }) 
   const { data, error } = await supabase.rpc("delete_producer_list_item", { p_list: listKey, p_code: code, p_fr: fr, p_group_title: groupTitle });
   if (error) {
     console.error("deleteProducerListItem:", error);
+    return { error };
+  }
+  return { removedFrom: Number(data) || 0 };
+}
+
+// Fiche Shop : même liste modifiable (catégorie de shop), avec l'ordre d'affichage.
+// Combien de shops portent cet élément (pour prévenir avant de le supprimer).
+export async function countShopsWithListItem(listKey, code) {
+  const { data, error } = await supabase.rpc("count_shops_with_list_item", { p_list: listKey, p_code: code });
+  if (error) {
+    console.error("countShopsWithListItem:", error);
+    return { error };
+  }
+  return { count: Number(data) || 0 };
+}
+
+// Supprimer un élément : le retire de tous les shops qui le portent et de l'ordre de sa liste, puis le supprime (ou
+// le masque, s'il vient de la liste figée) — en une seule opération côté base. Rend le nombre de shops modifiés.
+export async function deleteShopListItem(listKey, { code, fr, groupTitle }) {
+  const { data, error } = await supabase.rpc("delete_shop_list_item", { p_list: listKey, p_code: code, p_fr: fr, p_group_title: groupTitle });
+  if (error) {
+    console.error("deleteShopListItem:", error);
     return { error };
   }
   return { removedFrom: Number(data) || 0 };

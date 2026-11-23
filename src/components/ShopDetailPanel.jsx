@@ -1,29 +1,32 @@
 import React, { useState } from "react";
 import { WhatsappIcon, FacebookIcon, InstagramIcon, TiktokIcon, SnapchatIcon, LinkedinIcon, YoutubeIcon, PlaceCheckIcon } from "./icons.jsx";
 import { geocodeAddress } from "../data/sharedDirectories.js";
-import { SHOP_CHANNELS, hasStore, hasOnline, missingShopFields, createShop, updateShop, deleteShop, saveShopGeocodeResult } from "../data/shops.js";
+import { SHOP_TYPES, missingShopFields, createShop, updateShop, deleteShop, saveShopGeocodeResult } from "../data/shops.js";
 import { StatusSelector } from "./StatusSelector.jsx";
 import { AddressAutocomplete } from "./AddressAutocomplete.jsx";
 import { CollapsibleSection } from "./CollapsibleSection.jsx";
+import { FlatListField } from "./FlatListField.jsx";
+import { SHOP_CATEGORY_LIST } from "../data/customLists.js";
 import { COUNTRIES, PHONE_PREFIXES, COUNTRY_ISO_CODES } from "../constants.js";
 import { GEOAPIFY_CONFIGURED, parseCoordinate, fieldStyle, labelStyle, separatorStyle, SocialLinkField } from "./BreweryDetailPanel.jsx";
 
 const countryName = (code) => (COUNTRIES.find((c) => c.code === code) || {}).fr || code;
 
-// Choix du canal de vente : trois boutons radio (même principe que le choix d'état de la page Affichage).
-function ChannelChoice({ value, onChange }) {
+// Les deux pastilles « Magasin » et « En ligne » : cliquables séparément, les deux peuvent être allumées (un shop qui a un magasin ET une boutique en ligne).
+function TypeToggles({ hasStore, hasOnline, onToggle }) {
+  const state = { store: hasStore, online: hasOnline };
   return (
-    <div role="radiogroup" aria-label="Type de shop" style={{ display: "flex", gap: "8px", flexWrap: "wrap" }}>
-      {SHOP_CHANNELS.map((c) => {
-        const active = value === c.key;
+    <div role="group" aria-label="Type de shop" style={{ display: "flex", gap: "8px", flexWrap: "wrap" }}>
+      {SHOP_TYPES.map((t) => {
+        const active = state[t.key];
         return (
           <button
-            key={c.key}
-            role="radio"
+            key={t.key}
+            role="checkbox"
             aria-checked={active}
-            onClick={() => onChange(c.key)}
+            onClick={() => onToggle(t.key)}
             style={{
-              padding: "9px 14px",
+              padding: "9px 18px",
               borderRadius: "8px",
               border: `2px solid ${active ? "#39FF66" : "#28405C"}`,
               background: active ? "#28405C" : "#16273D",
@@ -33,7 +36,7 @@ function ChannelChoice({ value, onChange }) {
               cursor: "pointer",
             }}
           >
-            {c.label}
+            {t.label}
           </button>
         );
       })}
@@ -89,7 +92,9 @@ export function ShopDetailPanel({ shop, onClose, onSaved }) {
   const [form, setForm] = useState({
     name: shop?.name || "",
     subtitle: shop?.subtitle || "",
-    channel: shop?.channel || "store",
+    hasStore: shop ? shop.hasStore : true,
+    hasOnline: shop ? shop.hasOnline : false,
+    categories: shop?.categories || [],
     country: shop?.country || "belgique",
     streetName: shop?.streetName || "",
     streetNumber: shop?.streetNumber || "",
@@ -121,9 +126,12 @@ export function ShopDetailPanel({ shop, onClose, onSaved }) {
   const [error, setError] = useState("");
 
   const set = (field, value) => setForm((f) => ({ ...f, [field]: value }));
+  const toggleCategory = (code) => setForm((f) => ({ ...f, categories: f.categories.includes(code) ? f.categories.filter((x) => x !== code) : [...f.categories, code] }));
+  const addCategory = (item) => setForm((f) => (f.categories.includes(item.code) ? f : { ...f, categories: [...f.categories, item.code] }));
+  const removeCategory = (code) => setForm((f) => ({ ...f, categories: f.categories.filter((x) => x !== code) }));
   const phonePrefix = PHONE_PREFIXES[form.country] || "";
-  const store = hasStore(form.channel);
-  const online = hasOnline(form.channel);
+  const store = form.hasStore;
+  const online = form.hasOnline;
   const missing = missingShopFields(form);
 
   const handleGeocode = async () => {
@@ -154,7 +162,9 @@ export function ShopDetailPanel({ shop, onClose, onSaved }) {
   const buildPatch = () => ({
     name: form.name.trim(),
     subtitle: form.subtitle.trim(),
-    channel: form.channel,
+    hasStore: form.hasStore,
+    hasOnline: form.hasOnline,
+    categories: form.categories,
     country: store ? form.country : "",
     streetName: store ? form.streetName.trim() : "",
     streetNumber: store ? form.streetNumber.trim() : "",
@@ -236,7 +246,21 @@ export function ShopDetailPanel({ shop, onClose, onSaved }) {
         <div style={separatorStyle} />
 
         <CollapsibleSection title="Type de shop" defaultOpen>
-          <ChannelChoice value={form.channel} onChange={(c) => set("channel", c)} />
+          <TypeToggles hasStore={form.hasStore} hasOnline={form.hasOnline} onToggle={(k) => set(k === "store" ? "hasStore" : "hasOnline", !(k === "store" ? form.hasStore : form.hasOnline))} />
+        </CollapsibleSection>
+
+        <div style={separatorStyle} />
+
+        <CollapsibleSection title="Catégorie de shop" defaultOpen>
+          <FlatListField
+            list={SHOP_CATEGORY_LIST}
+            variant="pills"
+            compact={false}
+            selected={form.categories}
+            onToggle={toggleCategory}
+            onAdded={addCategory}
+            onDeleted={removeCategory}
+          />
         </CollapsibleSection>
 
         {store && (

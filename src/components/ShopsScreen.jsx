@@ -1,5 +1,7 @@
-import React, { useState, useEffect } from "react";
-import { loadShops, shopChannelLabel } from "../data/shops.js";
+import React, { useState, useEffect, useMemo } from "react";
+import { loadShops, shopTypeLabel } from "../data/shops.js";
+import { loadCustomListItems } from "../data/sharedDirectories.js";
+import { SHOP_CATEGORY_LIST, itemLabelResolver } from "../data/customLists.js";
 import { DataTable, StatusBadge, VisibilityDot } from "./DataTable.jsx";
 import { ShopDetailPanel } from "./ShopDetailPanel.jsx";
 import { DetailedStatsCounterBar, applyStatFilter } from "./DetailedStatsCounterBar.jsx";
@@ -15,11 +17,13 @@ const deliveryLabel = (s) => {
   return names.length <= 3 ? names.join(", ") : `${names.slice(0, 3).join(", ")} +${names.length - 3}`;
 };
 
-const SHOP_COLUMNS = [
+// Les noms des catégories viennent de la liste de départ complétée par la gestion (élément renommé ou ajouté à la main).
+const getShopColumns = (categoryLabel) => [
   { key: "name", label: "Nom" },
-  { key: "channel", label: "Type", render: (s) => shopChannelLabel(s.channel) },
+  { key: "type", label: "Type", render: shopTypeLabel },
   { key: "country", label: "Pays", render: (s) => countryLabel(s.country) },
   { key: "city", label: "Ville", render: (s) => s.city || "—" },
+  { key: "categories", label: "Catégorie", render: (s) => (s.categories || []).map(categoryLabel).join(", ") || "—" },
   { key: "deliveryCountries", label: "Pays desservis", render: deliveryLabel },
   { key: "website", label: "Site internet" },
   { key: "status", label: "Statut", render: (s) => <StatusBadge status={s.status} /> },
@@ -33,10 +37,16 @@ export function ShopsScreen() {
   const [selected, setSelected] = useState(null);
   const [creating, setCreating] = useState(false);
   const [activeFilter, setActiveFilter] = useState("total");
+  // Les modifications de la liste « catégorie » (noms renommés, éléments ajoutés), pour afficher les bons noms.
+  const [categoryChanges, setCategoryChanges] = useState([]);
+
+  const loadCategoryChanges = async () => setCategoryChanges(await loadCustomListItems(SHOP_CATEGORY_LIST.key));
+
+  const columns = useMemo(() => getShopColumns(itemLabelResolver(SHOP_CATEGORY_LIST, categoryChanges)), [categoryChanges]);
 
   const refresh = async () => {
     setLoading(true);
-    const result = await loadShops();
+    const [result] = await Promise.all([loadShops(), loadCategoryChanges()]);
     setItems(result.items);
     setLoadError(result.error || "");
     setLoading(false);
@@ -72,14 +82,14 @@ export function ShopsScreen() {
             activeFilter={activeFilter}
             onFilterChange={setActiveFilter}
             getCountry={(s) => countryLabel(s.country)}
-            showContributions={false}
+            showSuggestedEdits={false}
             showCertification={false}
           />
           <DataTable
             items={applyStatFilter(items, activeFilter, (s) => countryLabel(s.country))}
-            allColumns={SHOP_COLUMNS}
+            allColumns={columns}
             forcedKeys={["name", "status"]}
-            defaultVisibleKeys={["name", "channel", "country", "city", "deliveryCountries", "status", "visible"]}
+            defaultVisibleKeys={["name", "type", "categories", "country", "city", "deliveryCountries", "status", "visible"]}
             storageKey="shops"
             onRowClick={setSelected}
             onAdd={() => setCreating(true)}
@@ -94,12 +104,14 @@ export function ShopsScreen() {
           onClose={() => {
             setSelected(null);
             setCreating(false);
+            loadCategoryChanges();
           }}
           onSaved={(saved) => {
             const wasCreating = creating;
             const removedId = selected?.id;
             setSelected(null);
             setCreating(false);
+            loadCategoryChanges();
             if (saved) setItems((prev) => (wasCreating ? [...prev, saved] : prev.map((i) => (i.id === saved.id ? saved : i))));
             else setItems((prev) => prev.filter((i) => i.id !== removedId));
           }}

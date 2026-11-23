@@ -22,7 +22,7 @@ import { COCKTAIL_STYLE_GROUPS, MOCKTAIL_STYLE_GROUPS, RTD_STYLES } from "./cock
 import { COCKTAIL_CHARACTERISTIC_GROUPS } from "./cocktailCharacteristics.js";
 import { HOT_CHARACTERISTIC_GROUPS } from "./hotCharacteristics.js";
 import { SNACK_CHARACTERISTIC_GROUPS } from "./snackCharacteristics.js";
-import { PAYMENT_METHODS, VENUE_TYPES, PRODUCER_TYPES, PRODUCER_PROFILES, BRAND_CLASSIFICATIONS, BRAND_TYPES } from "../constants.js";
+import { PAYMENT_METHODS, VENUE_TYPES, PRODUCER_TYPES, PRODUCER_PROFILES, BRAND_CLASSIFICATIONS, BRAND_TYPES, SHOP_CATEGORIES } from "../constants.js";
 
 // Un code ne peut avoir qu'une place dans une liste modifiable (une modification d'un élément vise son code, et
 // un code ne se range que dans un groupe). On garde donc la première place de chaque code. Dans la liste des
@@ -192,6 +192,16 @@ export const PRODUCER_ENTITY = {
   all: "tous les producteurs",
   none: "aucun producteur",
 };
+export const SHOP_ENTITY = {
+  one: "shop",
+  many: "shops",
+  this: "ce shop",
+  ofThis: "de ce shop",
+  ofThese: "de ces shops",
+  forThis: "pour ce shop",
+  all: "tous les shops",
+  none: "aucun shop",
+};
 export const BRAND_ENTITY = {
   one: "marque",
   many: "marques",
@@ -339,6 +349,26 @@ export const PRODUCER_PROFILE_LIST = {
     ofThe: "du profil",
     ofAll: "des profils",
     namePlaceholder: "Nom du profil (ex. Familial)",
+  },
+};
+
+// Fiche Shop : catégorie du shop (plusieurs choix, étiquettes : supermarché, négociant en vin…). Colonne shop_categories.
+export const SHOP_CATEGORY_LIST = {
+  key: "shop_category",
+  flat: true,
+  orderable: true,
+  source: "shops",
+  entity: SHOP_ENTITY,
+  builtinGroups: [{ title: "", tags: SHOP_CATEGORIES }],
+  orphanTitle: "",
+  words: {
+    noun: "catégorie de shop",
+    one: "une catégorie de shop",
+    this: "cette catégorie de shop",
+    the: "la catégorie de shop",
+    ofThe: "de la catégorie de shop",
+    ofAll: "des catégories de shop",
+    namePlaceholder: "Nom de la catégorie (ex. Night shop)",
   },
 };
 

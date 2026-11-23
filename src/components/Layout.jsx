@@ -192,7 +192,7 @@ export function Layout({ current, onNavigate, onLogout, myRole, myCanModerate, m
   // Nouvelles fiches "à traiter" (status to_process) pour chacun des 4 types — en plus des
   // Signalements, déjà comptés ailleurs.
   const databaseBadge = (item) =>
-    ({ venues: newItemsCounts.venues, drinks: newItemsCounts.drinks, brands: newItemsCounts.brands, breweries: newItemsCounts.breweries, reports: pendingReportsCount }[item.key]);
+    ({ venues: newItemsCounts.venues, drinks: newItemsCounts.drinks, brands: newItemsCounts.brands, breweries: newItemsCounts.breweries, shops: newItemsCounts.shops, reports: pendingReportsCount }[item.key]);
 
   const [communicationOpen, setCommunicationOpen] = useState(true);
   const [databaseSectionOpen, setDatabaseSectionOpen] = useState(true);
@@ -279,7 +279,7 @@ export function Layout({ current, onNavigate, onLogout, myRole, myCanModerate, m
               COMMUNICATION_ITEMS.map((item) => {
                 const badge =
                   item.key === "notifications"
-                    ? pendingReportsCount + newItemsCounts.drinks + newItemsCounts.venues + newItemsCounts.brands + newItemsCounts.breweries
+                    ? pendingReportsCount + newItemsCounts.drinks + newItemsCounts.venues + newItemsCounts.brands + newItemsCounts.breweries + newItemsCounts.shops
                     : item.key === "chatTeam"
                     ? unreadChatCounts.chatTeam
                     : item.key === "chatUsers"
@@ -330,7 +330,7 @@ export function Layout({ current, onNavigate, onLogout, myRole, myCanModerate, m
           pendingReportsCount={pendingReportsCount}
           notificationPrefs={notificationPrefs}
           openClaimsCount={openClaimsCount}
-          newItemsCount={newItemsCounts.drinks + newItemsCounts.venues + newItemsCounts.brands + newItemsCounts.breweries}
+          newItemsCount={newItemsCounts.drinks + newItemsCounts.venues + newItemsCounts.brands + newItemsCounts.breweries + newItemsCounts.shops}
           onOpenReports={() => onNavigate("notifications")}
           unreadMessagesCount={unreadChatCounts.chatTeam + unreadChatCounts.chatUsers + unreadChatCounts.chatBusiness}
           onOpenMessages={() => onNavigate("chatTeam")}

@@ -201,6 +201,14 @@ export const PRODUCER_TYPES = [
   { code: "alimentaire", fr: "Alimentaire" },
 ];
 
+// Shops (points de vente de boissons à emporter) : catégories de départ ; la gestion en ajoute, renomme ou masque (liste modifiable, clé `shop_category`).
+export const SHOP_CATEGORIES = [
+  { code: "supermarche", fr: "Supermarché" },
+  { code: "negociant_vin", fr: "Négociant en vin" },
+  { code: "drink_food_shop", fr: "Drink & Food Shop" },
+  { code: "cave_a_bieres", fr: "Cave à bières" },
+];
+
 export const PRODUCER_PROFILES = [
   { code: "micro_producteur", fr: "Micro-producteur" },
   { code: "artisanal", fr: "Artisanal" },
