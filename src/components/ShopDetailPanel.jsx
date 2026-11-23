@@ -207,6 +207,9 @@ export function ShopDetailPanel({ shop, onClose, onSaved, myUserId }) {
     tiktokUrl: form.tiktokUrl.trim(),
     snapchatUrl: form.snapchatUrl.trim(),
     status,
+    // Un shop devenu uniquement en ligne n'a plus d'horaires : son lien Google est dissocié (comme avec « Dissocier »).
+    // Pour un magasin, ces champs ne sont pas envoyés : « Enregistrer » ne touche jamais à la liaison Google.
+    ...(!store && googlePlaceId ? { googlePlaceId: null, googlePlaceIdCheckedAt: null, googleHoursLastFetchAt: null, googleHoursLastStatus: null } : {}),
   });
 
   const save = async () => {
