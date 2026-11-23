@@ -1,12 +1,13 @@
 import React, { useState } from "react";
 import { WhatsappIcon, FacebookIcon, InstagramIcon, TiktokIcon, SnapchatIcon, LinkedinIcon, YoutubeIcon, PlaceCheckIcon } from "./icons.jsx";
-import { geocodeAddress } from "../data/sharedDirectories.js";
+import { geocodeAddress, uploadShopPhoto } from "../data/sharedDirectories.js";
 import { SHOP_TYPES, missingShopFields, createShop, updateShop, deleteShop, saveShopGeocodeResult } from "../data/shops.js";
 import { StatusSelector } from "./StatusSelector.jsx";
 import { PendingContributionsSection } from "./PendingContributionsSection.jsx";
 import { AddressAutocomplete } from "./AddressAutocomplete.jsx";
 import { CollapsibleSection } from "./CollapsibleSection.jsx";
 import { FlatListField } from "./FlatListField.jsx";
+import { AdminPhotoField } from "./AdminPhotoField.jsx";
 import { SHOP_CATEGORY_LIST } from "../data/customLists.js";
 import { COUNTRIES, PHONE_PREFIXES, COUNTRY_ISO_CODES } from "../constants.js";
 import { GEOAPIFY_CONFIGURED, parseCoordinate, fieldStyle, labelStyle, separatorStyle, SocialLinkField } from "./BreweryDetailPanel.jsx";
@@ -121,6 +122,11 @@ export function ShopDetailPanel({ shop, onClose, onSaved, myUserId }) {
     snapchatUrl: shop?.snapchatUrl || "",
   });
   const [status, setStatus] = useState(shop?.status || "draft");
+  const [activeTab, setActiveTab] = useState("informations");
+  const [profilePhotoUrl, setProfilePhotoUrl] = useState(shop?.profilePhotoUrl || null);
+  const [coverPhotoUrl, setCoverPhotoUrl] = useState(shop?.coverPhotoUrl || null);
+  const [uploadingProfile, setUploadingProfile] = useState(false);
+  const [uploadingCover, setUploadingCover] = useState(false);
   const [geocoding, setGeocoding] = useState(false);
   const [geocodeNotFound, setGeocodeNotFound] = useState(false);
   const [geocodeStatus, setGeocodeStatus] = useState(shop?.geocodeStatus || null);
@@ -186,6 +192,8 @@ export function ShopDetailPanel({ shop, onClose, onSaved, myUserId }) {
     email: form.email.trim(),
     website: form.website.trim(),
     googleUrl: form.googleUrl.trim(),
+    profilePhotoUrl,
+    coverPhotoUrl,
     whatsappUrl: form.whatsappUrl.trim(),
     facebookUrl: form.facebookUrl.trim(),
     instagramUrl: form.instagramUrl.trim(),
@@ -212,6 +220,23 @@ export function ShopDetailPanel({ shop, onClose, onSaved, myUserId }) {
       if (result.error) return setError("La sauvegarde a échoué : " + result.error);
       onSaved(result.shop);
     }
+  };
+
+  // Les images sont envoyées tout de suite (nom provisoire pour un nouveau shop) ; l'adresse de l'image n'est enregistrée dans la fiche qu'avec « Enregistrer ».
+  const handleUploadProfile = async (file) => {
+    setUploadingProfile(true);
+    const url = await uploadShopPhoto(shop?.id || `pending-${Date.now()}`, file, "profile");
+    if (url) setProfilePhotoUrl(url);
+    else setError("L'envoi de l'image de profil a échoué.");
+    setUploadingProfile(false);
+  };
+
+  const handleUploadCover = async (file) => {
+    setUploadingCover(true);
+    const url = await uploadShopPhoto(shop?.id || `pending-${Date.now()}`, file, "cover");
+    if (url) setCoverPhotoUrl(url);
+    else setError("L'envoi de l'image de couverture a échoué.");
+    setUploadingCover(false);
   };
 
   const remove = async () => {
@@ -243,6 +268,35 @@ export function ShopDetailPanel({ shop, onClose, onSaved, myUserId }) {
 
         <div style={separatorStyle} />
 
+        <div role="tablist" style={{ display: "flex", gap: "6px", marginBottom: "20px", borderBottom: "2px solid #28405C" }}>
+          {[
+            { key: "informations", label: "Informations" },
+            { key: "medias", label: "Médias" },
+          ].map((tab) => (
+            <button
+              key={tab.key}
+              role="tab"
+              aria-selected={activeTab === tab.key}
+              onClick={() => setActiveTab(tab.key)}
+              style={{
+                background: "none",
+                border: "none",
+                borderBottom: `2px solid ${activeTab === tab.key ? "#39FF66" : "transparent"}`,
+                marginBottom: "-2px",
+                padding: "8px 12px",
+                fontSize: "13px",
+                fontWeight: 700,
+                color: activeTab === tab.key ? "#39FF66" : "#8792A6",
+                cursor: "pointer",
+              }}
+            >
+              {tab.label}
+            </button>
+          ))}
+        </div>
+
+        {activeTab === "informations" && (
+          <>
         <CollapsibleSection title="Dénomination" defaultOpen>
           <label style={labelStyle}>Nom *</label>
           <input value={form.name} onChange={(e) => set("name", e.target.value)} style={{ ...fieldStyle, marginBottom: "14px" }} />
@@ -427,6 +481,15 @@ export function ShopDetailPanel({ shop, onClose, onSaved, myUserId }) {
           <SocialLinkField icon={<LinkedinIcon size={18} />} label="LinkedIn" prefix="https://www.linkedin.com/company/" value={form.linkedinUrl} onChange={(v) => set("linkedinUrl", v)} />
           <SocialLinkField icon={<YoutubeIcon size={18} />} label="YouTube" prefix="https://www.youtube.com/channel/" value={form.youtubeUrl} onChange={(v) => set("youtubeUrl", v)} />
         </CollapsibleSection>
+          </>
+        )}
+
+        {activeTab === "medias" && (
+          <>
+            <AdminPhotoField label="Image de profil (400×400)" photoUrl={profilePhotoUrl} onUpload={handleUploadProfile} onDelete={() => setProfilePhotoUrl(null)} uploading={uploadingProfile} />
+            <AdminPhotoField label="Image de couverture (1200×400)" photoUrl={coverPhotoUrl} aspect="banner" onUpload={handleUploadCover} onDelete={() => setCoverPhotoUrl(null)} uploading={uploadingCover} />
+          </>
+        )}
 
         <div style={{ display: "flex", flexDirection: "column", gap: "10px", marginTop: "20px" }}>
           {missing.length > 0 && (

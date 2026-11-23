@@ -2874,6 +2874,26 @@ export async function uploadBreweryGalleryPhoto(breweryId, file) {
   return data.url;
 }
 
+// Images d'un shop (image de profil 400×400, image de couverture 1200×400) : même fonction d'envoi (vérification de contenu) que les producteurs.
+export async function uploadShopPhoto(shopId, file, kind) {
+  const dims = kind === "cover" ? [1200, 400] : [400, 400];
+  const blob = await resizeImageTo(file, dims[0], dims[1]);
+  const imageBase64 = await blobToBase64(blob);
+  const path = `${shopId}-${kind}-${Date.now()}.jpg`;
+  const { data, error } = await supabase.functions.invoke("moderate-and-upload-photo", {
+    body: { bucket: "shop-photos", path, imageBase64, contentType: "image/jpeg", entityType: "shop", entityId: shopId, kind: kind === "cover" ? "cover" : "profile_photo" },
+  });
+  if (error) {
+    console.error("uploadShopPhoto:", error);
+    return null;
+  }
+  if (data?.error) {
+    console.error("uploadShopPhoto:", data.error);
+    return null;
+  }
+  return data.url;
+}
+
 /* ---------------- MARQUES ---------------- */
 
 export async function loadBrandsDirectory() {
