@@ -5,7 +5,8 @@ import { supabase } from "../supabaseClient.js";
    Un shop vend des boissons à emporter : supermarché, négociant en vin, Drink & Food Shop, et aussi boutique en ligne.
    Deux pastilles, cumulables : « Magasin » (colonne `has_store` : une adresse et un point sur la carte) et « En ligne » (colonne `has_online` : un site,
    et la liste des pays où il livre). Au moins une des deux. Lecture : les comptes connectés ne voient que les fiches visibles (à traiter, à compléter,
-   complète) ; le personnel voit tout et écrit ; un compte de l'app peut proposer un nouveau shop (`created_via = 'app'`, statut « à traiter »). */
+   complète) ; le personnel voit tout et écrit ; un compte de l'app peut proposer un nouveau shop (`created_via = 'app'`, statut « à traiter ») puis, plus tard, suggérer une modification d'un shop
+   existant (table `data_contributions`, `entity_type = 'shop'`, compteur `pending_contributions_count`). */
 
 export const SHOP_TYPES = [
   { key: "store", label: "Magasin" },
@@ -113,6 +114,7 @@ function rowToShop(row) {
     linkedinUrl: row.linkedin_url,
     youtubeUrl: row.youtube_url,
     status: row.status,
+    pendingContributionsCount: row.pending_contributions_count || 0,
     createdVia: row.created_via,
     submittedBy: row.submitted_by,
     submittedAt: row.submitted_at ? new Date(row.submitted_at).getTime() : null,

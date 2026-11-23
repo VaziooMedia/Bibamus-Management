@@ -1638,7 +1638,7 @@ export async function loadContributionsForEntity(entityType, entityId, status = 
   return data.map(rowToContribution);
 }
 
-const CONTRIBUTION_ENTITY_TABLES = { venue: "public_venues", drink: "drinks_directory", brand: "brands_directory", producer: "breweries_directory" };
+const CONTRIBUTION_ENTITY_TABLES = { venue: "public_venues", drink: "drinks_directory", brand: "brands_directory", producer: "breweries_directory", shop: "shops_directory" };
 
 async function incrementPendingCount(entityType, entityId, delta) {
   const table = CONTRIBUTION_ENTITY_TABLES[entityType];

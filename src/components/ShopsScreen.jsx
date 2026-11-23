@@ -30,7 +30,7 @@ const getShopColumns = (categoryLabel) => [
   { key: "visible", label: "Visible", render: (s) => <VisibilityDot status={s.status} /> },
 ];
 
-export function ShopsScreen() {
+export function ShopsScreen({ myUserId }) {
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState("");
@@ -82,7 +82,6 @@ export function ShopsScreen() {
             activeFilter={activeFilter}
             onFilterChange={setActiveFilter}
             getCountry={(s) => countryLabel(s.country)}
-            showSuggestedEdits={false}
             showCertification={false}
           />
           <DataTable
@@ -101,6 +100,7 @@ export function ShopsScreen() {
       {(selected || creating) && (
         <ShopDetailPanel
           shop={selected}
+          myUserId={myUserId}
           onClose={() => {
             setSelected(null);
             setCreating(false);

@@ -3,6 +3,7 @@ import { WhatsappIcon, FacebookIcon, InstagramIcon, TiktokIcon, SnapchatIcon, Li
 import { geocodeAddress } from "../data/sharedDirectories.js";
 import { SHOP_TYPES, missingShopFields, createShop, updateShop, deleteShop, saveShopGeocodeResult } from "../data/shops.js";
 import { StatusSelector } from "./StatusSelector.jsx";
+import { PendingContributionsSection } from "./PendingContributionsSection.jsx";
 import { AddressAutocomplete } from "./AddressAutocomplete.jsx";
 import { CollapsibleSection } from "./CollapsibleSection.jsx";
 import { FlatListField } from "./FlatListField.jsx";
@@ -87,7 +88,10 @@ function CountryPicker({ value, onChange }) {
 }
 
 // shop === null → mode création
-export function ShopDetailPanel({ shop, onClose, onSaved }) {
+// Le nom d'un champ suggéré (colonne de la base, « postal_code ») devient celui du formulaire (« postalCode »).
+const camelField = (field) => field.replace(/_([a-z])/g, (_, c) => c.toUpperCase());
+
+export function ShopDetailPanel({ shop, onClose, onSaved, myUserId }) {
   const isNew = !shop;
   const [form, setForm] = useState({
     name: shop?.name || "",
@@ -126,6 +130,7 @@ export function ShopDetailPanel({ shop, onClose, onSaved }) {
   const [error, setError] = useState("");
 
   const set = (field, value) => setForm((f) => ({ ...f, [field]: value }));
+  const refreshAfterContribution = (contribution) => set(camelField(contribution.fieldPath), contribution.proposedValue);
   const toggleCategory = (code) => setForm((f) => ({ ...f, categories: f.categories.includes(code) ? f.categories.filter((x) => x !== code) : [...f.categories, code] }));
   const addCategory = (item) => setForm((f) => (f.categories.includes(item.code) ? f : { ...f, categories: [...f.categories, item.code] }));
   const removeCategory = (code) => setForm((f) => ({ ...f, categories: f.categories.filter((x) => x !== code) }));
@@ -228,6 +233,8 @@ export function ShopDetailPanel({ shop, onClose, onSaved }) {
             ✕
           </button>
         </div>
+
+        <PendingContributionsSection entityType="shop" entityId={shop?.id || null} reviewerId={myUserId} onApplied={refreshAfterContribution} />
 
         <label style={labelStyle}>Statut de vérification</label>
         <div style={{ marginBottom: "20px", maxWidth: "220px" }}>

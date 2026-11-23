@@ -160,7 +160,7 @@ export default function App() {
           myUserId={myUserId}
         />
       )}
-      {screen === "shops" && <ShopsScreen />}
+      {screen === "shops" && <ShopsScreen myUserId={myUserId} />}
       {screen === "officialStories" && <OfficialStoriesScreen myUserId={myUserId} />}
       {screen === "brands" && (
         <BrandsScreen initialBrandId={viewedClaimEntity?.type === "brand" ? viewedClaimEntity.id : null} onInitialBrandOpened={() => setViewedClaimEntity(null)} myUserId={myUserId} />
