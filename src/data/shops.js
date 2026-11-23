@@ -3,6 +3,7 @@ import { supabase } from "../supabaseClient.js";
 /* ---------------- SHOPS (points de vente de boissons à emporter) ----------------
    Table `shops_directory` (voir docs/DATABASE.md de bibamus-web, « Shops ») : le 5ᵉ répertoire de l'app, à côté des Lieux, Produits, Marques et Producteurs.
    Un shop vend des boissons à emporter : supermarché, négociant en vin, Drink & Food Shop, et aussi boutique en ligne.
+   Médias : une image de profil (`profile_photo_url`, 400×400) et une image de couverture (`cover_photo_url`, 1200×400), bucket `shop-photos`.
    Deux pastilles, cumulables : « Magasin » (colonne `has_store` : une adresse et un point sur la carte) et « En ligne » (colonne `has_online` : un site,
    et la liste des pays où il livre). Au moins une des deux. Lecture : les comptes connectés ne voient que les fiches visibles (à traiter, à compléter,
    complète) ; le personnel voit tout et écrit ; un compte de l'app peut proposer un nouveau shop (`created_via = 'app'`, statut « à traiter ») puis, plus tard, suggérer une modification d'un shop
@@ -106,6 +107,8 @@ function rowToShop(row) {
     email: row.email,
     website: row.website,
     googleUrl: row.google_url,
+    profilePhotoUrl: row.profile_photo_url || null,
+    coverPhotoUrl: row.cover_photo_url || null,
     whatsappUrl: row.whatsapp_url,
     facebookUrl: row.facebook_url,
     instagramUrl: row.instagram_url,
@@ -146,6 +149,8 @@ function shopToRow(s, partial = false) {
     email: s.email,
     website: s.website,
     google_url: s.googleUrl,
+    profile_photo_url: s.profilePhotoUrl,
+    cover_photo_url: s.coverPhotoUrl,
     whatsapp_url: s.whatsappUrl,
     facebook_url: s.facebookUrl,
     instagram_url: s.instagramUrl,
