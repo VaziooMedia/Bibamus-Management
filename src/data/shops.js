@@ -75,6 +75,13 @@ export async function deleteShop(id) {
   return { ok: true };
 }
 
+// Une fiche complète, au même format que la liste (ouverte depuis un signalement).
+export async function loadShopById(id) {
+  const { data, error } = await supabase.from("shops_directory").select("*").eq("id", id).single();
+  if (error || !data) return null;
+  return rowToShop(data);
+}
+
 export async function saveShopGeocodeResult(shopId, { lat, lng, source, confidence, status }) {
   const { error } = await supabase
     .from("shops_directory")

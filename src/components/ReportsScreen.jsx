@@ -7,6 +7,7 @@ import { VenueDetailPanel } from "./VenueDetailPanel.jsx";
 import { DrinkDetailPanel } from "./DrinkDetailPanel.jsx";
 import { BreweryDetailPanel } from "./BreweryDetailPanel.jsx";
 import { BrandDetailPanel } from "./BrandDetailPanel.jsx";
+import { ShopDetailPanel } from "./ShopDetailPanel.jsx";
 
 const statusLabel = (key) => STATUSES.find((s) => s.key === key)?.label || key;
 const drinkTypeLabel = (key) => DRINK_TYPES.find((t) => t.code === key)?.fr || key;
@@ -23,7 +24,7 @@ const REASON_LABELS = {
   other: "Autre raison",
 };
 
-const ENTITY_TYPE_LABELS = { venue: "Établissement", drink: "Produit", brand: "Marque", producer: "Producteur", pulse_event: "Publication", pulse_comment: "Commentaire" };
+const ENTITY_TYPE_LABELS = { venue: "Établissement", drink: "Produit", brand: "Marque", producer: "Producteur", shop: "Shop", pulse_event: "Publication", pulse_comment: "Commentaire" };
 
 // Aperçu compact d'une fiche (photo + nom + détails spécifiques au type) — juste pour situer le
 // signalement d'un coup d'œil. L'action se fait via "Ouvrir la fiche complète" (le vrai
@@ -52,6 +53,12 @@ function EntityPreview({ entityType, details, onOpen, keeperControl }) {
           )}
           {entityType === "drink" && <p style={{ fontSize: "11.5px", color: "#8792A6", margin: "8px 0 0" }}>{drinkTypeLabel(details.type)}</p>}
           {entityType === "producer" && <p style={{ fontSize: "11.5px", color: "#8792A6", margin: "8px 0 0" }}>{details.country}</p>}
+          {entityType === "shop" && (
+            <p style={{ fontSize: "11.5px", color: "#8792A6", margin: "8px 0 0" }}>
+              {details.has_store ? [[details.street_name, details.street_number].filter(Boolean).join(" "), details.city].filter(Boolean).join(", ") || "Magasin" : "En ligne"}
+              {details.has_store && details.has_online ? " · aussi en ligne" : ""}
+            </p>
+          )}
           <p style={{ fontSize: "11px", color: "#8792A6", margin: "8px 0 0" }}>Statut : {statusLabel(details.status)}</p>
         </div>
         {onOpen && (
@@ -145,7 +152,7 @@ const TABS = [
   { key: "dismissed", label: "Ignorés" },
 ];
 
-export function ReportsScreen() {
+export function ReportsScreen({ myUserId }) {
   const [tab, setTab] = useState("pending");
   const [reports, setReports] = useState(null);
   const [busyId, setBusyId] = useState(null);
@@ -413,6 +420,7 @@ export function ReportsScreen() {
       {openEntity?.entityType === "drink" && <DrinkDetailPanel drink={openEntity.data} onClose={() => setOpenEntity(null)} onSaved={handleEntitySaved} />}
       {openEntity?.entityType === "producer" && <BreweryDetailPanel brewery={openEntity.data} onClose={() => setOpenEntity(null)} onSaved={handleEntitySaved} />}
       {openEntity?.entityType === "brand" && <BrandDetailPanel brand={openEntity.data} onClose={() => setOpenEntity(null)} onSaved={handleEntitySaved} />}
+      {openEntity?.entityType === "shop" && <ShopDetailPanel shop={openEntity.data} myUserId={myUserId} onClose={() => setOpenEntity(null)} onSaved={handleEntitySaved} />}
     </div>
   );
 }

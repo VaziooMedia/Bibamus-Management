@@ -204,7 +204,7 @@ export default function App() {
         />
       )}
       {screen === "users" && <UsersScreen initialUserId={viewedUserId} onInitialUserOpened={() => setViewedUserId(null)} />}
-      {screen === "reports" && <ReportsScreen />}
+      {screen === "reports" && <ReportsScreen myUserId={myUserId} />}
       {screen === "audit" && <AuditLogScreen />}
       {screen === "myEntities" && <MyBusinessEntitiesScreen myUserId={myUserId} />}
       {screen === "countryRules" && <CountryRulesScreen />}

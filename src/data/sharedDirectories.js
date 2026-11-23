@@ -14,6 +14,7 @@
 import { supabase } from "../supabaseClient.js";
 import { DRINK_TYPE_CODE_TO_LABEL } from "../constants.js";
 import { normalizeSearchText } from "../utils.js";
+import { loadShopById } from "./shops.js";
 
 /* ---------------- PERMISSIONS CENTRALISÉES ---------------- */
 
@@ -32,12 +33,13 @@ const CAPABILITY_MATRIX = {
 
 /* ---------------- SIGNALEMENTS ---------------- */
 
-const ENTITY_TABLE_BY_TYPE = { venue: "public_venues", drink: "drinks_directory", brand: "brands_directory", producer: "breweries_directory" };
+const ENTITY_TABLE_BY_TYPE = { venue: "public_venues", drink: "drinks_directory", brand: "brands_directory", producer: "breweries_directory", shop: "shops_directory" };
 const ENTITY_SELECT_FIELDS = {
   venue: "id, name, street_name, street_number, city, cover_photo_url, profile_photo_url, status, certification_level",
   drink: "id, name, type, photo_url, status, certification_level",
   brand: "id, name, logo_url, status, certification_level",
   producer: "id, name, country, profile_photo_url, cover_photo_url, status, certification_level",
+  shop: "id, name, has_store, has_online, street_name, street_number, city, country, profile_photo_url, cover_photo_url, status",
 };
 
 // Détails des publications / commentaires signalés (auteur, état, objet concerné) — via une
@@ -162,6 +164,7 @@ export async function updateEntityField(entityType, entityId, patch) {
 export async function loadEntityDetail(entityType, entityId) {
   const table = ENTITY_TABLE_BY_TYPE[entityType];
   if (!table) return null;
+  if (entityType === "shop") return loadShopById(entityId);
   const { data, error } = await supabase.from(table).select("*").eq("id", entityId).single();
   if (error || !data) return null;
   if (entityType === "venue") return rowToVenue(data);
@@ -174,6 +177,14 @@ export async function loadEntityDetail(entityType, entityId) {
 // Fusion réelle — transfère les relations (propriété Business, produits liés à une
 // marque/producteur fusionné, revendications en attente), pas seulement le tombstone.
 export async function mergeEntities(entityType, loserId, keeperId) {
+  // Shops : la fonction serveur `merge_entities` ne les connaît pas encore, et un shop n'a (pour l'instant) aucune relation à
+  // transférer — ni revendication, ni favori, ni produit lié. La fiche en double passe donc simplement au statut « Doublon »
+  // (invisible dans l'app) ; la colonne `duplicate_of_id` n'existe pas encore sur `shops_directory`.
+  if (entityType === "shop") {
+    const { error: shopError } = await supabase.from("shops_directory").update({ status: "duplicate", updated_at: new Date().toISOString() }).eq("id", loserId);
+    if (shopError) return { error: shopError.message };
+    return { ok: true };
+  }
   const { data, error } = await supabase.rpc("merge_entities", { p_entity_type: entityType, p_loser_id: loserId, p_keeper_id: keeperId });
   if (error) return { error: error.message };
   if (data?.error) return { error: data.error };
