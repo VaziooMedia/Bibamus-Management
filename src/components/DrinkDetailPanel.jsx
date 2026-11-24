@@ -1356,7 +1356,7 @@ export function DrinkDetailPanel({ drink, onClose, onSaved, myUserId }) {
               >
                 <span style={{ ...sectionTitleStyle, marginTop: 0, marginBottom: 0 }}>
                   <span style={{ width: "4px", height: "14px", background: "#39FF66", borderRadius: "2px", display: "inline-block" }} />
-                  {isWine ? "Styles" : "Style(s)"}
+                  Style(s)
                   {!isSoft && !isHot && !isCocktail && !isWine && !isSpirit && shownStyles.length > 0 && <span style={{ color: "#8792A6", fontWeight: 500 }}> ({shownStyles.length} sélectionné{shownStyles.length > 1 ? "s" : ""})</span>}
                   {isSpirit && SPIRIT_STYLE_LISTS[form.beverageSubtype] && spiritOwnedStyles.length > 0 && (
                     <span style={{ color: "#8792A6", fontWeight: 500 }}>
