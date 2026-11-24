@@ -20,6 +20,7 @@ import { SOFT_CHARACTERISTICS } from "./softCharacteristics.js";
 import { COFFEE_STYLE_GROUPS, TEA_STYLE_GROUPS, INFUSION_STYLE_GROUPS, HOT_MILK_STYLE_GROUPS, SOUP_STYLE_GROUPS, HOT_MIX_STYLE_GROUPS, CEREAL_CHICORY_STYLE_GROUPS } from "./hotStyles.js";
 import { COCKTAIL_STYLE_GROUPS, MOCKTAIL_STYLE_GROUPS, RTD_STYLES } from "./cocktailStyles.js";
 import { WINE_STYLE_GROUPS, WINE_EFFERVESCENT_STYLE_GROUPS } from "./wineStyles.js";
+import { SPIRIT_STYLE_GROUPS_BY_SUBTYPE, SPIRIT_STYLE_PREFIXES } from "./spiritStyles.js";
 import { COCKTAIL_CHARACTERISTIC_GROUPS } from "./cocktailCharacteristics.js";
 import { HOT_CHARACTERISTIC_GROUPS } from "./hotCharacteristics.js";
 import { SNACK_CHARACTERISTIC_GROUPS } from "./snackCharacteristics.js";
@@ -832,6 +833,54 @@ export const SPARKLING_WINE_STYLE_LIST = {
 };
 // La liste de styles de chaque sous-catégorie de vins (clé : code de la sous-catégorie).
 export const WINE_STYLE_LISTS = { vin: WINE_STYLE_LIST, vin_effervescent: SPARKLING_WINE_STYLE_LIST };
+
+// Fiche Spiritueux : styles de chacune des 16 sous-catégories (Whisky, Rum, Gin…) — une liste PLATE par sous-catégorie (un seul groupe « Style »
+// à chaque fois, donc des étiquettes sans accordéon, comme l'Eau), à plusieurs choix. La liste s'appelle « <préfixe>_style » (« whisky_style »,
+// « rum_style »…, voir SPIRIT_STYLE_PREFIXES) ; les styles de départ (128, codes inchangés) sont dans spiritStyles.js, et un style ajouté à la
+// main s'appelle « perso_<préfixe>_… » (voir `codePrefix`). Seuls les produits Spiritueux sont comptés et modifiés (`source: "spirit_styles"`) :
+// cette colonne est aussi celle des bières, des vins, des softs, des boissons chaudes et des cocktails.
+const SPIRIT_ENTITY_WORDS = {
+  whisky: ["tous les whiskies", "aucun whisky"],
+  rhum: ["tous les rhums", "aucun rhum"],
+  gin: ["tous les gins", "aucun gin"],
+  genever: ["tous les genevers", "aucun genever"],
+  vodka: ["toutes les vodkas", "aucune vodka"],
+  agave: ["tous les spiritueux d'agave", "aucun spiritueux d'agave"],
+  brandy: ["tous les brandys", "aucun brandy"],
+  wine_spirits: ["toutes les eaux-de-vie de vin", "aucune eau-de-vie de vin"],
+  eaux_de_vie_de_fruits: ["toutes les eaux-de-vie de fruits", "aucune eau-de-vie de fruits"],
+  eaux_de_vie_de_marc: ["toutes les eaux-de-vie de marc", "aucune eau-de-vie de marc"],
+  liqueurs_cremes: ["toutes les liqueurs et crèmes", "aucune liqueur ni crème"],
+  anises: ["tous les spiritueux anisés", "aucun spiritueux anisé"],
+  bitters: ["tous les bitters", "aucun bitter"],
+  herbal: ["tous les spiritueux aux herbes", "aucun spiritueux aux herbes"],
+  spiritueux_de_canne: ["tous les spiritueux de canne", "aucun spiritueux de canne"],
+  autres_spiritueux: ["tous les autres spiritueux", "aucun autre spiritueux"],
+};
+const spiritStyleList = (subtype) => {
+  const prefix = SPIRIT_STYLE_PREFIXES[subtype];
+  const [all, none] = SPIRIT_ENTITY_WORDS[subtype];
+  return {
+    key: `${prefix}_style`,
+    flat: true,
+    source: "spirit_styles",
+    codePrefix: `perso_${prefix}_`,
+    entity: { ...PRODUCT_ENTITY, all, none },
+    builtinGroups: [{ title: "", tags: SPIRIT_STYLE_GROUPS_BY_SUBTYPE[subtype].flatMap((g) => g.tags) }],
+    orphanTitle: "",
+    words: {
+      noun: "style",
+      one: "un style",
+      this: "ce style",
+      the: "le style",
+      ofThe: "du style",
+      ofAll: "des styles",
+      namePlaceholder: "Nom du style",
+    },
+  };
+};
+// La liste de styles de chaque sous-catégorie de spiritueux (clé : code de la sous-catégorie).
+export const SPIRIT_STYLE_LISTS = Object.fromEntries(Object.keys(SPIRIT_STYLE_PREFIXES).map((subtype) => [subtype, spiritStyleList(subtype)]));
 
 // Fiche Cocktails / Mocktails : styles des Cocktails — six classifications (Types de cocktails, Bases alcoolisées, Bases non alcoolisées
 // & Mixers, Gazéification, Saveurs & Profil aromatique, Texture & Présentation), donc une liste à groupes comme celles des softs et des

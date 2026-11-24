@@ -21,6 +21,8 @@ import {
   deleteSoftStyle,
   countDrinksWithWineStyle,
   deleteWineStyle,
+  countDrinksWithSpiritStyle,
+  deleteSpiritStyle,
   countDrinksWithHotStyle,
   deleteHotStyle,
   countDrinksWithCocktailStyle,
@@ -38,7 +40,7 @@ import {
   saveCustomListOrder,
 } from "../data/sharedDirectories.js";
 
-// Où une liste compte et supprime ses éléments : dans les lieux, dans les producteurs, dans les marques, dans les softs, dans les vins, dans les boissons chaudes, dans les cocktails / mocktails, dans les caractéristiques des softs, dans les caractéristiques des cocktails / mocktails, dans les caractéristiques des boissons chaudes, dans les caractéristiques des snacks, dans les dérivés des bières, ou (par défaut) dans les produits.
+// Où une liste compte et supprime ses éléments : dans les lieux, dans les producteurs, dans les marques, dans les softs, dans les vins, dans les spiritueux, dans les boissons chaudes, dans les cocktails / mocktails, dans les caractéristiques des softs, dans les caractéristiques des cocktails / mocktails, dans les caractéristiques des boissons chaudes, dans les caractéristiques des snacks, dans les dérivés des bières, ou (par défaut) dans les produits.
 const SOURCES = {
   venues: { count: countVenuesWithListItem, remove: deleteVenueListItem },
   producers: { count: countProducersWithListItem, remove: deleteProducerListItem },
@@ -46,6 +48,7 @@ const SOURCES = {
   shops: { count: countShopsWithListItem, remove: deleteShopListItem },
   soft_styles: { count: countDrinksWithSoftStyle, remove: deleteSoftStyle },
   wine_styles: { count: countDrinksWithWineStyle, remove: deleteWineStyle },
+  spirit_styles: { count: countDrinksWithSpiritStyle, remove: deleteSpiritStyle },
   hot_styles: { count: countDrinksWithHotStyle, remove: deleteHotStyle },
   cocktail_styles: { count: countDrinksWithCocktailStyle, remove: deleteCocktailStyle },
   soft_characteristics: { count: countDrinksWithSoftCharacteristic, remove: deleteSoftCharacteristic },
