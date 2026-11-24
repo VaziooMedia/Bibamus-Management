@@ -20,7 +20,7 @@ import { FlavorNotesPicker } from "./FlavorNotesPicker.jsx";
 import { FlatListField } from "./FlatListField.jsx";
 import { OnOffSwitch } from "./OnOffSwitch.jsx";
 import { GroupedListField } from "./GroupedListField.jsx";
-import { BEER_DERIVATIVE_LIST, SPIRIT_DERIVATIVE_LIST, TEA_DERIVATIVE_LIST, derivativeVolumesToForm, derivativeVolumesToSave, derivativeKcalToForm, derivativeKcalToSave, mergeCustomItems, FOOD_PAIRING_LIST, OCCASION_LIST, GLASS_LIST, CHARACTERISTIC_LIST, SOFT_CHARACTERISTIC_LIST, COCKTAIL_CHARACTERISTIC_LIST, HOT_CHARACTERISTIC_LIST, SNACK_CHARACTERISTIC_LIST, SOFT_STYLE_LISTS, HOT_STYLE_LISTS, COCKTAIL_STYLE_LISTS } from "../data/customLists.js";
+import { BEER_DERIVATIVE_LIST, SPIRIT_DERIVATIVE_LIST, TEA_DERIVATIVE_LIST, derivativeVolumesToForm, derivativeVolumesToSave, derivativeKcalToForm, derivativeKcalToSave, mergeCustomItems, FOOD_PAIRING_LIST, OCCASION_LIST, GLASS_LIST, CHARACTERISTIC_LIST, SOFT_CHARACTERISTIC_LIST, COCKTAIL_CHARACTERISTIC_LIST, HOT_CHARACTERISTIC_LIST, SNACK_CHARACTERISTIC_LIST, SOFT_STYLE_LISTS, HOT_STYLE_LISTS, COCKTAIL_STYLE_LISTS, WINE_STYLE_LISTS } from "../data/customLists.js";
 import { softStyleOwner, stylesForSoftSubtype } from "../data/softStyles.js";
 import { characteristicsForSoft, characteristicsWithoutSoftOnly } from "../data/softCharacteristics.js";
 import { characteristicsForCocktail, characteristicsWithoutCocktailOnly } from "../data/cocktailCharacteristics.js";
@@ -55,7 +55,7 @@ import {
   APPLE_TYPES,
   VERIFICATION_STATUSES,
 } from "../data/beerCiderStyles.js";
-import { WINE_STYLE_GROUPS, WINE_EFFERVESCENT_STYLE_GROUPS, WINE_COLORS_BY_SUBTYPE, WINE_APPELLATIONS_BY_COUNTRY, WINE_EFFERVESCENT_APPELLATIONS_BY_COUNTRY } from "../data/wineStyles.js";
+import { WINE_STYLE_GROUPS, WINE_EFFERVESCENT_STYLE_GROUPS, wineStyleOwner, stylesForWineSubtype, WINE_COLORS_BY_SUBTYPE, WINE_APPELLATIONS_BY_COUNTRY, WINE_EFFERVESCENT_APPELLATIONS_BY_COUNTRY } from "../data/wineStyles.js";
 import { SPIRIT_STYLE_GROUPS_BY_SUBTYPE } from "../data/spiritStyles.js";
 
 export const DRINK_TYPES = [
@@ -77,8 +77,8 @@ export const BEER_CIDER_SUBTYPES = [
   { code: "poire", fr: "Poiré" },
 ];
 export const WINE_SUBTYPES = [
-  { code: "vin", fr: "Vin" },
-  { code: "vin_effervescent", fr: "Vin effervescent" },
+  { code: "vin", fr: "Wine" },
+  { code: "vin_effervescent", fr: "Sparkling Wine" },
 ];
 // Spiritueux : 16 sous-catégories aux noms anglais, dans l'ordre voulu par Mehdi (2026-11-24). Les codes des 10 sous-catégories qui existaient déjà n'ont pas
 // changé (seul le nom affiché a changé) ; `gin`, `genever`, `brandy`, `wine_spirits`, `bitters` et `herbal` sont nouveaux : ils remplacent
@@ -537,6 +537,9 @@ export function DrinkDetailPanel({ drink, onClose, onSaved, myUserId }) {
   // Pareil pour un cocktail / mocktail : les styles de sa sous-catégorie seulement, et la même ligne d'étiquettes.
   const cocktailOwnedStyles = isCocktail ? form.styles.filter((c) => cocktailStyleOwner(c) === form.beverageSubtype) : [];
   const cocktailStyleChips = { codes: cocktailOwnedStyles, ariaLabel: "Styles sélectionnés" };
+  // Pareil pour un vin : les styles de sa sous-catégorie (Wine ou Sparkling Wine) seulement, et la même ligne d'étiquettes.
+  const wineOwnedStyles = isWine ? form.styles.filter((c) => wineStyleOwner(c) === form.beverageSubtype) : [];
+  const wineStyleChips = { codes: wineOwnedStyles, ariaLabel: "Styles sélectionnés" };
   // Interrupteur « Dérivés du produit » : en l'allumant, tous les dérivés de la liste sont cochés d'emblée (on décoche ensuite ceux que
   // ce produit ne peut pas devenir). La liste est lue à l'instant, avec les dérivés ajoutés ou supprimés depuis la gestion.
   const switchDerivatives = async (on) => {
@@ -657,7 +660,7 @@ export function DrinkDetailPanel({ drink, onClose, onSaved, myUserId }) {
       vintage: form.vintage || null,
       originRegion: form.originRegion.trim(),
       originCity: form.originCity.trim(),
-      styles: isBeerOrCider ? stylesForBeerCiderSubtype(form.styles, form.beverageSubtype, beerCiderStyleGroups) : form.styles,
+      styles: isBeerOrCider ? stylesForBeerCiderSubtype(form.styles, form.beverageSubtype, beerCiderStyleGroups) : isWine ? stylesForWineSubtype(form.styles, form.beverageSubtype) : form.styles,
       productStatus: form.productStatus,
       launchYear: form.launchYear === "" ? null : parseInt(form.launchYear, 10),
       malts: form.malts,
@@ -1351,8 +1354,14 @@ export function DrinkDetailPanel({ drink, onClose, onSaved, myUserId }) {
               >
                 <span style={{ ...sectionTitleStyle, marginTop: 0, marginBottom: 0 }}>
                   <span style={{ width: "4px", height: "14px", background: "#39FF66", borderRadius: "2px", display: "inline-block" }} />
-                  {isWine ? "Caractéristiques" : "Style(s)"}
-                  {!isSoft && !isHot && !isCocktail && shownStyles.length > 0 && <span style={{ color: "#8792A6", fontWeight: 500 }}> ({shownStyles.length} sélectionné{shownStyles.length > 1 ? "s" : ""})</span>}
+                  {isWine ? "Styles" : "Style(s)"}
+                  {!isSoft && !isHot && !isCocktail && !isWine && shownStyles.length > 0 && <span style={{ color: "#8792A6", fontWeight: 500 }}> ({shownStyles.length} sélectionné{shownStyles.length > 1 ? "s" : ""})</span>}
+                  {isWine && WINE_STYLE_LISTS[form.beverageSubtype] && wineOwnedStyles.length > 0 && (
+                    <span style={{ color: "#8792A6", fontWeight: 500 }}>
+                      {" "}
+                      ({wineOwnedStyles.length} sélectionné{wineOwnedStyles.length > 1 ? "s" : ""})
+                    </span>
+                  )}
                   {isHot && HOT_STYLE_LISTS[form.beverageSubtype] && hotOwnedStyles.length > 0 && (
                     <span style={{ color: "#8792A6", fontWeight: 500 }}>
                       {" "}
@@ -1462,14 +1471,16 @@ export function DrinkDetailPanel({ drink, onClose, onSaved, myUserId }) {
             {stylesSectionOpen && !isSoft && !isHot && !isCocktail && !hasNoStyles && (
               <>
                 <p style={{ fontSize: "11.5px", color: "#8792A6", marginTop: "-6px", marginBottom: "10px" }}>
-                  {isWine ? "Plusieurs caractéristiques peuvent se cumuler." : "Plusieurs styles peuvent se cumuler (ex. IPA + Hazy + Double IPA)."}
+                  {isWine ? "Plusieurs styles peuvent se cumuler." : "Plusieurs styles peuvent se cumuler (ex. IPA + Hazy + Double IPA)."}
                 </p>
-                <SelectedStyleChips
-                  codes={shownStyles}
-                  labelFor={(code) => styleLabelByCode.get(code) || null}
-                  ready={customStylesReady}
-                  ariaLabel={isWine ? "Caractéristiques sélectionnées" : "Styles sélectionnés"}
-                />
+                {!isWine && (
+                  <SelectedStyleChips
+                    codes={shownStyles}
+                    labelFor={(code) => styleLabelByCode.get(code) || null}
+                    ready={customStylesReady}
+                    ariaLabel="Styles sélectionnés"
+                  />
+                )}
                 <div style={{ border: "2px solid #28405C", borderRadius: "8px", padding: "12px" }}>
                   {isBeerOrCider ? (
                     <BeerCiderStylePicker
@@ -1487,20 +1498,25 @@ export function DrinkDetailPanel({ drink, onClose, onSaved, myUserId }) {
                       onCount={countDrinksWithBeerCiderStyle}
                       onDelete={deleteCustomBeerCiderStyle}
                     />
+                  ) : isWine ? (
+                    // Vins : une liste modifiable par sous-catégorie (Wine, Sparkling Wine), comme celles des softs. `key` : changer de
+                    // sous-catégorie recharge la liste (ses modifications sont lues à l'ouverture).
+                    WINE_STYLE_LISTS[form.beverageSubtype] && (
+                      <GroupedListField
+                        key={form.beverageSubtype}
+                        list={WINE_STYLE_LISTS[form.beverageSubtype]}
+                        chips={wineStyleChips}
+                        selected={form.styles}
+                        onToggle={toggleStyle}
+                        onAdded={softStyleAdded}
+                        onDeleted={softStyleDeleted}
+                      />
+                    )
                   ) : (
                     <StyleTagAccordion
-                      groups={
-                        isWine
-                          ? form.beverageSubtype === "vin_effervescent"
-                            ? WINE_EFFERVESCENT_STYLE_GROUPS
-                            : WINE_STYLE_GROUPS
-                          : isSpirit
-                          ? SPIRIT_STYLE_GROUPS_BY_SUBTYPE[form.beverageSubtype] || []
-                          : []
-                      }
+                      groups={isSpirit ? SPIRIT_STYLE_GROUPS_BY_SUBTYPE[form.beverageSubtype] || [] : []}
                       selected={form.styles}
                       onToggle={toggleStyle}
-                      hideControls={isWine}
                     />
                   )}
 

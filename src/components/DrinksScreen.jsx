@@ -19,7 +19,7 @@ const labelFromList = (list) => {
   return (code) => map[code] || code || "—";
 };
 const typeLabel = labelFromList(DRINK_TYPES);
-// "Sous-Catégorie" affiche à la fois "Bière/Cidre", "Vin/Vin effervescent" ET les spiritueux — le
+// "Sous-Catégorie" affiche à la fois "Bière/Cidre", "Wine/Sparkling Wine" ET les spiritueux — le
 // repli sur BEER_CIDER_SUBTYPES seul affichait le code brut ("vin", "vin_effervescent") pour un vin.
 const subtypeLabel = labelFromList([...BEER_CIDER_SUBTYPES, ...WINE_SUBTYPES, ...SPIRIT_SUBTYPES, ...SOFT_SUBTYPES, ...HOT_SUBTYPES, ...COCKTAIL_SUBTYPES, ...SNACK_SUBTYPES]);
 const countryLabel = labelFromList(COUNTRIES);
