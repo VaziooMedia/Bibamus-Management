@@ -1,74 +1,98 @@
-// Groupes de styles spécifiques aux vins — vide pour l'instant, à compléter plus tard
-// (même principe que BEER_CIDER_STYLE_GROUPS dans beerCiderStyles.js).
+// Styles des vins (sous-catégories « Wine » et « Sparkling Wine », codes « vin » et « vin_effervescent » en base). Chaque sous-catégorie a
+// sa propre liste, modifiable depuis la fiche produit (ajouter, renommer, changer de groupe, supprimer ; voir WINE_STYLE_LIST et
+// SPARKLING_WINE_STYLE_LIST dans customLists.js). Ces groupes sont les styles de départ ; les noms sont en français.
+// Le style d'un produit est rangé dans la même colonne que ceux des bières et des spiritueux (drinks_directory.styles, une liste de codes) :
+// pour que les codes de deux familles ne puissent jamais se confondre (« sec », « demi_sec », « doux », « bio »… étaient communs au Wine et au
+// Sparkling Wine, et plusieurs aux bières), ceux du Wine commencent par « wine_ », ceux du Sparkling Wine par « sparkling_ », et ceux qu'on
+// ajoute à la main par « perso_ » + ce préfixe (« perso_wine_… », « perso_sparkling_… », voir `codePrefix` dans customLists.js).
+// Avant le 2026-11-24, les codes n'avaient pas de préfixe (« sec », « brut »…) : les produits ont été migrés (voir docs/DATABASE.md de l'app).
 export const WINE_STYLE_GROUPS = [
   {
     title: "Style",
     tags: [
-      { code: "demi_sec", fr: "Demi-sec" },
-      { code: "doux", fr: "Doux" },
-      { code: "liquoreux", fr: "Liquoreux" },
-      { code: "moelleux", fr: "Moelleux" },
-      { code: "primeur_nouveau", fr: "Primeur / Nouveau" },
-      { code: "sec", fr: "Sec" },
-      { code: "vendanges_tardives", fr: "Vendanges tardives" },
-      { code: "vin_de_glace", fr: "Vin de glace" },
-      { code: "vin_de_paille", fr: "Vin de paille" },
-      { code: "vin_doux_naturel", fr: "Vin doux naturel" },
-      { code: "vin_fortifie", fr: "Vin fortifié" },
-      { code: "vin_oxydatif", fr: "Vin oxydatif" },
+      { code: "wine_demi_sec", fr: "Demi-sec" },
+      { code: "wine_doux", fr: "Doux" },
+      { code: "wine_liquoreux", fr: "Liquoreux" },
+      { code: "wine_moelleux", fr: "Moelleux" },
+      { code: "wine_primeur_nouveau", fr: "Primeur / Nouveau" },
+      { code: "wine_sec", fr: "Sec" },
+      { code: "wine_vendanges_tardives", fr: "Vendanges tardives" },
+      { code: "wine_vin_de_glace", fr: "Vin de glace" },
+      { code: "wine_vin_de_paille", fr: "Vin de paille" },
+      { code: "wine_vin_doux_naturel", fr: "Vin doux naturel" },
+      { code: "wine_vin_fortifie", fr: "Vin fortifié" },
+      { code: "wine_vin_oxydatif", fr: "Vin oxydatif" },
     ],
   },
   {
     title: "Labels",
     tags: [
-      { code: "biodynamique", fr: "Biodynamique" },
-      { code: "bio", fr: "Bio" },
-      { code: "nature", fr: "Nature" },
+      { code: "wine_biodynamique", fr: "Biodynamique" },
+      { code: "wine_bio", fr: "Bio" },
+      { code: "wine_nature", fr: "Nature" },
     ],
   },
 ];
 
-// Caractéristiques spécifiques au vin effervescent — groupe séparé de WINE_STYLE_GROUPS,
-// utilisé uniquement quand beverageSubtype === "vin_effervescent".
+// Styles du vin effervescent — liste séparée de WINE_STYLE_GROUPS, utilisée uniquement quand beverageSubtype === "vin_effervescent".
 export const WINE_EFFERVESCENT_STYLE_GROUPS = [
   {
     title: "Style / Dosage",
     tags: [
-      { code: "brut", fr: "Brut" },
-      { code: "brut_nature", fr: "Brut nature" },
-      { code: "demi_sec", fr: "Demi-sec" },
-      { code: "doux", fr: "Doux" },
-      { code: "extra_brut", fr: "Extra brut" },
-      { code: "extra_dry", fr: "Extra dry" },
-      { code: "sec", fr: "Sec" },
+      { code: "sparkling_brut", fr: "Brut" },
+      { code: "sparkling_brut_nature", fr: "Brut nature" },
+      { code: "sparkling_demi_sec", fr: "Demi-sec" },
+      { code: "sparkling_doux", fr: "Doux" },
+      { code: "sparkling_extra_brut", fr: "Extra brut" },
+      { code: "sparkling_extra_dry", fr: "Extra dry" },
+      { code: "sparkling_sec", fr: "Sec" },
     ],
   },
   {
     title: "Style de cuvée",
     tags: [
-      { code: "blanc_de_blancs", fr: "Blanc de Blancs" },
-      { code: "blanc_de_noirs", fr: "Blanc de Noirs" },
-      { code: "rose", fr: "Rosé" },
+      { code: "sparkling_blanc_de_blancs", fr: "Blanc de Blancs" },
+      { code: "sparkling_blanc_de_noirs", fr: "Blanc de Noirs" },
+      { code: "sparkling_rose", fr: "Rosé" },
     ],
   },
   {
     title: "Méthode",
     tags: [
-      { code: "gazeifie", fr: "Gazéifié" },
-      { code: "methode_ancestrale", fr: "Méthode ancestrale" },
-      { code: "methode_charmat_cuve_close", fr: "Méthode Charmat / Cuve close" },
-      { code: "methode_traditionnelle", fr: "Méthode traditionnelle" },
+      { code: "sparkling_gazeifie", fr: "Gazéifié" },
+      { code: "sparkling_methode_ancestrale", fr: "Méthode ancestrale" },
+      { code: "sparkling_methode_charmat_cuve_close", fr: "Méthode Charmat / Cuve close" },
+      { code: "sparkling_methode_traditionnelle", fr: "Méthode traditionnelle" },
     ],
   },
   {
     title: "Labels",
     tags: [
-      { code: "biodynamique", fr: "Biodynamique" },
-      { code: "bio", fr: "Bio" },
-      { code: "nature", fr: "Nature" },
+      { code: "sparkling_biodynamique", fr: "Biodynamique" },
+      { code: "sparkling_bio", fr: "Bio" },
+      { code: "sparkling_nature", fr: "Nature" },
     ],
   },
 ];
+
+// Les sous-catégories de vins qui ont une liste de styles, avec le préfixe des codes de leurs styles.
+export const WINE_STYLE_PREFIXES = { vin: "wine", vin_effervescent: "sparkling" };
+export const WINE_STYLE_SUBTYPES = Object.keys(WINE_STYLE_PREFIXES);
+
+// La sous-catégorie de vin à laquelle appartient un code de style, ou null si ce n'est pas un de leurs codes
+// (un style de bière gardé sur une vieille fiche, par exemple).
+export const wineStyleOwner = (code) => {
+  const c = String(code ?? "");
+  return WINE_STYLE_SUBTYPES.find((s) => c.startsWith(`${WINE_STYLE_PREFIXES[s]}_`) || c.startsWith(`perso_${WINE_STYLE_PREFIXES[s]}_`)) ?? null;
+};
+
+// Les styles à enregistrer pour un vin de cette sous-catégorie : on retire ceux de l'AUTRE sous-catégorie de vins (par exemple les
+// styles du Sparkling Wine restés cochés après être passé à « Wine »), et on garde tout le reste tel quel.
+export const stylesForWineSubtype = (styles, subtype) =>
+  (styles || []).filter((code) => {
+    const owner = wineStyleOwner(code);
+    return owner === null || owner === subtype;
+  });
 
 // Couleurs disponibles selon la sous-catégorie — même 4 choix, mais un ordre d'affichage
 // différent selon qu'il s'agit d'un vin tranquille ou d'un vin effervescent.

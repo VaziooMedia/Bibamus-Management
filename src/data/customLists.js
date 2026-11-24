@@ -19,6 +19,7 @@ import { WATER_STYLES, SODA_STYLE_GROUPS, JUICE_STYLE_GROUPS, ENERGY_STYLE_GROUP
 import { SOFT_CHARACTERISTICS } from "./softCharacteristics.js";
 import { COFFEE_STYLE_GROUPS, TEA_STYLE_GROUPS, INFUSION_STYLE_GROUPS, HOT_MILK_STYLE_GROUPS, SOUP_STYLE_GROUPS, HOT_MIX_STYLE_GROUPS, CEREAL_CHICORY_STYLE_GROUPS } from "./hotStyles.js";
 import { COCKTAIL_STYLE_GROUPS, MOCKTAIL_STYLE_GROUPS, RTD_STYLES } from "./cocktailStyles.js";
+import { WINE_STYLE_GROUPS, WINE_EFFERVESCENT_STYLE_GROUPS } from "./wineStyles.js";
 import { COCKTAIL_CHARACTERISTIC_GROUPS } from "./cocktailCharacteristics.js";
 import { HOT_CHARACTERISTIC_GROUPS } from "./hotCharacteristics.js";
 import { SNACK_CHARACTERISTIC_GROUPS } from "./snackCharacteristics.js";
@@ -782,6 +783,55 @@ export const CEREAL_CHICORY_STYLE_LIST = {
 };
 // La liste de styles de chaque sous-catégorie de Boissons chaudes (clé : code de la sous-catégorie) ; les autres n'en ont pas encore.
 export const HOT_STYLE_LISTS = { cafe: COFFEE_STYLE_LIST, the: TEA_STYLE_LIST, infusion: INFUSION_STYLE_LIST, hot_milk: HOT_MILK_STYLE_LIST, soupe: SOUP_STYLE_LIST, hot_mix: HOT_MIX_STYLE_LIST, cereales_chicoree: CEREAL_CHICORY_STYLE_LIST };
+
+// Fiche Vins & Bulles : styles du Wine (sous-catégorie « vin ») — deux classifications (Style, Labels), donc une liste à groupes comme celles
+// des softs. La liste s'appelle « wine_style », ses styles « wine_… » (« perso_wine_… » pour un ajout à la main, voir `codePrefix`) : avant
+// le 2026-11-24 les vins et les vins effervescents partageaient des codes sans préfixe (« sec », « doux »…), voir wineStyles.js. Seuls les
+// produits Vins & Bulles sont comptés et modifiés (`source: "wine_styles"`) : cette colonne est aussi celle des bières, des spiritueux, des
+// softs, des boissons chaudes et des cocktails. Les styles de départ sont dans wineStyles.js.
+export const WINE_ENTITY = { ...PRODUCT_ENTITY, all: "tous les vins", none: "aucun vin" };
+export const WINE_STYLE_LIST = {
+  key: "wine_style",
+  source: "wine_styles",
+  codePrefix: "perso_wine_",
+  entity: WINE_ENTITY,
+  builtinGroups: WINE_STYLE_GROUPS,
+  orphanTitle: "Autres styles",
+  words: {
+    noun: "style",
+    one: "un style",
+    this: "ce style",
+    the: "le style",
+    ofThe: "du style",
+    ofAll: "des styles",
+    namePlaceholder: "Nom du style (ex. Orange)",
+    searchPlaceholder: "Chercher un style (ex. Sec, Liquoreux, Bio...)",
+  },
+};
+
+// Fiche Vins & Bulles : styles du Sparkling Wine (sous-catégorie « vin_effervescent ») — quatre classifications (Style / Dosage, Style de cuvée,
+// Méthode, Labels). La liste s'appelle « sparkling_wine_style », ses styles « sparkling_… » (« perso_sparkling_… » pour un ajout à la main).
+export const SPARKLING_WINE_ENTITY = { ...PRODUCT_ENTITY, all: "tous les vins effervescents", none: "aucun vin effervescent" };
+export const SPARKLING_WINE_STYLE_LIST = {
+  key: "sparkling_wine_style",
+  source: "wine_styles",
+  codePrefix: "perso_sparkling_",
+  entity: SPARKLING_WINE_ENTITY,
+  builtinGroups: WINE_EFFERVESCENT_STYLE_GROUPS,
+  orphanTitle: "Autres styles",
+  words: {
+    noun: "style",
+    one: "un style",
+    this: "ce style",
+    the: "le style",
+    ofThe: "du style",
+    ofAll: "des styles",
+    namePlaceholder: "Nom du style (ex. Pet-nat)",
+    searchPlaceholder: "Chercher un style (ex. Brut, Blanc de Blancs, Charmat...)",
+  },
+};
+// La liste de styles de chaque sous-catégorie de vins (clé : code de la sous-catégorie).
+export const WINE_STYLE_LISTS = { vin: WINE_STYLE_LIST, vin_effervescent: SPARKLING_WINE_STYLE_LIST };
 
 // Fiche Cocktails / Mocktails : styles des Cocktails — six classifications (Types de cocktails, Bases alcoolisées, Bases non alcoolisées
 // & Mixers, Gazéification, Saveurs & Profil aromatique, Texture & Présentation), donc une liste à groupes comme celles des softs et des
