@@ -93,6 +93,47 @@ export function mergeCustomStyles(groups, custom) {
   return merged;
 }
 
+// ---------- Séparation des styles par sous-catégorie (Mehdi, 2026-11-24) ----------
+// Un produit « Bières & Cidres » ne voit que les styles de sa sous-catégorie : les groupes de bières pour « Bière », les groupes « Cidre — … »
+// pour « Cidre » et « Poiré » (qui ont les mêmes groupes : « Poiré / Perry » et « Poiré de glace » sont déjà dans ceux des cidres). La famille d'un groupe se
+// lit dans son titre : « Cidre — … » = cidres, tous les autres = bières ; un groupe que la gestion a créé pour recueillir des styles orphelins (« Autres styles »)
+// est montré dans les deux cas. La famille d'un STYLE est celle du groupe où il se trouve aujourd'hui (liste de départ + modifications faites depuis la gestion).
+export const CIDER_GROUP_PREFIX = "Cidre — ";
+export const SHARED_STYLE_GROUP_TITLE = "Autres styles";
+export const isCiderGroupTitle = (title) => String(title ?? "").startsWith(CIDER_GROUP_PREFIX);
+const BEER_CIDER_SUBTYPE_CODES = ["biere", "cidre", "poire"];
+
+// « beer » pour la sous-catégorie « Bière », « cider » pour « Cidre » et « Poiré », null pour toute autre valeur (aucun tri alors).
+export const styleFamilyOfSubtype = (subtype) => (subtype === "biere" ? "beer" : subtype === "cidre" || subtype === "poire" ? "cider" : null);
+
+// Les groupes à afficher (ou à proposer comme destination) pour une sous-catégorie ; tous les groupes si la sous-catégorie n'est pas reconnue.
+export function styleGroupsForSubtype(groups, subtype) {
+  const family = styleFamilyOfSubtype(subtype);
+  if (!family) return groups;
+  return groups.filter((g) => g.title === SHARED_STYLE_GROUP_TITLE || isCiderGroupTitle(g.title) === (family === "cider"));
+}
+
+// « beer » ou « cider » selon le groupe où se trouve ce style, null s'il n'est dans aucun groupe (style supprimé, inconnu) ou dans le groupe partagé.
+export function styleFamilyOfCode(code, groups) {
+  for (const g of groups) {
+    if (g.title === SHARED_STYLE_GROUP_TITLE) continue;
+    if (g.tags.some((t) => t.code === code)) return isCiderGroupTitle(g.title) ? "cider" : "beer";
+  }
+  return null;
+}
+
+// Les styles d'un produit qui vont avec sa sous-catégorie : ceux de l'autre famille ne comptent pas, ne s'affichent pas et ne sont pas enregistrés (même règle que
+// pour les Softs & Eaux : les styles de l'Eau restés cochés après être passé à « Soda » sont retirés). Les styles sans famille connue sont gardés tels quels.
+export function stylesForBeerCiderSubtype(styles, subtype, groups) {
+  const list = styles || [];
+  const family = styleFamilyOfSubtype(subtype);
+  if (!family || !BEER_CIDER_SUBTYPE_CODES.includes(subtype)) return list;
+  return list.filter((code) => {
+    const owner = styleFamilyOfCode(code, groups);
+    return owner === null || owner === family;
+  });
+}
+
 // La liste en mémoire après l'enregistrement d'un style (ajouté ou modifié) : sa ligne est remplacée ou ajoutée.
 export function withStyleSaved(custom, style) {
   const row = { code: style.code, fr: style.fr, groupTitle: style.groupTitle, hidden: false };

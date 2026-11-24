@@ -5,7 +5,8 @@ import { validateStyleFields, describeStyleError } from "../data/customStyles.js
 // le touche en mode « Modifier la liste ». On y renomme le style, on le range dans un autre groupe, ou on
 // le supprime. Tout vaut pour TOUS les produits (la liste est commune).
 //   style    : { code, fr, groupTitle } — le style ouvert, tel qu'il s'affiche
-//   groups   : les groupes de la liste de départ (choix du groupe)
+//   groups   : les groupes de la liste de départ (détection des doublons)
+//   groupChoices : les groupes proposés dans le menu « Groupe du style » (par défaut, tous ceux de `groups`)
 //   custom   : les modifications déjà enregistrées (détection des doublons)
 //   onSave   : async ({ code, fr, groupTitle }) -> { style } ou { error }
 //   onCount  : async (code) -> { count } ou { error } — combien de produits portent ce style
@@ -20,7 +21,7 @@ const outlineButton = (color) => ({ background: "none", border: `2px solid ${col
 const cleanName = (s) => String(s ?? "").trim().replace(/\s+/g, " ");
 const produits = (n) => `${n} produit${n > 1 ? "s" : ""}`;
 
-export function StyleManagePanel({ style, groups, custom, onSave, onCount, onDelete, onClose }) {
+export function StyleManagePanel({ style, groups, groupChoices, custom, onSave, onCount, onDelete, onClose }) {
   const [name, setName] = useState(style.fr);
   const [groupTitle, setGroupTitle] = useState(style.groupTitle);
   const [busy, setBusy] = useState(false);
@@ -88,12 +89,12 @@ export function StyleManagePanel({ style, groups, custom, onSave, onCount, onDel
               style={{ ...fieldStyle, flex: 1, minWidth: "200px" }}
             />
             <select aria-label="Groupe du style" value={groupTitle} onChange={(e) => setGroupTitle(e.target.value)} style={{ ...fieldStyle, flex: 1, minWidth: "200px" }}>
-              {groups.map((g) => (
+              {(groupChoices || groups).map((g) => (
                 <option key={g.title} value={g.title}>
                   {g.title}
                 </option>
               ))}
-              {!groups.some((g) => g.title === groupTitle) && <option value={groupTitle}>{groupTitle}</option>}
+              {!(groupChoices || groups).some((g) => g.title === groupTitle) && <option value={groupTitle}>{groupTitle}</option>}
             </select>
           </div>
           <div style={{ display: "flex", flexWrap: "wrap", gap: "8px", marginTop: "10px" }}>
