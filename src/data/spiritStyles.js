@@ -1,6 +1,8 @@
 // Styles spécifiques aux spiritueux — un tableau de groupes par sous-catégorie (beverageSubtype),
-// même principe que WINE_STYLE_GROUPS / BEER_CIDER_STYLE_GROUPS. La plupart des sous-catégories
-// n'ont qu'un seul groupe "Style" ; Gin & Genièvre en a deux, pour distinguer les deux familles.
+// même principe que WINE_STYLE_GROUPS / BEER_CIDER_STYLE_GROUPS. Chaque sous-catégorie n'a qu'un seul groupe "Style".
+// Depuis le 2026-11-24 (Mehdi), 16 sous-catégories aux noms anglais (voir SPIRIT_SUBTYPES dans DrinkDetailPanel.jsx) : Gin et Genever,
+// Brandy et Wine Spirits, Bitters et Herbal sont chacune un dédoublement d'une ancienne sous-catégorie (Gin & Genièvre ; Brandy & Eaux-de-vie
+// de vin ; Amers & spiritueux aux plantes). Les codes des styles n'ont pas changé : seul leur rangement dans les sous-catégories a bougé.
 export const SPIRIT_STYLE_GROUPS_BY_SUBTYPE = {
   whisky: [
     {
@@ -43,9 +45,9 @@ export const SPIRIT_STYLE_GROUPS_BY_SUBTYPE = {
     },
   ],
 
-  gin_genievre: [
+  gin: [
     {
-      title: "Gin",
+      title: "Style",
       tags: [
         { code: "gin", fr: "Gin" },
         { code: "distilled_gin", fr: "Distilled Gin" },
@@ -57,8 +59,11 @@ export const SPIRIT_STYLE_GROUPS_BY_SUBTYPE = {
         { code: "sloe_gin", fr: "Sloe Gin" },
       ],
     },
+  ],
+
+  genever: [
     {
-      title: "Genever / Jenever",
+      title: "Style",
       tags: [
         { code: "genever_jenever", fr: "Genever / Jenever" },
         { code: "jonge_jenever", fr: "Jonge Jenever" },
@@ -94,7 +99,7 @@ export const SPIRIT_STYLE_GROUPS_BY_SUBTYPE = {
     },
   ],
 
-  brandy_eaux_de_vie_de_vin: [
+  brandy: [
     {
       title: "Style",
       tags: [
@@ -104,6 +109,14 @@ export const SPIRIT_STYLE_GROUPS_BY_SUBTYPE = {
         { code: "pisco", fr: "Pisco" },
         { code: "brandy_de_jerez", fr: "Brandy de Jerez" },
         { code: "weinbrand", fr: "Weinbrand" },
+      ],
+    },
+  ],
+
+  wine_spirits: [
+    {
+      title: "Style",
+      tags: [
         { code: "eau_de_vie_de_vin", fr: "Eau-de-vie de vin" },
         { code: "autre_eau_de_vie_de_vin", fr: "Autre eau-de-vie de vin" },
       ],
@@ -192,17 +205,25 @@ export const SPIRIT_STYLE_GROUPS_BY_SUBTYPE = {
     },
   ],
 
-  amers_bitters_amaros: [
+  bitters: [
     {
       title: "Style",
       tags: [
         { code: "amaro", fr: "Amaro" },
         { code: "fernet", fr: "Fernet" },
         { code: "bitter", fr: "Bitter" },
-        { code: "krauterlikor_liqueur_aux_herbes", fr: "Kräuterlikör / liqueur aux herbes" },
         { code: "amer_aperitif", fr: "Amer apéritif" },
         { code: "amer_digestif", fr: "Amer digestif" },
         { code: "autre_amer", fr: "Autre amer" },
+      ],
+    },
+  ],
+
+  herbal: [
+    {
+      title: "Style",
+      tags: [
+        { code: "krauterlikor_liqueur_aux_herbes", fr: "Kräuterlikör / liqueur aux herbes" },
       ],
     },
   ],
