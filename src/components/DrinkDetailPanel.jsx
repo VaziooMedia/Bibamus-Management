@@ -80,20 +80,26 @@ export const WINE_SUBTYPES = [
   { code: "vin", fr: "Vin" },
   { code: "vin_effervescent", fr: "Vin effervescent" },
 ];
+// Spiritueux : 16 sous-catégories aux noms anglais, dans l'ordre voulu par Mehdi (2026-11-24). Les codes des 10 sous-catégories qui existaient déjà n'ont pas
+// changé (seul le nom affiché a changé) ; `gin`, `genever`, `brandy`, `wine_spirits`, `bitters` et `herbal` sont nouveaux : ils remplacent
+// `gin_genievre`, `brandy_eaux_de_vie_de_vin` et `amers_bitters_amaros`, dédoublés (les produits existants ont été reclassés par un script SQL d'après leurs styles).
 export const SPIRIT_SUBTYPES = [
-  { code: "whisky", fr: "Whisky / Whiskey" },
-  { code: "rhum", fr: "Rhum" },
-  { code: "gin_genievre", fr: "Gin & Genièvre" },
+  { code: "whisky", fr: "Whisky" },
+  { code: "rhum", fr: "Rum" },
+  { code: "gin", fr: "Gin" },
+  { code: "genever", fr: "Genever" },
   { code: "vodka", fr: "Vodka" },
   { code: "agave", fr: "Agave" },
-  { code: "brandy_eaux_de_vie_de_vin", fr: "Brandy & Eaux-de-vie de vin" },
-  { code: "eaux_de_vie_de_fruits", fr: "Eaux-de-vie de fruits" },
-  { code: "eaux_de_vie_de_marc", fr: "Eaux-de-vie de marc" },
-  { code: "liqueurs_cremes", fr: "Liqueurs & Crèmes" },
-  { code: "anises", fr: "Anisés" },
-  { code: "amers_bitters_amaros", fr: "Amers & spiritueux aux plantes" },
-  { code: "spiritueux_de_canne", fr: "Spiritueux de canne hors rhum" },
-  { code: "autres_spiritueux", fr: "Autres spiritueux" },
+  { code: "brandy", fr: "Brandy" },
+  { code: "wine_spirits", fr: "Wine Spirits" },
+  { code: "eaux_de_vie_de_fruits", fr: "Fruit Spirits" },
+  { code: "eaux_de_vie_de_marc", fr: "Grape Marc" },
+  { code: "liqueurs_cremes", fr: "Liqueurs & Cream" },
+  { code: "anises", fr: "Anise" },
+  { code: "bitters", fr: "Bitters" },
+  { code: "herbal", fr: "Herbal" },
+  { code: "spiritueux_de_canne", fr: "Cane" },
+  { code: "autres_spiritueux", fr: "Other" },
 ];
 // Softs & Eaux : une seule sous-catégorie par produit, choisie dans la liste déroulante sous « Catégorie »
 // (comme pour les bières, vins et spiritueux). Au départ, aucune : « — ».
