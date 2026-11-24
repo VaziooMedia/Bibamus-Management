@@ -539,7 +539,7 @@ export function DrinkDetailPanel({ drink, onClose, onSaved, myUserId }) {
   const cocktailStyleChips = { codes: cocktailOwnedStyles, ariaLabel: "Styles sélectionnés" };
   // Pareil pour un vin : les styles de sa sous-catégorie (Wine ou Sparkling Wine) seulement, et la même ligne d'étiquettes.
   const wineOwnedStyles = isWine ? form.styles.filter((c) => wineStyleOwner(c) === form.beverageSubtype) : [];
-  const wineStyleChips = { codes: wineOwnedStyles, ariaLabel: "Caractéristiques sélectionnées" };
+  const wineStyleChips = { codes: wineOwnedStyles, ariaLabel: "Styles sélectionnés" };
   // Interrupteur « Dérivés du produit » : en l'allumant, tous les dérivés de la liste sont cochés d'emblée (on décoche ensuite ceux que
   // ce produit ne peut pas devenir). La liste est lue à l'instant, avec les dérivés ajoutés ou supprimés depuis la gestion.
   const switchDerivatives = async (on) => {
@@ -1354,7 +1354,7 @@ export function DrinkDetailPanel({ drink, onClose, onSaved, myUserId }) {
               >
                 <span style={{ ...sectionTitleStyle, marginTop: 0, marginBottom: 0 }}>
                   <span style={{ width: "4px", height: "14px", background: "#39FF66", borderRadius: "2px", display: "inline-block" }} />
-                  {isWine ? "Caractéristiques" : "Style(s)"}
+                  {isWine ? "Styles" : "Style(s)"}
                   {!isSoft && !isHot && !isCocktail && !isWine && shownStyles.length > 0 && <span style={{ color: "#8792A6", fontWeight: 500 }}> ({shownStyles.length} sélectionné{shownStyles.length > 1 ? "s" : ""})</span>}
                   {isWine && WINE_STYLE_LISTS[form.beverageSubtype] && wineOwnedStyles.length > 0 && (
                     <span style={{ color: "#8792A6", fontWeight: 500 }}>
@@ -1471,7 +1471,7 @@ export function DrinkDetailPanel({ drink, onClose, onSaved, myUserId }) {
             {stylesSectionOpen && !isSoft && !isHot && !isCocktail && !hasNoStyles && (
               <>
                 <p style={{ fontSize: "11.5px", color: "#8792A6", marginTop: "-6px", marginBottom: "10px" }}>
-                  {isWine ? "Plusieurs caractéristiques peuvent se cumuler." : "Plusieurs styles peuvent se cumuler (ex. IPA + Hazy + Double IPA)."}
+                  {isWine ? "Plusieurs styles peuvent se cumuler." : "Plusieurs styles peuvent se cumuler (ex. IPA + Hazy + Double IPA)."}
                 </p>
                 {!isWine && (
                   <SelectedStyleChips
