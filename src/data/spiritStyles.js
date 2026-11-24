@@ -3,6 +3,9 @@
 // Depuis le 2026-11-24 (Mehdi), 16 sous-catégories aux noms anglais (voir SPIRIT_SUBTYPES dans DrinkDetailPanel.jsx) : Gin et Genever,
 // Brandy et Wine Spirits, Bitters et Herbal sont chacune un dédoublement d'une ancienne sous-catégorie (Gin & Genièvre ; Brandy & Eaux-de-vie
 // de vin ; Amers & spiritueux aux plantes). Les codes des styles n'ont pas changé : seul leur rangement dans les sous-catégories a bougé.
+// Depuis le 2026-11-25 (Mehdi), ces listes sont le POINT DE DÉPART de listes modifiables (une par sous-catégorie, voir SPIRIT_STYLE_LISTS dans
+// customLists.js) : un style peut être ajouté, renommé ou supprimé depuis la fiche produit. Un style de départ ajouté, renommé ou supprimé ICI se reporte
+// dans l'app avec « node scripts/generate-other-style-labels.mjs » (dépôt bibamus-web).
 export const SPIRIT_STYLE_GROUPS_BY_SUBTYPE = {
   whisky: [
     {
@@ -260,3 +263,49 @@ export const SPIRIT_STYLE_GROUPS_BY_SUBTYPE = {
     },
   ],
 };
+
+// Styles modifiables (depuis le 2026-11-24, Mehdi : « Pour tous les Spiritueux, pouvoir modifier, ajouter, etc. les styles ») : chaque
+// sous-catégorie a sa liste (SPIRIT_STYLE_LISTS dans customLists.js), plate puisqu'elle n'a qu'un seul groupe. Les 128 codes de départ sont tous
+// différents et n'ont pas changé : seuls les styles ajoutés à la main ont un code préfixé, « perso_ » + le préfixe de leur sous-catégorie
+// (« perso_whisky_… », « perso_rum_… »…), pour ne jamais se confondre avec ceux d'une autre famille dans la colonne partagée
+// drinks_directory.styles. Le même préfixe donne la clé de la liste dans custom_list_items (« whisky_style », « rum_style »…).
+export const SPIRIT_STYLE_PREFIXES = {
+  whisky: "whisky",
+  rhum: "rum",
+  gin: "gin",
+  genever: "genever",
+  vodka: "vodka",
+  agave: "agave",
+  brandy: "brandy",
+  wine_spirits: "wine_spirits",
+  eaux_de_vie_de_fruits: "fruit_spirits",
+  eaux_de_vie_de_marc: "grape_marc",
+  liqueurs_cremes: "liqueur",
+  anises: "anise",
+  bitters: "bitters",
+  herbal: "herbal",
+  spiritueux_de_canne: "cane",
+  autres_spiritueux: "other_spirits",
+};
+export const SPIRIT_STYLE_SUBTYPES = Object.keys(SPIRIT_STYLE_PREFIXES);
+
+// Le code d'un style de départ → sa sous-catégorie.
+const BUILTIN_OWNER = new Map(
+  Object.entries(SPIRIT_STYLE_GROUPS_BY_SUBTYPE).flatMap(([subtype, groups]) => groups.flatMap((g) => g.tags.map((t) => [t.code, subtype])))
+);
+
+// La sous-catégorie de spiritueux à laquelle appartient un code de style : un style de départ (même renommé ou déplacé, son code ne change
+// pas) ou un style ajouté à la main (« perso_ » + préfixe) ; null si ce n'est pas un de leurs codes (un style de bière gardé sur une
+// vieille fiche, par exemple).
+export const spiritStyleOwner = (code) => {
+  const c = String(code ?? "");
+  return BUILTIN_OWNER.get(c) ?? SPIRIT_STYLE_SUBTYPES.find((s) => c.startsWith(`perso_${SPIRIT_STYLE_PREFIXES[s]}_`)) ?? null;
+};
+
+// Les styles à enregistrer pour un spiritueux de cette sous-catégorie : on retire ceux d'une AUTRE sous-catégorie de spiritueux (par exemple
+// ceux du Gin restés cochés après être passé à « Genever »), et on garde tout le reste tel quel.
+export const stylesForSpiritSubtype = (styles, subtype) =>
+  (styles || []).filter((code) => {
+    const owner = spiritStyleOwner(code);
+    return owner === null || owner === subtype;
+  });

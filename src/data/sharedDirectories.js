@@ -2473,6 +2473,29 @@ export async function deleteWineStyle(listKey, { code, fr, groupTitle }) {
   return { removedFrom: Number(data) || 0 };
 }
 
+// Styles des spiritueux (les 16 listes « whisky_style », « rum_style »… de custom_list_items, colonne drinks_directory.styles) : comptés et
+// retirés uniquement parmi les produits Spiritueux, car cette colonne est aussi celle des bières, des vins et des softs. Fonctions SQL
+// propres (voir le script « spiritueux-styles-1-fonctions »), sur le modèle de celles des vins et des softs.
+export async function countDrinksWithSpiritStyle(listKey, code) {
+  const { data, error } = await supabase.rpc("count_drinks_with_spirit_style", { p_list: listKey, p_code: code });
+  if (error) {
+    console.error("countDrinksWithSpiritStyle:", error);
+    return { error };
+  }
+  return { count: Number(data) || 0 };
+}
+
+// Supprimer un style : le retire de tous les spiritueux qui le portent, puis le supprime (ou le masque, s'il vient de la liste de départ) —
+// en une seule opération côté base. Rend le nombre de produits modifiés.
+export async function deleteSpiritStyle(listKey, { code, fr, groupTitle }) {
+  const { data, error } = await supabase.rpc("delete_spirit_style", { p_list: listKey, p_code: code, p_fr: fr, p_group_title: groupTitle });
+  if (error) {
+    console.error("deleteSpiritStyle:", error);
+    return { error };
+  }
+  return { removedFrom: Number(data) || 0 };
+}
+
 // Styles des Boissons chaudes (liste « coffee_style » de custom_list_items, colonne drinks_directory.styles) : comptés et retirés
 // uniquement parmi les produits Boissons chaudes, car cette colonne est aussi celle des bières, des vins et des softs. Fonctions
 // SQL propres (voir le script « cafe-styles »), sur le modèle de celles des softs.
