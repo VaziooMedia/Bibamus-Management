@@ -1,8 +1,9 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { WhatsappIcon, FacebookIcon, InstagramIcon, TiktokIcon, SnapchatIcon, LinkedinIcon, YoutubeIcon, PlaceCheckIcon } from "./icons.jsx";
-import { geocodeAddress, uploadShopPhoto } from "../data/sharedDirectories.js";
-import { SHOP_TYPES, missingShopFields, createShop, updateShop, deleteShop, saveShopGeocodeResult } from "../data/shops.js";
+import { geocodeAddress, uploadShopPhoto, mergeEntities } from "../data/sharedDirectories.js";
+import { SHOP_TYPES, missingShopFields, createShop, updateShop, deleteShop, saveShopGeocodeResult, loadShops, loadShopById } from "../data/shops.js";
 import { StatusSelector } from "./StatusSelector.jsx";
+import { SearchableSelect } from "./SearchableSelect.jsx";
 import { PendingContributionsSection } from "./PendingContributionsSection.jsx";
 import { AddressAutocomplete } from "./AddressAutocomplete.jsx";
 import { CollapsibleSection } from "./CollapsibleSection.jsx";
@@ -123,6 +124,9 @@ export function ShopDetailPanel({ shop, onClose, onSaved, myUserId }) {
     snapchatUrl: shop?.snapchatUrl || "",
   });
   const [status, setStatus] = useState(shop?.status || "draft");
+  // Doublon : la fiche à conserver. Choisir « Doublon » + une fiche et enregistrer lance la vraie fusion (`merge_entities`).
+  const [duplicateOfId, setDuplicateOfId] = useState(shop?.duplicateOfId || null);
+  const [otherShopOptions, setOtherShopOptions] = useState([]);
   const [activeTab, setActiveTab] = useState("informations");
   const [profilePhotoUrl, setProfilePhotoUrl] = useState(shop?.profilePhotoUrl || null);
   const [coverPhotoUrl, setCoverPhotoUrl] = useState(shop?.coverPhotoUrl || null);
@@ -140,6 +144,19 @@ export function ShopDetailPanel({ shop, onClose, onSaved, myUserId }) {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
 
+  // La liste des fiches à conserver se charge à la demande ; une fiche déjà « Doublon » ne peut pas être conservée.
+  useEffect(() => {
+    if (status !== "duplicate") return;
+    loadShops().then((r) =>
+      setOtherShopOptions(
+        r.items
+          .filter((x) => x.id !== shop?.id && x.status !== "duplicate")
+          .map((x) => ({ id: x.id, name: `${x.name} — ${x.hasStore && x.city ? x.city : x.hasOnline ? "En ligne" : "—"}` }))
+      )
+    );
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [status]);
+
   const set = (field, value) => setForm((f) => ({ ...f, [field]: value }));
   const refreshAfterContribution = (contribution) => set(camelField(contribution.fieldPath), contribution.proposedValue);
   const toggleCategory = (code) => setForm((f) => ({ ...f, categories: f.categories.includes(code) ? f.categories.filter((x) => x !== code) : [...f.categories, code] }));
@@ -149,6 +166,10 @@ export function ShopDetailPanel({ shop, onClose, onSaved, myUserId }) {
   const store = form.hasStore;
   const online = form.hasOnline;
   const missing = missingShopFields(form);
+  if (status === "duplicate" && isNew) missing.push("un autre statut que « Doublon » (un nouveau shop n'est pas un doublon)");
+  if (status === "duplicate" && !isNew && !duplicateOfId) missing.push("la fiche à conserver (« Doublon de »)");
+  // Une fusion est nécessaire quand la fiche devient « Doublon », ou quand on change la fiche conservée d'un doublon déjà fusionné.
+  const mergeNeeded = !isNew && status === "duplicate" && (shop.status !== "duplicate" || shop.duplicateOfId !== duplicateOfId);
 
   const handleGeocode = async () => {
     setGeocoding(true);
@@ -207,6 +228,8 @@ export function ShopDetailPanel({ shop, onClose, onSaved, myUserId }) {
     tiktokUrl: form.tiktokUrl.trim(),
     snapchatUrl: form.snapchatUrl.trim(),
     status,
+    // Un shop qui quitte le statut « Doublon » perd le lien vers la fiche conservée (ses favoris restent chez elle).
+    ...(shop?.duplicateOfId && status !== "duplicate" ? { duplicateOfId: null } : {}),
     // Un shop devenu uniquement en ligne n'a plus d'horaires : son lien Google est dissocié (comme avec « Dissocier »).
     // Pour un magasin, ces champs ne sont pas envoyés : « Enregistrer » ne touche jamais à la liaison Google.
     ...(!store && googlePlaceId ? { googlePlaceId: null, googlePlaceIdCheckedAt: null, googleHoursLastFetchAt: null, googleHoursLastStatus: null } : {}),
@@ -222,6 +245,17 @@ export function ShopDetailPanel({ shop, onClose, onSaved, myUserId }) {
       setSaving(false);
       if (result.error) return setError("La création a échoué : " + result.error);
       onSaved(result.shop);
+    } else if (mergeNeeded) {
+      // Fusion réelle côté serveur : la fiche devient « Doublon » (invisible dans l'app) et ses favoris passent à la fiche conservée.
+      // Les autres modifications du formulaire ne sont pas enregistrées (la fiche absorbée n'est plus utilisée).
+      const merged = await mergeEntities("shop", shop.id, duplicateOfId);
+      if (merged.error) {
+        setSaving(false);
+        return setError("La fusion a échoué : " + merged.error);
+      }
+      const fresh = await loadShopById(shop.id);
+      setSaving(false);
+      onSaved(fresh || { ...shop, status: "duplicate", duplicateOfId });
     } else {
       const result = await updateShop(shop.id, buildPatch());
       setSaving(false);
@@ -270,9 +304,19 @@ export function ShopDetailPanel({ shop, onClose, onSaved, myUserId }) {
         <PendingContributionsSection entityType="shop" entityId={shop?.id || null} reviewerId={myUserId} onApplied={refreshAfterContribution} />
 
         <label style={labelStyle}>Statut de vérification</label>
-        <div style={{ marginBottom: "20px", maxWidth: "220px" }}>
+        <div style={{ marginBottom: status === "duplicate" && !isNew ? "14px" : "20px", maxWidth: "220px" }}>
           <StatusSelector value={status} onChange={setStatus} />
         </div>
+
+        {status === "duplicate" && !isNew && (
+          <div data-duplicate-of style={{ marginBottom: "20px" }}>
+            <label style={labelStyle}>Doublon de</label>
+            <SearchableSelect options={otherShopOptions} value={duplicateOfId} onChange={setDuplicateOfId} placeholder="Chercher le shop conservé..." />
+            <p style={{ fontSize: "11.5px", color: "#8792A6", margin: "8px 0 0" }}>
+              À l'enregistrement, ce shop devient invisible dans l'app et ses favoris passent au shop conservé.
+            </p>
+          </div>
+        )}
 
         <div style={separatorStyle} />
 
@@ -532,7 +576,7 @@ export function ShopDetailPanel({ shop, onClose, onSaved, myUserId }) {
             disabled={saving || missing.length > 0}
             style={{ background: "#39FF66", border: "none", borderRadius: "8px", padding: "12px", fontWeight: 700, color: "#0D1B2A", cursor: "pointer", opacity: missing.length === 0 ? 1 : 0.5 }}
           >
-            ✓ {isNew ? "Créer le shop" : "Enregistrer"}
+            ✓ {isNew ? "Créer le shop" : mergeNeeded ? "Fusionner avec le shop conservé" : "Enregistrer"}
           </button>
           {!isNew && (
             <button onClick={remove} style={{ background: "none", border: "none", color: "#FF3B4E", fontSize: "13px", cursor: "pointer", marginTop: "8px" }}>

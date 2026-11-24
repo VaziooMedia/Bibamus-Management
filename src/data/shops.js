@@ -129,6 +129,8 @@ function rowToShop(row) {
     linkedinUrl: row.linkedin_url,
     youtubeUrl: row.youtube_url,
     status: row.status,
+    // Fiche conservée quand ce shop est un doublon (colonne `duplicate_of_id`, remplie par la fusion `merge_entities`).
+    duplicateOfId: row.duplicate_of_id ?? null,
     pendingContributionsCount: row.pending_contributions_count || 0,
     createdVia: row.created_via,
     submittedBy: row.submitted_by,
@@ -171,6 +173,8 @@ function shopToRow(s, partial = false) {
     linkedin_url: s.linkedinUrl,
     youtube_url: s.youtubeUrl,
     status: s.status,
+    // Écrit seulement quand la fiche perd son statut « Doublon » (remise à vide) ; la fusion, elle, passe par `merge_entities`.
+    duplicate_of_id: s.duplicateOfId,
     // Liaison à Google : jamais écrite par « Enregistrer » pour un magasin (elle l'est par GooglePlaceLinker).
     // Seule exception : un shop devenu uniquement en ligne la perd (la fiche envoie alors ces quatre champs à vide).
     google_place_id: s.googlePlaceId,

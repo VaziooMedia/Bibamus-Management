@@ -175,16 +175,9 @@ export async function loadEntityDetail(entityType, entityId) {
 }
 
 // Fusion réelle — transfère les relations (propriété Business, produits liés à une
-// marque/producteur fusionné, revendications en attente), pas seulement le tombstone.
+// marque/producteur fusionné, favoris d'un shop, revendications en attente), pas seulement le tombstone.
+// Tous les types passent par la fonction serveur `merge_entities` (y compris « shop » depuis 2026-11-24).
 export async function mergeEntities(entityType, loserId, keeperId) {
-  // Shops : la fonction serveur `merge_entities` ne les connaît pas encore, et un shop n'a (pour l'instant) aucune relation à
-  // transférer — ni revendication, ni favori, ni produit lié. La fiche en double passe donc simplement au statut « Doublon »
-  // (invisible dans l'app) ; la colonne `duplicate_of_id` n'existe pas encore sur `shops_directory`.
-  if (entityType === "shop") {
-    const { error: shopError } = await supabase.from("shops_directory").update({ status: "duplicate", updated_at: new Date().toISOString() }).eq("id", loserId);
-    if (shopError) return { error: shopError.message };
-    return { ok: true };
-  }
   const { data, error } = await supabase.rpc("merge_entities", { p_entity_type: entityType, p_loser_id: loserId, p_keeper_id: keeperId });
   if (error) return { error: error.message };
   if (data?.error) return { error: data.error };
