@@ -34,7 +34,7 @@ import { FreeTagInput } from "./FreeTagInput.jsx";
 import { CollapsibleSection } from "./CollapsibleSection.jsx";
 import { COUNTRIES } from "../constants.js";
 import { loadDrinkVariants, createDrinkVariantChecked, updateDrinkVariantChecked, deleteDrinkVariantChecked, findBarcodeOwnerName, loadCustomBeerCiderStyles, createCustomBeerCiderStyle, saveCustomBeerCiderStyle, countDrinksWithBeerCiderStyle, deleteCustomBeerCiderStyle } from "../data/sharedDirectories.js";
-import { mergeCustomStyles } from "../data/customStyles.js";
+import { mergeCustomStyles, styleGroupsForSubtype, stylesForBeerCiderSubtype } from "../data/customStyles.js";
 import { emptyRow, rowsFromVariants, validateRows, syncBarcodeRows, describeBarcodeError } from "../data/barcodeRows.js";
 import {
   BEER_CIDER_STYLE_GROUPS,
@@ -412,6 +412,11 @@ export function DrinkDetailPanel({ drink, onClose, onSaved, myUserId }) {
     };
   }, [isBeerOrCiderType]);
   const beerCiderStyleGroups = useMemo(() => mergeCustomStyles(BEER_CIDER_STYLE_GROUPS, customStyles), [customStyles]);
+  // Bières & Cidres : les styles se séparent par sous-catégorie (Mehdi, 2026-11-24). « Bière » voit les groupes de bières ; « Cidre » et « Poiré » voient les groupes
+  // « Cidre — … ». Les styles déjà cochés qui sont de l'autre famille ne sont ni affichés, ni comptés, ni enregistrés (comme pour les Softs & Eaux).
+  const subtypeStyleGroups = useMemo(() => styleGroupsForSubtype(beerCiderStyleGroups, form.beverageSubtype), [beerCiderStyleGroups, form.beverageSubtype]);
+  const subtypeStyleChoices = useMemo(() => styleGroupsForSubtype(BEER_CIDER_STYLE_GROUPS, form.beverageSubtype), [form.beverageSubtype]);
+  const shownStyles = isBeerOrCiderType ? stylesForBeerCiderSubtype(form.styles, form.beverageSubtype, beerCiderStyleGroups) : form.styles;
   // Libellé d'un code de style, pour les étiquettes sélectionnées : toutes les listes confondues (un
   // produit peut porter un code d'une autre sous-catégorie), avec les noms modifiés et les styles ajoutés.
   const styleLabelByCode = useMemo(
@@ -652,7 +657,7 @@ export function DrinkDetailPanel({ drink, onClose, onSaved, myUserId }) {
       vintage: form.vintage || null,
       originRegion: form.originRegion.trim(),
       originCity: form.originCity.trim(),
-      styles: form.styles,
+      styles: isBeerOrCider ? stylesForBeerCiderSubtype(form.styles, form.beverageSubtype, beerCiderStyleGroups) : form.styles,
       productStatus: form.productStatus,
       launchYear: form.launchYear === "" ? null : parseInt(form.launchYear, 10),
       malts: form.malts,
@@ -1347,7 +1352,7 @@ export function DrinkDetailPanel({ drink, onClose, onSaved, myUserId }) {
                 <span style={{ ...sectionTitleStyle, marginTop: 0, marginBottom: 0 }}>
                   <span style={{ width: "4px", height: "14px", background: "#39FF66", borderRadius: "2px", display: "inline-block" }} />
                   {isWine ? "Caractéristiques" : "Style(s)"}
-                  {!isSoft && !isHot && !isCocktail && form.styles.length > 0 && <span style={{ color: "#8792A6", fontWeight: 500 }}> ({form.styles.length} sélectionné{form.styles.length > 1 ? "s" : ""})</span>}
+                  {!isSoft && !isHot && !isCocktail && shownStyles.length > 0 && <span style={{ color: "#8792A6", fontWeight: 500 }}> ({shownStyles.length} sélectionné{shownStyles.length > 1 ? "s" : ""})</span>}
                   {isHot && HOT_STYLE_LISTS[form.beverageSubtype] && hotOwnedStyles.length > 0 && (
                     <span style={{ color: "#8792A6", fontWeight: 500 }}>
                       {" "}
@@ -1460,7 +1465,7 @@ export function DrinkDetailPanel({ drink, onClose, onSaved, myUserId }) {
                   {isWine ? "Plusieurs caractéristiques peuvent se cumuler." : "Plusieurs styles peuvent se cumuler (ex. IPA + Hazy + Double IPA)."}
                 </p>
                 <SelectedStyleChips
-                  codes={form.styles}
+                  codes={shownStyles}
                   labelFor={(code) => styleLabelByCode.get(code) || null}
                   ready={customStylesReady}
                   ariaLabel={isWine ? "Caractéristiques sélectionnées" : "Styles sélectionnés"}
@@ -1468,8 +1473,9 @@ export function DrinkDetailPanel({ drink, onClose, onSaved, myUserId }) {
                 <div style={{ border: "2px solid #28405C", borderRadius: "8px", padding: "12px" }}>
                   {isBeerOrCider ? (
                     <BeerCiderStylePicker
-                      groups={beerCiderStyleGroups}
+                      groups={subtypeStyleGroups}
                       builtinGroups={BEER_CIDER_STYLE_GROUPS}
+                      groupChoices={subtypeStyleChoices}
                       custom={customStyles}
                       onCustomChange={setCustomStyles}
                       selected={form.styles}

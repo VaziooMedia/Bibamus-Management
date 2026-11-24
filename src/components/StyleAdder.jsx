@@ -4,7 +4,8 @@ import { validateNewStyle, uniqueStyleCode, allStyleCodes, describeStyleError } 
 // Ajout manuel d'un style de bière / cidre (Niveau 1 → Style(s)). Le style est enregistré une fois
 // pour toutes (table custom_beer_cider_styles) : il rejoint son groupe pour TOUS les produits, puis
 // est sélectionné pour celui en cours d'édition.
-//   groups   : les groupes de la liste figée (pour le choix du groupe et la détection des doublons)
+//   groups   : les groupes de la liste figée (détection des doublons et codes déjà pris)
+//   groupChoices : les groupes proposés dans le menu « Groupe… » (par défaut, tous ceux de `groups` ; la fiche produit n'y met que ceux de la sous-catégorie ouverte)
 //   custom   : les modifications déjà enregistrées (styles ajoutés, renommés, déplacés, supprimés)
 //   onCreate : async ({ code, fr, groupTitle }) -> { style } ou { error }
 //   onCreated: (style) -> void
@@ -12,7 +13,7 @@ import { validateNewStyle, uniqueStyleCode, allStyleCodes, describeStyleError } 
 const fieldStyle = { padding: "10px 12px", borderRadius: "8px", border: "2px solid #28405C", fontSize: "13px" };
 const outlineButton = (color) => ({ background: "none", border: `2px solid ${color}`, borderRadius: "8px", padding: "0 14px", height: "40px", color, cursor: "pointer", fontSize: "12.5px", fontWeight: 700 });
 
-export function StyleAdder({ groups, custom, onCreate, onCreated }) {
+export function StyleAdder({ groups, groupChoices, custom, onCreate, onCreated }) {
   const [open, setOpen] = useState(false);
   const [name, setName] = useState("");
   const [groupTitle, setGroupTitle] = useState("");
@@ -73,7 +74,7 @@ export function StyleAdder({ groups, custom, onCreate, onCreated }) {
             />
             <select value={groupTitle} onChange={(e) => setGroupTitle(e.target.value)} style={{ ...fieldStyle, flex: 1, minWidth: "200px" }}>
               <option value="">Groupe…</option>
-              {groups.map((g) => (
+              {(groupChoices || groups).map((g) => (
                 <option key={g.title} value={g.title}>
                   {g.title}
                 </option>

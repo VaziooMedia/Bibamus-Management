@@ -8,13 +8,14 @@ import { withStyleSaved, withStyleDeleted } from "../data/customStyles.js";
 // style », et le mode « Modifier la liste » pour renommer, déplacer ou supprimer n'importe quel style — y
 // compris ceux de la liste de départ. La liste est commune à tous les produits.
 //   groups         : les groupes affichés (liste de départ + modifications)
-//   builtinGroups  : les groupes de la liste de départ (choix du groupe, détection des doublons)
+//   builtinGroups  : les groupes de la liste de départ (détection des doublons, codes déjà pris)
+//   groupChoices   : les groupes de départ proposés comme destination d'un style ajouté ou déplacé (ceux de la sous-catégorie ouverte ; par défaut, tous)
 //   custom         : les modifications enregistrées ; onCustomChange(prev => liste) pour les mettre à jour (un setState)
 //   selected       : codes sélectionnés pour ce produit ; onToggle(code)
 //   onAdded(style) : un style vient d'être ajouté (le parent le sélectionne pour ce produit)
 //   onDeleted(code): un style vient d'être supprimé (le parent le retire de ce produit)
 //   onCreate / onSave / onCount / onDelete : accès à la base (voir StyleAdder et StyleManagePanel)
-export function BeerCiderStylePicker({ groups, builtinGroups, custom, onCustomChange, selected, onToggle, onAdded, onDeleted, onCreate, onSave, onCount, onDelete }) {
+export function BeerCiderStylePicker({ groups, builtinGroups, groupChoices, custom, onCustomChange, selected, onToggle, onAdded, onDeleted, onCreate, onSave, onCount, onDelete }) {
   const [managing, setManaging] = useState(false);
   const [activeCode, setActiveCode] = useState(null);
   const [message, setMessage] = useState(null);
@@ -58,6 +59,7 @@ export function BeerCiderStylePicker({ groups, builtinGroups, custom, onCustomCh
             key={tag.code}
             style={{ code: tag.code, fr: tag.fr, groupTitle: group.title }}
             groups={builtinGroups}
+            groupChoices={groupChoices}
             custom={custom}
             onSave={save}
             onCount={onCount}
@@ -81,6 +83,7 @@ export function BeerCiderStylePicker({ groups, builtinGroups, custom, onCustomCh
       {!managing && (
         <StyleAdder
           groups={builtinGroups}
+          groupChoices={groupChoices}
           custom={custom}
           onCreate={onCreate}
           onCreated={(style) => {
