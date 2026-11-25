@@ -26,7 +26,7 @@ const ACTION_COLORS = {
   ownership_transferred: "#FFC145",
 };
 
-const ENTITY_TYPE_LABELS = { venue: "Établissement", drink: "Produit", brand: "Marque", producer: "Producteur", user: "Utilisateur" };
+const ENTITY_TYPE_LABELS = { venue: "Établissement", drink: "Produit", brand: "Marque", producer: "Producteur", shop: "Shop", user: "Utilisateur" };
 
 const ACTION_FILTERS = [
   { key: null, label: "Toutes les actions" },
