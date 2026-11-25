@@ -38,10 +38,17 @@ export function uniqueStyleCode(name, takenCodes) {
 // Le style visible qui porte déjà ce nom, ou null. On compare avec les noms tels qu'ils s'affichent (les
 // modifications faites depuis la gestion comptent, les styles supprimés non). `exceptCode` : le style qu'on
 // est en train de modifier, qui ne fait pas doublon avec lui-même.
-export function findDuplicateStyle(name, groups, custom, exceptCode = null) {
+// `groupTitle` (Mehdi, 2026-11-25 : « Lorsque je veux renommer un style d'un cidre, ça me met que ce style existe déjà
+// côté bière. Il faudrait bien séparer ») : le groupe où le style est (ou sera) rangé. Les noms ne se comparent alors
+// qu'entre styles de la même famille — les groupes « Cidre — … » d'un côté, tous les autres de l'autre (voir
+// `styleFamilyOfGroupTitle`) : un style de cidre peut porter le nom d'un style de bière, et inversement.
+// Sans `groupTitle`, la comparaison porte sur tous les styles, comme avant.
+export function findDuplicateStyle(name, groups, custom, exceptCode = null, groupTitle = null) {
   const target = normalizeStyleName(name);
   if (!target) return null;
+  const family = groupTitle ? styleFamilyOfGroupTitle(groupTitle) : null;
   for (const g of mergeCustomStyles(groups, custom)) {
+    if (family && styleFamilyOfGroupTitle(g.title) !== family) continue;
     for (const t of g.tags) if (t.code !== exceptCode && normalizeStyleName(t.fr) === target) return { fr: t.fr, groupTitle: g.title };
   }
   return null;
@@ -101,6 +108,10 @@ export function mergeCustomStyles(groups, custom) {
 export const CIDER_GROUP_PREFIX = "Cidre — ";
 export const SHARED_STYLE_GROUP_TITLE = "Autres styles";
 export const isCiderGroupTitle = (title) => String(title ?? "").startsWith(CIDER_GROUP_PREFIX);
+
+// La famille d'un groupe pour l'unicité des noms : « cider » pour les groupes « Cidre — … », « beer » pour tous les autres (y compris « Autres styles »).
+// La base applique la même règle à son index de noms uniques (voir docs/DATABASE.md de bibamus-web).
+export const styleFamilyOfGroupTitle = (title) => (isCiderGroupTitle(title) ? "cider" : "beer");
 const BEER_CIDER_SUBTYPE_CODES = ["biere", "cidre", "poire"];
 
 // « beer » pour la sous-catégorie « Bière », « cider » pour « Cidre » et « Poiré », null pour toute autre valeur (aucun tri alors).
@@ -157,7 +168,7 @@ export function validateStyleFields(name, groupTitle, groups, custom, exceptCode
   if (trimmed.length > MAX_STYLE_NAME_LENGTH) return `Le nom est trop long (${MAX_STYLE_NAME_LENGTH} caractères maximum).`;
   if (!styleCodeFromName(trimmed)) return "Le nom doit contenir au moins une lettre ou un chiffre.";
   if (!groupTitle) return "Choisissez le groupe dans lequel ranger ce style.";
-  const dup = findDuplicateStyle(trimmed, groups, custom, exceptCode);
+  const dup = findDuplicateStyle(trimmed, groups, custom, exceptCode, groupTitle);
   if (dup) return `« ${dup.fr} » existe déjà, dans le groupe « ${dup.groupTitle} ».`;
   return null;
 }
