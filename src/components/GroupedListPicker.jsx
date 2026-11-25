@@ -2,7 +2,7 @@ import React, { useMemo, useState } from "react";
 import { StyleTagAccordion } from "./StyleTagAccordion.jsx";
 import { ListItemAdder } from "./ListItemAdder.jsx";
 import { ListItemManagePanel } from "./ListItemManagePanel.jsx";
-import { mergeCustomItems, withItemSaved, withItemDeleted } from "../data/customLists.js";
+import { mergeCustomItems, withItemSaved, withItemDeleted, orderGroups, moveWithinGroup } from "../data/customLists.js";
 
 // Choix des éléments d'une liste à groupes de la fiche produit (les arômes & saveurs, par exemple) : l'accordéon
 // des groupes, « + Ajouter … », et le mode « Modifier la liste » pour renommer, déplacer ou supprimer n'importe
@@ -12,14 +12,17 @@ import { mergeCustomItems, withItemSaved, withItemDeleted } from "../data/custom
 //   selected       : codes sélectionnés pour ce produit ; onToggle(code)
 //   onAdded(item)  : un élément vient d'être ajouté (le parent le sélectionne pour ce produit)
 //   onDeleted(code): un élément vient d'être supprimé (le parent le retire de ce produit)
+//   order / onOrderChange / onReorder : (listes `orderable`, les styles) l'ordre enregistré des éléments DANS chaque groupe (voir orderGroups), son setState, et
+//                  async (ordre) -> { ordre } ou { error } qui l'enregistre ; sans eux, la liste garde son ordre de départ et le panneau n'a pas de boutons de place
 //   onCreate / onSave / onCount / onDelete : accès à la base (voir ListItemAdder et ListItemManagePanel)
-export function GroupedListPicker({ list, custom, onCustomChange, selected, onToggle, onAdded, onDeleted, onCreate, onSave, onCount, onDelete }) {
+export function GroupedListPicker({ list, custom, onCustomChange, order, onOrderChange, onReorder, selected, onToggle, onAdded, onDeleted, onCreate, onSave, onCount, onDelete }) {
   const w = list.words;
   const [managing, setManaging] = useState(false);
   const [activeCode, setActiveCode] = useState(null);
   const [message, setMessage] = useState(null);
 
-  const groups = useMemo(() => mergeCustomItems(list, custom), [list, custom]);
+  const groups = useMemo(() => orderGroups(mergeCustomItems(list, custom), order), [list, custom, order]);
+  const canReorder = !!(list.orderable && onReorder && onOrderChange);
 
   const stopManaging = () => {
     setManaging(false);
@@ -48,6 +51,16 @@ export function GroupedListPicker({ list, custom, onCustomChange, selected, onTo
     return res;
   };
 
+  // Déplacer un élément dans son groupe : l'ordre de ce groupe est enregistré aussitôt, celui des autres groupes est gardé tel quel.
+  const move = async (groupTitle, code, action) => {
+    const next = moveWithinGroup(groups, order, groupTitle, code, action);
+    if (!next) return {};
+    const res = await onReorder(next);
+    if (res.error) return res;
+    onOrderChange(next);
+    return {};
+  };
+
   const manage = managing
     ? {
         activeCode,
@@ -65,6 +78,8 @@ export function GroupedListPicker({ list, custom, onCustomChange, selected, onTo
             onCount={onCount}
             onDelete={remove}
             onClose={() => setActiveCode(null)}
+            position={canReorder ? { index: group.tags.findIndex((t) => t.code === tag.code), total: group.tags.length, scope: "group" } : undefined}
+            onMove={canReorder ? (action) => move(group.title, tag.code, action) : undefined}
           />
         ),
       }
@@ -83,7 +98,7 @@ export function GroupedListPicker({ list, custom, onCustomChange, selected, onTo
 
       {managing && (
         <p style={{ fontSize: "11.5px", color: "#F2F2E8", marginTop: "10px", marginBottom: 0 }}>
-          Mode modification : touchez {w.one} pour le renommer, le changer de groupe ou le supprimer. Rien n'est (dé)sélectionné pour ce produit tant que ce mode est actif.
+          Mode modification : touchez {w.one} pour le renommer, le changer de groupe, le déplacer dans son groupe ou le supprimer. Rien n'est (dé)sélectionné pour ce produit tant que ce mode est actif.
         </p>
       )}
 

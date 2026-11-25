@@ -19,7 +19,7 @@ import { FlavorNotesPicker } from "./FlavorNotesPicker.jsx";
 import { FlatListField } from "./FlatListField.jsx";
 import { OnOffSwitch } from "./OnOffSwitch.jsx";
 import { GroupedListField } from "./GroupedListField.jsx";
-import { BEER_DERIVATIVE_LIST, SPIRIT_DERIVATIVE_LIST, TEA_DERIVATIVE_LIST, derivativeVolumesToForm, derivativeVolumesToSave, derivativeKcalToForm, derivativeKcalToSave, mergeCustomItems, FOOD_PAIRING_LIST, OCCASION_LIST, GLASS_LIST, CHARACTERISTIC_LIST, SOFT_CHARACTERISTIC_LIST, COCKTAIL_CHARACTERISTIC_LIST, HOT_CHARACTERISTIC_LIST, SNACK_CHARACTERISTIC_LIST, SOFT_STYLE_LISTS, HOT_STYLE_LISTS, COCKTAIL_STYLE_LISTS, WINE_STYLE_LISTS, SPIRIT_STYLE_LISTS } from "../data/customLists.js";
+import { BEER_DERIVATIVE_LIST, SPIRIT_DERIVATIVE_LIST, TEA_DERIVATIVE_LIST, derivativeVolumesToForm, derivativeVolumesToSave, derivativeKcalToForm, derivativeKcalToSave, mergeCustomItems, FOOD_PAIRING_LIST, OCCASION_LIST, GLASS_LIST, CHARACTERISTIC_LIST, SOFT_CHARACTERISTIC_LIST, COCKTAIL_CHARACTERISTIC_LIST, HOT_CHARACTERISTIC_LIST, SNACK_CHARACTERISTIC_LIST, SOFT_STYLE_LISTS, HOT_STYLE_LISTS, COCKTAIL_STYLE_LISTS, WINE_STYLE_LISTS, SPIRIT_STYLE_LISTS, orderGroups } from "../data/customLists.js";
 import { softStyleOwner, stylesForSoftSubtype } from "../data/softStyles.js";
 import { characteristicsForSoft, characteristicsWithoutSoftOnly } from "../data/softCharacteristics.js";
 import { characteristicsForCocktail, characteristicsWithoutCocktailOnly } from "../data/cocktailCharacteristics.js";
@@ -32,8 +32,9 @@ import { PendingContributionsSection } from "./PendingContributionsSection.jsx";
 import { FreeTagInput } from "./FreeTagInput.jsx";
 import { CollapsibleSection } from "./CollapsibleSection.jsx";
 import { COUNTRIES } from "../constants.js";
-import { loadDrinkVariants, createDrinkVariantChecked, updateDrinkVariantChecked, deleteDrinkVariantChecked, findBarcodeOwnerName, loadCustomBeerCiderStyles, createCustomBeerCiderStyle, saveCustomBeerCiderStyle, countDrinksWithBeerCiderStyle, deleteCustomBeerCiderStyle } from "../data/sharedDirectories.js";
-import { mergeCustomStyles, styleGroupsForSubtype, stylesForBeerCiderSubtype } from "../data/customStyles.js";
+import { loadDrinkVariants, createDrinkVariantChecked, updateDrinkVariantChecked, deleteDrinkVariantChecked, findBarcodeOwnerName, loadCustomBeerCiderStyles, createCustomBeerCiderStyle, saveCustomBeerCiderStyle, countDrinksWithBeerCiderStyle, deleteCustomBeerCiderStyle, saveCustomListOrder } from "../data/sharedDirectories.js";
+import { mergeCustomStyles, styleGroupsForSubtype, stylesForBeerCiderSubtype, BEER_CIDER_STYLE_LIST_KEY } from "../data/customStyles.js";
+import { useCustomListOrder } from "./useCustomListOrder.js";
 import { emptyRow, rowsFromVariants, validateRows, syncBarcodeRows, describeBarcodeError } from "../data/barcodeRows.js";
 import {
   BEER_CIDER_STYLE_GROUPS,
@@ -410,7 +411,9 @@ export function DrinkDetailPanel({ drink, onClose, onSaved, myUserId }) {
       cancelled = true;
     };
   }, [isBeerOrCiderType]);
-  const beerCiderStyleGroups = useMemo(() => mergeCustomStyles(BEER_CIDER_STYLE_GROUPS, customStyles), [customStyles]);
+  // L'ordre des styles DANS chaque groupe (table custom_list_order, Mehdi, 2026-11-25), réglé depuis « Modifier la liste » ; lu comme les styles ajoutés.
+  const [styleOrder, setStyleOrder] = useCustomListOrder(BEER_CIDER_STYLE_LIST_KEY, isBeerOrCiderType);
+  const beerCiderStyleGroups = useMemo(() => orderGroups(mergeCustomStyles(BEER_CIDER_STYLE_GROUPS, customStyles), styleOrder), [customStyles, styleOrder]);
   // Bières & Cidres : les styles se séparent par sous-catégorie (Mehdi, 2026-11-24). « Bière » voit les groupes de bières ; « Cidre » et « Poiré » voient les groupes
   // « Cidre — … ». Les styles déjà cochés qui sont de l'autre famille ne sont ni affichés, ni comptés, ni enregistrés (comme pour les Softs & Eaux).
   const subtypeStyleGroups = useMemo(() => styleGroupsForSubtype(beerCiderStyleGroups, form.beverageSubtype), [beerCiderStyleGroups, form.beverageSubtype]);
@@ -1519,6 +1522,9 @@ export function DrinkDetailPanel({ drink, onClose, onSaved, myUserId }) {
                       groupChoices={subtypeStyleChoices}
                       custom={customStyles}
                       onCustomChange={setCustomStyles}
+                      order={styleOrder}
+                      onOrderChange={setStyleOrder}
+                      onReorder={(codes) => saveCustomListOrder(BEER_CIDER_STYLE_LIST_KEY, codes)}
                       selected={form.styles}
                       onToggle={toggleStyle}
                       onAdded={(style) => setForm((f) => (f.styles.includes(style.code) ? f : { ...f, styles: [...f.styles, style.code] }))}

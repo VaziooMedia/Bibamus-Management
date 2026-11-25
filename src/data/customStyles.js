@@ -18,6 +18,9 @@ export const normalizeStyleName = (s) =>
 
 export const MAX_STYLE_NAME_LENGTH = 60;
 
+// La clé de l'ordre des styles de bières & cidres dans la table custom_list_order (une entrée « groupe::code » par style, voir orderGroups dans customLists.js).
+export const BEER_CIDER_STYLE_LIST_KEY = "beer_cider_style";
+
 // Le préfixe "perso_" distingue sans ambiguïté un style ajouté à la main d'un style de la liste figée.
 export function styleCodeFromName(name) {
   const n = normalizeStyleName(name);

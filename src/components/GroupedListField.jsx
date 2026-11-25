@@ -2,8 +2,9 @@ import React from "react";
 import { GroupedListPicker } from "./GroupedListPicker.jsx";
 import { SelectedListChips } from "./SelectedListChips.jsx";
 import { useCustomListItems } from "./useCustomListItems.js";
+import { useCustomListOrder } from "./useCustomListOrder.js";
 import { listSource } from "./FlatListField.jsx";
-import { createCustomListItem, saveCustomListItem } from "../data/sharedDirectories.js";
+import { createCustomListItem, saveCustomListItem, saveCustomListOrder } from "../data/sharedDirectories.js";
 
 // Le champ d'une liste À GROUPES de la fiche produit dont la liste se modifie depuis la gestion (les styles du Soda) : l'accordéon
 // des groupes, « + Ajouter un style » et « Modifier la liste » (renommer, changer de groupe, supprimer), voir GroupedListPicker.
@@ -16,6 +17,8 @@ import { createCustomListItem, saveCustomListItem } from "../data/sharedDirector
 //   chips          : { codes, ariaLabel } pour montrer les éléments cochés sur une ligne au-dessus de la recherche (facultatif)
 export function GroupedListField({ list, selected, onToggle, onAdded, onDeleted, chips }) {
   const [custom, setCustom, loaded] = useCustomListItems(list.key);
+  // L'ordre des styles dans leur groupe (listes `orderable`, table custom_list_order), lu à l'ouverture.
+  const [order, setOrder] = useCustomListOrder(list.key, !!list.orderable);
   const source = listSource(list);
   return (
     <>
@@ -24,6 +27,9 @@ export function GroupedListField({ list, selected, onToggle, onAdded, onDeleted,
         list={list}
         custom={custom}
         onCustomChange={setCustom}
+        order={order}
+        onOrderChange={setOrder}
+        onReorder={list.orderable ? (codes) => saveCustomListOrder(list.key, codes) : undefined}
         selected={selected}
         onToggle={onToggle}
         onAdded={onAdded}
