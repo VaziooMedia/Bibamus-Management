@@ -3,6 +3,7 @@ import { StyleTagAccordion } from "./StyleTagAccordion.jsx";
 import { StyleAdder } from "./StyleAdder.jsx";
 import { StyleManagePanel } from "./StyleManagePanel.jsx";
 import { withStyleSaved, withStyleDeleted } from "../data/customStyles.js";
+import { moveWithinGroup } from "../data/customLists.js";
 
 // Choix des styles d'un produit bière / cidre (Niveau 1 → Style(s)) : l'accordéon des styles, « + Ajouter un
 // style », et le mode « Modifier la liste » pour renommer, déplacer ou supprimer n'importe quel style — y
@@ -14,8 +15,10 @@ import { withStyleSaved, withStyleDeleted } from "../data/customStyles.js";
 //   selected       : codes sélectionnés pour ce produit ; onToggle(code)
 //   onAdded(style) : un style vient d'être ajouté (le parent le sélectionne pour ce produit)
 //   onDeleted(code): un style vient d'être supprimé (le parent le retire de ce produit)
+//   order / onOrderChange / onReorder : l'ordre enregistré des styles DANS chaque groupe (déjà appliqué aux `groups` reçus), son setState, et async (ordre) -> { ordre } ou
+//                  { error } qui l'enregistre ; sans eux, le panneau n'a pas de boutons de place
 //   onCreate / onSave / onCount / onDelete : accès à la base (voir StyleAdder et StyleManagePanel)
-export function BeerCiderStylePicker({ groups, builtinGroups, groupChoices, custom, onCustomChange, selected, onToggle, onAdded, onDeleted, onCreate, onSave, onCount, onDelete }) {
+export function BeerCiderStylePicker({ groups, builtinGroups, groupChoices, custom, onCustomChange, order, onOrderChange, onReorder, selected, onToggle, onAdded, onDeleted, onCreate, onSave, onCount, onDelete }) {
   const [managing, setManaging] = useState(false);
   const [activeCode, setActiveCode] = useState(null);
   const [message, setMessage] = useState(null);
@@ -47,6 +50,18 @@ export function BeerCiderStylePicker({ groups, builtinGroups, groupChoices, cust
     return res;
   };
 
+  // Déplacer un style dans son groupe : l'ordre de ce groupe est enregistré aussitôt ; les entrées des autres groupes (y compris ceux de l'autre famille,
+  // cidre ou bière, qui ne sont pas affichés) sont gardées telles quelles.
+  const canReorder = !!(onReorder && onOrderChange);
+  const move = async (groupTitle, code, action) => {
+    const next = moveWithinGroup(groups, order, groupTitle, code, action);
+    if (!next) return {};
+    const res = await onReorder(next);
+    if (res.error) return res;
+    onOrderChange(next);
+    return {};
+  };
+
   const manage = managing
     ? {
         activeCode,
@@ -65,6 +80,8 @@ export function BeerCiderStylePicker({ groups, builtinGroups, groupChoices, cust
             onCount={onCount}
             onDelete={remove}
             onClose={() => setActiveCode(null)}
+            position={canReorder ? { index: group.tags.findIndex((t) => t.code === tag.code), total: group.tags.length, scope: "group" } : undefined}
+            onMove={canReorder ? (action) => move(group.title, tag.code, action) : undefined}
           />
         ),
       }
@@ -76,7 +93,7 @@ export function BeerCiderStylePicker({ groups, builtinGroups, groupChoices, cust
 
       {managing && (
         <p style={{ fontSize: "11.5px", color: "#F2F2E8", marginTop: "10px", marginBottom: 0 }}>
-          Mode modification : touchez un style pour le renommer, le changer de groupe ou le supprimer. Rien n'est (dé)sélectionné pour ce produit tant que ce mode est actif.
+          Mode modification : touchez un style pour le renommer, le changer de groupe, le déplacer dans son groupe ou le supprimer. Rien n'est (dé)sélectionné pour ce produit tant que ce mode est actif.
         </p>
       )}
 

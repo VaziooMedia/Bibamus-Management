@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { validateStyleFields, describeStyleError } from "../data/customStyles.js";
+import { PositionControls } from "./PositionControls.jsx";
 
 // Panneau de modification d'un style de bière / cidre, affiché sous les étiquettes de son groupe quand on
 // le touche en mode « Modifier la liste ». On y renomme le style, on le range dans un autre groupe, ou on
@@ -12,6 +13,7 @@ import { validateStyleFields, describeStyleError } from "../data/customStyles.js
 //   onCount  : async (code) -> { count } ou { error } — combien de produits portent ce style
 //   onDelete : async ({ code, fr, groupTitle }) -> { removedFrom } ou { error }
 //   onClose  : () -> void
+//   position : (facultatif) { index, total, scope } — la place du style dans son groupe ; onMove : async (action) -> {} ou { error } — le déplace (voir PositionControls)
 // Quand l'enregistrement ou la suppression réussit, le parent referme le panneau (et affiche le résultat) :
 // ce panneau n'a donc pas de message de succès à lui.
 
@@ -21,7 +23,7 @@ const outlineButton = (color) => ({ background: "none", border: `2px solid ${col
 const cleanName = (s) => String(s ?? "").trim().replace(/\s+/g, " ");
 const produits = (n) => `${n} produit${n > 1 ? "s" : ""}`;
 
-export function StyleManagePanel({ style, groups, groupChoices, custom, onSave, onCount, onDelete, onClose }) {
+export function StyleManagePanel({ style, groups, groupChoices, custom, onSave, onCount, onDelete, onClose, position, onMove }) {
   const [name, setName] = useState(style.fr);
   const [groupTitle, setGroupTitle] = useState(style.groupTitle);
   const [busy, setBusy] = useState(false);
@@ -46,6 +48,16 @@ export function StyleManagePanel({ style, groups, groupChoices, custom, onSave, 
     const res = await onSave({ code: style.code, fr, groupTitle });
     setBusy(false);
     if (res.error) setError(describeStyleError(res.error));
+  };
+
+  // Déplacer le style dans son groupe : l'ordre est enregistré aussitôt (sans passer par « Enregistrer »).
+  const move = async (action) => {
+    if (busy) return;
+    setError(null);
+    setBusy(true);
+    const res = await onMove(action);
+    setBusy(false);
+    if (res?.error) setError(describeStyleError(res.error));
   };
 
   const askDelete = async () => {
@@ -97,6 +109,7 @@ export function StyleManagePanel({ style, groups, groupChoices, custom, onSave, 
               {!(groupChoices || groups).some((g) => g.title === groupTitle) && <option value={groupTitle}>{groupTitle}</option>}
             </select>
           </div>
+          {position && onMove && <PositionControls position={position} busy={busy} onMove={move} name={style.fr} />}
           <div style={{ display: "flex", flexWrap: "wrap", gap: "8px", marginTop: "10px" }}>
             <button onClick={save} disabled={busy} style={outlineButton("#39FF66")}>
               {busy ? "…" : "Enregistrer"}

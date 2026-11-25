@@ -425,6 +425,7 @@ export const BRAND_TYPE_LIST = {
 export const WATER_ENTITY = { ...PRODUCT_ENTITY, all: "toutes les eaux", none: "aucune eau" };
 export const WATER_STYLE_LIST = {
   key: "water_style",
+  orderable: true,
   flat: true,
   source: "soft_styles",
   codePrefix: "perso_eau_",
@@ -448,6 +449,7 @@ export const WATER_STYLE_LIST = {
 export const SODA_ENTITY = { ...PRODUCT_ENTITY, all: "tous les sodas", none: "aucun soda" };
 export const SODA_STYLE_LIST = {
   key: "soda_style",
+  orderable: true,
   source: "soft_styles",
   codePrefix: "perso_soda_",
   entity: SODA_ENTITY,
@@ -471,6 +473,7 @@ export const SODA_STYLE_LIST = {
 export const JUICE_ENTITY = { ...PRODUCT_ENTITY, all: "tous les jus", none: "aucun jus" };
 export const JUICE_STYLE_LIST = {
   key: "juice_style",
+  orderable: true,
   source: "soft_styles",
   codePrefix: "perso_jus_",
   entity: JUICE_ENTITY,
@@ -494,6 +497,7 @@ export const JUICE_STYLE_LIST = {
 export const ENERGY_ENTITY = { ...PRODUCT_ENTITY, all: "toutes les boissons Energy", none: "aucune boisson Energy" };
 export const ENERGY_STYLE_LIST = {
   key: "energy_style",
+  orderable: true,
   source: "soft_styles",
   codePrefix: "perso_energy_",
   entity: ENERGY_ENTITY,
@@ -517,6 +521,7 @@ export const ENERGY_STYLE_LIST = {
 export const SPORT_ENTITY = { ...PRODUCT_ENTITY, all: "toutes les boissons sportives", none: "aucune boisson sportive" };
 export const SPORT_STYLE_LIST = {
   key: "sport_style",
+  orderable: true,
   source: "soft_styles",
   codePrefix: "perso_sport_",
   entity: SPORT_ENTITY,
@@ -541,6 +546,7 @@ export const SPORT_STYLE_LIST = {
 export const DAIRY_ENTITY = { ...PRODUCT_ENTITY, all: "toutes les boissons lactées", none: "aucune boisson lactée" };
 export const DAIRY_STYLE_LIST = {
   key: "dairy_style",
+  orderable: true,
   source: "soft_styles",
   codePrefix: "perso_lactee_",
   entity: DAIRY_ENTITY,
@@ -565,6 +571,7 @@ export const DAIRY_STYLE_LIST = {
 export const SYRUP_ENTITY = { ...PRODUCT_ENTITY, all: "tous les sirops", none: "aucun sirop" };
 export const SYRUP_STYLE_LIST = {
   key: "syrup_style",
+  orderable: true,
   source: "soft_styles",
   codePrefix: "perso_sirop_",
   entity: SYRUP_ENTITY,
@@ -623,6 +630,7 @@ export const SOFT_CHARACTERISTIC_LIST = {
 export const COFFEE_ENTITY = { ...PRODUCT_ENTITY, all: "tous les cafés", none: "aucun café" };
 export const COFFEE_STYLE_LIST = {
   key: "coffee_style",
+  orderable: true,
   source: "hot_styles",
   codePrefix: "perso_cafe_",
   entity: COFFEE_ENTITY,
@@ -647,6 +655,7 @@ export const COFFEE_STYLE_LIST = {
 export const TEA_ENTITY = { ...PRODUCT_ENTITY, all: "tous les thés", none: "aucun thé" };
 export const TEA_STYLE_LIST = {
   key: "tea_style",
+  orderable: true,
   source: "hot_styles",
   codePrefix: "perso_the_",
   entity: TEA_ENTITY,
@@ -671,6 +680,7 @@ export const TEA_STYLE_LIST = {
 export const INFUSION_ENTITY = { ...PRODUCT_ENTITY, all: "toutes les infusions", none: "aucune infusion" };
 export const INFUSION_STYLE_LIST = {
   key: "infusion_style",
+  orderable: true,
   source: "hot_styles",
   codePrefix: "perso_infusion_",
   entity: INFUSION_ENTITY,
@@ -695,6 +705,7 @@ export const INFUSION_STYLE_LIST = {
 export const HOT_MILK_ENTITY = { ...PRODUCT_ENTITY, all: "tous les Hot Milk", none: "aucun Hot Milk" };
 export const HOT_MILK_STYLE_LIST = {
   key: "hot_milk_style",
+  orderable: true,
   source: "hot_styles",
   codePrefix: "perso_hot_milk_",
   entity: HOT_MILK_ENTITY,
@@ -719,6 +730,7 @@ export const HOT_MILK_STYLE_LIST = {
 export const SOUP_ENTITY = { ...PRODUCT_ENTITY, all: "toutes les soupes", none: "aucune soupe" };
 export const SOUP_STYLE_LIST = {
   key: "soup_style",
+  orderable: true,
   source: "hot_styles",
   codePrefix: "perso_soupe_",
   entity: SOUP_ENTITY,
@@ -742,6 +754,7 @@ export const SOUP_STYLE_LIST = {
 export const HOT_MIX_ENTITY = { ...PRODUCT_ENTITY, all: "tous les Hot Mix", none: "aucun Hot Mix" };
 export const HOT_MIX_STYLE_LIST = {
   key: "hot_mix_style",
+  orderable: true,
   source: "hot_styles",
   codePrefix: "perso_hot_mix_",
   entity: HOT_MIX_ENTITY,
@@ -766,6 +779,7 @@ export const HOT_MIX_STYLE_LIST = {
 export const CEREAL_CHICORY_ENTITY = { ...PRODUCT_ENTITY, all: "toutes les boissons Céréales & Chicorée", none: "aucune boisson Céréales & Chicorée" };
 export const CEREAL_CHICORY_STYLE_LIST = {
   key: "cereal_chicory_style",
+  orderable: true,
   source: "hot_styles",
   codePrefix: "perso_cereales_chicoree_",
   entity: CEREAL_CHICORY_ENTITY,
@@ -793,6 +807,7 @@ export const HOT_STYLE_LISTS = { cafe: COFFEE_STYLE_LIST, the: TEA_STYLE_LIST, i
 export const WINE_ENTITY = { ...PRODUCT_ENTITY, all: "tous les vins", none: "aucun vin" };
 export const WINE_STYLE_LIST = {
   key: "wine_style",
+  orderable: true,
   source: "wine_styles",
   codePrefix: "perso_wine_",
   entity: WINE_ENTITY,
@@ -815,6 +830,7 @@ export const WINE_STYLE_LIST = {
 export const SPARKLING_WINE_ENTITY = { ...PRODUCT_ENTITY, all: "tous les vins effervescents", none: "aucun vin effervescent" };
 export const SPARKLING_WINE_STYLE_LIST = {
   key: "sparkling_wine_style",
+  orderable: true,
   source: "wine_styles",
   codePrefix: "perso_sparkling_",
   entity: SPARKLING_WINE_ENTITY,
@@ -862,6 +878,7 @@ const spiritStyleList = (subtype) => {
   const [all, none] = SPIRIT_ENTITY_WORDS[subtype];
   return {
     key: `${prefix}_style`,
+    orderable: true,
     flat: true,
     source: "spirit_styles",
     codePrefix: `perso_${prefix}_`,
@@ -890,6 +907,7 @@ export const SPIRIT_STYLE_LISTS = Object.fromEntries(Object.keys(SPIRIT_STYLE_PR
 export const COCKTAIL_ENTITY = { ...PRODUCT_ENTITY, all: "tous les cocktails", none: "aucun cocktail" };
 export const COCKTAIL_STYLE_LIST = {
   key: "cocktail_style",
+  orderable: true,
   source: "cocktail_styles",
   codePrefix: "perso_cocktail_",
   entity: COCKTAIL_ENTITY,
@@ -915,6 +933,7 @@ export const COCKTAIL_STYLE_LIST = {
 export const MOCKTAIL_ENTITY = { ...PRODUCT_ENTITY, all: "tous les mocktails", none: "aucun mocktail" };
 export const MOCKTAIL_STYLE_LIST = {
   key: "mocktail_style",
+  orderable: true,
   source: "cocktail_styles",
   codePrefix: "perso_mocktail_",
   entity: MOCKTAIL_ENTITY,
@@ -1176,15 +1195,58 @@ export function itemLabelResolver(list, custom) {
 // Les éléments visibles de la liste, à plat, dans l'ordre d'affichage.
 export const orderedItems = (list, custom, order) => applyOrder(mergeCustomItems(list, custom).flatMap((g) => g.tags), order);
 
-// La suite des codes après avoir déplacé `code` d'un cran (direction -1 : vers le haut, +1 : vers le bas) ;
-// null si le déplacement est impossible (déjà au bout, ou code inconnu).
+// La suite des codes après avoir déplacé `code` d'un cran (direction -1 : vers le haut, +1 : vers le bas) ou tout au bout
+// (« first » : en premier, « last » : en dernier) ; null si le déplacement est impossible (déjà à sa place, ou code inconnu).
 export function moveInOrder(codes, code, direction) {
   const i = codes.indexOf(code);
+  if (i < 0) return null;
+  if (direction === "first" || direction === "last") {
+    const j = direction === "first" ? 0 : codes.length - 1;
+    if (i === j) return null;
+    const next = codes.filter((c) => c !== code);
+    next.splice(j, 0, code);
+    return next;
+  }
   const j = i + direction;
-  if (i < 0 || j < 0 || j >= codes.length) return null;
+  if (j < 0 || j >= codes.length) return null;
   const next = [...codes];
   [next[i], next[j]] = [next[j], next[i]];
   return next;
+}
+
+// ---------- Ordre des styles (Mehdi, 2026-11-25 : « pouvoir modifier l'ordre des styles (la position), partout, sur tous les styles de toutes les
+// sous-catégories ») ----------
+// Une liste de styles (clé « …_style ») garde son ordre dans la table custom_list_order, comme les listes des fiches Lieu, Producteur et Marque.
+// Liste PLATE (Eau, Spiritueux, Vin effervescent, RTD) : la suite des codes, comme ces listes. Liste À GROUPES (bière/cidre, Soda, Jus, Café,
+// Thé, Vin, Cocktail…) : l'ordre vaut DANS UN GROUPE, et chaque entrée est « titre du groupe::code » — un même style peut ainsi figurer dans
+// deux groupes (sept styles de bière sont dans deux groupes) avec une place différente dans chacun, et un style rangé dans un autre groupe
+// arrive en dernier dans ce groupe. Les groupes eux-mêmes ne se déplacent pas.
+export const isStyleList = (list) => String(list?.key ?? "").endsWith("_style");
+const GROUP_ORDER_SEPARATOR = "::";
+export const groupOrderEntry = (groupTitle, code) => `${groupTitle}${GROUP_ORDER_SEPARATOR}${code}`;
+
+// Les groupes avec les éléments de chacun dans l'ordre enregistré (un groupe sans entrée garde son ordre de départ ; les éléments qui n'y figurent pas
+// viennent à la fin).
+export function orderGroups(groups, order) {
+  if (!Array.isArray(order) || order.length === 0) return groups;
+  return groups.map((g) => {
+    const prefix = `${g.title}${GROUP_ORDER_SEPARATOR}`;
+    const codes = order.filter((e) => typeof e === "string" && e.startsWith(prefix)).map((e) => e.slice(prefix.length));
+    return codes.length === 0 ? g : { ...g, tags: applyOrder(g.tags, codes) };
+  });
+}
+
+// L'ordre enregistré après avoir déplacé `code` dans son groupe (`action` : -1, 1, « first » ou « last », voir moveInOrder). `groups` : TOUS les
+// groupes de la liste, déjà dans leur ordre d'affichage. Seules les entrées de ce groupe changent : celles des autres groupes sont gardées telles
+// quelles. null si le déplacement est impossible.
+export function moveWithinGroup(groups, order, groupTitle, code, action) {
+  const group = groups.find((g) => g.title === groupTitle);
+  if (!group) return null;
+  const next = moveInOrder(group.tags.map((t) => t.code), code, action);
+  if (!next) return null;
+  const prefix = `${groupTitle}${GROUP_ORDER_SEPARATOR}`;
+  const others = (Array.isArray(order) ? order : []).filter((e) => !(typeof e === "string" && e.startsWith(prefix)));
+  return [...others, ...next.map((c) => groupOrderEntry(groupTitle, c))];
 }
 
 // Ordre PROPRE À UN PRODUIT (dérivés) : d'abord les éléments cochés, dans l'ordre des codes cochés du produit, puis les autres dans l'ordre commun.

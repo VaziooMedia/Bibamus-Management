@@ -1,5 +1,6 @@
 import React, { useState } from "react";
-import { validateItemFields, describeItemError, entityOf, countLabel, deleteNoticeFor, parseItemEnergy, parseDerivativeVolume } from "../data/customLists.js";
+import { PositionControls } from "./PositionControls.jsx";
+import { isStyleList, validateItemFields, describeItemError, entityOf, countLabel, deleteNoticeFor, parseItemEnergy, parseDerivativeVolume } from "../data/customLists.js";
 
 // Panneau de modification d'un élément d'une liste de la fiche produit (un arôme, par exemple), de la fiche lieu ou de la
 // fiche producteur, affiché sous les
@@ -155,7 +156,8 @@ export function ListItemManagePanel({ list, item, custom, onSave, onCount, onDel
               Le volume ne vaut que pour ce produit : il s'enregistre avec la fiche.
             </p>
           )}
-          {position && onMove && (
+          {position && onMove && isStyleList(list) && <PositionControls position={position} busy={busy} onMove={move} name={item.fr} />}
+          {position && onMove && !isStyleList(list) && (
             <div style={{ display: "flex", flexWrap: "wrap", gap: "8px", alignItems: "center", marginTop: "10px" }}>
               <span style={{ fontSize: "12px", color: "#F2F2E8" }}>
                 Place dans la liste : <strong>{position.index + 1}</strong> sur {position.total}
