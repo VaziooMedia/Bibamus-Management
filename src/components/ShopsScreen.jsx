@@ -6,6 +6,7 @@ import { DataTable, StatusBadge, VisibilityDot } from "./DataTable.jsx";
 import { ShopDetailPanel } from "./ShopDetailPanel.jsx";
 import { DetailedStatsCounterBar, applyStatFilter } from "./DetailedStatsCounterBar.jsx";
 import { PageTitle } from "./PageTitle.jsx";
+import { alternateNameSearchFields } from "./AlternateNamesFields.jsx";
 import { COUNTRIES } from "../constants.js";
 
 const countryLabel = (code) => (COUNTRIES.find((c) => c.code === code) || {}).fr || code || "—";
@@ -93,6 +94,7 @@ export function ShopsScreen({ myUserId }) {
             onRowClick={setSelected}
             onAdd={() => setCreating(true)}
             searchPlaceholder="Rechercher Shops"
+            extraSearchFields={alternateNameSearchFields}
             filterKey={activeFilter}
           />
         </>
