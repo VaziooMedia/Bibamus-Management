@@ -8,6 +8,7 @@ import { PendingContributionsSection } from "./PendingContributionsSection.jsx";
 import { AddressAutocomplete } from "./AddressAutocomplete.jsx";
 import { CollapsibleSection } from "./CollapsibleSection.jsx";
 import { FlatListField } from "./FlatListField.jsx";
+import { AlternateNamesFields } from "./AlternateNamesFields.jsx";
 import { AdminPhotoField } from "./AdminPhotoField.jsx";
 import { GooglePlaceLinker } from "./GooglePlaceLinker.jsx";
 import { SHOP_CATEGORY_LIST } from "../data/customLists.js";
@@ -98,6 +99,9 @@ export function ShopDetailPanel({ shop, onClose, onSaved, myUserId }) {
   const isNew = !shop;
   const [form, setForm] = useState({
     name: shop?.name || "",
+    aliasesText: (shop?.aliases || []).join(", "),
+    alternateName: shop?.alternateName || "",
+    translations: shop?.translations || [],
     subtitle: shop?.subtitle || "",
     hasStore: shop ? shop.hasStore : true,
     hasOnline: shop ? shop.hasOnline : false,
@@ -198,6 +202,9 @@ export function ShopDetailPanel({ shop, onClose, onSaved, myUserId }) {
   // Un magasin seul ne livre nulle part : la liste des pays desservis est enregistrée vide.
   const buildPatch = () => ({
     name: form.name.trim(),
+    aliases: form.aliasesText.split(",").map((a) => a.trim()).filter(Boolean),
+    alternateName: form.alternateName.trim(),
+    translations: form.translations.filter((t) => t.value.trim()),
     subtitle: form.subtitle.trim(),
     hasStore: form.hasStore,
     hasOnline: form.hasOnline,
@@ -352,6 +359,16 @@ export function ShopDetailPanel({ shop, onClose, onSaved, myUserId }) {
         <CollapsibleSection title="Dénomination" defaultOpen>
           <label style={labelStyle}>Nom *</label>
           <input value={form.name} onChange={(e) => set("name", e.target.value)} style={{ ...fieldStyle, marginBottom: "14px" }} />
+
+          <AlternateNamesFields
+            aliasesText={form.aliasesText}
+            onAliasesTextChange={(v) => set("aliasesText", v)}
+            alternateName={form.alternateName}
+            onAlternateNameChange={(v) => set("alternateName", v)}
+            translations={form.translations}
+            onTranslationsChange={(v) => set("translations", v)}
+          />
+
           <label style={labelStyle}>Sous-titre</label>
           <input value={form.subtitle} onChange={(e) => set("subtitle", e.target.value)} style={fieldStyle} />
         </CollapsibleSection>
@@ -489,23 +506,6 @@ export function ShopDetailPanel({ shop, onClose, onSaved, myUserId }) {
                 {!geocodeNotFound && geocodeStatus === "pending" && <span style={{ fontSize: "12px", color: "#8792A6" }}>Pas encore géocodée</span>}
               </div>
             </CollapsibleSection>
-
-            <div style={separatorStyle} />
-            <CollapsibleSection title="Horaires d'ouverture" defaultOpen>
-              <GooglePlaceLinker
-                venueId={shop?.id || null}
-                table="shops_directory"
-                name={form.name}
-                address={`${form.streetName} ${form.streetNumber}, ${form.postalCode} ${form.city}`}
-                googlePlaceId={googlePlaceId}
-                checkedAt={shop?.googlePlaceIdCheckedAt}
-                noGooglePresence={noGooglePresence}
-                noFixedHours={noFixedHours}
-                onLinked={setGooglePlaceId}
-                onNoPresenceChange={setNoGooglePresence}
-                onNoFixedHoursChange={setNoFixedHours}
-              />
-            </CollapsibleSection>
           </>
         )}
 
@@ -550,6 +550,27 @@ export function ShopDetailPanel({ shop, onClose, onSaved, myUserId }) {
           <SocialLinkField icon={<LinkedinIcon size={18} />} label="LinkedIn" prefix="https://www.linkedin.com/company/" value={form.linkedinUrl} onChange={(v) => set("linkedinUrl", v)} />
           <SocialLinkField icon={<YoutubeIcon size={18} />} label="YouTube" prefix="https://www.youtube.com/channel/" value={form.youtubeUrl} onChange={(v) => set("youtubeUrl", v)} />
         </CollapsibleSection>
+
+        {store && (
+          <>
+            <div style={separatorStyle} />
+            <CollapsibleSection title="Horaires d'ouverture" defaultOpen>
+              <GooglePlaceLinker
+                venueId={shop?.id || null}
+                table="shops_directory"
+                name={form.name}
+                address={`${form.streetName} ${form.streetNumber}, ${form.postalCode} ${form.city}`}
+                googlePlaceId={googlePlaceId}
+                checkedAt={shop?.googlePlaceIdCheckedAt}
+                noGooglePresence={noGooglePresence}
+                noFixedHours={noFixedHours}
+                onLinked={setGooglePlaceId}
+                onNoPresenceChange={setNoGooglePresence}
+                onNoFixedHoursChange={setNoFixedHours}
+              />
+            </CollapsibleSection>
+          </>
+        )}
           </>
         )}
 

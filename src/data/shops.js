@@ -94,6 +94,10 @@ function rowToShop(row) {
   return {
     id: row.id,
     name: row.name,
+    // Autres noms (colonnes `aliases` text[], `alternate_name` text, `translations` jsonb) : les mêmes que pour les Lieux ; la recherche de l'app les lit par `search_text`.
+    aliases: row.aliases || [],
+    alternateName: row.alternate_name,
+    translations: row.translations || [],
     subtitle: row.subtitle,
     hasStore: row.has_store ?? true,
     hasOnline: !!row.has_online,
@@ -143,6 +147,9 @@ function rowToShop(row) {
 function shopToRow(s, partial = false) {
   const row = {
     name: s.name,
+    aliases: s.aliases,
+    alternate_name: s.alternateName,
+    translations: s.translations,
     subtitle: s.subtitle,
     has_store: s.hasStore,
     has_online: s.hasOnline,
