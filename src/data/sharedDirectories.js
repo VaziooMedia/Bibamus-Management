@@ -3162,8 +3162,21 @@ export async function globalSearch(query) {
 // vraie session est valide).
 export async function updateOwnPassword(newPassword) {
   const { error } = await supabase.auth.updateUser({ password: newPassword });
-  if (error) return { error: error.message };
+  if (error) return { error: authPasswordErrorText(error) };
   return { ok: true };
+}
+
+// Supabase Auth refuse un mot de passe trouvé dans une liste de mots de passe volés (réglage
+// « Prevent use of leaked passwords ») avec l'erreur « weak_password » et la raison « pwned » ;
+// son texte est en anglais, on le remplace donc ici. Toute autre erreur garde le texte de Supabase.
+function authPasswordErrorText(error) {
+  if (error.code === "weak_password") {
+    const reasons = Array.isArray(error.reasons) ? error.reasons : [];
+    if (reasons.length === 0 || reasons.includes("pwned")) {
+      return "Ce mot de passe est apparu dans des fuites de données : choisis-en un autre.";
+    }
+  }
+  return error.message;
 }
 
 // Vraies préférences de notification personnelles (Paramètres > Notifications) — quels vrais
