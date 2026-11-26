@@ -47,6 +47,9 @@ export function AddressAutocomplete({ postalCode, city, countryIsoCode, onPostal
       const props = feature?.properties || {};
       return [props.postcode, communeOf(props)].filter(Boolean).join(" ") || props.formatted || "";
     });
+    // La bibliothèque remplace un texte d'aide vide par « Enter an address here » : on le retire,
+    // les champs de saisie restent sans texte d'exemple.
+    postalRef.current.querySelector("input")?.setAttribute("placeholder", "");
     postalAutocompleteRef.current = postalAutocomplete;
 
     const cityAutocomplete = new GeocoderAutocomplete(cityRef.current, GEOAPIFY_API_KEY, {
@@ -61,6 +64,7 @@ export function AddressAutocomplete({ postalCode, city, countryIsoCode, onPostal
       if (communeOf(props)) onCityChange(communeOf(props));
       if (props.postcode) onPostalCodeChange(props.postcode);
     });
+    cityRef.current.querySelector("input")?.setAttribute("placeholder", "");
     cityAutocompleteRef.current = cityAutocomplete;
 
     return () => {
