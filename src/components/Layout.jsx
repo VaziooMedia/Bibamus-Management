@@ -16,6 +16,8 @@ const COMMUNICATION_ITEMS = [
 const DATABASE_ITEMS = [
   { key: "venues", label: "Lieux" },
   { key: "drinks", label: "Produits" },
+  // Paramétrages : réglages des listes liées aux produits (pour l'instant les dérivés de chaque sous-catégorie, listes « derivative_<sous-catégorie> »).
+  { key: "parametrages", label: "Paramétrages" },
   { key: "brands", label: "Marques" },
   { key: "breweries", label: "Producteurs" },
   // Shops : points de vente de boissons à emporter (supermarchés, négociants, boutiques en ligne…), table `shops_directory`.
