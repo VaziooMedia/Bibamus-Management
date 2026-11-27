@@ -30,6 +30,7 @@ import { FeatureFlagsScreen } from "./components/FeatureFlagsScreen.jsx";
 import { CrashReportsScreen } from "./components/CrashReportsScreen.jsx";
 import { AnalyticsScreen } from "./components/AnalyticsScreen.jsx";
 import { MyActivityScreen } from "./components/MyActivityScreen.jsx";
+import { DerivativeSettingsScreen } from "./components/DerivativeSettingsScreen.jsx";
 
 const SUPABASE_PROJECT_URL = "https://supabase.com/dashboard/project/rkmmrzkqzqpntgiguajz";
 
@@ -161,6 +162,7 @@ export default function App() {
         />
       )}
       {screen === "shops" && <ShopsScreen myUserId={myUserId} />}
+      {screen === "parametrages" && <DerivativeSettingsScreen />}
       {screen === "officialStories" && <OfficialStoriesScreen myUserId={myUserId} />}
       {screen === "brands" && (
         <BrandsScreen initialBrandId={viewedClaimEntity?.type === "brand" ? viewedClaimEntity.id : null} onInitialBrandOpened={() => setViewedClaimEntity(null)} myUserId={myUserId} />

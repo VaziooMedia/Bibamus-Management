@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from "react";
+import React, { useState, useEffect, useMemo, useRef } from "react";
 import aiIconGrey from "../assets/brand/ai_icon_grey.svg";
 import aiIconGreen from "../assets/brand/ai_icon_green.svg";
 import aiIconBlack from "../assets/brand/ai_icon_black.svg";
@@ -17,9 +17,12 @@ import { BeerCiderStylePicker } from "./BeerCiderStylePicker.jsx";
 import { SelectedStyleChips } from "./SelectedStyleChips.jsx";
 import { FlavorNotesPicker } from "./FlavorNotesPicker.jsx";
 import { FlatListField } from "./FlatListField.jsx";
+import { ProductDerivativesTable } from "./ProductDerivativesTable.jsx";
+import { loadSubtypeDerivatives } from "../data/derivativeSettingsDb.js";
+import { usesSubtypeDerivatives } from "../data/derivativeSettings.js";
 import { OnOffSwitch } from "./OnOffSwitch.jsx";
 import { GroupedListField } from "./GroupedListField.jsx";
-import { BEER_DERIVATIVE_LIST, SPIRIT_DERIVATIVE_LIST, TEA_DERIVATIVE_LIST, derivativeVolumesToForm, derivativeVolumesToSave, derivativeKcalToForm, derivativeKcalToSave, mergeCustomItems, FOOD_PAIRING_LIST, OCCASION_LIST, GLASS_LIST, CHARACTERISTIC_LIST, SOFT_CHARACTERISTIC_LIST, COCKTAIL_CHARACTERISTIC_LIST, HOT_CHARACTERISTIC_LIST, SNACK_CHARACTERISTIC_LIST, SOFT_STYLE_LISTS, HOT_STYLE_LISTS, COCKTAIL_STYLE_LISTS, WINE_STYLE_LISTS, SPIRIT_STYLE_LISTS, orderGroups } from "../data/customLists.js";
+import { BEER_DERIVATIVE_LIST, TEA_DERIVATIVE_LIST, derivativeVolumesToForm, derivativeVolumesToSave, derivativeKcalToForm, derivativeKcalToSave, mergeCustomItems, FOOD_PAIRING_LIST, OCCASION_LIST, GLASS_LIST, CHARACTERISTIC_LIST, SOFT_CHARACTERISTIC_LIST, COCKTAIL_CHARACTERISTIC_LIST, HOT_CHARACTERISTIC_LIST, SNACK_CHARACTERISTIC_LIST, SOFT_STYLE_LISTS, HOT_STYLE_LISTS, COCKTAIL_STYLE_LISTS, WINE_STYLE_LISTS, SPIRIT_STYLE_LISTS, orderGroups } from "../data/customLists.js";
 import { softStyleOwner, stylesForSoftSubtype } from "../data/softStyles.js";
 import { characteristicsForSoft, characteristicsWithoutSoftOnly } from "../data/softCharacteristics.js";
 import { characteristicsForCocktail, characteristicsWithoutCocktailOnly } from "../data/cocktailCharacteristics.js";
@@ -474,7 +477,34 @@ export function DrinkDetailPanel({ drink, onClose, onSaved, myUserId }) {
   const isTea = isHot && (form.beverageSubtype === "the" || form.beverageSubtype === "infusion");
   // Dérivés du produit : les bières (sous-catégorie « Bière » seulement), les spiritueux et les thés / infusions, chacun avec SA liste commune.
   const hasDerivatives = (isBeerOrCider && isBeer) || isSpirit || isTea;
-  const derivativeList = isSpirit ? SPIRIT_DERIVATIVE_LIST : isTea ? TEA_DERIVATIVE_LIST : BEER_DERIVATIVE_LIST;
+  // Spiritueux (et bientôt les autres catégories) : les dérivés sont ceux de la SOUS-CATÉGORIE du produit, réglés dans DataBase > Paramétrages ; la fiche ne fait que les
+  // cocher. Bières et thés gardent pour l'instant leur ancienne liste commune (modifiable ici même).
+  const subtypeDerivatives = usesSubtypeDerivatives(form.type);
+  const derivativeList = isTea ? TEA_DERIVATIVE_LIST : BEER_DERIVATIVE_LIST;
+  // Les codes de la liste de la sous-catégorie, une fois lue par le tableau (null avant), pour compter les dérivés vraiment activés.
+  const [derivativeListCodes, setDerivativeListCodes] = useState(null);
+  const derivativeActiveCount = subtypeDerivatives && derivativeListCodes ? form.derivatives.filter((c) => derivativeListCodes.includes(c)).length : form.derivatives.length;
+  // Au moment d'enregistrer : les codes de la liste de la sous-catégorie du produit (null = rien à filtrer). Un dérivé resté coché d'une autre sous-catégorie n'est pas enregistré.
+  const allowedDerivativesRef = useRef(null);
+  const keepDerivatives = (codes) => (allowedDerivativesRef.current ? codes.filter((c) => allowedDerivativesRef.current.has(c)) : codes);
+  // Changement de sous-catégorie d'un spiritueux dont les dérivés sont activés : on coche d'emblée ceux de la nouvelle liste ; les anciens, et les valeurs adaptées
+  // pour l'ancienne sous-catégorie, sont écartés.
+  const previousSubtypeRef = useRef(form.beverageSubtype);
+  useEffect(() => {
+    const previous = previousSubtypeRef.current;
+    previousSubtypeRef.current = form.beverageSubtype;
+    if (!subtypeDerivatives || previous === form.beverageSubtype || !form.derivativesOn) return undefined;
+    let cancelled = false;
+    const wanted = form.beverageSubtype;
+    loadSubtypeDerivatives(wanted).then((res) => {
+      if (cancelled || res.error) return;
+      setForm((f) => (f.derivativesOn && f.beverageSubtype === wanted ? { ...f, derivatives: res.items.map((d) => d.code), derivativeVolumes: {}, derivativeKcal: {} } : f));
+    });
+    return () => {
+      cancelled = true;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [form.beverageSubtype]);
   const visibleGrapeVarietyOptions = grapeVarietyOptions.filter((v) => !v.sparklingOnly || form.beverageSubtype === "vin_effervescent");
 
   useEffect(() => {
@@ -550,8 +580,14 @@ export function DrinkDetailPanel({ drink, onClose, onSaved, myUserId }) {
   const switchDerivatives = async (on) => {
     set("derivativesOn", on);
     if (!on) return;
-    const rows = await loadCustomListItems(derivativeList.key);
-    const codes = mergeCustomItems(derivativeList, rows).flatMap((g) => g.tags).map((t) => t.code);
+    let codes;
+    if (subtypeDerivatives) {
+      const res = await loadSubtypeDerivatives(form.beverageSubtype);
+      codes = res.error ? [] : res.items.map((d) => d.code);
+    } else {
+      const rows = await loadCustomListItems(derivativeList.key);
+      codes = mergeCustomItems(derivativeList, rows).flatMap((g) => g.tags).map((t) => t.code);
+    }
     // Si l'interrupteur a été refermé entre-temps, on ne touche à rien ; sinon on ajoute ce qui n'est pas déjà coché.
     setForm((f) => (f.derivativesOn ? { ...f, derivatives: [...new Set([...f.derivatives, ...codes])] } : f));
   };
@@ -638,13 +674,13 @@ export function DrinkDetailPanel({ drink, onClose, onSaved, myUserId }) {
       defaultPriceEuro: form.defaultPriceEuro === "" ? null : parseFloat(form.defaultPriceEuro),
       defaultPriceJeton: form.defaultPriceJeton === "" ? null : parseFloat(form.defaultPriceJeton),
       // Bières et spiritueux : les dérivés cochés. Interrupteur sur OFF (ou produit qui n'est plus une bière ni un spiritueux) → aucun dérivé enregistré.
-      derivatives: hasDerivatives && form.derivativesOn ? form.derivatives : [],
-      // Spiritueux : le volume du verre des seuls dérivés cochés qui en ont un (la saisie a déjà été vérifiée à l'enregistrement) ; interrupteur
-      // sur OFF ou dérivé décoché → son volume est effacé.
-      derivativeVolumes: isSpirit && form.derivativesOn ? derivativeVolumesToSave(form.derivatives, form.derivativeVolumes).volumes || {} : {},
-      // Bières, spiritueux, thés et infusions : l'énergie des seuls dérivés cochés qui en ont une (déjà vérifiée à l'enregistrement) ; interrupteur
-      // sur OFF ou dérivé décoché → son énergie est effacée.
-      derivativeKcal: hasDerivatives && form.derivativesOn ? derivativeKcalToSave(form.derivatives, form.derivativeKcal).kcal || {} : {},
+      derivatives: hasDerivatives && form.derivativesOn ? keepDerivatives(form.derivatives) : [],
+      // Spiritueux : le volume du verre adapté pour CE produit, pour les seuls dérivés cochés qui en ont un (la saisie a déjà été vérifiée à l'enregistrement) ;
+      // interrupteur sur OFF ou dérivé décoché → son volume est effacé. Sans valeur adaptée, c'est le volume de la sous-catégorie (Paramétrages) qui compte.
+      derivativeVolumes: isSpirit && form.derivativesOn ? derivativeVolumesToSave(keepDerivatives(form.derivatives), form.derivativeVolumes).volumes || {} : {},
+      // Bières, spiritueux, thés et infusions : l'énergie propre à ce produit des seuls dérivés cochés qui en ont une (déjà vérifiée à l'enregistrement) ;
+      // interrupteur sur OFF ou dérivé décoché → son énergie est effacée.
+      derivativeKcal: hasDerivatives && form.derivativesOn ? derivativeKcalToSave(keepDerivatives(form.derivatives), form.derivativeKcal).kcal || {} : {},
       // Spiritueux : la case « Shot » et ses valeurs par défaut. Case décochée → les valeurs du shot sont effacées à l'enregistrement.
       ...(isSpirit
         ? {
@@ -787,23 +823,35 @@ export function DrinkDetailPanel({ drink, onClose, onSaved, myUserId }) {
       alert("Codes-barres : " + barcodeProblems.join(" ; "));
       return;
     }
-    // Volumes des dérivés d'un spiritueux : un volume refusé (négatif, trop grand, pas un nombre) arrête l'enregistrement, avec le nom du dérivé.
+    // Spiritueux : les dérivés d'un produit sont ceux de SA sous-catégorie. La liste est lue à l'instant : un dérivé resté coché d'une autre sous-catégorie n'est pas
+    // enregistré. Liste vide (rien n'est encore réglé pour cette sous-catégorie) : on ne touche à rien.
+    let allowedDerivatives = null;
+    if (subtypeDerivatives && form.derivativesOn) {
+      const res = await loadSubtypeDerivatives(form.beverageSubtype);
+      if (res.error) {
+        alert("Les dérivés de cette sous-catégorie n'ont pas pu être lus. Réessaie dans un instant.");
+        return;
+      }
+      if (res.items.length > 0) allowedDerivatives = new Map(res.items.map((d) => [d.code, d.fr]));
+    }
+    allowedDerivativesRef.current = allowedDerivatives;
+    const derivativeNameOf = (code) => allowedDerivatives?.get(code) || code;
+    // Volumes adaptés pour ce produit (spiritueux) : un volume refusé (négatif, trop grand, pas un nombre) arrête l'enregistrement, avec le nom du dérivé.
     if (isSpirit && form.derivativesOn) {
-      const check = derivativeVolumesToSave(form.derivatives, form.derivativeVolumes);
+      const check = derivativeVolumesToSave(keepDerivatives(form.derivatives), form.derivativeVolumes, derivativeNameOf);
       if (check.error) {
-        const rows = await loadCustomListItems(derivativeList.key);
-        const names = Object.fromEntries(mergeCustomItems(derivativeList, rows).flatMap((g) => g.tags).map((t) => [t.code, t.fr]));
-        alert("Volume d'un dérivé — " + derivativeVolumesToSave(form.derivatives, form.derivativeVolumes, (code) => names[code] || code).error);
+        alert("Volume d'un dérivé : " + check.error);
         return;
       }
     }
-    // Énergie des dérivés : une énergie refusée (négative, trop haute, pas un nombre) arrête l'enregistrement, avec le nom du dérivé.
+    // Énergie adaptée pour ce produit : une énergie refusée (négative, trop haute, pas un nombre) arrête l'enregistrement, avec le nom du dérivé.
     if (hasDerivatives && form.derivativesOn) {
-      const check = derivativeKcalToSave(form.derivatives, form.derivativeKcal);
+      const check = derivativeKcalToSave(keepDerivatives(form.derivatives), form.derivativeKcal);
       if (check.error) {
-        const rows = await loadCustomListItems(derivativeList.key);
-        const names = Object.fromEntries(mergeCustomItems(derivativeList, rows).flatMap((g) => g.tags).map((t) => [t.code, t.fr]));
-        alert("Énergie d'un dérivé — " + derivativeKcalToSave(form.derivatives, form.derivativeKcal, (code) => names[code] || code).error);
+        const names = subtypeDerivatives
+          ? null
+          : Object.fromEntries(mergeCustomItems(derivativeList, await loadCustomListItems(derivativeList.key)).flatMap((g) => g.tags).map((t) => [t.code, t.fr]));
+        alert("Énergie d'un dérivé : " + derivativeKcalToSave(keepDerivatives(form.derivatives), form.derivativeKcal, (code) => (names ? names[code] : derivativeNameOf(code)) || code).error);
         return;
       }
     }
@@ -1304,10 +1352,10 @@ export function DrinkDetailPanel({ drink, onClose, onSaved, myUserId }) {
                   <span style={{ ...sectionTitleStyle, marginTop: 0, marginBottom: 0 }}>
                     <span style={{ width: "4px", height: "14px", background: "#39FF66", borderRadius: "2px", display: "inline-block" }} />
                     Dérivés du produit
-                    {form.derivativesOn && form.derivatives.length > 0 && (
+                    {form.derivativesOn && derivativeActiveCount > 0 && (
                       <span style={{ color: "#8792A6", fontWeight: 500 }}>
                         {" "}
-                        ({form.derivatives.length} activé{form.derivatives.length > 1 ? "s" : ""})
+                        ({derivativeActiveCount} activé{derivativeActiveCount > 1 ? "s" : ""})
                       </span>
                     )}
                   </span>
@@ -1315,27 +1363,41 @@ export function DrinkDetailPanel({ drink, onClose, onSaved, myUserId }) {
                 </div>
                 {form.derivativesOn && (
                   <>
-                    <FlatListField
-                      list={derivativeList}
-                      variant="rows"
-                      selected={form.derivatives}
-                      onToggle={(code) => toggleArrayField("derivatives", code)}
-                      onSelectedReorder={(codes) => set("derivatives", codes)}
-                      onAdded={(item) => setForm((f) => (f.derivatives.includes(item.code) ? f : { ...f, derivatives: [...f.derivatives, item.code] }))}
-                      onDeleted={(code) =>
-                        setForm((f) => {
-                          const { [code]: _gone, ...volumes } = f.derivativeVolumes || {};
-                          const { [code]: _goneKcal, ...kcal } = f.derivativeKcal || {};
-                          return f.derivatives.includes(code) || _gone !== undefined || _goneKcal !== undefined
-                            ? { ...f, derivatives: f.derivatives.filter((c) => c !== code), derivativeVolumes: volumes, derivativeKcal: kcal }
-                            : f;
-                        })
-                      }
-                      rowKcal={{ values: form.derivativeKcal, onChange: (code, v) => setForm((f) => ({ ...f, derivativeKcal: { ...f.derivativeKcal, [code]: v } })) }}
-                      rowValues={isSpirit ? { values: form.derivativeVolumes, onChange: (code, v) => setForm((f) => ({ ...f, derivativeVolumes: { ...f.derivativeVolumes, [code]: v } })) } : undefined}
-                      labelStyle={labelStyle}
-                      fieldStyle={fieldStyle}
-                    />
+                    {subtypeDerivatives ? (
+                      <ProductDerivativesTable
+                        key={form.beverageSubtype}
+                        type={form.type}
+                        subtype={form.beverageSubtype}
+                        productKcal={form.kcalPer100ml !== "" && Number.isFinite(parseFloat(form.kcalPer100ml)) ? parseFloat(form.kcalPer100ml) : null}
+                        selected={form.derivatives}
+                        onToggle={(code) => toggleArrayField("derivatives", code)}
+                        onSelectedReorder={(codes) => set("derivatives", codes)}
+                        kcalOverrides={{ values: form.derivativeKcal, onChange: (code, v) => setForm((f) => ({ ...f, derivativeKcal: { ...f.derivativeKcal, [code]: v } })) }}
+                        volumeOverrides={{ values: form.derivativeVolumes, onChange: (code, v) => setForm((f) => ({ ...f, derivativeVolumes: { ...f.derivativeVolumes, [code]: v } })) }}
+                        onLoaded={(items) => setDerivativeListCodes(items.map((d) => d.code))}
+                      />
+                    ) : (
+                      <FlatListField
+                        list={derivativeList}
+                        variant="rows"
+                        selected={form.derivatives}
+                        onToggle={(code) => toggleArrayField("derivatives", code)}
+                        onSelectedReorder={(codes) => set("derivatives", codes)}
+                        onAdded={(item) => setForm((f) => (f.derivatives.includes(item.code) ? f : { ...f, derivatives: [...f.derivatives, item.code] }))}
+                        onDeleted={(code) =>
+                          setForm((f) => {
+                            const { [code]: _gone, ...volumes } = f.derivativeVolumes || {};
+                            const { [code]: _goneKcal, ...kcal } = f.derivativeKcal || {};
+                            return f.derivatives.includes(code) || _gone !== undefined || _goneKcal !== undefined
+                              ? { ...f, derivatives: f.derivatives.filter((c) => c !== code), derivativeVolumes: volumes, derivativeKcal: kcal }
+                              : f;
+                          })
+                        }
+                        rowKcal={{ values: form.derivativeKcal, onChange: (code, v) => setForm((f) => ({ ...f, derivativeKcal: { ...f.derivativeKcal, [code]: v } })) }}
+                        labelStyle={labelStyle}
+                        fieldStyle={fieldStyle}
+                      />
+                    )}
                   </>
                 )}
               </>
