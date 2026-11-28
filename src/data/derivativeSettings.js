@@ -12,10 +12,20 @@ export const derivativeListKey = (subtype) => `${DERIVATIVE_LIST_PREFIX}${subtyp
 // Un dérivé ajouté à la main s'appelle « perso_<sous-catégorie>_<nom> » : un code ne sert qu'à UNE liste (la suppression d'un dérivé le retire de tous les produits).
 export const derivativeCodePrefix = (subtype) => `perso_${subtype}_`;
 
-// Les types de produits dont les dérivés se règlent déjà par sous-catégorie. Les autres gardent leur ancienne liste commune (bières, thés) ou n'ont pas
-// encore de dérivés : ils passent à ce système l'un après l'autre (spiritueux d'abord).
-export const SUBTYPE_DERIVATIVE_TYPES = ["spiritueux"];
-export const usesSubtypeDerivatives = (type) => SUBTYPE_DERIVATIVE_TYPES.includes(type);
+// Les types de produits dont les dérivés se règlent déjà par sous-catégorie, avec les sous-catégories concernées (null = toutes celles du type). Les autres types
+// (vins, softs et eaux, snacks, café et autres boissons chaudes) n'ont pas encore de dérivés : ils passent à ce système l'un après l'autre.
+//   spiritueux (16 sous-catégories) : livraison 1 ; bières, cidres et poirés, thés et infusions : livraison 2.
+export const SUBTYPE_DERIVATIVE_SUBTYPES = {
+  spiritueux: null,
+  bieres_cidres: null,
+  boissons_chaudes: ["the", "infusion"],
+};
+// `subtype` omis : le TYPE a-t-il au moins une sous-catégorie à dérivés ? Sinon : cette sous-catégorie-là en a-t-elle ?
+export const usesSubtypeDerivatives = (type, subtype) => {
+  if (!Object.prototype.hasOwnProperty.call(SUBTYPE_DERIVATIVE_SUBTYPES, type)) return false;
+  const subtypes = SUBTYPE_DERIVATIVE_SUBTYPES[type];
+  return subtype === undefined || subtypes === null || subtypes.includes(subtype);
+};
 
 // Le volume du verre se compte en grammes pour les snacks, en cl pour le reste.
 export const derivativeUnit = (type) => (type === "snacks" ? "g" : "cl");

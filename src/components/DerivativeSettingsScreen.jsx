@@ -21,7 +21,7 @@ import { moveInOrder, normalizeItemName } from "../data/customLists.js";
 // DataBase > Paramétrages : les dérivés de chaque sous-catégorie de produits (Whisky Coca, Mazout…). Une liste par sous-catégorie, avec pour chaque dérivé son
 // énergie seul (kcal/100ml), sa part dans le verre (en %, le reste du verre est le produit) et le volume du verre par défaut. Les trois valeurs sont obligatoires.
 // La fiche d'un produit ne fait que cocher les dérivés de SA sous-catégorie (et, rarement, adapter les valeurs pour ce produit).
-// Les catégories pas encore passées à ce système (voir SUBTYPE_DERIVATIVE_TYPES) sont affichées grisées.
+// Les catégories et sous-catégories pas encore passées à ce système (voir SUBTYPE_DERIVATIVE_SUBTYPES) sont affichées grisées.
 
 const CATEGORIES = [
   { type: "bieres_cidres", label: "Bières & Cidres", subtypes: BEER_CIDER_SUBTYPES },
@@ -137,7 +137,7 @@ export function DerivativeSettingsScreen() {
   };
   const switchType = (next) => {
     if (next === type || !usesSubtypeDerivatives(next)) return;
-    const first = CATEGORIES.find((c) => c.type === next).subtypes[0].code;
+    const first = CATEGORIES.find((c) => c.type === next).subtypes.find((s) => usesSubtypeDerivatives(next, s.code)).code;
     if (dirty && !window.confirm("Des modifications ne sont pas enregistrées.\nLes abandonner ?")) return;
     setMessage(null);
     setType(next);
@@ -239,7 +239,7 @@ export function DerivativeSettingsScreen() {
               aria-selected={active}
               disabled={!available}
               onClick={() => switchType(c.type)}
-              title={available ? undefined : "Pas encore disponible : les dérivés de cette catégorie se règlent encore sur la fiche du produit."}
+              title={available ? undefined : "Pas encore disponible : cette catégorie n'a pas encore de dérivés."}
               style={{
                 background: active ? GREEN : "none",
                 border: `2px solid ${active ? GREEN : BORDER}`,
@@ -262,12 +262,15 @@ export function DerivativeSettingsScreen() {
         {category.subtypes.map((s) => {
           const active = s.code === subtype;
           const n = counts[s.code] || 0;
+          const available = usesSubtypeDerivatives(type, s.code);
           return (
             <button
               key={s.code}
               role="tab"
               aria-selected={active}
+              disabled={!available}
               onClick={() => switchSubtype(s.code)}
+              title={available ? undefined : "Pas encore disponible : cette sous-catégorie n'a pas de dérivés pour l'instant."}
               style={{
                 background: active ? TEXT : "none",
                 border: `2px solid ${active ? TEXT : BORDER}`,
@@ -276,7 +279,8 @@ export function DerivativeSettingsScreen() {
                 fontSize: "12px",
                 fontWeight: 600,
                 color: active ? NAVY : TEXT,
-                cursor: "pointer",
+                cursor: available ? "pointer" : "not-allowed",
+                opacity: available ? 1 : 0.4,
                 display: "inline-flex",
                 alignItems: "center",
                 gap: "6px",
